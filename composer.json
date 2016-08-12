@@ -1,0 +1,17 @@
+{
+    "name": "language-server",
+    "description": "PHP Implementation of the Visual Studio Code Language Server Protocol",
+    "version": "1.0.0",
+    "bin": ["bin/main.php"],
+    "minimum-stability": "dev",
+    "require": {
+        "nikic/php-parser": "3.0.0alpha1",
+        "phpdocumentor/reflection-docblock": "^3.0",
+        "sabre/event": "^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "LanguageServer\\": "src/"
+        }
+    }
+}
