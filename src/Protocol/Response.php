@@ -15,12 +15,18 @@ class Response extends Message
     public $method;
 
     /**
-     * @var object|null
+     * @var mixed
      */
-    public $params;
+    public $result;
 
     /**
      * @var ResponseError|null
      */
     public $error;
+
+    public function __construct($result, ResponseError $error = null)
+    {
+        $this->result = $result;
+        $this->error = $error;
+    }
 }

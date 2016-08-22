@@ -107,5 +107,5 @@ class ServerCapabilites
      *
      * @var bool|null
      */
-    public $renameProvidern;
+    public $renameProvider;
 }

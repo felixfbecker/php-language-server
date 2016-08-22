@@ -3,14 +3,14 @@
 namespace LanguageServer\Protocol;
 
 use Sabre\Event\Loop;
-use Sabre\Event\EventEmitter;
+use LanguageServer\Protocol\Methods\Initialize\{InitializeRequest, InitializeResponse};
 
 abstract class ParsingMode {
     const HEADERS = 1;
     const BODY = 2;
 }
 
-class ProtocolServer extends EventEmitter
+abstract class ProtocolServer
 {
     private $input;
     private $output;
@@ -49,7 +49,18 @@ class ProtocolServer extends EventEmitter
                 case ParsingMode::BODY:
                     if (strlen($buffer) === $contentLength) {
                         $req = Message::parse($body, Request::class);
-                        $this->emit($body->method, [$req]);
+                        if (!method_exists($this, $req->method)) {
+                            $this->sendResponse(new Response(null, new ResponseError("Method {$req->method} is not implemented", ErrorCode::METHOD_NOT_FOUND, $e)));
+                        } else {
+                            try {
+                                $result = $this->{$req->method}($req->params);
+                                $this->sendResponse(new Response($result));
+                            } catch (ResponseError $e) {
+                                $this->sendResponse(new Response(null, $e));
+                            } catch (Throwable $e) {
+                                $this->sendResponse(new Response(null, new ResponseError($e->getMessage(), $e->getCode(), null, $e)));
+                            }
+                        }
                         $this->parsingMode = ParsingMode::HEADERS;
                         $this->buffer = '';
                     }
@@ -64,4 +75,6 @@ class ProtocolServer extends EventEmitter
     {
         fwrite($this->output, json_encode($res));
     }
+
+    abstract public function initialize(InitializeRequest $req): InitializeResponse;
 }

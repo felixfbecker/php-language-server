@@ -2,7 +2,9 @@
 
 namespace LanguageServer\Protocol;
 
-class ResponseError
+use Exception;
+
+class ResponseError extends Exception
 {
     /**
      * A number indicating the error type that occurred.
@@ -25,4 +27,10 @@ class ResponseError
      * @var mixed
      */
     public $data;
+
+    public function __construct(string $message, int $code = ErrorCode::INTERNAL_ERROR, $data = null, Throwable $previous = null)
+    {
+        parent::__construct($message, $code, $previous);
+        $this->data = $data;
+    }
 }
