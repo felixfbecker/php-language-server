@@ -1,6 +1,6 @@
 <?php
 
-namespace LanguageServer\Protocol\TextDocument;
+namespace LanguageServer\Protocol;
 
 /**
  * An event describing a file change.

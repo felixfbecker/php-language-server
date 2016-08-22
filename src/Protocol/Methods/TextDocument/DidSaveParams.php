@@ -1,6 +1,6 @@
 <?php
 
-namespace LanguageServer\Protocol\TextDocument;
+namespace LanguageServer\Protocol\Methods\TextDocument;
 
 use LanguageServer\Protocol\Params;
 
@@ -13,7 +13,7 @@ class DidSaveTextDocumentParams extends Params
     /**
      * The document that was closed.
      *
-     * @var TextDocumentIdentifier
+     * @var LanguageServer\Protocol\TextDocumentIdentifier
      */
     public $textDocument;
 }

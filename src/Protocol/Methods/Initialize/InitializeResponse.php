@@ -9,7 +9,7 @@ class InitializeResponse extends Response
     /**
      * The capabilities the language server provides.
      *
-     * @var ServerCapabilities
+     * @var LanguageServer\Protocol\ServerCapabilities
      */
     public $capabilites;
 }

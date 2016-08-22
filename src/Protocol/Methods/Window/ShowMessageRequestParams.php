@@ -21,7 +21,7 @@ class ShowMessageParams
     /**
      * The message action items to present.
      *
-     * @var MessageActionItem[]|null
+     * @var LanguageServer\Protocol\MessageActionItem[]|null
      */
     public $actions;
 }

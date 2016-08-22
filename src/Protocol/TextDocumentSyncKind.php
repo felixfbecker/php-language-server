@@ -1,6 +1,6 @@
 <?php
 
-namespace LanguageServer\Protocol\Methods\Initialize\ServerCapabilities;
+namespace LanguageServer\Protocol;
 
 /**
  * Defines how the host (editor) should sync document changes to the language server.

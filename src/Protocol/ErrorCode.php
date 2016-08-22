@@ -1,5 +1,7 @@
 <?php
 
+namespace LanguageServer\Protocol;
+
 /**
  * Enum
  */

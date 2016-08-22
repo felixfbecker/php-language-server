@@ -2,7 +2,7 @@
 
 namespace LanguageServer\Protocol;
 
-abstract class Params
+class Params
 {
 
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace LanguageServer\Protocol\TextDocument;
+namespace LanguageServer\Protocol;
 
 class CompletionItem
 {
@@ -17,7 +17,7 @@ class CompletionItem
      * The kind of this completion item. Based of the kind
      * an icon is chosen by the editor.
      *
-     * @var number|null
+     * @var int|null
      */
     public $kind;
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace LanguageServer\Protocol\TextDocument;
+namespace LanguageServer\Protocol;
 
 /**
  * An event describing a change to a text document. If range and rangeLength are
@@ -8,7 +8,6 @@ namespace LanguageServer\Protocol\TextDocument;
  */
 class ContentChangeEvent
 {
-
     /**
      * The range of the document that changed.
      *

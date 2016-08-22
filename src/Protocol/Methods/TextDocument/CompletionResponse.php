@@ -1,17 +1,13 @@
 <?php
 
-namespace LanguageServer\Protocol\TextDocument;
+namespace LanguageServer\Protocol\Methods\TextDocument;
 
 use LanguageServer\Protocol\Response;
 
-/**
- * Diagnostics notification are sent from the server to the client to signal results
- * of validation runs.
- */
-class PublishDiagnosticsParams extends Response
+class CompletionResponse extends Response
 {
     /**
-     * @var CompletionItem[]|CompletionList
+     * @var LanguageServer\Protocol\CompletionItem[]|LanguageServer\Protocol\CompletionList
      */
     public $result;
 }

@@ -1,9 +1,9 @@
 <?php
 
-namespace LanguageServer\Protocol\TextDocument;
+namespace LanguageServer\Protocol;
 
 /**
- * Represents a collection of [completion items](#CompletionItem) to be presented in
+ * Represents a collection of completion items to be presented in
  * the editor.
  */
 class CompletionList

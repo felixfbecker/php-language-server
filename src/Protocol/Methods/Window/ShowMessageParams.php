@@ -2,10 +2,12 @@
 
 namespace LanguageServer\Protocol\Window;
 
-class ShowMessageParams
+use LanguageServer\Protocol\Params;
+
+class ShowMessageParams extends Params
 {
     /**
-     * The message type. See {@link MessageType}.
+     * The message type. See LanguageServer\Protocol\MessageType
      *
      * @var int
      */

@@ -15,7 +15,7 @@ class InitializeParams
     /**
      * The process Id of the parent process that started the server.
      *
-     * @var number
+     * @var int
      */
     public $processId;
 

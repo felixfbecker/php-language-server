@@ -1,26 +1,26 @@
 <?php
 
-namespace LanguageServer\Protocol\TextDocument;
+namespace LanguageServer\Protocol\Methods\TextDocument;
 
-use LanguageServer\Protocol\RequestParams;
+use LanguageServer\Protocol\Params;
 
-/*
+/**
  * A parameter literal used in requests to pass a text document and a position inside
  * that document.
  */
-class TextDocumentPositionParams extends RequestParams
+class TextDocumentPositionParams extends Params
 {
     /**
      * The text document.
      *
-     * @var TextDocumentIdentifier
+     * @var LanguageServer\Protocol\TextDocumentIdentifier
      */
     public $textDocument;
 
     /**
      * The position inside the text document.
      *
-     * @var Position
+     * @var LanguageServer\Protocol\Position
      */
     public $position;
 }

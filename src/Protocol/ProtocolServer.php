@@ -48,7 +48,7 @@ class ProtocolServer extends EventEmitter
                     break;
                 case ParsingMode::BODY:
                     if (strlen($buffer) === $contentLength) {
-                        $req = Request::parse($body);
+                        $req = Message::parse($body, Request::class);
                         $this->emit($body->method, [$req]);
                         $this->parsingMode = ParsingMode::HEADERS;
                         $this->buffer = '';

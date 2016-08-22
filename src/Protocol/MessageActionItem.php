@@ -1,8 +1,8 @@
 <?php
 
-namespace LanguageServer\Protocol\Window;
+namespace LanguageServer\Protocol;
 
-class ShowMessageParams
+class MessageActionItem
 {
     /**
      * A short title like 'Retry', 'Open Log' etc.

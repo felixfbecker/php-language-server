@@ -1,8 +1,6 @@
 <?php
 
-namespace LanguageServer\Protocol\TextDocument;
-
-use LanguageServer\Protocol\RequestParams;
+namespace LanguageServer\Protocol;
 
 /**
  * Diagnostics notification are sent from the server to the client to signal results

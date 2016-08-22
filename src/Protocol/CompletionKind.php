@@ -1,6 +1,6 @@
 <?php
 
-namespace LanguageServer\Protocol\TextDocument;
+namespace LanguageServer\Protocol;
 
 /**
  * The kind of a completion entry.
@@ -8,12 +8,12 @@ namespace LanguageServer\Protocol\TextDocument;
 abstract class CompletionItemKind {
     const TEXT = 1;
     const METHOD = 2;
-    const _FUNCTION = 3;
+    const FUNCTION = 3;
     const CONSTRUCTOR = 4;
     const FIELD = 5;
     const VARIABLE = 6;
     const _CLASS = 7;
-    const _INTERFACE = 8;
+    const INTERFACE = 8;
     const MODULE = 9;
     const PROPERTY = 10;
     const UNIT = 11;

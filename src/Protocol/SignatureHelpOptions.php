@@ -1,6 +1,6 @@
 <?php
 
-namespace LanguageServer\Protocol\Methods\Initialize\ServerCapabilities;
+namespace LanguageServer\Protocol;
 
 /**
  * Signature help options.
