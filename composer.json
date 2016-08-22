@@ -5,13 +5,18 @@
     "bin": ["bin/main.php"],
     "minimum-stability": "dev",
     "require": {
+        "php": ">=7.0",
         "nikic/php-parser": "3.0.0alpha1",
         "phpdocumentor/reflection-docblock": "^3.0",
-        "sabre/event": "^3.0"
+        "sabre/event": "^3.0",
+        "netresearch/jsonmapper": "^0.11.0"
     },
     "autoload": {
         "psr-4": {
             "LanguageServer\\": "src/"
         }
+    },
+    "require-dev": {
+        "squizlabs/php_codesniffer": "^2.6"
     }
 }

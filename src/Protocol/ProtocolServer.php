@@ -1,6 +1,6 @@
 <?php
 
-namespace LanguageServer;
+namespace LanguageServer\Protocol;
 
 use Sabre\Event\Loop;
 use Sabre\Event\EventEmitter;
@@ -10,13 +10,17 @@ abstract class ParsingMode {
     const BODY = 2;
 }
 
-class LanguageServer extends EventEmitter
+class ProtocolServer extends EventEmitter
 {
     private $input;
     private $output;
+    private $buffer = '';
+    private $parsingMode = ParsingMode::HEADERS;
+    private $headers = [];
+    private $contentLength = 0;
 
     /**
-     * @param resource $input The input stream
+     * @param resource $input  The input stream
      * @param resource $output The output stream
      */
     public function __construct($input, $output)
@@ -27,36 +31,37 @@ class LanguageServer extends EventEmitter
 
     public function listen()
     {
-        $buffer = '';
-        $parsingMode = ParsingMode::HEADERS;
-        $headers = [];
-        $contentLength = 0;
 
-        Loop\addReadStream($this->input, function() use ($buffer, $parsingMode, $headers, $contentLength) {
-            $buffer .= fgetc($this->output);
+        Loop\addReadStream($this->input, function() {
+            $this->buffer .= fgetc($this->output);
             switch ($parsingMode) {
                 case ParsingMode::HEADERS:
                     if (substr($buffer, -4) === '\r\n\r\n') {
-                        $parsingMode = ParsingMode::BODY;
-                        $contentLength = (int)$headers['Content-Length'];
-                        $buffer = '';
+                        $this->parsingMode = ParsingMode::BODY;
+                        $this->contentLength = (int)$headers['Content-Length'];
+                        $this->buffer = '';
                     } else if (substr($buffer, -2) === '\r\n') {
                         $parts = explode(': ', $buffer);
                         $headers[$parts[0]] = $parts[1];
-                        $buffer = '';
+                        $this->buffer = '';
                     }
                     break;
                 case ParsingMode::BODY:
                     if (strlen($buffer) === $contentLength) {
-                        $body = json_decode($buffer);
-                        $this->emit($body->method, [$body->params]);
-                        $parsingMode = ParsingMode::HEADERS;
-                        $buffer = '';
+                        $req = Request::parse($body);
+                        $this->emit($body->method, [$req]);
+                        $this->parsingMode = ParsingMode::HEADERS;
+                        $this->buffer = '';
                     }
                     break;
             }
         });
 
         Loop\run();
+    }
+
+    public function sendResponse(Response $res)
+    {
+        fwrite($this->output, json_encode($res));
     }
 }
