@@ -1,7 +1,27 @@
 {
     "name": "language-server",
+    "version": "0.0.1",
     "description": "PHP Implementation of the Visual Studio Code Language Server Protocol",
-    "version": "1.0.0",
+    "authors": [
+        {
+            "name": "Felix Becker",
+            "email": "felix.b@outlook.com"
+        }
+    ],
+    "license": "ISC",
+    "type": "library",
+    "keywords": [
+        "php",
+        "language",
+        "server",
+        "microsoft",
+        "visual",
+        "studio",
+        "code",
+        "intellisense",
+        "autocompletion",
+        "refactor"
+    ],
     "bin": ["bin/main.php"],
     "minimum-stability": "dev",
     "require": {
@@ -15,8 +35,5 @@
         "psr-4": {
             "LanguageServer\\": "src/"
         }
-    },
-    "require-dev": {
-        "squizlabs/php_codesniffer": "^2.6"
     }
 }
