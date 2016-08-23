@@ -24,7 +24,7 @@ class Response extends Message
      */
     public $error;
 
-    public function __construct($result, ResponseError $error = null)
+    public function __construct($id, string $method, $result, ResponseError $error = null)
     {
         $this->result = $result;
         $this->error = $error;

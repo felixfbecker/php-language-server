@@ -1,6 +1,6 @@
 <?php
 
-namespace LanguageServer\Protocol\Methods\Initialize;
+namespace LanguageServer\Protocol\Methods;
 
 use LanguageServer\Protocol\Request;
 

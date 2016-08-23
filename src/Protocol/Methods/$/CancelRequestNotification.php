@@ -7,7 +7,7 @@ use LanguageServer\Protocol\Notification;
 class CancelRequestNotification extends Notification
 {
     /**
-     * @var CancelParams
+     * @var CancelRequestParams
      */
     public $params;
 }
