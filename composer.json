@@ -35,5 +35,13 @@
         "psr-4": {
             "LanguageServer\\": "src/"
         }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "LanguageServer\\Tests\\": "tests/"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^5.5"
     }
 }
