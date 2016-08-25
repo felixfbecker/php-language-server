@@ -21,7 +21,7 @@ class ProtocolStreamWriter implements ProtocolWriter
      * @param Message $msg
      * @return void
      */
-    private function write(Message $msg)
+    public function write(Message $msg)
     {
         fwrite($this->output, (string)$msg);
     }
