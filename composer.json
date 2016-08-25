@@ -1,6 +1,5 @@
 {
     "name": "felixfbecker/language-server",
-    "version": "1.0.0",
     "description": "PHP Implementation of the Visual Studio Code Language Server Protocol",
     "authors": [
         {
