@@ -16,4 +16,10 @@ class Location
      * @var Range
      */
     public $range;
+
+    public function __construct(string $uri = null, Range $range = null)
+    {
+        $this->uri = $uri;
+        $this->range = $range;
+    }
 }

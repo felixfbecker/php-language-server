@@ -2,7 +2,7 @@
 
 namespace LanguageServer\Protocol;
 
-class ServerCapabilites
+class ServerCapabilities
 {
     /**
      * Defines how text documents are synced.

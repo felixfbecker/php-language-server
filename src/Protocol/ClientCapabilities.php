@@ -2,7 +2,7 @@
 
 namespace LanguageServer\Protocol;
 
-class ClientCapabilites
+class ClientCapabilities
 {
 
 }

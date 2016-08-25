@@ -1,6 +1,6 @@
 {
-    "name": "language-server",
-    "version": "0.0.1",
+    "name": "felixfbecker/language-server",
+    "version": "1.0.0",
     "description": "PHP Implementation of the Visual Studio Code Language Server Protocol",
     "authors": [
         {
@@ -23,14 +23,15 @@
         "refactor"
     ],
     "bin": ["bin/main.php"],
-    "minimum-stability": "dev",
     "require": {
         "php": ">=7.0",
         "nikic/php-parser": "3.0.0alpha1",
         "phpdocumentor/reflection-docblock": "^3.0",
         "sabre/event": "^3.0",
-        "netresearch/jsonmapper": "^0.11.0"
+        "felixfbecker/advanced-json-rpc": "^1.2"
     },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
     "autoload": {
         "psr-4": {
             "LanguageServer\\": "src/"

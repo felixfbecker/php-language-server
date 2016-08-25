@@ -20,4 +20,10 @@ class Range
      * @var Position
      */
     public $end;
+
+    public function __construct(Position $start = null, Position $end = null)
+    {
+        $this->start = $start;
+        $this->end = $end;
+    }
 }

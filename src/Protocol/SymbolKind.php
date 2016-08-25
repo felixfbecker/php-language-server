@@ -11,7 +11,7 @@ abstract class SymbolKind
     const MODULE = 2;
     const NAMESPACE = 3;
     const PACKAGE = 4;
-    const _CLASS = 5;
+    const CLASS_ = 5;
     const METHOD = 6;
     const PROPERTY = 7;
     const FIELD = 8;

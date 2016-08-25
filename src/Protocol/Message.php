@@ -1,49 +1,64 @@
 <?php
+declare(strict_types = 1);
 
 namespace LanguageServer\Protocol;
 
-/**
- * A general message as defined by JSON-RPC. The language server protocol always uses "2.0" as the jsonrpc version.
- */
-abstract class Message
+use AdvancedJsonRpc\Message as MessageBody;
+
+class Message
 {
     /**
-     * The version (2.0)
-     *
-     * @var string
+     * @var \AdvancedJsonRpc\Message
      */
-    public $jsonrpc;
+    public $body;
 
     /**
-     * Parses a request body and returns the appropiate Message subclass
-     *
-     * @param string $body The raw request body
-     * @param string $fallbackClass The class to fall back to if the body is not a Notification and the method is
-     * unknown (Request::class or Response::class)
+     * @var string[]
      */
-    public static function parse(string $body, string $fallbackClass): self
+    public $headers;
+
+    /**
+     * Parses a message
+     *
+     * @param string $msg
+     * @return Message
+     */
+    public static function parse(string $msg): Message
     {
-        $decoded = json_decode($body);
-
-        // The appropiate Request/Notification subclasses are namespaced according to the method
-        // example: textDocument/didOpen -> LanguageServer\Protocol\Methods\TextDocument\DidOpenNotification
-        $class = __NAMESPACE__ . '\\Methods\\' . implode('\\', array_map('ucfirst', explode('/', $decoded->method))) . (isset($decoded->id) ? 'Request' : 'Notification');
-
-        // If the Request/Notification type is unknown, instantiate a basic Request or Notification class
-        // (this is the reason Request and Notification are not abstract)
-        if (!class_exists($class)) {
-            fwrite(STDERR, "Unknown method {$decoded->method}\n");
-            if (!isset($decoded->id)) {
-                $class = Notification::class;
-            } else {
-                $class = $fallbackClass;
+        $obj = new self;
+        $parts = explode("\r\n", $msg);
+        $obj->body = MessageBody::parse(array_pop($parts));
+        foreach ($parts as $line) {
+            if ($line) {
+                $pair = explode(': ', $line);
+                $obj->headers[$pair[0]] = $pair[1];
             }
         }
+        return $obj;
+    }
 
-        // JsonMapper will take care of recursively using the right classes for $params etc.
-        $mapper = new JsonMapper();
-        $message = $mapper->map($decoded, new $class);
+    /**
+     * @param \AdvancedJsonRpc\Message $body
+     * @param string[] $headers
+     */
+    public function __construct(MessageBody $body = null, array $headers = [])
+    {
+        $this->body = $body;
+        if (!isset($headers['Content-Type'])) {
+            $headers['Content-Type'] = 'application/vscode-jsonrpc; charset=utf8';
+        }
+        $this->headers = $headers;
+    }
 
-        return $message;
+    public function __toString(): string
+    {
+        $body = (string)$this->body;
+        $contentLength = strlen($body);
+        $this->headers['Content-Length'] = $contentLength;
+        $headers = '';
+        foreach ($this->headers as $name => $value) {
+            $headers .= "$name: $value\r\n";
+        }
+        return $headers . "\r\n" . $body;
     }
 }
