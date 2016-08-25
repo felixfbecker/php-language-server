@@ -1,6 +1,6 @@
 <?php
 
-use LanguageServer\LanguageServer;
+use LanguageServer\{LanguageServer, ProtocolStreamReader, ProtocolStreamWriter};
 use Sabre\Event\Loop;
 
 foreach ([__DIR__ . '/../../../autoload.php', __DIR__ . '/../autoload.php', __DIR__ . '/../vendor/autoload.php'] as $file) {
