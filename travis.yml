@@ -1,0 +1,10 @@
+language: php
+
+php:
+ - '7.0'
+
+install:
+ - composer install
+
+script:
+ - vendor/bin/phpunit --bootstrap vendor/autoload.php tests
