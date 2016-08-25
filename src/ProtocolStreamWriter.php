@@ -3,6 +3,8 @@ declare(strict_types = 1);
 
 namespace LanguageServer;
 
+use LanguageServer\Protocol\Message;
+
 class ProtocolStreamWriter implements ProtocolWriter
 {
     private $output;
