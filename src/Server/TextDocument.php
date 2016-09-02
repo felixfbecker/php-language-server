@@ -1,15 +1,24 @@
 <?php
 
-namespace LanguageServer;
+namespace LanguageServer\Server;
 
 use PhpParser\{Error, Comment, Node, ParserFactory, NodeTraverser, Lexer};
 use PhpParser\NodeVisitor\NameResolver;
-use LanguageServer\Protocol\{TextDocumentItem, TextDocumentIdentifier, VersionedTextDocumentIdentifier};
+use LanguageServer\{LanguageClient, ColumnCalculator, SymbolFinder};
+use LanguageServer\Protocol\{
+    TextDocumentItem,
+    TextDocumentIdentifier,
+    VersionedTextDocumentIdentifier,
+    Diagnostic,
+    DiagnosticSeverity,
+    Range,
+    Position
+};
 
 /**
  * Provides method handlers for all textDocument/* methods
  */
-class TextDocumentManager
+class TextDocument
 {
     /**
      * @var PhpParser\Parser
@@ -23,8 +32,16 @@ class TextDocumentManager
      */
     private $asts;
 
-    public function __construct()
+    /**
+     * The lanugage client object to call methods on the client
+     *
+     * @var LanguageServer\LanguageClient
+     */
+    private $client;
+
+    public function __construct(LanguageClient $client)
     {
+        $this->client = $client;
         $lexer = new Lexer(['usedAttributes' => ['comments', 'startLine', 'endLine', 'startFilePos', 'endFilePos']]);
         $this->parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7, $lexer, ['throwOnError' => false]);
     }
@@ -74,20 +91,39 @@ class TextDocumentManager
         $this->updateAst($textDocument->uri, $contentChanges[0]->text);
     }
 
+    /**
+     * Re-parses a source file, updates the AST and reports parsing errors that may occured as diagnostics
+     *
+     * @param string $uri     The URI of the source file
+     * @param string $content The new content of the source file
+     * @return void
+     */
     private function updateAst(string $uri, string $content)
     {
         $stmts = $this->parser->parse($content);
-        // TODO report errors as diagnostics
-        // foreach ($parser->getErrors() as $error) {
-        //     error_log($error->getMessage());
-        // }
+        $diagnostics = [];
+        foreach ($this->parser->getErrors() as $error) {
+            $diagnostic = new Diagnostic();
+            $diagnostic->range = new Range(
+                new Position($error->getStartLine() - 1, $error->hasColumnInfo() ? $error->getStartColumn($content) - 1 : 0),
+                new Position($error->getEndLine() - 1, $error->hasColumnInfo() ? $error->getEndColumn($content) - 1 : 0)
+            );
+            $diagnostic->severity = DiagnosticSeverity::ERROR;
+            $diagnostic->source = 'php';
+            // Do not include "on line ..." in the error message
+            $diagnostic->message = $error->getRawMessage();
+            $diagnostics[] = $diagnostic;
+        }
+        if (count($diagnostics) > 0) {
+            $this->client->textDocument->publishDiagnostics($uri, $diagnostics);
+        }
         // $stmts can be null in case of a fatal parsing error
         if ($stmts) {
             $traverser = new NodeTraverser;
             $traverser->addVisitor(new NameResolver);
             $traverser->addVisitor(new ColumnCalculator($content));
             $traverser->traverse($stmts);
+            $this->asts[$uri] = $stmts;
         }
-        $this->asts[$uri] = $stmts;
     }
 }

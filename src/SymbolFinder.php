@@ -10,6 +10,7 @@ class SymbolFinder extends NodeVisitorAbstract
 {
     const NODE_SYMBOL_KIND_MAP = [
         Node\Stmt\Class_::class           => SymbolKind::CLASS_,
+        Node\Stmt\Trait_::class           => SymbolKind::CLASS_,
         Node\Stmt\Interface_::class       => SymbolKind::INTERFACE,
         Node\Stmt\Namespace_::class       => SymbolKind::NAMESPACE,
         Node\Stmt\Function_::class        => SymbolKind::FUNCTION,

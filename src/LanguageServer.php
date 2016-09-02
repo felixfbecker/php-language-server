@@ -2,13 +2,20 @@
 
 namespace LanguageServer;
 
+use LanguageServer\Server\TextDocument;
 use LanguageServer\Protocol\{ServerCapabilities, ClientCapabilities, TextDocumentSyncKind, Message};
 use LanguageServer\Protocol\InitializeResult;
 use AdvancedJsonRpc\{Dispatcher, ResponseError, Response as ResponseBody, Request as RequestBody};
 
 class LanguageServer extends \AdvancedJsonRpc\Dispatcher
 {
+    /**
+     * Handles textDocument/* method calls
+     *
+     * @var Server\TextDocument
+     */
     public $textDocument;
+
     public $telemetry;
     public $window;
     public $workspace;
@@ -17,6 +24,7 @@ class LanguageServer extends \AdvancedJsonRpc\Dispatcher
 
     private $protocolReader;
     private $protocolWriter;
+    private $client;
 
     public function __construct(ProtocolReader $reader, ProtocolWriter $writer)
     {
@@ -47,7 +55,8 @@ class LanguageServer extends \AdvancedJsonRpc\Dispatcher
             }
         });
         $this->protocolWriter = $writer;
-        $this->textDocument = new TextDocumentManager();
+        $this->client = new LanguageClient($writer);
+        $this->textDocument = new Server\TextDocument($this->client);
     }
 
     /**
