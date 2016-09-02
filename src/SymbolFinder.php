@@ -4,6 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer;
 
 use PhpParser\{NodeVisitorAbstract, Node};
+use LanguageServer\Protocol\{SymbolInformation, SymbolKind, Range, Position, Location};
 
 class SymbolFinder extends NodeVisitorAbstract
 {
@@ -41,17 +42,17 @@ class SymbolFinder extends NodeVisitorAbstract
     public function enterNode(Node $node)
     {
         $class = get_class($node);
-        if (!isset(self::NODE_SYMBOL_MAP[$class])) {
+        if (!isset(self::NODE_SYMBOL_KIND_MAP[$class])) {
             return;
         }
         $symbol = new SymbolInformation();
-        $symbol->kind = self::NODE_SYMBOL_MAP[$class];
+        $symbol->kind = self::NODE_SYMBOL_KIND_MAP[$class];
         $symbol->name = (string)$node->name;
         $symbol->location = new Location(
             $this->uri,
             new Range(
-                new Position($node->getAttribute('startLine'), $node->getAttribute('startColumn')),
-                new Position($node->getAttribute('endLine'), $node->getAttribute('endColumn'))
+                new Position($node->getAttribute('startLine') - 1, $node->getAttribute('startColumn') - 1),
+                new Position($node->getAttribute('endLine') - 1, $node->getAttribute('endColumn') - 1)
             )
         );
         $symbol->containerName = $this->containerName;

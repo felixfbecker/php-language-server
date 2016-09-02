@@ -4,7 +4,7 @@ namespace LanguageServer;
 
 use PhpParser\{Error, Comment, Node, ParserFactory, NodeTraverser, Lexer};
 use PhpParser\NodeVisitor\NameResolver;
-use LanguageServer\Protocol\TextDocumentItem;
+use LanguageServer\Protocol\{TextDocumentItem, TextDocumentIdentifier, VersionedTextDocumentIdentifier};
 
 /**
  * Provides method handlers for all textDocument/* methods
@@ -65,18 +65,18 @@ class TextDocumentManager
     /**
      * The document change notification is sent from the client to the server to signal changes to a text document.
      *
-     * @param LanguageServer\Protocol\VersionedTextDocumentIdentifier $textDocument
-     * @param LanguageServer\Protocol\TextDocumentContentChangeEvent[] $contentChanges
+     * @param Protocol\VersionedTextDocumentIdentifier $textDocument
+     * @param Protocol\TextDocumentContentChangeEvent[] $contentChanges
      * @return void
      */
     public function didChange(VersionedTextDocumentIdentifier $textDocument, array $contentChanges)
     {
-        $this->updateAst($textDocument->uri, $contentChanges->text);
+        $this->updateAst($textDocument->uri, $contentChanges[0]->text);
     }
 
     private function updateAst(string $uri, string $content)
     {
-        $stmts = $parser->parse($content);
+        $stmts = $this->parser->parse($content);
         // TODO report errors as diagnostics
         // foreach ($parser->getErrors() as $error) {
         //     error_log($error->getMessage());
@@ -85,7 +85,7 @@ class TextDocumentManager
         if ($stmts) {
             $traverser = new NodeTraverser;
             $traverser->addVisitor(new NameResolver);
-            $traverser->addVisitor(new ColumnCalculator($textDocument->text));
+            $traverser->addVisitor(new ColumnCalculator($content));
             $traverser->traverse($stmts);
         }
         $this->asts[$uri] = $stmts;

@@ -6,3 +6,5 @@
 [![License](https://img.shields.io/packagist/l/felixfbecker/language-server.svg)](https://github.com/felixfbecker/php-language-server/blob/master/LICENSE.txt)
 
 A pure PHP implementation of the [Language Server Protocol](https://github.com/Microsoft/language-server-protocol).
+
+![Find all symbols demo](images/documentSymbol.gif)
