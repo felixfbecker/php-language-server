@@ -58,7 +58,7 @@ class LanguageServer extends \AdvancedJsonRpc\Dispatcher
      * @param ClientCapabilities $capabilities The capabilities provided by the client (editor)
      * @return InitializeResult
      */
-    public function initialize(string $rootPath, int $processId, ClientCapabilities $capabilities): InitializeResult
+    public function initialize(string $rootPath, int $processId, ClientCapabilities $capabilities = null): InitializeResult
     {
         $serverCapabilities = new ServerCapabilities();
         // Ask the client to return always full documents (because we need to rebuild the AST from scratch)
