@@ -187,7 +187,7 @@ class TextDocumentTest extends TestCase
                     ],
                     'end' => [
                         'line' => 2,
-                        'character' => 14
+                        'character' => 15
                     ]
                 ],
                 'severity' => DiagnosticSeverity::ERROR,
