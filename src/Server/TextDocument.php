@@ -106,7 +106,7 @@ class TextDocument
             $diagnostic = new Diagnostic();
             $diagnostic->range = new Range(
                 new Position($error->getStartLine() - 1, $error->hasColumnInfo() ? $error->getStartColumn($content) - 1 : 0),
-                new Position($error->getEndLine() - 1, $error->hasColumnInfo() ? $error->getEndColumn($content) - 1 : 0)
+                new Position($error->getEndLine() - 1, $error->hasColumnInfo() ? $error->getEndColumn($content) : 0)
             );
             $diagnostic->severity = DiagnosticSeverity::ERROR;
             $diagnostic->source = 'php';
@@ -114,9 +114,7 @@ class TextDocument
             $diagnostic->message = $error->getRawMessage();
             $diagnostics[] = $diagnostic;
         }
-        if (count($diagnostics) > 0) {
-            $this->client->textDocument->publishDiagnostics($uri, $diagnostics);
-        }
+        $this->client->textDocument->publishDiagnostics($uri, $diagnostics);
         // $stmts can be null in case of a fatal parsing error
         if ($stmts) {
             $traverser = new NodeTraverser;
