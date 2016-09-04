@@ -21,21 +21,21 @@ use LanguageServer\Protocol\{
 class TextDocument
 {
     /**
-     * @var PhpParser\Parser
+     * @var \PhpParser\Parser
      */
     private $parser;
 
     /**
      * A map from file URIs to ASTs
      *
-     * @var PhpParser\Stmt[][]
+     * @var \PhpParser\Stmt[][]
      */
     private $asts;
 
     /**
      * The lanugage client object to call methods on the client
      *
-     * @var LanguageServer\LanguageClient
+     * @var \LanguageServer\LanguageClient
      */
     private $client;
 
@@ -50,7 +50,7 @@ class TextDocument
      * The document symbol request is sent from the client to the server to list all symbols found in a given text
      * document.
      *
-     * @param LanguageServer\Protocol\TextDocumentIdentifier $textDocument
+     * @param \LanguageServer\Protocol\TextDocumentIdentifier $textDocument
      * @return SymbolInformation[]
      */
     public function documentSymbol(TextDocumentIdentifier $textDocument): array
@@ -71,7 +71,7 @@ class TextDocument
      * document's truth is now managed by the client and the server must not try to read the document's truth using the
      * document's uri.
      *
-     * @param LanguageServer\Protocol\TextDocumentItem $textDocument The document that was opened.
+     * @param \LanguageServer\Protocol\TextDocumentItem $textDocument The document that was opened.
      * @return void
      */
     public function didOpen(TextDocumentItem $textDocument)
@@ -82,8 +82,8 @@ class TextDocument
     /**
      * The document change notification is sent from the client to the server to signal changes to a text document.
      *
-     * @param Protocol\VersionedTextDocumentIdentifier $textDocument
-     * @param Protocol\TextDocumentContentChangeEvent[] $contentChanges
+     * @param \LanguageServer\Protocol\VersionedTextDocumentIdentifier $textDocument
+     * @param \LanguageServer\Protocol\TextDocumentContentChangeEvent[] $contentChanges
      * @return void
      */
     public function didChange(VersionedTextDocumentIdentifier $textDocument, array $contentChanges)
