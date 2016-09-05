@@ -2,7 +2,8 @@
 
 namespace LanguageServer\Server;
 
-use PhpParser\{Error, Comment, Node, ParserFactory, NodeTraverser, Lexer, PrettyPrinter\Standard as PrettyPrinterStandard};
+use PhpParser\{Error, Comment, Node, ParserFactory, NodeTraverser, Lexer};
+use PhpParser\PrettyPrinter\Standard as PrettyPrinter;
 use PhpParser\NodeVisitor\NameResolver;
 use LanguageServer\{LanguageClient, ColumnCalculator, SymbolFinder};
 use LanguageServer\Protocol\{
@@ -137,10 +138,10 @@ class TextDocument
     public function formatting(TextDocumentIdentifier $textDocument, FormattingOptions $options)
     {
         $nodes = $this->asts[$textDocument->uri];
-        if (empty($nodes)){
+        if (empty($nodes)) {
             return [];
         }
-        $prettyPrinter = new PrettyPrinterStandard();
+        $prettyPrinter = new PrettyPrinter();
         $edit = new TextEdit();
         $edit->range = new Range(new Position(0, 0), new Position(PHP_INT_MAX, PHP_INT_MAX));
         $edit->newText = $prettyPrinter->prettyPrintFile($nodes);
