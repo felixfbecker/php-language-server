@@ -7,4 +7,7 @@ install:
  - composer install
 
 script:
- - vendor/bin/phpunit --bootstrap vendor/autoload.php tests
+ - vendor/bin/phpunit --coverage-clover=coverage.xml --whitelist src --bootstrap vendor/autoload.php tests
+
+after_success:
+ - bash <(curl -s https://codecov.io/bash)
