@@ -9,3 +9,19 @@
 A pure PHP implementation of the [Language Server Protocol](https://github.com/Microsoft/language-server-protocol).
 
 ![Find all symbols demo](images/documentSymbol.gif)
+
+## Used by
+ - [vscode-php-intellisense](https://github.com/felixfbecker/vscode-php-intellisense)
+
+## Contributing
+
+You need at least PHP 7.0 and Composer installed.
+Clone the repository and run
+
+    composer install
+
+to install dependencies.
+
+Run the tests with 
+
+    vendor/bin/phpunit --bootstrap vendor/autoload.php tests
