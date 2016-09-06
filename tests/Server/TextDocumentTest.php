@@ -206,11 +206,11 @@ class TextDocumentTest extends TestCase
         $textDocumentItem->uri = 'whatever';
         $textDocumentItem->languageId = 'php';
         $textDocumentItem->version = 1;
-        $textDocumentItem->text = file_get_contents(__DIR__ . '/../../fixtures/Format.php');
+        $textDocumentItem->text = file_get_contents(__DIR__ . '/../../fixtures/format.php');
         $textDocument->didOpen($textDocumentItem);
         
         // how code should look after formatting
-        $expected = file_get_contents(__DIR__ . '/../../fixtures/Format_expected.php');
+        $expected = file_get_contents(__DIR__ . '/../../fixtures/format_expected.php');
         // Request formatting
         $result = $textDocument->formatting(new TextDocumentIdentifier('whatever'), new FormattingOptions());
         $this->assertEquals([0 => [
