@@ -74,6 +74,8 @@ class LanguageServer extends \AdvancedJsonRpc\Dispatcher
         $serverCapabilities->textDocumentSync = TextDocumentSyncKind::FULL;
         // Support "Find all symbols"
         $serverCapabilities->documentSymbolProvider = true;
+        // Support "Format Code"
+        $serverCapabilities->documentFormattingProvider = true;
         return new InitializeResult($serverCapabilities);
     }
 

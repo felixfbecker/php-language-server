@@ -40,7 +40,7 @@ class LanguageServerTest extends TestCase
                 'workspaceSymbolProvider' => null,
                 'codeActionProvider' => null,
                 'codeLensProvider' => null,
-                'documentFormattingProvider' => null,
+                'documentFormattingProvider' => true,
                 'documentRangeFormattingProvider' => null,
                 'documentOnTypeFormattingProvider' => null,
                 'renameProvider' => null

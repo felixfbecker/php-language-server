@@ -6,7 +6,7 @@ namespace LanguageServer\Tests\Server;
 use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\{Server, Client, LanguageClient};
-use LanguageServer\Protocol\{TextDocumentItem, TextDocumentIdentifier, SymbolKind, DiagnosticSeverity};
+use LanguageServer\Protocol\{TextDocumentItem, TextDocumentIdentifier, SymbolKind, DiagnosticSeverity, FormattingOptions};
 use AdvancedJsonRpc\{Request as RequestBody, Response as ResponseBody};
 
 class TextDocumentTest extends TestCase
@@ -196,5 +196,35 @@ class TextDocumentTest extends TestCase
                 'message' => "Syntax error, unexpected T_CLASS, expecting T_STRING"
             ]]
         ], json_decode(json_encode($args), true));
+    }
+    
+    public function testFormatting()
+    {
+        $textDocument = new Server\TextDocument(new LanguageClient(new MockProtocolStream()));
+        // Trigger parsing of source
+        $textDocumentItem = new TextDocumentItem();
+        $textDocumentItem->uri = 'whatever';
+        $textDocumentItem->languageId = 'php';
+        $textDocumentItem->version = 1;
+        $textDocumentItem->text = file_get_contents(__DIR__ . '/../../fixtures/format.php');
+        $textDocument->didOpen($textDocumentItem);
+        
+        // how code should look after formatting
+        $expected = file_get_contents(__DIR__ . '/../../fixtures/format_expected.php');
+        // Request formatting
+        $result = $textDocument->formatting(new TextDocumentIdentifier('whatever'), new FormattingOptions());
+        $this->assertEquals([0 => [
+            'range' => [
+                'start' => [
+                    'line' => 0,
+                    'character' => 0
+                ],
+                'end' => [
+                    'line' => PHP_INT_MAX,
+                    'character' => PHP_INT_MAX
+                ]
+            ],
+            'newText' => $expected
+        ]], json_decode(json_encode($result), true));
     }
 }
