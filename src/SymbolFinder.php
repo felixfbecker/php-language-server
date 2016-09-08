@@ -21,9 +21,9 @@ class SymbolFinder extends NodeVisitorAbstract
     ];
 
     /**
-     * @var LanguageServer\Protocol\SymbolInformation[]
+     * @var \LanguageServer\Protocol\SymbolInformation[]
      */
-    public $symbols;
+    public $symbols = [];
 
     /**
      * @var string
@@ -46,6 +46,22 @@ class SymbolFinder extends NodeVisitorAbstract
         if (!isset(self::NODE_SYMBOL_KIND_MAP[$class])) {
             return;
         }
+
+        $symbol = end($this->symbols);
+        $kind = self::NODE_SYMBOL_KIND_MAP[$class];
+
+        // exclude variable symbols that are defined in methods and functions.
+        if ($symbol && $kind === SymbolKind::VARIABLE &&
+            ($symbol->kind === SymbolKind::METHOD || $symbol->kind === SymbolKind::FUNCTION)
+        ) {
+            if (
+                $node->getAttribute('startLine') - 1 > $symbol->location->range->start->line &&
+                $node->getAttribute('endLine') - 1 < $symbol->location->range->end->line
+            ) {
+                return;
+            }
+        }
+
         $symbol = new SymbolInformation();
         $symbol->kind = self::NODE_SYMBOL_KIND_MAP[$class];
         $symbol->name = (string)$node->name;
