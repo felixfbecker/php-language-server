@@ -44,8 +44,8 @@ class SymbolFinder extends NodeVisitorAbstract
     {
         $class = get_class($node);
         if (!isset(self::NODE_SYMBOL_KIND_MAP[$class])) {
-        return;
-    }
+            return;
+        }
 
         $symbol = end($this->symbols);
         $kind = self::NODE_SYMBOL_KIND_MAP[$class];
