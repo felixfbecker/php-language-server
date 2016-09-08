@@ -24,7 +24,7 @@ class TextDocumentTest extends TestCase
         // Request symbols
         $result = $textDocument->documentSymbol(new TextDocumentIdentifier('whatever'));
         $this->assertEquals([
-           [
+            [
                 'name' => 'TestNamespace',
                 'kind' => SymbolKind::NAMESPACE,
                 'location' => [
@@ -91,24 +91,6 @@ class TextDocumentTest extends TestCase
                         'end' => [
                             'line' => 11,
                             'character' => 4
-                        ]
-                    ]
-                ],
-                'containerName' => null
-            ],
-            [
-                'name' => 'testVariable',
-                'kind' => SymbolKind::VARIABLE,
-                'location' => [
-                    'uri' => 'whatever',
-                    'range' => [
-                        'start' => [
-                            'line' => 10,
-                            'character' => 8
-                        ],
-                        'end' => [
-                            'line' => 10,
-                            'character' => 20
                         ]
                     ]
                 ],
@@ -197,7 +179,7 @@ class TextDocumentTest extends TestCase
             ]]
         ], json_decode(json_encode($args), true));
     }
-    
+
     public function testFormatting()
     {
         $textDocument = new Server\TextDocument(new LanguageClient(new MockProtocolStream()));
@@ -208,7 +190,7 @@ class TextDocumentTest extends TestCase
         $textDocumentItem->version = 1;
         $textDocumentItem->text = file_get_contents(__DIR__ . '/../../fixtures/format.php');
         $textDocument->didOpen($textDocumentItem);
-        
+
         // how code should look after formatting
         $expected = file_get_contents(__DIR__ . '/../../fixtures/format_expected.php');
         // Request formatting
