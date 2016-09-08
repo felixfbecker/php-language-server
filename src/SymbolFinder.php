@@ -23,7 +23,7 @@ class SymbolFinder extends NodeVisitorAbstract
     /**
      * @var \LanguageServer\Protocol\SymbolInformation[]
      */
-    public $symbols;
+    public $symbols = [];
 
     /**
      * @var string
