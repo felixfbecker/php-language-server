@@ -97,24 +97,6 @@ class TextDocumentTest extends TestCase
                 'containerName' => null
             ],
             [
-                'name' => 'testVariable',
-                'kind' => SymbolKind::VARIABLE,
-                'location' => [
-                    'uri' => 'whatever',
-                    'range' => [
-                        'start' => [
-                            'line' => 10,
-                            'character' => 8
-                        ],
-                        'end' => [
-                            'line' => 10,
-                            'character' => 20
-                        ]
-                    ]
-                ],
-                'containerName' => null
-            ],
-            [
                 'name' => 'TestTrait',
                 'kind' => SymbolKind::CLASS_,
                 'location' => [
