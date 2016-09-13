@@ -36,7 +36,7 @@ class TextDocumentTest extends TestCase
                         ],
                         'end' => [
                             'line' => 2,
-                            'character' => 23
+                            'character' => 24
                         ]
                     ]
                 ],
@@ -54,7 +54,7 @@ class TextDocumentTest extends TestCase
                         ],
                         'end' => [
                             'line' => 12,
-                            'character' => 0
+                            'character' => 1
                         ]
                     ]
                 ],
@@ -72,7 +72,7 @@ class TextDocumentTest extends TestCase
                         ],
                         'end' => [
                             'line' => 6,
-                            'character' => 23
+                            'character' => 24
                         ]
                     ]
                 ],
@@ -90,7 +90,7 @@ class TextDocumentTest extends TestCase
                         ],
                         'end' => [
                             'line' => 11,
-                            'character' => 4
+                            'character' => 5
                         ]
                     ]
                 ],
@@ -108,7 +108,7 @@ class TextDocumentTest extends TestCase
                         ],
                         'end' => [
                             'line' => 17,
-                            'character' => 0
+                            'character' => 1
                         ]
                     ]
                 ],
@@ -126,7 +126,7 @@ class TextDocumentTest extends TestCase
                         ],
                         'end' => [
                             'line' => 22,
-                            'character' => 0
+                            'character' => 1
                         ]
                     ]
                 ],
