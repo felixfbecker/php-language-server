@@ -69,7 +69,7 @@ class SymbolFinder extends NodeVisitorAbstract
             $this->uri,
             new Range(
                 new Position($node->getAttribute('startLine') - 1, $node->getAttribute('startColumn') - 1),
-                new Position($node->getAttribute('endLine') - 1, $node->getAttribute('endColumn') - 1)
+                new Position($node->getAttribute('endLine') - 1, $node->getAttribute('endColumn'))
             )
         );
         $symbol->containerName = $this->containerName;
