@@ -6,6 +6,7 @@ use LanguageServer\Server\TextDocument;
 use LanguageServer\Protocol\{ServerCapabilities, ClientCapabilities, TextDocumentSyncKind, Message};
 use LanguageServer\Protocol\InitializeResult;
 use AdvancedJsonRpc\{Dispatcher, ResponseError, Response as ResponseBody, Request as RequestBody};
+use Sabre\Event\Loop;
 
 class LanguageServer extends \AdvancedJsonRpc\Dispatcher
 {
@@ -16,15 +17,23 @@ class LanguageServer extends \AdvancedJsonRpc\Dispatcher
      */
     public $textDocument;
 
+    /**
+     * Handles workspace/* method calls
+     *
+     * @var Server\Workspace
+     */
+    public $workspace;
+
     public $telemetry;
     public $window;
-    public $workspace;
     public $completionItem;
     public $codeLens;
 
     private $protocolReader;
     private $protocolWriter;
     private $client;
+
+    private $project;
 
     public function __construct(ProtocolReader $reader, ProtocolWriter $writer)
     {
@@ -56,7 +65,11 @@ class LanguageServer extends \AdvancedJsonRpc\Dispatcher
         });
         $this->protocolWriter = $writer;
         $this->client = new LanguageClient($writer);
-        $this->textDocument = new Server\TextDocument($this->client);
+
+        $this->project = new Project($this->client);
+
+        $this->textDocument = new Server\TextDocument($this->project, $this->client);
+        $this->workspace = new Server\Workspace($this->project, $this->client);
     }
 
     /**
@@ -69,11 +82,18 @@ class LanguageServer extends \AdvancedJsonRpc\Dispatcher
      */
     public function initialize(string $rootPath, int $processId, ClientCapabilities $capabilities): InitializeResult
     {
+        // start building project index
+        if ($rootPath) {
+            $this->indexProject($rootPath);
+        }
+
         $serverCapabilities = new ServerCapabilities();
         // Ask the client to return always full documents (because we need to rebuild the AST from scratch)
         $serverCapabilities->textDocumentSync = TextDocumentSyncKind::FULL;
         // Support "Find all symbols"
         $serverCapabilities->documentSymbolProvider = true;
+        // Support "Find all symbols in workspace"
+        $serverCapabilities->workspaceSymbolProvider = true;
         // Support "Format Code"
         $serverCapabilities->documentFormattingProvider = true;
         return new InitializeResult($serverCapabilities);
@@ -99,5 +119,43 @@ class LanguageServer extends \AdvancedJsonRpc\Dispatcher
     public function exit()
     {
         exit(0);
+    }
+
+    /**
+     * Parses workspace files, one at a time.
+     *
+     * @param string $rootPath The rootPath of the workspace. Is null if no folder is open.
+     * @return void
+     */
+    private function indexProject(string $rootPath)
+    {
+        $dir = new \RecursiveDirectoryIterator($rootPath);
+        $ite = new \RecursiveIteratorIterator($dir);
+        $files = new \RegexIterator($ite, '/^.+\.php$/i', \RegexIterator::GET_MATCH);
+        $fileList = array();
+        foreach($files as $file) {
+            $fileList = array_merge($fileList, $file);
+        }
+        
+        $processFile = function() use (&$fileList, &$processFile, &$rootPath){
+            if ($file = array_pop($fileList)) {
+                
+                $uri = 'file://'.(substr($file, -1) == '/' || substr($file, -1) == '\\' ? '' : '/').str_replace('\\', '/', $file);
+                
+                $numFiles = count($fileList);
+                if (($numFiles % 100) == 0) {
+                    $this->client->window->logMessage(3, $numFiles.' PHP files remaining.');
+                }
+                
+                $this->project->getDocument($uri)->updateAst(file_get_contents($file));
+                
+                Loop\nextTick($processFile);
+            }
+            else {
+                $this->client->window->logMessage(3, 'All PHP files parsed.');
+            }
+        };
+
+        Loop\nextTick($processFile);
     }
 }

@@ -35,6 +35,21 @@ class SymbolFinder extends NodeVisitorAbstract
      */
     private $containerName;
 
+    /**
+     * @var array
+     */
+    private $nameStack = array();
+
+    /**
+     * @var array
+     */
+    private $nodeStack = array();
+
+    /**
+     * @var int
+     */
+    private $functionCount = 0;
+
     public function __construct(string $uri)
     {
         $this->uri = $uri;
@@ -42,24 +57,34 @@ class SymbolFinder extends NodeVisitorAbstract
 
     public function enterNode(Node $node)
     {
+        array_push($this->nodeStack, $node);
+        $containerName = end($this->nameStack);
+
+        // If we enter a named node, push its name onto name stack.
+        // Else push the current name onto stack.
+        if (isset($node->name) && is_string($node->name) && !empty($node->name)){
+            array_push($this->nameStack, $node->name);
+        }
+        else {
+            array_push($this->nameStack, $containerName);
+        }
+
         $class = get_class($node);
         if (!isset(self::NODE_SYMBOL_KIND_MAP[$class])) {
             return;
         }
 
+        // if we enter a method or function, increase the function counter
+        if ($class === Node\Stmt\Function_::class || $class === Node\Stmt\ClassMethod::class) {
+            $this->functionCount++;
+        }
+
         $symbol = end($this->symbols);
         $kind = self::NODE_SYMBOL_KIND_MAP[$class];
 
-        // exclude variable symbols that are defined in methods and functions.
-        if ($symbol && $kind === SymbolKind::VARIABLE &&
-            ($symbol->kind === SymbolKind::METHOD || $symbol->kind === SymbolKind::FUNCTION)
-        ) {
-            if (
-                $node->getAttribute('startLine') - 1 > $symbol->location->range->start->line &&
-                $node->getAttribute('endLine') - 1 < $symbol->location->range->end->line
-            ) {
-                return;
-            }
+        // exclude non-global variable symbols.
+        if ($kind === SymbolKind::VARIABLE && $this->functionCount > 0) {
+            return;
         }
 
         $symbol = new SymbolInformation();
@@ -72,13 +97,19 @@ class SymbolFinder extends NodeVisitorAbstract
                 new Position($node->getAttribute('endLine') - 1, $node->getAttribute('endColumn'))
             )
         );
-        $symbol->containerName = $this->containerName;
-        $this->containerName = $symbol->name;
+        $symbol->containerName = $containerName;
         $this->symbols[] = $symbol;
     }
 
     public function leaveNode(Node $node)
     {
-        $this->containerName = null;
+        array_pop($this->nodeStack);
+        array_pop($this->nameStack);
+
+        // if we leave a method or function, decrease the function counter
+        $class = get_class($node);
+        if ($class === Node\Stmt\Function_::class || $class === Node\Stmt\ClassMethod::class) {
+            $this->functionCount--;
+        }
     }
 }

@@ -2,10 +2,7 @@
 
 namespace LanguageServer\Server;
 
-use PhpParser\{Error, Comment, Node, ParserFactory, NodeTraverser, Lexer};
-use PhpParser\PrettyPrinter\Standard as PrettyPrinter;
-use PhpParser\NodeVisitor\NameResolver;
-use LanguageServer\{LanguageClient, ColumnCalculator, SymbolFinder};
+use LanguageServer\{LanguageClient, ColumnCalculator, SymbolFinder, Project};
 use LanguageServer\Protocol\{
     TextDocumentItem,
     TextDocumentIdentifier,
@@ -24,29 +21,18 @@ use LanguageServer\Protocol\{
 class TextDocument
 {
     /**
-     * @var \PhpParser\Parser
-     */
-    private $parser;
-
-    /**
-     * A map from file URIs to ASTs
-     *
-     * @var \PhpParser\Stmt[][]
-     */
-    private $asts;
-
-    /**
      * The lanugage client object to call methods on the client
      *
      * @var \LanguageServer\LanguageClient
      */
     private $client;
 
-    public function __construct(LanguageClient $client)
+    private $project;
+
+    public function __construct(Project $project, LanguageClient $client)
     {
+        $this->project = $project;
         $this->client = $client;
-        $lexer = new Lexer(['usedAttributes' => ['comments', 'startLine', 'endLine', 'startFilePos', 'endFilePos']]);
-        $this->parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7, $lexer, ['throwOnError' => false]);
     }
 
     /**
@@ -58,15 +44,7 @@ class TextDocument
      */
     public function documentSymbol(TextDocumentIdentifier $textDocument): array
     {
-        $stmts = $this->asts[$textDocument->uri];
-        if (!$stmts) {
-            return [];
-        }
-        $finder = new SymbolFinder($textDocument->uri);
-        $traverser = new NodeTraverser;
-        $traverser->addVisitor($finder);
-        $traverser->traverse($stmts);
-        return $finder->symbols;
+        return $this->project->getDocument($textDocument->uri)->getSymbols();
     }
 
     /**
@@ -79,7 +57,7 @@ class TextDocument
      */
     public function didOpen(TextDocumentItem $textDocument)
     {
-        $this->updateAst($textDocument->uri, $textDocument->text);
+        $this->project->getDocument($textDocument->uri)->updateAst($textDocument->text);
     }
 
     /**
@@ -91,42 +69,9 @@ class TextDocument
      */
     public function didChange(VersionedTextDocumentIdentifier $textDocument, array $contentChanges)
     {
-        $this->updateAst($textDocument->uri, $contentChanges[0]->text);
+        $this->project->getDocument($textDocument->uri)->updateAst($contentChanges[0]->text);
     }
-
-    /**
-     * Re-parses a source file, updates the AST and reports parsing errors that may occured as diagnostics
-     *
-     * @param string $uri     The URI of the source file
-     * @param string $content The new content of the source file
-     * @return void
-     */
-    private function updateAst(string $uri, string $content)
-    {
-        $stmts = $this->parser->parse($content);
-        $diagnostics = [];
-        foreach ($this->parser->getErrors() as $error) {
-            $diagnostic = new Diagnostic();
-            $diagnostic->range = new Range(
-                new Position($error->getStartLine() - 1, $error->hasColumnInfo() ? $error->getStartColumn($content) - 1 : 0),
-                new Position($error->getEndLine() - 1, $error->hasColumnInfo() ? $error->getEndColumn($content) : 0)
-            );
-            $diagnostic->severity = DiagnosticSeverity::ERROR;
-            $diagnostic->source = 'php';
-            // Do not include "on line ..." in the error message
-            $diagnostic->message = $error->getRawMessage();
-            $diagnostics[] = $diagnostic;
-        }
-        $this->client->textDocument->publishDiagnostics($uri, $diagnostics);
-        // $stmts can be null in case of a fatal parsing error
-        if ($stmts) {
-            $traverser = new NodeTraverser;
-            $traverser->addVisitor(new NameResolver);
-            $traverser->addVisitor(new ColumnCalculator($content));
-            $traverser->traverse($stmts);
-            $this->asts[$uri] = $stmts;
-        }
-    }
+    
 
     /**
      * The document formatting request is sent from the server to the client to format a whole document.
@@ -137,15 +82,7 @@ class TextDocument
      */
     public function formatting(TextDocumentIdentifier $textDocument, FormattingOptions $options)
     {
-        $nodes = $this->asts[$textDocument->uri];
-        if (empty($nodes)) {
-            return [];
-        }
-        $prettyPrinter = new PrettyPrinter();
-        $edit = new TextEdit();
-        $edit->range = new Range(new Position(0, 0), new Position(PHP_INT_MAX, PHP_INT_MAX));
-        $edit->newText = $prettyPrinter->prettyPrintFile($nodes);
-        return [$edit];
+        return $this->project->getDocument($textDocument->uri)->getFormattedText();
     }
     
 }
