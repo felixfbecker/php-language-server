@@ -2,7 +2,7 @@
 
 namespace LanguageServer;
 
-use \LanguageServer\Protocol\{Diagnostic, DiagnosticSeverity, Range, Position, SymbolKind};
+use \LanguageServer\Protocol\{Diagnostic, DiagnosticSeverity, Range, Position, SymbolKind, TextEdit};
 
 use PhpParser\{Error, Comment, Node, ParserFactory, NodeTraverser, Lexer, Parser};
 use PhpParser\PrettyPrinter\Standard as PrettyPrinter;
