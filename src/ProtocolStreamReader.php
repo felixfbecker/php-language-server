@@ -30,32 +30,36 @@ class ProtocolStreamReader implements ProtocolReader
     {
         $this->input = $input;
         Loop\addReadStream($this->input, function() {
-            $c = fgetc($this->input);
-            $this->buffer .= $c;
-            switch ($this->parsingMode) {
-                case ParsingMode::HEADERS:
-                    if ($this->buffer === "\r\n") {
-                        $this->parsingMode = ParsingMode::BODY;
-                        $this->contentLength = (int)$this->headers['Content-Length'];
-                        $this->buffer = '';
-                    } else if (substr($this->buffer, -2) === "\r\n") {
-                        $parts = explode(':', $this->buffer);
-                        $this->headers[$parts[0]] = trim($parts[1]);
-                        $this->buffer = '';
-                    }
-                    break;
-                case ParsingMode::BODY:
-                    if (strlen($this->buffer) === $this->contentLength) {
-                        if (isset($this->listener)) {
-                            $msg = new Message(MessageBody::parse($this->buffer), $this->headers);
-                            $listener = $this->listener;
-                            $listener($msg);
+           while(($c = fgetc($this->input)) !== false) {
+                $this->buffer .= $c;
+                switch ($this->parsingMode) {
+                    case ParsingMode::HEADERS:
+                        if ($this->buffer === "\r\n") {
+                            $this->parsingMode = ParsingMode::BODY;
+                            $this->contentLength = (int)$this->headers['Content-Length'];
+                            $this->buffer = '';
+                        } else if (substr($this->buffer, -2) === "\r\n") {
+                            $parts = explode(':', $this->buffer);
+                            $this->headers[$parts[0]] = trim($parts[1]);
+                            $this->buffer = '';
                         }
-                        $this->parsingMode = ParsingMode::HEADERS;
-                        $this->headers = [];
-                        $this->buffer = '';
-                    }
-                    break;
+                        break;
+                    case ParsingMode::BODY:
+                        if (strlen($this->buffer) === $this->contentLength) {
+                            if (isset($this->listener)) {
+                                $msg = new Message(MessageBody::parse($this->buffer), $this->headers);
+                                $listener = $this->listener;
+                                $listener($msg);
+                            }
+                            $this->parsingMode = ParsingMode::HEADERS;
+                            $this->headers = [];
+                            $this->buffer = '';
+
+                            // after reading a full message, leave to allow different tasks to run
+                            return;
+                        }
+                        break;
+                }
             }
         });
     }

@@ -8,8 +8,26 @@ use PhpParser\NodeVisitor\NameResolver;
 
 class Project
 {
+    /**
+     * An associative array [string => PhpDocument]
+     * that maps URIs to loaded PhpDocuments
+     *
+     * @var array 
+     */
     private $documents;
+
+    /**
+     * Instance of the PHP parser
+     *
+     * @var ParserAbstract
+     */
     private $parser;
+
+    /**
+     * Reference to the language server client interface
+     *
+     * @var LanguageClient
+     */
     private $client;
 
     public function __construct(LanguageClient $client)

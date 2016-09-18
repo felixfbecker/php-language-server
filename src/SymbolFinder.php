@@ -4,6 +4,9 @@ declare(strict_types = 1);
 namespace LanguageServer;
 
 use PhpParser\{NodeVisitorAbstract, Node};
+use PhpParser\Builder\Function_;
+use PhpParser\Node\Stmt\ClassMethod;
+
 use LanguageServer\Protocol\{SymbolInformation, SymbolKind, Range, Position, Location};
 
 class SymbolFinder extends NodeVisitorAbstract
@@ -75,7 +78,7 @@ class SymbolFinder extends NodeVisitorAbstract
         }
 
         // if we enter a method or function, increase the function counter
-        if ($class === Node\Stmt\Function_::class || $class === Node\Stmt\ClassMethod::class) {
+        if ($node instanceof Function_ || $node instanceof ClassMethod) {
             $this->functionCount++;
         }
 
@@ -107,8 +110,7 @@ class SymbolFinder extends NodeVisitorAbstract
         array_pop($this->nameStack);
 
         // if we leave a method or function, decrease the function counter
-        $class = get_class($node);
-        if ($class === Node\Stmt\Function_::class || $class === Node\Stmt\ClassMethod::class) {
+        if ($node instanceof Function_ || $node instanceof ClassMethod) {
             $this->functionCount--;
         }
     }

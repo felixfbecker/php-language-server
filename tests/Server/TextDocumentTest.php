@@ -5,7 +5,7 @@ namespace LanguageServer\Tests\Server;
 
 use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
-use LanguageServer\{Server, Client, LanguageClient};
+use LanguageServer\{Server, Client, LanguageClient, Project, PhpDocument};
 use LanguageServer\Protocol\{TextDocumentItem, TextDocumentIdentifier, SymbolKind, DiagnosticSeverity, FormattingOptions};
 use AdvancedJsonRpc\{Request as RequestBody, Response as ResponseBody};
 
@@ -13,7 +13,9 @@ class TextDocumentTest extends TestCase
 {
     public function testDocumentSymbol()
     {
-        $textDocument = new Server\TextDocument(new LanguageClient(new MockProtocolStream()));
+        $client = new LanguageClient(new MockProtocolStream());
+        $project = new Project($client);
+        $textDocument = new Server\TextDocument($project, $client);
         // Trigger parsing of source
         $textDocumentItem = new TextDocumentItem();
         $textDocumentItem->uri = 'whatever';
@@ -94,7 +96,7 @@ class TextDocumentTest extends TestCase
                         ]
                     ]
                 ],
-                'containerName' => null
+                'containerName' => 'TestClass'
             ],
             [
                 'name' => 'TestTrait',
@@ -151,7 +153,11 @@ class TextDocumentTest extends TestCase
                 $this->args = func_get_args();
             }
         };
-        $textDocument = new Server\TextDocument($client);
+
+        $project = new Project($client);
+
+        $textDocument = new Server\TextDocument($project, $client);
+
         // Trigger parsing of source
         $textDocumentItem = new TextDocumentItem();
         $textDocumentItem->uri = 'whatever';
@@ -182,7 +188,10 @@ class TextDocumentTest extends TestCase
 
     public function testFormatting()
     {
-        $textDocument = new Server\TextDocument(new LanguageClient(new MockProtocolStream()));
+        $client =  new LanguageClient(new MockProtocolStream());
+        $project = new Project($client);
+        $textDocument = new Server\TextDocument($project, $client);
+
         // Trigger parsing of source
         $textDocumentItem = new TextDocumentItem();
         $textDocumentItem->uri = 'whatever';

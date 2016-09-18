@@ -75,12 +75,12 @@ class LanguageServer extends \AdvancedJsonRpc\Dispatcher
     /**
      * The initialize request is sent as the first request from the client to the server.
      *
-     * @param string $rootPath The rootPath of the workspace. Is null if no folder is open.
      * @param int $processId The process Id of the parent process that started the server.
      * @param ClientCapabilities $capabilities The capabilities provided by the client (editor)
+     * @param string $rootPath The rootPath of the workspace. Is null if no folder is open.
      * @return InitializeResult
      */
-    public function initialize(string $rootPath, int $processId, ClientCapabilities $capabilities): InitializeResult
+    public function initialize(int $processId, ClientCapabilities $capabilities, string $rootPath = null): InitializeResult
     {
         // start building project index
         if ($rootPath) {
@@ -124,7 +124,7 @@ class LanguageServer extends \AdvancedJsonRpc\Dispatcher
     /**
      * Parses workspace files, one at a time.
      *
-     * @param string $rootPath The rootPath of the workspace. Is null if no folder is open.
+     * @param string $rootPath The rootPath of the workspace.
      * @return void
      */
     private function indexProject(string $rootPath)
@@ -136,26 +136,29 @@ class LanguageServer extends \AdvancedJsonRpc\Dispatcher
         foreach($files as $file) {
             $fileList = array_merge($fileList, $file);
         }
+        $numTotalFiles = count($fileList);
+
+        $startTime = microtime(true);
         
-        $processFile = function() use (&$fileList, &$processFile, &$rootPath){
+        $processFile = function() use (&$fileList, &$processFile, $rootPath, $numTotalFiles, $startTime) {
             if ($file = array_pop($fileList)) {
                 
                 $uri = 'file://'.($file[0] == '/' || $file[0] == '\\' ? '' : '/').str_replace('\\', '/', $file);
                 
-                $numFiles = count($fileList);
-                if (($numFiles % 100) == 0) {
-                    $this->client->window->logMessage(3, $numFiles.' PHP files remaining.');
-                }
+                $fileNum = $numTotalFiles - count($fileList);
+                $shortName = substr($file, strlen($rootPath)+1);
+                $this->client->window->logMessage(3, "Parsing file $fileNum/$numTotalFiles: $shortName.");
                 
                 $this->project->getDocument($uri)->updateAst(file_get_contents($file));
                 
-                Loop\nextTick($processFile);
+                Loop\setTimeout($processFile, 0);
             }
             else {
-                $this->client->window->logMessage(3, 'All PHP files parsed.');
+                $duration = (int)(microtime(true) - $startTime);
+                $this->client->window->logMessage(3, "All PHP files parsed in $duration seconds.");
             }
         };
 
-        Loop\nextTick($processFile);
+        Loop\setTimeout($processFile, 0);
     }
 }

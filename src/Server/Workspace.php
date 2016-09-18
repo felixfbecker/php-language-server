@@ -31,6 +31,11 @@ class Workspace
      */
     private $client;
 
+    /**
+     * The current project database
+     *
+     * @var Project
+     */
     private $project;
 
     public function __construct(Project $project, LanguageClient $client)
@@ -49,25 +54,5 @@ class Workspace
     public function symbol(string $query): array
     {
         return $this->project->findSymbols($query);
-    }
-
-    /**
-     * A notification sent from the client to the server to signal the change of configuration settings.
-     *
-     * @param The actual changed settings
-     * @return void
-     */
-    public function didChangeConfiguration($settings)
-    {
-    }
-
-    /**
-     * The document change notification is sent from the client to the server to signal changes to a text document.
-     *
-     * @param \LanguageServer\Protocol\FileEvent[] $textDocument
-     * @return void
-     */
-    public function didChangeWatchedFiles(array $changes)
-    {
     }
 }
