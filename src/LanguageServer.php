@@ -140,7 +140,7 @@ class LanguageServer extends \AdvancedJsonRpc\Dispatcher
         $processFile = function() use (&$fileList, &$processFile, &$rootPath){
             if ($file = array_pop($fileList)) {
                 
-                $uri = 'file://'.(substr($file, -1) == '/' || substr($file, -1) == '\\' ? '' : '/').str_replace('\\', '/', $file);
+                $uri = 'file://'.($file[0] == '/' || $file[0] == '\\' ? '' : '/').str_replace('\\', '/', $file);
                 
                 $numFiles = count($fileList);
                 if (($numFiles % 100) == 0) {
