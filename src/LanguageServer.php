@@ -129,13 +129,7 @@ class LanguageServer extends \AdvancedJsonRpc\Dispatcher
      */
     private function indexProject(string $rootPath)
     {
-        $dir = new \RecursiveDirectoryIterator($rootPath);
-        $ite = new \RecursiveIteratorIterator($dir);
-        $files = new \RegexIterator($ite, '/^.+\.php$/i', \RegexIterator::GET_MATCH);
-        $fileList = array();
-        foreach($files as $file) {
-            $fileList = array_merge($fileList, $file);
-        }
+        $fileList = findFilesRecursive($rootPath, '/^.+\.php$/i');
         $numTotalFiles = count($fileList);
 
         $startTime = microtime(true);
@@ -143,8 +137,7 @@ class LanguageServer extends \AdvancedJsonRpc\Dispatcher
         $processFile = function() use (&$fileList, &$processFile, $rootPath, $numTotalFiles, $startTime) {
             if ($file = array_pop($fileList)) {
                 
-                $uri = 'file://'.($file[0] == '/' || $file[0] == '\\' ? '' : '/').str_replace('\\', '/', $file);
-                
+                $uri = pathToUri($file);
                 $fileNum = $numTotalFiles - count($fileList);
                 $shortName = substr($file, strlen($rootPath)+1);
                 $this->client->window->logMessage(3, "Parsing file $fileNum/$numTotalFiles: $shortName.");
@@ -155,7 +148,8 @@ class LanguageServer extends \AdvancedJsonRpc\Dispatcher
             }
             else {
                 $duration = (int)(microtime(true) - $startTime);
-                $this->client->window->logMessage(3, "All PHP files parsed in $duration seconds.");
+                $mem = memory_get_usage(true);
+                $this->client->window->logMessage(3, "All PHP files parsed in $duration seconds. $mem bytes allocated.");
             }
         };
 

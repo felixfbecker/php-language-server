@@ -34,7 +34,8 @@
     "autoload": {
         "psr-4": {
             "LanguageServer\\": "src/"
-        }
+        },
+        "files" : ["src/utils.php"]
     },
     "autoload-dev": {
         "psr-4": {
