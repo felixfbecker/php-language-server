@@ -77,7 +77,7 @@ class LanguageServer extends \AdvancedJsonRpc\Dispatcher
      *
      * @param int $processId The process Id of the parent process that started the server.
      * @param ClientCapabilities $capabilities The capabilities provided by the client (editor)
-     * @param string $rootPath The rootPath of the workspace. Is null if no folder is open.
+     * @param string|null $rootPath The rootPath of the workspace. Is null if no folder is open.
      * @return InitializeResult
      */
     public function initialize(int $processId, ClientCapabilities $capabilities, string $rootPath = null): InitializeResult
