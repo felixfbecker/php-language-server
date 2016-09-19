@@ -42,6 +42,13 @@ class TextDocument
      */
     private $client;
 
+    /**
+     * Opened source files content
+     *
+     * @var string[]
+     */
+    private $documents = [];
+    
     public function __construct(LanguageClient $client)
     {
         $this->client = $client;
@@ -103,6 +110,8 @@ class TextDocument
      */
     private function updateAst(string $uri, string $content)
     {
+        $this->documents[$uri] = $content;
+        
         $stmts = $this->parser->parse($content);
         $diagnostics = [];
         foreach ($this->parser->getErrors() as $error) {
@@ -129,23 +138,33 @@ class TextDocument
     }
 
     /**
+     * The document close notification is sent from the client to the server when
+     * the document got closed in the client. The document's truth now exists where the document's
+     * uri points to (e.g. if the document's uri is a file uri the truth now exists on disk).
+     *
+     * @param TextDocumentIdentifier $textDocument
+     */
+    public function didClose(TextDocumentIdentifier $textDocument)
+    {
+        unset($this->documents[$textDocument->uri]);
+    }
+
+    /**
      * The document formatting request is sent from the server to the client to format a whole document.
      *
      * @param TextDocumentIdentifier $textDocument The document to format
-     * @param FormattingOptions $options The format options
+     * @param FormattingOptions      $options      The format options
+     *
      * @return TextEdit[]
      */
     public function formatting(TextDocumentIdentifier $textDocument, FormattingOptions $options)
     {
-        $nodes = $this->asts[$textDocument->uri];
-        if (empty($nodes)) {
+        $formatter = new Formatter();
+        $content = $this->documents[$textDocument->uri];
+        if (!$content) {
             return [];
         }
-        $prettyPrinter = new PrettyPrinter();
-        $edit = new TextEdit();
-        $edit->range = new Range(new Position(0, 0), new Position(PHP_INT_MAX, PHP_INT_MAX));
-        $edit->newText = $prettyPrinter->prettyPrintFile($nodes);
-        return [$edit];
+
+        return $formatter->format($content, $textDocument->uri);
     }
-    
 }
