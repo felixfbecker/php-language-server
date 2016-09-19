@@ -27,5 +27,7 @@ function findFilesRecursive(string $path, string $pattern): array {
  * @return string
  */
 function pathToUri(string $filepath): string {
-    return 'file://'.($filepath[0] == '/' || $filepath[0] == '\\' ? '' : '/').str_replace('\\', '/', $filepath);
+    $filepath = trim(str_replace('\\', '/', $filepath), '/');
+    $filepath = implode('/', array_map('urlencode', explode('/', $filepath)));
+    return 'file:///'.$filepath;
 }
