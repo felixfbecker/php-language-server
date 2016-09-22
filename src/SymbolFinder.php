@@ -4,8 +4,6 @@ declare(strict_types = 1);
 namespace LanguageServer;
 
 use PhpParser\{NodeVisitorAbstract, Node};
-use PhpParser\Builder\Function_;
-use PhpParser\Node\Stmt\ClassMethod;
 
 use LanguageServer\Protocol\{SymbolInformation, SymbolKind, Range, Position, Location};
 
@@ -65,8 +63,18 @@ class SymbolFinder extends NodeVisitorAbstract
 
         // If we enter a named node, push its name onto name stack.
         // Else push the current name onto stack.
-        if (isset($node->name) && is_string($node->name) && !empty($node->name)){
-            array_push($this->nameStack, $node->name);
+        if (!empty($node->name) && (is_string($node->name) || method_exists($node->name, '__toString')) && !empty((string)$node->name)) {
+            if (empty($containerName)) {
+                array_push($this->nameStack, (string)$node->name);
+            }
+            else {
+                if ($node instanceof Stmt\ClassMethod) {
+                    array_push($this->nameStack, $containerName . '::' . (string)$node->name);
+                }
+                else {
+                    array_push($this->nameStack, $containerName . '\\' . (string)$node->name);
+                }
+            }
         }
         else {
             array_push($this->nameStack, $containerName);
@@ -78,11 +86,10 @@ class SymbolFinder extends NodeVisitorAbstract
         }
 
         // if we enter a method or function, increase the function counter
-        if ($node instanceof Function_ || $node instanceof ClassMethod) {
+        if ($node instanceof Stmt\Function_ || $node instanceof Stmt\ClassMethod) {
             $this->functionCount++;
         }
 
-        $symbol = end($this->symbols);
         $kind = self::NODE_SYMBOL_KIND_MAP[$class];
 
         // exclude non-global variable symbols.
