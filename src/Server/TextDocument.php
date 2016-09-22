@@ -57,7 +57,7 @@ class TextDocument
      */
     public function didOpen(TextDocumentItem $textDocument)
     {
-        $this->project->getDocument($textDocument->uri)->updateAst($textDocument->text);
+        $this->project->getDocument($textDocument->uri)->updateContent($textDocument->text);
     }
 
     /**
@@ -69,7 +69,7 @@ class TextDocument
      */
     public function didChange(VersionedTextDocumentIdentifier $textDocument, array $contentChanges)
     {
-        $this->project->getDocument($textDocument->uri)->updateAst($contentChanges[0]->text);
+        $this->project->getDocument($textDocument->uri)->updateContent($contentChanges[0]->text);
     }
     
 

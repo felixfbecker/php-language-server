@@ -142,14 +142,14 @@ class LanguageServer extends \AdvancedJsonRpc\Dispatcher
                 $shortName = substr($file, strlen($rootPath)+1);
                 $this->client->window->logMessage(3, "Parsing file $fileNum/$numTotalFiles: $shortName.");
                 
-                $this->project->getDocument($uri)->updateAst(file_get_contents($file));
+                $this->project->getDocument($uri)->updateContent(file_get_contents($file));
                 
                 Loop\setTimeout($processFile, 0);
             }
             else {
                 $duration = (int)(microtime(true) - $startTime);
-                $mem = memory_get_usage(true);
-                $this->client->window->logMessage(3, "All PHP files parsed in $duration seconds. $mem bytes allocated.");
+                $mem = (int)(memory_get_usage(true)/(1024*1024));
+                $this->client->window->logMessage(3, "All PHP files parsed in $duration seconds. $mem MiB allocated.");
             }
         };
 
