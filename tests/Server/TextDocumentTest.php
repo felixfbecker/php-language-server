@@ -60,7 +60,7 @@ class TextDocumentTest extends TestCase
                         ]
                     ]
                 ],
-                'containerName' => null
+                'containerName' => 'TestNamespace'
             ],
             [
                 'name' => 'testProperty',
@@ -78,7 +78,7 @@ class TextDocumentTest extends TestCase
                         ]
                     ]
                 ],
-                'containerName' => 'TestClass'
+                'containerName' => 'TestNamespace\\TestClass'
             ],
             [
                 'name' => 'testMethod',
@@ -96,7 +96,7 @@ class TextDocumentTest extends TestCase
                         ]
                     ]
                 ],
-                'containerName' => 'TestClass'
+                'containerName' => 'TestNamespace\\TestClass'
             ],
             [
                 'name' => 'TestTrait',
@@ -114,7 +114,7 @@ class TextDocumentTest extends TestCase
                         ]
                     ]
                 ],
-                'containerName' => null
+                'containerName' => 'TestNamespace'
             ],
             [
                 'name' => 'TestInterface',
@@ -132,7 +132,7 @@ class TextDocumentTest extends TestCase
                         ]
                     ]
                 ],
-                'containerName' => null
+                'containerName' => 'TestNamespace'
             ]
         ], json_decode(json_encode($result), true));
     }

@@ -68,7 +68,7 @@ class SymbolFinder extends NodeVisitorAbstract
                 array_push($this->nameStack, (string)$node->name);
             }
             else {
-                if ($node instanceof Stmt\ClassMethod) {
+                if ($node instanceof Node\Stmt\ClassMethod) {
                     array_push($this->nameStack, $containerName . '::' . (string)$node->name);
                 }
                 else {
@@ -86,7 +86,7 @@ class SymbolFinder extends NodeVisitorAbstract
         }
 
         // if we enter a method or function, increase the function counter
-        if ($node instanceof Stmt\Function_ || $node instanceof Stmt\ClassMethod) {
+        if ($node instanceof Node\Stmt\Function_ || $node instanceof Node\Stmt\ClassMethod) {
             $this->functionCount++;
         }
 
@@ -117,7 +117,7 @@ class SymbolFinder extends NodeVisitorAbstract
         array_pop($this->nameStack);
 
         // if we leave a method or function, decrease the function counter
-        if ($node instanceof Function_ || $node instanceof ClassMethod) {
+        if ($node instanceof Node\Stmt\Function_ || $node instanceof Node\Stmt\ClassMethod) {
             $this->functionCount--;
         }
     }
