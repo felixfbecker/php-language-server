@@ -1,6 +1,6 @@
 <?php
 
-namespace       TestNamespace;
+namespace TestNamespace;
 
 
 
@@ -9,12 +9,16 @@ class TestClass
 {
     public $testProperty;
 
-                public function testMethod($testParameter)
+    /**
+     * @param $testParameter description
+     */
+    public function     testMethod(   $testParameter)
+
     {
         $testVariable = 123;
-        
-                if (  empty($testParameter)){
-                    echo 'Empty';
+
+        if (  empty($testParameter))    {
+            echo 'Empty';
         }
     }
 }
