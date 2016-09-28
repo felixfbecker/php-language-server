@@ -27,6 +27,8 @@ else {
     $outputStream = STDOUT;
 }
 
+stream_set_blocking($inputStream, false);
+
 $server = new LanguageServer(new ProtocolStreamReader($inputStream), new ProtocolStreamWriter($outputStream));
 
 Loop\run();

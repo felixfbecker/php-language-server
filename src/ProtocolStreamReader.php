@@ -30,7 +30,7 @@ class ProtocolStreamReader implements ProtocolReader
     {
         $this->input = $input;
         Loop\addReadStream($this->input, function() {
-            while(($c = fgetc($this->input)) !== false) {
+            while(($c = fgetc($this->input)) !== false && $c !== '') {
                 $this->buffer .= $c;
                 switch ($this->parsingMode) {
                     case ParsingMode::HEADERS:
@@ -54,9 +54,6 @@ class ProtocolStreamReader implements ProtocolReader
                             $this->parsingMode = ParsingMode::HEADERS;
                             $this->headers = [];
                             $this->buffer = '';
-
-                            // after reading a full message, leave to allow different tasks to run
-                            return;
                         }
                         break;
                 }
