@@ -69,15 +69,20 @@ class PhpDocument
     public function parse()
     {
         $stmts = null;
+        $errors = [];
         try {
             $stmts = $this->parser->parse($this->content);
         }
-        catch(Error $e) {
-            // Parser still throws errors. e.g for unterminated comments
+        catch(\PhpParser\Error $e) {
+            // Lexer can throw errors. e.g for unterminated comments
+            // unfortunately we don't get a location back
+            $errors[] = $e;
         }
 
+        $errors = array_merge($this->parser->getErrors(), $errors);
+
         $diagnostics = [];
-        foreach ($this->parser->getErrors() as $error) {
+        foreach ($errors as $error) {
             $diagnostic = new Diagnostic();
             $diagnostic->range = new Range(
                 new Position($error->getStartLine() - 1, $error->hasColumnInfo() ? $error->getStartColumn($this->content) - 1 : 0),
