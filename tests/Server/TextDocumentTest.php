@@ -6,7 +6,7 @@ namespace LanguageServer\Tests\Server;
 use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\{Server, Client, LanguageClient, Project, PhpDocument};
-use LanguageServer\Protocol\{TextDocumentItem, TextDocumentIdentifier, SymbolKind, DiagnosticSeverity, FormattingOptions};
+use LanguageServer\Protocol\{TextDocumentItem, TextDocumentIdentifier, SymbolKind, DiagnosticSeverity, FormattingOptions, VersionedTextDocumentIdentifier, TextDocumentContentChangeEvent, Range, Position};
 use AdvancedJsonRpc\{Request as RequestBody, Response as ResponseBody};
 
 class TextDocumentTest extends TestCase
@@ -217,5 +217,25 @@ class TextDocumentTest extends TestCase
             ],
             'newText' => $expected
         ]], json_decode(json_encode($result), true));
+    }
+
+    public function testDidChange()
+    {
+        $client =  new LanguageClient(new MockProtocolStream());
+        $project = new Project($client);
+        $textDocument = new Server\TextDocument($project, $client);
+
+        $phpDocument = $project->getDocument('whatever');
+        $phpDocument->updateContent("<?php\necho 'Hello, World'\n");
+
+        $identifier = new VersionedTextDocumentIdentifier('whatever');
+        $changeEvent = new TextDocumentContentChangeEvent();
+        $changeEvent->range = new Range(new Position(0,0), new Position(9999,9999));
+        $changeEvent->rangeLength = 9999;
+        $changeEvent->text = "<?php\necho 'Goodbye, World'\n";
+
+        $textDocument->didChange($identifier, [$changeEvent]);
+
+        $this->assertEquals("<?php\necho 'Goodbye, World'\n", $phpDocument->getContent());
     }
 }

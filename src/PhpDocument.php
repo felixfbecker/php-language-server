@@ -123,4 +123,14 @@ class PhpDocument
         $edit->newText = $prettyPrinter->prettyPrintFile($stmts);
         return [$edit];
     }
+
+    /**
+     * Returns this document's text content.
+     *
+     * @return string
+     */
+    public function getContent()
+    {
+        return $this->content;
+    }
 }
