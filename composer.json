@@ -26,7 +26,7 @@
         "php": ">=7.0",
         "nikic/php-parser": "^3.0.0beta1",
         "phpdocumentor/reflection-docblock": "^3.0",
-        "sabre/event": "^3.0",
+        "sabre/event": "^4.0",
         "felixfbecker/advanced-json-rpc": "^1.2"
     },
     "minimum-stability": "dev",
