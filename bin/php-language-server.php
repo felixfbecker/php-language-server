@@ -12,7 +12,7 @@ foreach ([__DIR__ . '/../../../autoload.php', __DIR__ . '/../autoload.php', __DI
     }
 }
 
-if (count($argv) >= 3 && $argv[1] == '--tcp') {
+if (count($argv) >= 3 && $argv[1] === '--tcp') {
     $address = $argv[2];
     $socket = stream_socket_client('tcp://' . $address, $errno, $errstr);
     if ($socket === false) {
