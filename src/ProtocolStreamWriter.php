@@ -25,6 +25,16 @@ class ProtocolStreamWriter implements ProtocolWriter
      */
     public function write(Message $msg)
     {
-        fwrite($this->output, (string)$msg);
+        $data = (string)$msg;
+        $msgSize = strlen($data);
+        $totalBytesWritten = 0;
+
+        while ($totalBytesWritten < $msgSize) {
+            $bytesWritten = fwrite($this->output, substr($data, $totalBytesWritten));
+            if ($bytesWritten === false) {
+                throw new Error('Could not write message.');
+            }
+            $totalBytesWritten += $bytesWritten;
+        }
     }
 }
