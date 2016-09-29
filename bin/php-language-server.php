@@ -21,8 +21,7 @@ if (count($argv) >= 3 && $argv[1] === '--tcp') {
         exit(1);
     }
     $inputStream = $outputStream = $socket;
-}
-else {
+} else {
     $inputStream = STDIN;
     $outputStream = STDOUT;
 }
