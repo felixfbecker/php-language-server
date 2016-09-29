@@ -32,7 +32,7 @@ class ProtocolStreamWriter implements ProtocolWriter
         while ($totalBytesWritten < $msgSize) {
             $bytesWritten = @fwrite($this->output, substr($data, $totalBytesWritten));
             if ($bytesWritten === false) {
-                throw new Error('Could not write message.');
+                throw new Exception('Could not write message.');
             }
             $totalBytesWritten += $bytesWritten;
         }
