@@ -71,7 +71,7 @@ class TextDocument
     {
         $this->project->getDocument($textDocument->uri)->updateContent($contentChanges[0]->text);
     }
-    
+
 
     /**
      * The document formatting request is sent from the server to the client to format a whole document.
@@ -84,5 +84,4 @@ class TextDocument
     {
         return $this->project->getDocument($textDocument->uri)->getFormattedText();
     }
-    
 }

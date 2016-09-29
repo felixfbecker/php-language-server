@@ -12,7 +12,7 @@ class Project
      * An associative array [string => PhpDocument]
      * that maps URIs to loaded PhpDocuments
      *
-     * @var array 
+     * @var array
      */
     private $documents;
 
@@ -31,7 +31,7 @@ class Project
     private $client;
 
     public function __construct(LanguageClient $client)
-    {        
+    {
         $this->client = $client;
 
         $lexer = new Lexer(['usedAttributes' => ['comments', 'startLine', 'endLine', 'startFilePos', 'endFilePos']]);
@@ -47,7 +47,7 @@ class Project
     public function getDocument(string $uri)
     {
         $uri = urldecode($uri);
-        if (!isset($this->documents[$uri])){
+        if (!isset($this->documents[$uri])) {
             $this->documents[$uri] = new PhpDocument($uri, $this, $this->client, $this->parser);
         }
         return $this->documents[$uri];

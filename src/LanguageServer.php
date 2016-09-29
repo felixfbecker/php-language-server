@@ -133,22 +133,22 @@ class LanguageServer extends \AdvancedJsonRpc\Dispatcher
         $numTotalFiles = count($fileList);
 
         $startTime = microtime(true);
-        
+
         $processFile = function() use (&$fileList, &$processFile, $rootPath, $numTotalFiles, $startTime) {
             if ($file = array_pop($fileList)) {
-                
+
                 $uri = pathToUri($file);
                 $fileNum = $numTotalFiles - count($fileList);
                 $shortName = substr($file, strlen($rootPath)+1);
                 $this->client->window->logMessage(3, "Parsing file $fileNum/$numTotalFiles: $shortName.");
-                
+
                 $this->project->getDocument($uri)->updateContent(file_get_contents($file));
-                
+
                 Loop\setTimeout($processFile, 0);
             }
             else {
                 $duration = (int)(microtime(true) - $startTime);
-                $mem = (int)(memory_get_usage(true)/(1024*1024));
+                $mem = (int)(memory_get_usage(true) / (1024 * 1024));
                 $this->client->window->logMessage(3, "All PHP files parsed in $duration seconds. $mem MiB allocated.");
             }
         };

@@ -21,8 +21,8 @@ class FileUriTest extends TestCase
         $uri = \LanguageServer\pathToUri('/usr/local/bin');
         $this->assertEquals('file:///usr/local/bin', $uri);
 
-        $uri = \LanguageServer\pathToUri('a/b/c/');
-        $this->assertEquals('file:///a/b/c', $uri);
+        $uri = \LanguageServer\pathToUri('a/b/c/test.txt');
+        $this->assertEquals('file:///a/b/c/test.txt', $uri);
 
         $uri = \LanguageServer\pathToUri('/d/e/f');
         $this->assertEquals('file:///d/e/f', $uri);

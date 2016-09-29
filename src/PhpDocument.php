@@ -22,7 +22,7 @@ class PhpDocument
     {
         $this->uri = $uri;
         $this->project = $project;
-        $this->client = $client;        
+        $this->client = $client;
         $this->parser = $parser;
     }
 
@@ -72,8 +72,7 @@ class PhpDocument
         $errors = [];
         try {
             $stmts = $this->parser->parse($this->content);
-        }
-        catch(\PhpParser\Error $e) {
+        } catch(\PhpParser\Error $e) {
             // Lexer can throw errors. e.g for unterminated comments
             // unfortunately we don't get a location back
             $errors[] = $e;

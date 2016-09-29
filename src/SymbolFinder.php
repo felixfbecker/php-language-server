@@ -39,12 +39,12 @@ class SymbolFinder extends NodeVisitorAbstract
     /**
      * @var array
      */
-    private $nameStack = array();
+    private $nameStack = [];
 
     /**
      * @var array
      */
-    private $nodeStack = array();
+    private $nodeStack = [];
 
     /**
      * @var int
@@ -58,26 +58,21 @@ class SymbolFinder extends NodeVisitorAbstract
 
     public function enterNode(Node $node)
     {
-        array_push($this->nodeStack, $node);
+        $this->nodeStack[] = $node;
         $containerName = end($this->nameStack);
 
         // If we enter a named node, push its name onto name stack.
         // Else push the current name onto stack.
-        if (!empty($node->name) && (is_string($node->name) || method_exists($node->name, '__toString')) && !empty((string)$node->name)) {
+        if (!empty($node->name) && !empty((string)$node->name)) {
             if (empty($containerName)) {
-                array_push($this->nameStack, (string)$node->name);
+                $this->nameStack[] = (string)$node->name;
+            } else if ($node instanceof Node\Stmt\ClassMethod) {
+                $this->nameStack[] = $containerName . '::' . (string)$node->name;
+            } else {
+                $this->nameStack[] = $containerName . '\\' . (string)$node->name;
             }
-            else {
-                if ($node instanceof Node\Stmt\ClassMethod) {
-                    array_push($this->nameStack, $containerName . '::' . (string)$node->name);
-                }
-                else {
-                    array_push($this->nameStack, $containerName . '\\' . (string)$node->name);
-                }
-            }
-        }
-        else {
-            array_push($this->nameStack, $containerName);
+        } else {
+            $this->nameStack[] = $containerName;
         }
 
         $class = get_class($node);
