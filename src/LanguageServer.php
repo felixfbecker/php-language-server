@@ -3,8 +3,14 @@
 namespace LanguageServer;
 
 use LanguageServer\Server\TextDocument;
-use LanguageServer\Protocol\{ServerCapabilities, ClientCapabilities, TextDocumentSyncKind, Message};
-use LanguageServer\Protocol\InitializeResult;
+use LanguageServer\Protocol\{
+    ServerCapabilities,
+    ClientCapabilities,
+    TextDocumentSyncKind,
+    Message,
+    MessageType,
+    InitializeResult
+};
 use AdvancedJsonRpc\{Dispatcher, ResponseError, Response as ResponseBody, Request as RequestBody};
 use Sabre\Event\Loop;
 
@@ -141,7 +147,7 @@ class LanguageServer extends \AdvancedJsonRpc\Dispatcher
                 $uri = pathToUri($file);
                 $fileNum++;
                 $shortName = substr($file, strlen($rootPath) + 1);
-                $this->client->window->logMessage(3, "Parsing file $fileNum/$numTotalFiles: $shortName.");
+                $this->client->window->logMessage(MessageType::INFO, "Parsing file $fileNum/$numTotalFiles: $shortName.");
 
                 $this->project->getDocument($uri)->updateContent(file_get_contents($file));
 
@@ -149,7 +155,7 @@ class LanguageServer extends \AdvancedJsonRpc\Dispatcher
             } else {
                 $duration = (int)(microtime(true) - $startTime);
                 $mem = (int)(memory_get_usage(true) / (1024 * 1024));
-                $this->client->window->logMessage(3, "All PHP files parsed in $duration seconds. $mem MiB allocated.");
+                $this->client->window->logMessage(MessageType::INFO, "All PHP files parsed in $duration seconds. $mem MiB allocated.");
             }
         };
 
