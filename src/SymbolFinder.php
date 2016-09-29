@@ -63,7 +63,7 @@ class SymbolFinder extends NodeVisitorAbstract
 
         // If we enter a named node, push its name onto name stack.
         // Else push the current name onto stack.
-        if (!empty($node->name) && !empty((string)$node->name)) {
+        if (!empty($node->name) && (is_string($node->name) || method_exists($node->name, '__toString')) && !empty((string)$node->name)) {
             if (empty($containerName)) {
                 $this->nameStack[] = (string)$node->name;
             } else if ($node instanceof Node\Stmt\ClassMethod) {
