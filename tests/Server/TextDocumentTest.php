@@ -21,7 +21,7 @@ class TextDocumentTest extends TestCase
         $textDocumentItem->uri = 'whatever';
         $textDocumentItem->languageId = 'php';
         $textDocumentItem->version = 1;
-        $textDocumentItem->text = file_get_contents(__DIR__ . '/../../fixtures/Symbols.php');
+        $textDocumentItem->text = file_get_contents(__DIR__ . '/../../fixtures/symbols.php');
         $textDocument->didOpen($textDocumentItem);
         // Request symbols
         $result = $textDocument->documentSymbol(new TextDocumentIdentifier('whatever'));
@@ -163,7 +163,7 @@ class TextDocumentTest extends TestCase
         $textDocumentItem->uri = 'whatever';
         $textDocumentItem->languageId = 'php';
         $textDocumentItem->version = 1;
-        $textDocumentItem->text = file_get_contents(__DIR__ . '/../../fixtures/InvalidFile.php');
+        $textDocumentItem->text = file_get_contents(__DIR__ . '/../../fixtures/invalid_file.php');
         $textDocument->didOpen($textDocumentItem);
         $this->assertEquals([
             'whatever',
