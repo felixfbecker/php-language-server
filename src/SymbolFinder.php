@@ -4,6 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer;
 
 use PhpParser\{NodeVisitorAbstract, Node};
+
 use LanguageServer\Protocol\{SymbolInformation, SymbolKind, Range, Position, Location};
 
 class SymbolFinder extends NodeVisitorAbstract
@@ -35,6 +36,21 @@ class SymbolFinder extends NodeVisitorAbstract
      */
     private $containerName;
 
+    /**
+     * @var array
+     */
+    private $nameStack = [];
+
+    /**
+     * @var array
+     */
+    private $nodeStack = [];
+
+    /**
+     * @var int
+     */
+    private $functionCount = 0;
+
     public function __construct(string $uri)
     {
         $this->uri = $uri;
@@ -42,24 +58,38 @@ class SymbolFinder extends NodeVisitorAbstract
 
     public function enterNode(Node $node)
     {
+        $this->nodeStack[] = $node;
+        $containerName = end($this->nameStack);
+
+        // If we enter a named node, push its name onto name stack.
+        // Else push the current name onto stack.
+        if (!empty($node->name) && (is_string($node->name) || method_exists($node->name, '__toString')) && !empty((string)$node->name)) {
+            if (empty($containerName)) {
+                $this->nameStack[] = (string)$node->name;
+            } else if ($node instanceof Node\Stmt\ClassMethod) {
+                $this->nameStack[] = $containerName . '::' . (string)$node->name;
+            } else {
+                $this->nameStack[] = $containerName . '\\' . (string)$node->name;
+            }
+        } else {
+            $this->nameStack[] = $containerName;
+        }
+
         $class = get_class($node);
         if (!isset(self::NODE_SYMBOL_KIND_MAP[$class])) {
             return;
         }
 
-        $symbol = end($this->symbols);
+        // if we enter a method or function, increase the function counter
+        if ($node instanceof Node\Stmt\Function_ || $node instanceof Node\Stmt\ClassMethod) {
+            $this->functionCount++;
+        }
+
         $kind = self::NODE_SYMBOL_KIND_MAP[$class];
 
-        // exclude variable symbols that are defined in methods and functions.
-        if ($symbol && $kind === SymbolKind::VARIABLE &&
-            ($symbol->kind === SymbolKind::METHOD || $symbol->kind === SymbolKind::FUNCTION)
-        ) {
-            if (
-                $node->getAttribute('startLine') - 1 > $symbol->location->range->start->line &&
-                $node->getAttribute('endLine') - 1 < $symbol->location->range->end->line
-            ) {
-                return;
-            }
+        // exclude non-global variable symbols.
+        if ($kind === SymbolKind::VARIABLE && $this->functionCount > 0) {
+            return;
         }
 
         $symbol = new SymbolInformation();
@@ -72,13 +102,18 @@ class SymbolFinder extends NodeVisitorAbstract
                 new Position($node->getAttribute('endLine') - 1, $node->getAttribute('endColumn'))
             )
         );
-        $symbol->containerName = $this->containerName;
-        $this->containerName = $symbol->name;
+        $symbol->containerName = $containerName;
         $this->symbols[] = $symbol;
     }
 
     public function leaveNode(Node $node)
     {
-        $this->containerName = null;
+        array_pop($this->nodeStack);
+        array_pop($this->nameStack);
+
+        // if we leave a method or function, decrease the function counter
+        if ($node instanceof Node\Stmt\Function_ || $node instanceof Node\Stmt\ClassMethod) {
+            $this->functionCount--;
+        }
     }
 }

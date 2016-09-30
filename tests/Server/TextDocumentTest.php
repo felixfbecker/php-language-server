@@ -5,15 +5,17 @@ namespace LanguageServer\Tests\Server;
 
 use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
-use LanguageServer\{Server, Client, LanguageClient};
-use LanguageServer\Protocol\{TextDocumentItem, TextDocumentIdentifier, SymbolKind, DiagnosticSeverity, FormattingOptions};
+use LanguageServer\{Server, Client, LanguageClient, Project, PhpDocument};
+use LanguageServer\Protocol\{TextDocumentItem, TextDocumentIdentifier, SymbolKind, DiagnosticSeverity, FormattingOptions, VersionedTextDocumentIdentifier, TextDocumentContentChangeEvent, Range, Position};
 use AdvancedJsonRpc\{Request as RequestBody, Response as ResponseBody};
 
 class TextDocumentTest extends TestCase
 {
     public function testDocumentSymbol()
     {
-        $textDocument = new Server\TextDocument(new LanguageClient(new MockProtocolStream()));
+        $client = new LanguageClient(new MockProtocolStream());
+        $project = new Project($client);
+        $textDocument = new Server\TextDocument($project, $client);
         // Trigger parsing of source
         $textDocumentItem = new TextDocumentItem();
         $textDocumentItem->uri = 'whatever';
@@ -58,7 +60,7 @@ class TextDocumentTest extends TestCase
                         ]
                     ]
                 ],
-                'containerName' => null
+                'containerName' => 'TestNamespace'
             ],
             [
                 'name' => 'testProperty',
@@ -76,7 +78,7 @@ class TextDocumentTest extends TestCase
                         ]
                     ]
                 ],
-                'containerName' => 'TestClass'
+                'containerName' => 'TestNamespace\\TestClass'
             ],
             [
                 'name' => 'testMethod',
@@ -94,7 +96,7 @@ class TextDocumentTest extends TestCase
                         ]
                     ]
                 ],
-                'containerName' => null
+                'containerName' => 'TestNamespace\\TestClass'
             ],
             [
                 'name' => 'TestTrait',
@@ -112,7 +114,7 @@ class TextDocumentTest extends TestCase
                         ]
                     ]
                 ],
-                'containerName' => null
+                'containerName' => 'TestNamespace'
             ],
             [
                 'name' => 'TestInterface',
@@ -130,7 +132,7 @@ class TextDocumentTest extends TestCase
                         ]
                     ]
                 ],
-                'containerName' => null
+                'containerName' => 'TestNamespace'
             ]
         ], json_decode(json_encode($result), true));
     }
@@ -151,7 +153,11 @@ class TextDocumentTest extends TestCase
                 $this->args = func_get_args();
             }
         };
-        $textDocument = new Server\TextDocument($client);
+
+        $project = new Project($client);
+
+        $textDocument = new Server\TextDocument($project, $client);
+
         // Trigger parsing of source
         $textDocumentItem = new TextDocumentItem();
         $textDocumentItem->uri = 'whatever';
@@ -182,7 +188,10 @@ class TextDocumentTest extends TestCase
 
     public function testFormatting()
     {
-        $textDocument = new Server\TextDocument(new LanguageClient(new MockProtocolStream()));
+        $client =  new LanguageClient(new MockProtocolStream());
+        $project = new Project($client);
+        $textDocument = new Server\TextDocument($project, $client);
+
         // Trigger parsing of source
         $textDocumentItem = new TextDocumentItem();
         $textDocumentItem->uri = 'whatever';
@@ -208,5 +217,25 @@ class TextDocumentTest extends TestCase
             ],
             'newText' => $expected
         ]], json_decode(json_encode($result), true));
+    }
+
+    public function testDidChange()
+    {
+        $client =  new LanguageClient(new MockProtocolStream());
+        $project = new Project($client);
+        $textDocument = new Server\TextDocument($project, $client);
+
+        $phpDocument = $project->getDocument('whatever');
+        $phpDocument->updateContent("<?php\necho 'Hello, World'\n");
+
+        $identifier = new VersionedTextDocumentIdentifier('whatever');
+        $changeEvent = new TextDocumentContentChangeEvent();
+        $changeEvent->range = new Range(new Position(0,0), new Position(9999,9999));
+        $changeEvent->rangeLength = 9999;
+        $changeEvent->text = "<?php\necho 'Goodbye, World'\n";
+
+        $textDocument->didChange($identifier, [$changeEvent]);
+
+        $this->assertEquals("<?php\necho 'Goodbye, World'\n", $phpDocument->getContent());
     }
 }

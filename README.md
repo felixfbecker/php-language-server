@@ -26,3 +26,15 @@ to install dependencies.
 Run the tests with 
 
     vendor/bin/phpunit --bootstrap vendor/autoload.php tests
+
+## Command line arguments
+
+    --tcp host:port
+
+Causes the server to use a tcp connection for communicating with the language client instead of using STDIN/STDOUT.
+The server will try to connect to the specified address.
+
+Example:
+
+    php bin/php-language-server.php --tcp 127.0.0.1:12345
+

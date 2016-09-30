@@ -3,9 +3,16 @@
 namespace LanguageServer;
 
 use LanguageServer\Server\TextDocument;
-use LanguageServer\Protocol\{ServerCapabilities, ClientCapabilities, TextDocumentSyncKind, Message};
-use LanguageServer\Protocol\InitializeResult;
+use LanguageServer\Protocol\{
+    ServerCapabilities,
+    ClientCapabilities,
+    TextDocumentSyncKind,
+    Message,
+    MessageType,
+    InitializeResult
+};
 use AdvancedJsonRpc\{Dispatcher, ResponseError, Response as ResponseBody, Request as RequestBody};
+use Sabre\Event\Loop;
 
 class LanguageServer extends \AdvancedJsonRpc\Dispatcher
 {
@@ -16,15 +23,23 @@ class LanguageServer extends \AdvancedJsonRpc\Dispatcher
      */
     public $textDocument;
 
+    /**
+     * Handles workspace/* method calls
+     *
+     * @var Server\Workspace
+     */
+    public $workspace;
+
     public $telemetry;
     public $window;
-    public $workspace;
     public $completionItem;
     public $codeLens;
 
     private $protocolReader;
     private $protocolWriter;
     private $client;
+
+    private $project;
 
     public function __construct(ProtocolReader $reader, ProtocolWriter $writer)
     {
@@ -56,24 +71,35 @@ class LanguageServer extends \AdvancedJsonRpc\Dispatcher
         });
         $this->protocolWriter = $writer;
         $this->client = new LanguageClient($writer);
-        $this->textDocument = new Server\TextDocument($this->client);
+
+        $this->project = new Project($this->client);
+
+        $this->textDocument = new Server\TextDocument($this->project, $this->client);
+        $this->workspace = new Server\Workspace($this->project, $this->client);
     }
 
     /**
      * The initialize request is sent as the first request from the client to the server.
      *
-     * @param string $rootPath The rootPath of the workspace. Is null if no folder is open.
      * @param int $processId The process Id of the parent process that started the server.
      * @param ClientCapabilities $capabilities The capabilities provided by the client (editor)
+     * @param string|null $rootPath The rootPath of the workspace. Is null if no folder is open.
      * @return InitializeResult
      */
-    public function initialize(string $rootPath, int $processId, ClientCapabilities $capabilities): InitializeResult
+    public function initialize(int $processId, ClientCapabilities $capabilities, string $rootPath = null): InitializeResult
     {
+        // start building project index
+        if ($rootPath) {
+            $this->indexProject($rootPath);
+        }
+
         $serverCapabilities = new ServerCapabilities();
         // Ask the client to return always full documents (because we need to rebuild the AST from scratch)
         $serverCapabilities->textDocumentSync = TextDocumentSyncKind::FULL;
         // Support "Find all symbols"
         $serverCapabilities->documentSymbolProvider = true;
+        // Support "Find all symbols in workspace"
+        $serverCapabilities->workspaceSymbolProvider = true;
         // Support "Format Code"
         $serverCapabilities->documentFormattingProvider = true;
         return new InitializeResult($serverCapabilities);
@@ -99,5 +125,40 @@ class LanguageServer extends \AdvancedJsonRpc\Dispatcher
     public function exit()
     {
         exit(0);
+    }
+
+    /**
+     * Parses workspace files, one at a time.
+     *
+     * @param string $rootPath The rootPath of the workspace.
+     * @return void
+     */
+    private function indexProject(string $rootPath)
+    {
+        $fileList = findFilesRecursive($rootPath, '/^.+\.php$/i');
+        $numTotalFiles = count($fileList);
+
+        $startTime = microtime(true);
+        $fileNum = 0;
+
+        $processFile = function() use (&$fileList, &$fileNum, &$processFile, $rootPath, $numTotalFiles, $startTime) {
+            if ($fileNum < $numTotalFiles) {
+                $file = $fileList[$fileNum];
+                $uri = pathToUri($file);
+                $fileNum++;
+                $shortName = substr($file, strlen($rootPath) + 1);
+                $this->client->window->logMessage(MessageType::INFO, "Parsing file $fileNum/$numTotalFiles: $shortName.");
+
+                $this->project->getDocument($uri)->updateContent(file_get_contents($file));
+
+                Loop\setTimeout($processFile, 0);
+            } else {
+                $duration = (int)(microtime(true) - $startTime);
+                $mem = (int)(memory_get_usage(true) / (1024 * 1024));
+                $this->client->window->logMessage(MessageType::INFO, "All PHP files parsed in $duration seconds. $mem MiB allocated.");
+            }
+        };
+
+        Loop\setTimeout($processFile, 0);
     }
 }
