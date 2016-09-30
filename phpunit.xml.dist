@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit bootstrap="vendor/autoload.php">
-	<testsuites>
-		<testsuite name="PHP Language Server Test Suite">
-			<directory>./tests</directory>
-		</testsuite>
-	</testsuites>
+    <testsuites>
+        <testsuite name="PHP Language Server Test Suite">
+            <directory>./tests</directory>
+        </testsuite>
+    </testsuites>
 
-	<filter>
-		<whitelist>
-			<directory>./src</directory>
-		</whitelist>
-	</filter>
+    <filter>
+        <whitelist>
+            <directory>./src</directory>
+        </whitelist>
+    </filter>
 </phpunit>
