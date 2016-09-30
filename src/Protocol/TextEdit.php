@@ -22,4 +22,10 @@ class TextEdit
      * @var string
      */
     public $newText;
+
+    public function __construct(Range $range = null, string $newText)
+    {
+        $this->range = $range;
+        $this->newText = $newText;
+    }
 }

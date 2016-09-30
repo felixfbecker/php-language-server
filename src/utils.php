@@ -32,3 +32,19 @@ function pathToUri(string $filepath): string {
     $filepath = implode('/', array_map('urlencode', explode('/', $filepath)));
     return 'file:///' . $filepath;
 }
+
+/**
+ * Transforms URI into file path
+ * 
+ * @param string $uri
+ * @return string
+ */
+function uriToPath(string $uri)
+{
+    $position = strpos($uri, '://');
+    if (! $position) {
+        return $uri;
+    }
+    $path = substr($uri, $position + 3);
+    return strpos($path, ':') ? str_replace('/', "\\", substr($path, 1)) : $path;
+}

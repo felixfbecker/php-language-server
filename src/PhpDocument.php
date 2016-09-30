@@ -224,14 +224,11 @@ class PhpDocument
      */
     public function getFormattedText()
     {
-        if (empty($this->stmts)) {
+        if (empty($this->getContent())) {
             return [];
         }
-        $prettyPrinter = new PrettyPrinter();
-        $edit = new TextEdit();
-        $edit->range = new Range(new Position(0, 0), new Position(PHP_INT_MAX, PHP_INT_MAX));
-        $edit->newText = $prettyPrinter->prettyPrintFile($this->stmts);
-        return [$edit];
+        $formatter = new Formatter();
+        return $formatter->format($this->getContent(), $this->getUri());
     }
 
     /**
