@@ -73,6 +73,8 @@ class SymbolFinder extends NodeVisitorAbstract
             }
         } else {
             $this->nameStack[] = $containerName;
+            // We are not interested in unnamed nodes, return
+            return;
         }
 
         $class = get_class($node);
