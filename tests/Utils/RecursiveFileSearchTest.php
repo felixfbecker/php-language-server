@@ -11,7 +11,7 @@ class RecursiveFileSearchTest extends TestCase
     {
         $path = realpath(__DIR__ . '/../../fixtures/recursive');
         $files = \LanguageServer\findFilesRecursive($path, '/.+\.txt/');
-        
+        sort($files);
         $this->assertEquals([
             $path . DIRECTORY_SEPARATOR . 'a.txt',
             $path . DIRECTORY_SEPARATOR . 'search' . DIRECTORY_SEPARATOR . 'b.txt',
