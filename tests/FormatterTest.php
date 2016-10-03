@@ -1,7 +1,7 @@
 <?php
 declare(strict_types = 1);
 
-namespace LanguageServer\Tests\Server;
+namespace LanguageServer\Tests;
 
 use PHPUnit\Framework\TestCase;
 use LanguageServer\Formatter;
