@@ -41,6 +41,6 @@ function pathToUri(string $filepath): string {
  */
 function uriToPath(string $uri)
 {
-    $path = urldecode(parse_url($uri)['path']);
-    return strpos($path, ':') ? str_replace(\DIRECTORY_SEPARATOR, '\\', substr($path, 1)) : $path;
+    $filepath = urldecode(parse_url($uri)['path']);
+    return strpos($filepath, ':') === false ? $filepath : str_replace('/', '\\', $filepath);
 }

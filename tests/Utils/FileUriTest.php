@@ -7,13 +7,7 @@ use PHPUnit\Framework\TestCase;
 
 class FileUriTest extends TestCase
 {
-    public function testSpecialCharsAreEscaped()
-    {
-        $uri = \LanguageServer\pathToUri('c:/path/to/file/dürüm döner.php');
-        $this->assertEquals('file:///c%3A/path/to/file/d%C3%BCr%C3%BCm+d%C3%B6ner.php', $uri);
-    }
-
-    public function testUriIsWellFormed()
+    public function testPathToUri()
     {
         $uri = \LanguageServer\pathToUri('var/log');
         $this->assertEquals('file:///var/log', $uri);
@@ -26,32 +20,34 @@ class FileUriTest extends TestCase
 
         $uri = \LanguageServer\pathToUri('/d/e/f');
         $this->assertEquals('file:///d/e/f', $uri);
-    }
 
-    public function testBackslashesAreTransformed()
-    {
+        // special chars are escaped
+        $uri = \LanguageServer\pathToUri('c:/path/to/file/dürüm döner.php');
+        $this->assertEquals('file:///c%3A/path/to/file/d%C3%BCr%C3%BCm+d%C3%B6ner.php', $uri);
+
+        //backslashes are transformed
         $uri = \LanguageServer\pathToUri('c:\\foo\\bar.baz');
         $this->assertEquals('file:///c%3A/foo/bar.baz', $uri);
     }
-    
+
     public function testUriToPath()
     {
         $uri = 'file:///var/log';
         $this->assertEquals('/var/log', \LanguageServer\uriToPath($uri));
-    
+
         $uri = 'file:///usr/local/bin';
         $this->assertEquals('/usr/local/bin', \LanguageServer\uriToPath($uri));
-    
-        $uri = 'file:///d/e/f';
-        $this->assertEquals('/d/e/f', \LanguageServer\uriToPath($uri));
-        
+
         $uri = 'file:///a/b/c/test.txt';
         $this->assertEquals('/a/b/c/test.txt', \LanguageServer\uriToPath($uri));
-        
-        $uri = 'file:///c%3A/foo/bar.baz';
-        $this->assertEquals('c:\\foo\\bar.baz', \LanguageServer\uriToPath($uri));
-        
-        $uri = 'file:///c%3A/path/to/file/d%C3%BCr%C3%BCm+d%C3%B6ner.php';
+
+        $uri = 'file:///d/e/f';
+        $this->assertEquals('/d/e/f', \LanguageServer\uriToPath($uri));
+
+        $uri = 'file:///c:/path/to/file/d%C3%BCr%C3%BCm+d%C3%B6ner.php';
         $this->assertEquals('c:\\path\\to\\file\\dürüm döner.php', \LanguageServer\uriToPath($uri));
+
+        $uri = 'file:///c:/foo/bar.baz';
+        $this->assertEquals('c:\\foo\\bar.baz', \LanguageServer\uriToPath($uri));
     }
 }
