@@ -34,24 +34,24 @@ class FileUriTest extends TestCase
         $this->assertEquals('file:///c%3A/foo/bar.baz', $uri);
     }
     
-    public function testUriToPathUnix()
+    public function testUriToPath()
     {
-        $uri = "file:///home/foo/bar/Test.php";
-        $this->assertEquals("/home/foo/bar/Test.php", \LanguageServer\uriToPath($uri));
+        $uri = 'file:///var/log';
+        $this->assertEquals('/var/log', \LanguageServer\uriToPath($uri));
     
-        $uri = "/home/foo/bar/Test.php";
-        $this->assertEquals("/home/foo/bar/Test.php", \LanguageServer\uriToPath($uri));
+        $uri = 'file:///usr/local/bin';
+        $this->assertEquals('/usr/local/bin', \LanguageServer\uriToPath($uri));
     
-        $uri = "/home/foo space/bar/Test.php";
-        $this->assertEquals("/home/foo space/bar/Test.php", \LanguageServer\uriToPath($uri));
-    }
-    
-    public function testUriToPathWindows()
-    {  
-        $uri = "file:///c:/home/foo/bar/Test.php";
-        $this->assertEquals("c:\\home\\foo\\bar\\Test.php", \LanguageServer\uriToPath($uri));
-    
-        $uri = "c:\\home\\foo\\bar\\Test.php";
-        $this->assertEquals("c:\\home\\foo\\bar\\Test.php", \LanguageServer\uriToPath($uri));
+        $uri = 'file:///d/e/f';
+        $this->assertEquals('/d/e/f', \LanguageServer\uriToPath($uri));
+        
+        $uri = 'file:///a/b/c/test.txt';
+        $this->assertEquals('/a/b/c/test.txt', \LanguageServer\uriToPath($uri));
+        
+        $uri = 'file:///c%3A/foo/bar.baz';
+        $this->assertEquals('c:\\foo\\bar.baz', \LanguageServer\uriToPath($uri));
+        
+        $uri = 'file:///c%3A/path/to/file/d%C3%BCr%C3%BCm+d%C3%B6ner.php';
+        $this->assertEquals('c:\\path\\to\\file\\dürüm döner.php', \LanguageServer\uriToPath($uri));
     }
 }

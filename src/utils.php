@@ -41,10 +41,6 @@ function pathToUri(string $filepath): string {
  */
 function uriToPath(string $uri)
 {
-    $position = strpos($uri, '://');
-    if (! $position) {
-        return $uri;
-    }
-    $path = substr($uri, $position + 3);
-    return strpos($path, ':') ? str_replace('/', "\\", substr($path, 1)) : $path;
+    $path = urldecode(parse_url($uri)['path']);
+    return strpos($path, ':') ? str_replace(\DIRECTORY_SEPARATOR, '\\', substr($path, 1)) : $path;
 }

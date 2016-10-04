@@ -46,12 +46,12 @@ class Formatter
         do {
             $default = $currentDir . DIRECTORY_SEPARATOR . 'phpcs.xml';
             if (is_file($default) === true) {
-                return array($default);
+                return [$default];
             }
             
             $default = $currentDir . DIRECTORY_SEPARATOR . 'phpcs.xml.dist';
             if (is_file($default) === true) {
-                return array($default);
+                return [$default];
             }
             
             $lastDir = $currentDir;

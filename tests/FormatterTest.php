@@ -16,7 +16,7 @@ class FormatterTest extends TestCase
         $input = file_get_contents(__DIR__ . '/../fixtures/format.php');
         $output = file_get_contents(__DIR__ . '/../fixtures/format_expected.php');
         
-        $edits = $formatter->format($input, "whatever");
+        $edits = $formatter->format($input, 'whatever');
         $this->assertTrue($edits[0]->newText === $output);
     }
 
@@ -25,7 +25,7 @@ class FormatterTest extends TestCase
         $formatter = new Formatter();
         $expected = file_get_contents(__DIR__ . '/../fixtures/format_expected.php');
         
-        $edits = $formatter->format($expected, "whatever");
+        $edits = $formatter->format($expected, 'whatever');
         $this->assertTrue($edits == []);
     }
 

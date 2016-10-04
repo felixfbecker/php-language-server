@@ -23,7 +23,7 @@ class TextEdit
      */
     public $newText;
 
-    public function __construct(Range $range = null, string $newText)
+    public function __construct(Range $range = null, string $newText = null)
     {
         $this->range = $range;
         $this->newText = $newText;
