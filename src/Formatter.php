@@ -32,9 +32,19 @@ class Formatter
         if ($content === $new) {
             return [];
         }
-        return [new TextEdit(new Range(new Position(0, 0), new Position(PHP_INT_MAX, PHP_INT_MAX)), $new)];
+        return [new TextEdit(new Range(new Position(0, 0), $this->calculateEndPosition($content)), $new)];
     }
 
+    /**
+     * @param string $content
+     * @return \LanguageServer\Protocol\Position
+     */
+    private function calculateEndPosition(string $content): Position
+    {
+        $lines = explode("\n", $content);
+        return new Position(sizeof($lines) - 1, strlen(end($lines)));
+    }
+    
     /**
      *
      * @param string $uri            

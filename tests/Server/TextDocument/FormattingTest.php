@@ -47,8 +47,8 @@ class FormattingTest extends TestCase
                     'character' => 0
                 ],
                 'end' => [
-                    'line' => PHP_INT_MAX,
-                    'character' => PHP_INT_MAX
+                    'line' => 20,
+                    'character' => 0
                 ]
             ],
             'newText' => $expected
