@@ -143,7 +143,7 @@ class PhpDocument
             $traverser->addVisitor(new NameResolver);
 
             // Add parentNode, previousSibling, nextSibling attributes
-            $traverser->addVisitor(new ReferencesAdder);
+            $traverser->addVisitor(new ReferencesAdder($this));
 
             // Add column attributes to nodes
             $traverser->addVisitor(new ColumnCalculator($this->content));

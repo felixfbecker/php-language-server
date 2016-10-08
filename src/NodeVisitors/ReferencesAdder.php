@@ -21,8 +21,22 @@ class ReferencesAdder extends NodeVisitorAbstract
      */
     private $previous;
 
+    /**
+     * @var mixed
+     */
+    private $document;
+
+    /**
+     * @param mixed $document The value for the ownerDocument attribute
+     */
+    public function __construct($document = null)
+    {
+        $this->document = $document;
+    }
+
     public function enterNode(Node $node)
     {
+        $node->setAttribute('ownerDocument', $this->document);
         if (!empty($this->stack)) {
             $node->setAttribute('parentNode', end($this->stack));
         }
