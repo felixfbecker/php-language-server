@@ -31,7 +31,7 @@ class LanguageServerTest extends TestCase
             'capabilities' => (object)[
                 'textDocumentSync' => TextDocumentSyncKind::FULL,
                 'documentSymbolProvider' => true,
-                'hoverProvider' => null,
+                'hoverProvider' => true,
                 'completionProvider' => null,
                 'signatureHelpProvider' => null,
                 'definitionProvider' => true,

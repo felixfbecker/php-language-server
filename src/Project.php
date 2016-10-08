@@ -3,6 +3,7 @@ declare(strict_types = 1);
 
 namespace LanguageServer;
 
+use phpDocumentor\Reflection\DocBlockFactory;
 use PhpParser\{ParserFactory, Lexer};
 
 class Project
@@ -37,6 +38,13 @@ class Project
     private $parser;
 
     /**
+     * The DocBlockFactory instance to parse docblocks
+     *
+     * @var DocBlockFactory
+     */
+    private $docBlockFactory;
+
+    /**
      * Reference to the language server client interface
      *
      * @var LanguageClient
@@ -49,6 +57,7 @@ class Project
 
         $lexer = new Lexer(['usedAttributes' => ['comments', 'startLine', 'endLine', 'startFilePos', 'endFilePos']]);
         $this->parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7, $lexer, ['throwOnError' => false]);
+        $this->docBlockFactory = DocBlockFactory::createInstance();
     }
 
     /**
@@ -81,7 +90,7 @@ class Project
             $document = $this->documents[$uri];
             $document->updateContent($content);
         } else {
-            $document = new PhpDocument($uri, $content, $this, $this->client, $this->parser);
+            $document = new PhpDocument($uri, $content, $this, $this->client, $this->parser, $this->docBlockFactory);
         }
         return $document;
     }
@@ -99,7 +108,7 @@ class Project
             $document = $this->documents[$uri];
             $document->updateContent($content);
         } else {
-            $document = new PhpDocument($uri, $content, $this, $this->client, $this->parser);
+            $document = new PhpDocument($uri, $content, $this, $this->client, $this->parser, $this->docBlockFactory);
             $this->documents[$uri] = $document;
         }
         return $document;

@@ -4,16 +4,20 @@ declare(strict_types = 1);
 namespace LanguageServer\Server;
 
 use LanguageServer\{LanguageClient, Project};
+use PhpParser\PrettyPrinter\Standard as PrettyPrinter;
 use LanguageServer\Protocol\{
     TextDocumentItem,
     TextDocumentIdentifier,
     VersionedTextDocumentIdentifier,
     Position,
+    Range,
     FormattingOptions,
     TextEdit,
     Location,
     SymbolInformation,
-    ReferenceContext
+    ReferenceContext,
+    Hover,
+    MarkedString
 };
 
 /**
@@ -33,10 +37,16 @@ class TextDocument
      */
     private $project;
 
+    /**
+     * @var PrettyPrinter
+     */
+    private $prettyPrinter;
+
     public function __construct(Project $project, LanguageClient $client)
     {
         $this->project = $project;
         $this->client = $client;
+        $this->prettyPrinter = new PrettyPrinter();
     }
 
     /**
@@ -147,5 +157,41 @@ class TextDocument
             return [];
         }
         return Location::fromNode($def);
+    }
+
+    /**
+     * The hover request is sent from the client to the server to request hover information at a given text document position.
+     *
+     * @param TextDocumentIdentifier $textDocument The text document
+     * @param Position $position The position inside the text document
+     * @return Hover|null
+     */
+    public function hover(TextDocumentIdentifier $textDocument, Position $position)
+    {
+        $document = $this->project->getDocument($textDocument->uri);
+        $node = $document->getNodeAtPosition($position);
+        if ($node === null) {
+            return null;
+        }
+        $def = $document->getDefinitionByNode($node);
+        if ($def === null) {
+            return null;
+        }
+        $contents = [];
+        $docBlock = $def->getAttribute('docBlock');
+        if ($docBlock !== null) {
+            $contents[] = $docBlock->getSummary();
+        }
+        $defLine = clone $def;
+        $defLine->setAttribute('comments', []);
+        if (isset($defLine->stmts)) {
+            $defLine->stmts = [];
+        }
+        $defText = $this->prettyPrinter->prettyPrint([$defLine]);
+        $lines = explode("\n", $defText);
+        if (isset($lines[0])) {
+            $contents[] = new MarkedString('php', $lines[0]);
+        }
+        return new Hover($contents, Range::fromNode($node));
     }
 }

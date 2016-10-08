@@ -7,6 +7,7 @@ use LanguageServer\Protocol\{Diagnostic, DiagnosticSeverity, Range, Position, Te
 use LanguageServer\NodeVisitor\{
     NodeAtPositionFinder,
     ReferencesAdder,
+    DocBlockParser,
     DefinitionCollector,
     ColumnCalculator,
     ReferencesCollector,
@@ -14,6 +15,7 @@ use LanguageServer\NodeVisitor\{
 };
 use PhpParser\{Error, Node, NodeTraverser, Parser};
 use PhpParser\NodeVisitor\NameResolver;
+use phpDocumentor\Reflection\DocBlockFactory;
 
 class PhpDocument
 {
@@ -39,6 +41,13 @@ class PhpDocument
      * @var Parser
      */
     private $parser;
+
+    /**
+     * The DocBlockFactory instance to parse docblocks
+     *
+     * @var DocBlockFactory
+     */
+    private $docBlockFactory;
 
     /**
      * The URI of the document
@@ -76,18 +85,20 @@ class PhpDocument
     private $references;
 
     /**
-     * @param string         $uri     The URI of the document
-     * @param string         $content The content of the document
-     * @param Project        $project The Project this document belongs to (to register definitions etc)
-     * @param LanguageClient $client  The LanguageClient instance (to report errors etc)
-     * @param Parser         $parser  The PHPParser instance
+     * @param string          $uri             The URI of the document
+     * @param string          $content         The content of the document
+     * @param Project         $project         The Project this document belongs to (to register definitions etc)
+     * @param LanguageClient  $client          The LanguageClient instance (to report errors etc)
+     * @param Parser          $parser          The PHPParser instance
+     * @param DocBlockFactory $docBlockFactory The DocBlockFactory instance to parse docblocks
      */
-    public function __construct(string $uri, string $content, Project $project, LanguageClient $client, Parser $parser)
+    public function __construct(string $uri, string $content, Project $project, LanguageClient $client, Parser $parser, DocBlockFactory $docBlockFactory)
     {
         $this->uri = $uri;
         $this->project = $project;
         $this->client = $client;
         $this->parser = $parser;
+        $this->docBlockFactory = $docBlockFactory;
         $this->updateContent($content);
     }
 
@@ -153,6 +164,9 @@ class PhpDocument
 
             // Add column attributes to nodes
             $traverser->addVisitor(new ColumnCalculator($content));
+
+            // Parse docblocks and add docBlock attributes to nodes
+            $traverser->addVisitor(new DocBlockParser($this->docBlockFactory));
 
             $traverser->traverse($stmts);
             $traverser = new NodeTraverser;
