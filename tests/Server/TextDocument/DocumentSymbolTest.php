@@ -207,6 +207,24 @@ class DocumentSymbolTest extends TestCase
                     ]
                 ],
                 'containerName' => 'TestNamespace'
+            ],
+            [
+                'name' => 'test_function',
+                'kind' => SymbolKind::FUNCTION,
+                'location' => [
+                    'uri' => 'symbols',
+                    'range' => [
+                        'start' => [
+                            'line' => 33,
+                            'character' => 0
+                        ],
+                        'end' => [
+                            'line' => 36,
+                            'character' => 1
+                        ]
+                    ]
+                ],
+                'containerName' => 'TestNamespace'
             ]
         ], json_decode(json_encode($result), true));
     }

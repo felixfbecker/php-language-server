@@ -4,7 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer;
 
 use LanguageServer\Protocol\{Diagnostic, DiagnosticSeverity, Range, Position, SymbolKind, TextEdit};
-use LanguageServer\NodeVisitors\{NodeAtPositionFinder, ReferencesAdder, SymbolFinder, ColumnCalculator};
+use LanguageServer\NodeVisitors\{NodeAtPositionFinder, ReferencesAdder, DefinitionCollector, SymbolFinder, ColumnCalculator};
 use PhpParser\{Error, Comment, Node, ParserFactory, NodeTraverser, Lexer, Parser};
 use PhpParser\PrettyPrinter\Standard as PrettyPrinter;
 use PhpParser\NodeVisitor\NameResolver;
@@ -23,7 +23,9 @@ class PhpDocument
      *
      * @var Project
      */
-    private $project;
+    public $project;
+    // for whatever reason I get "cannot access private property" error if $project is not public
+    // https://github.com/felixfbecker/php-language-server/pull/49#issuecomment-252427359
 
     /**
      * The PHPParser instance
@@ -45,6 +47,28 @@ class PhpDocument
      * @var string
      */
     private $content;
+
+    /**
+     * The AST of the document
+     *
+     * @var Node[]
+     */
+    private $stmts = [];
+
+    /**
+     * Map from fully qualified name (FQN) to Node
+     * Examples of fully qualified names:
+     *  - testFunction()
+     *  - TestNamespace\TestClass
+     *  - TestNamespace\TestClass::TEST_CONSTANT
+     *  - TestNamespace\TestClass::staticTestProperty
+     *  - TestNamespace\TestClass::testProperty
+     *  - TestNamespace\TestClass::staticTestMethod()
+     *  - TestNamespace\TestClass::testMethod()
+     *
+     * @var Node[]
+     */
+    private $definitions = [];
 
     /**
      * @var SymbolInformation[]
@@ -149,12 +173,23 @@ class PhpDocument
             $traverser->addVisitor(new ColumnCalculator($this->content));
 
             // Collect all symbols
+            // TODO: use DefinitionCollector for this
             $symbolFinder = new SymbolFinder($this->uri);
             $traverser->addVisitor($symbolFinder);
+
+            // Collect all definitions
+            $definitionCollector = new DefinitionCollector;
+            $traverser->addVisitor($definitionCollector);
 
             $traverser->traverse($stmts);
 
             $this->symbols = $symbolFinder->symbols;
+
+            $this->definitions = $definitionCollector->definitions;
+            // Register this document on the project for all the symbols defined in it
+            foreach ($definitionCollector->definitions as $fqn => $node) {
+                $this->project->addDefinitionDocument($fqn, $this);
+            }
 
             $this->stmts = $stmts;
         }
@@ -188,6 +223,16 @@ class PhpDocument
     }
 
     /**
+     * Returns the URI of the document
+     *
+     * @return string
+     */
+    public function getUri(): string
+    {
+        return $this->uri;
+    }
+
+    /**
      * Returns the node at a specified position
      *
      * @param Position $position
@@ -203,5 +248,174 @@ class PhpDocument
         $traverser->addVisitor($finder);
         $traverser->traverse($this->stmts);
         return $finder->node;
+    }
+
+    /**
+     * Returns the definition node for a fully qualified name
+     *
+     * @param string $fqn
+     * @return Node|null
+     */
+    public function getDefinitionByFqn(string $fqn)
+    {
+        return $this->definitions[$fqn] ?? null;
+    }
+
+    /**
+     * Returns the definition node for any node
+     * The definition node MAY be in another document, check the ownerDocument attribute
+     *
+     * @param Node $node
+     * @return Node|null
+     */
+    public function getDefinitionByNode(Node $node)
+    {
+        if ($node instanceof Node\Name) {
+            $nameNode = $node;
+            $node = $node->getAttribute('parentNode');
+        }
+        // Variables always stay in the boundary of the file and need to be searched inside their function scope
+        // by traversing the AST
+        if ($node instanceof Node\Expr\Variable) {
+            return $this->getVariableDefinition($node);
+        }
+
+        if (
+            ($node instanceof Node\Stmt\ClassLike
+            || $node instanceof Node\Param
+            || $node instanceof Node\Stmt\Function_)
+            && isset($nameNode)
+        ) {
+            // For extends, implements and type hints use the name directly
+            $name = (string)$nameNode;
+        } else if ($node instanceof Node\Stmt\UseUse) {
+            $name = (string)$node->name;
+            $parent = $node->getAttribute('parentNode');
+            if ($parent instanceof Node\Stmt\GroupUse) {
+                $name = $parent->prefix . '\\' . $name;
+            }
+        } else if ($node instanceof Node\Expr\New_) {
+            if (!($node->class instanceof Node\Name)) {
+                // Cannot get definition of dynamic calls
+                return null;
+            }
+            $name = (string)$node->class;
+        } else if ($node instanceof Node\Expr\MethodCall || $node instanceof Node\Expr\PropertyFetch) {
+            if ($node->name instanceof Node\Expr || !($node->var instanceof Node\Expr\Variable)) {
+                // Cannot get definition of dynamic calls
+                return null;
+            }
+            // Need to resolve variable to a class
+            $varDef = $this->getVariableDefinition($node->var);
+            if (!isset($varDef)) {
+                return null;
+            }
+            if ($varDef instanceof Node\Param) {
+                if (!isset($varDef->type)) {
+                    // Cannot resolve to class without a type hint
+                    // TODO: parse docblock
+                    return null;
+                }
+                $name = (string)$varDef->type;
+            } else if ($varDef instanceof Node\Expr\Assign) {
+                if ($varDef->expr instanceof Node\Expr\New_) {
+                    if (!($varDef->expr->class instanceof Node\Name)) {
+                        // Cannot get definition of dynamic calls
+                        return null;
+                    }
+                    $name = (string)$varDef->expr->class;
+                } else {
+                    return null;
+                }
+            } else {
+                return null;
+            }
+            $name .= '::' . (string)$node->name;
+        } else if ($node instanceof Node\Expr\FuncCall) {
+            if ($node->name instanceof Node\Expr) {
+                return null;
+            }
+            $name = (string)$node->name;
+        } else if ($node instanceof Node\Expr\ConstFetch) {
+            $name = (string)$node->name;
+        } else if (
+            $node instanceof Node\Expr\ClassConstFetch
+            || $node instanceof Node\Expr\StaticPropertyFetch
+            || $node instanceof Node\Expr\StaticCall
+        ) {
+            if ($node->class instanceof Node\Expr || $node->name instanceof Node\Expr) {
+                // Cannot get definition of dynamic names
+                return null;
+            }
+            $name = (string)$node->class . '::' . $node->name;
+        }
+        if (
+            $node instanceof Node\Expr\MethodCall
+            || $node instanceof Node\Expr\FuncCall
+            || $node instanceof Node\Expr\StaticCall
+        ) {
+            $name .= '()';
+        }
+        if (!isset($name)) {
+            return null;
+        }
+        // Search for the document where the class, interface, trait, function, method or property is defined
+        $document = $this->project->getDefinitionDocument($name);
+        if (!$document && $node instanceof Node\Expr\FuncCall) {
+            // Find and try with namespace
+            // Namespaces aren't added automatically by NameResolver because PHP falls back to global functions
+            $n = $node;
+            while (isset($n)) {
+                $n = $n->getAttribute('parentNode');
+                if ($n instanceof Node\Stmt\Namespace_) {
+                    $name = (string)$n->name . '\\' . $name;
+                    $document = $this->project->getDefinitionDocument($name);
+                    break;
+                }
+            }
+        }
+        if (!isset($document)) {
+            return null;
+        }
+        return $document->getDefinitionByFqn($name);
+    }
+
+    /**
+     * Returns the assignment or parameter node where a variable was defined
+     *
+     * @param Node\Expr\Variable $n The variable access
+     * @return Node\Expr\Assign|Node\Param|Node\Expr\ClosureUse|null
+     */
+    public function getVariableDefinition(Node\Expr\Variable $var)
+    {
+        $n = $var;
+        // Traverse the AST up
+        while (isset($n) && $n = $n->getAttribute('parentNode')) {
+            // If a function is met, check the parameters and use statements
+            if ($n instanceof Node\FunctionLike) {
+                foreach ($n->getParams() as $param) {
+                    if ($param->name === $var->name) {
+                        return $param;
+                    }
+                }
+                // If it is a closure, also check use statements
+                if ($n instanceof Node\Expr\Closure) {
+                    foreach ($n->uses as $use) {
+                        if ($use->var === $var->name) {
+                            return $use;
+                        }
+                    }
+                }
+                break;
+            }
+            // Check each previous sibling node for a variable assignment to that variable
+            while ($n->getAttribute('previousSibling') && $n = $n->getAttribute('previousSibling')) {
+                if ($n instanceof Node\Expr\Assign && $n->var->name === $var->name) {
+                    return $n;
+                }
+            }
+        }
+        // Return null if nothing was found
+        return null;
     }
 }

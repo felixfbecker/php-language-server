@@ -38,6 +38,11 @@ class NodeAtPositionFinder extends NodeVisitorAbstract
             new Position($node->getAttribute('startLine') - 1, $node->getAttribute('startColumn') - 1),
             new Position($node->getAttribute('endLine') - 1, $node->getAttribute('endColumn') - 1)
         );
+        // Workaround for https://github.com/nikic/PHP-Parser/issues/311
+        $parent = $node->getAttribute('parentNode');
+        if (isset($parent) && $parent instanceof Node\Stmt\GroupUse && $parent->prefix === $node) {
+            return;
+        }
         if (!isset($this->node) && $range->includes($this->position)) {
             $this->node = $node;
         }
