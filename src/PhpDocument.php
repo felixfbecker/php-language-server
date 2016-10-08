@@ -4,7 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer;
 
 use LanguageServer\Protocol\{Diagnostic, DiagnosticSeverity, Range, Position, SymbolKind, TextEdit};
-use LanguageServer\NodeVisitors\{ReferencesAdder, SymbolFinder, ColumnCalculator};
+use LanguageServer\NodeVisitors\{NodeAtPositionFinder, ReferencesAdder, SymbolFinder, ColumnCalculator};
 use PhpParser\{Error, Comment, Node, ParserFactory, NodeTraverser, Lexer, Parser};
 use PhpParser\PrettyPrinter\Standard as PrettyPrinter;
 use PhpParser\NodeVisitor\NameResolver;
@@ -104,7 +104,7 @@ class PhpDocument
      * Re-parses a source file, updates symbols, reports parsing errors
      * that may have occured as diagnostics and returns parsed nodes.
      *
-     * @return \PhpParser\Node[]
+     * @return void
      */
     public function parse()
     {
@@ -155,9 +155,9 @@ class PhpDocument
             $traverser->traverse($stmts);
 
             $this->symbols = $symbolFinder->symbols;
-        }
 
-        return $stmts;
+            $this->stmts = $stmts;
+        }
     }
 
     /**
@@ -167,14 +167,13 @@ class PhpDocument
      */
     public function getFormattedText()
     {
-        $stmts = $this->parse();
-        if (empty($stmts)) {
+        if (empty($this->stmts)) {
             return [];
         }
         $prettyPrinter = new PrettyPrinter();
         $edit = new TextEdit();
         $edit->range = new Range(new Position(0, 0), new Position(PHP_INT_MAX, PHP_INT_MAX));
-        $edit->newText = $prettyPrinter->prettyPrintFile($stmts);
+        $edit->newText = $prettyPrinter->prettyPrintFile($this->stmts);
         return [$edit];
     }
 
@@ -186,5 +185,23 @@ class PhpDocument
     public function getContent()
     {
         return $this->content;
+    }
+
+    /**
+     * Returns the node at a specified position
+     *
+     * @param Position $position
+     * @return Node|null
+     */
+    public function getNodeAtPosition(Position $position)
+    {
+        if ($this->stmts === null) {
+            return null;
+        }
+        $traverser = new NodeTraverser;
+        $finder = new NodeAtPositionFinder($position);
+        $traverser->addVisitor($finder);
+        $traverser->traverse($this->stmts);
+        return $finder->node;
     }
 }
