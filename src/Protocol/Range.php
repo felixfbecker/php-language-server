@@ -26,4 +26,15 @@ class Range
         $this->start = $start;
         $this->end = $end;
     }
+
+    /**
+     * Checks if a position is within the range
+     *
+     * @param Position $position
+     * @return bool
+     */
+    public function includes(Position $position): bool
+    {
+        return $this->start->compare($position) <= 0 && $this->end->compare($position) >= 0;
+    }
 }

@@ -4,7 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer\NodeVisitors;
 
 use PhpParser\{NodeVisitorAbstract, Node};
-use LanguageServer\Protocol\Position;
+use LanguageServer\Protocol\{Position, Range};
 
 /**
  * Finds the Node at a specified position
@@ -34,13 +34,11 @@ class NodeAtPositionFinder extends NodeVisitorAbstract
 
     public function leaveNode(Node $node)
     {
-        if (
-            !isset($this->node)
-            && $node->getAttribute('startLine') <= $this->position->line + 1
-            && $node->getAttribute('endLine') >= $this->position->line + 1
-            && $node->getAttribute('startColumn') <= $this->position->character + 1
-            && $node->getAttribute('endColumn') >= $this->position->character + 1
-        ) {
+        $range = new Range(
+            new Position($node->getAttribute('startLine') - 1, $node->getAttribute('startColumn') - 1),
+            new Position($node->getAttribute('endLine') - 1, $node->getAttribute('endColumn') - 1)
+        );
+        if (!isset($this->node) && $range->includes($this->position)) {
             $this->node = $node;
         }
     }
