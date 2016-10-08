@@ -3,7 +3,7 @@ declare(strict_types = 1);
 
 namespace LanguageServer\Server;
 
-use LanguageServer\{LanguageClient, ColumnCalculator, SymbolFinder, Project};
+use LanguageServer\{LanguageClient, ColumnCalculator, Project};
 use LanguageServer\Protocol\{
     TextDocumentItem,
     TextDocumentIdentifier,

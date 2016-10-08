@@ -6,7 +6,7 @@ namespace LanguageServer\Server;
 use PhpParser\{Error, Comment, Node, ParserFactory, NodeTraverser, Lexer};
 use PhpParser\PrettyPrinter\Standard as PrettyPrinter;
 use PhpParser\NodeVisitor\NameResolver;
-use LanguageServer\{LanguageClient, ColumnCalculator, SymbolFinder, Project};
+use LanguageServer\{LanguageClient, ColumnCalculator, Project};
 use LanguageServer\Protocol\{
     TextDocumentItem,
     TextDocumentIdentifier,

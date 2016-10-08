@@ -3,8 +3,8 @@ declare(strict_types = 1);
 
 namespace LanguageServer;
 
-use LanguageServer\Protocol\{Diagnostic, DiagnosticSeverity, Range, Position, SymbolKind, TextEdit};
-use LanguageServer\NodeVisitors\{NodeAtPositionFinder, ReferencesAdder, DefinitionCollector, SymbolFinder, ColumnCalculator};
+use LanguageServer\Protocol\{Diagnostic, DiagnosticSeverity, Range, Position, SymbolInformation, SymbolKind, TextEdit, Location};
+use LanguageServer\NodeVisitors\{NodeAtPositionFinder, ReferencesAdder, DefinitionCollector, ColumnCalculator};
 use PhpParser\{Error, Comment, Node, ParserFactory, NodeTraverser, Lexer, Parser};
 use PhpParser\PrettyPrinter\Standard as PrettyPrinter;
 use PhpParser\NodeVisitor\NameResolver;
@@ -71,11 +71,6 @@ class PhpDocument
     private $definitions = [];
 
     /**
-     * @var SymbolInformation[]
-     */
-    private $symbols = [];
-
-    /**
      * @param string         $uri     The URI of the document
      * @param Project        $project The Project this document belongs to (to register definitions etc)
      * @param LanguageClient $client  The LanguageClient instance (to report errors etc)
@@ -92,22 +87,56 @@ class PhpDocument
     /**
      * Returns all symbols in this document.
      *
-     * @return SymbolInformation[]
+     * @return SymbolInformation[]|null
      */
     public function getSymbols()
     {
-        return $this->symbols;
+        if (!isset($this->definitions)) {
+            return null;
+        }
+        $nodeSymbolKindMap = [
+            Node\Stmt\Class_::class           => SymbolKind::CLASS_,
+            Node\Stmt\Trait_::class           => SymbolKind::CLASS_,
+            Node\Stmt\Interface_::class       => SymbolKind::INTERFACE,
+            Node\Stmt\Namespace_::class       => SymbolKind::NAMESPACE,
+            Node\Stmt\Function_::class        => SymbolKind::FUNCTION,
+            Node\Stmt\ClassMethod::class      => SymbolKind::METHOD,
+            Node\Stmt\PropertyProperty::class => SymbolKind::PROPERTY,
+            Node\Const_::class                => SymbolKind::CONSTANT
+        ];
+        $symbols = [];
+        foreach ($this->definitions as $fqn => $node) {
+            $symbol = new SymbolInformation();
+            $symbol->kind = $nodeSymbolKindMap[get_class($node)];
+            $symbol->name = (string)$node->name;
+            $symbol->location = new Location(
+                $this->getUri(),
+                new Range(
+                    new Position($node->getAttribute('startLine') - 1, $node->getAttribute('startColumn') - 1),
+                    new Position($node->getAttribute('endLine') - 1, $node->getAttribute('endColumn'))
+                )
+            );
+            $parts = preg_split('/(::|\\\\)/', $fqn);
+            array_pop($parts);
+            $symbol->containerName = implode('\\', $parts);
+            $symbols[] = $symbol;
+        }
+        return $symbols;
     }
 
     /**
      * Returns symbols in this document filtered by query string.
      *
      * @param string $query The search query
-     * @return SymbolInformation[]
+     * @return SymbolInformation[]|null
      */
     public function findSymbols(string $query)
     {
-        return array_filter($this->symbols, function($symbol) use(&$query) {
+        $symbols = $this->getSymbols();
+        if ($symbols === null) {
+            return null;
+        }
+        return array_filter($symbols, function($symbol) use ($query) {
             return stripos($symbol->name, $query) !== false;
         });
     }
@@ -172,18 +201,11 @@ class PhpDocument
             // Add column attributes to nodes
             $traverser->addVisitor(new ColumnCalculator($this->content));
 
-            // Collect all symbols
-            // TODO: use DefinitionCollector for this
-            $symbolFinder = new SymbolFinder($this->uri);
-            $traverser->addVisitor($symbolFinder);
-
             // Collect all definitions
             $definitionCollector = new DefinitionCollector;
             $traverser->addVisitor($definitionCollector);
 
             $traverser->traverse($stmts);
-
-            $this->symbols = $symbolFinder->symbols;
 
             $this->definitions = $definitionCollector->definitions;
             // Register this document on the project for all the symbols defined in it

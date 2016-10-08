@@ -29,24 +29,6 @@ class DocumentSymbolTest extends TestCase
         $result = $this->textDocument->documentSymbol(new TextDocumentIdentifier('symbols'));
         $this->assertEquals([
             [
-                'name' => 'TestNamespace',
-                'kind' => SymbolKind::NAMESPACE,
-                'location' => [
-                    'uri' => 'symbols',
-                    'range' => [
-                        'start' => [
-                            'line' => 2,
-                            'character' => 0
-                        ],
-                        'end' => [
-                            'line' => 2,
-                            'character' => 24
-                        ]
-                    ]
-                ],
-                'containerName' => null
-            ],
-            [
                 'name' => 'TEST_CONST',
                 'kind' => SymbolKind::CONSTANT,
                 'location' => [

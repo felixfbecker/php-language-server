@@ -94,7 +94,10 @@ class Project
     {
         $queryResult = [];
         foreach ($this->documents as $uri => $document) {
-            $queryResult = array_merge($queryResult, $document->findSymbols($query));
+            $documentQueryResult = $document->findSymbols($query);
+            if ($documentQueryResult !== null) {
+                $queryResult = array_merge($queryResult, $documentQueryResult);
+            }
         }
         return $queryResult;
     }

@@ -30,44 +30,7 @@ class PhpDocumentTest extends TestCase
 
         $symbols = $document->getSymbols();
 
-        $this->assertEquals([
-            [
-                'name' => 'a',
-                'kind' => SymbolKind::VARIABLE,
-                'location' => [
-                    'uri' => 'whatever',
-                    'range' => [
-                        'start' => [
-                            'line' => 1,
-                            'character' => 0
-                        ],
-                        'end' => [
-                            'line' => 1,
-                            'character' => 3
-                        ]
-                    ]
-                ],
-                'containerName' => null
-            ],
-            [
-                'name' => 'bar',
-                'kind' => SymbolKind::VARIABLE,
-                'location' => [
-                    'uri' => 'whatever',
-                    'range' => [
-                        'start' => [
-                            'line' => 2,
-                            'character' => 0
-                        ],
-                        'end' => [
-                            'line' => 2,
-                            'character' => 4
-                        ]
-                    ]
-                ],
-                'containerName' => null
-            ]
-        ], json_decode(json_encode($symbols), true));
+        $this->assertEquals([], json_decode(json_encode($symbols), true));
     }
 
     public function testGetNodeAtPosition()
