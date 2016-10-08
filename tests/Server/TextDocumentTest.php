@@ -45,22 +45,76 @@ class TextDocumentTest extends TestCase
                 'containerName' => null
             ],
             [
+                'name' => 'TEST_CONST',
+                'kind' => SymbolKind::CONSTANT,
+                'location' => [
+                    'uri' => 'whatever',
+                    'range' => [
+                        'start' => [
+                            'line' => 4,
+                            'character' => 6
+                        ],
+                        'end' => [
+                            'line' => 4,
+                            'character' => 22
+                        ]
+                    ]
+                ],
+                'containerName' => 'TestNamespace'
+            ],
+            [
                 'name' => 'TestClass',
                 'kind' => SymbolKind::CLASS_,
                 'location' => [
                     'uri' => 'whatever',
                     'range' => [
                         'start' => [
-                            'line' => 4,
+                            'line' => 6,
                             'character' => 0
                         ],
                         'end' => [
-                            'line' => 12,
+                            'line' => 21,
                             'character' => 1
                         ]
                     ]
                 ],
                 'containerName' => 'TestNamespace'
+            ],
+            [
+                'name' => 'TEST_CLASS_CONST',
+                'kind' => SymbolKind::CONSTANT,
+                'location' => [
+                    'uri' => 'whatever',
+                    'range' => [
+                        'start' => [
+                            'line' => 8,
+                            'character' => 10
+                        ],
+                        'end' => [
+                            'line' => 8,
+                            'character' => 32
+                        ]
+                    ]
+                ],
+                'containerName' => 'TestNamespace\\TestClass'
+            ],
+            [
+                'name' => 'staticTestProperty',
+                'kind' => SymbolKind::PROPERTY,
+                'location' => [
+                    'uri' => 'whatever',
+                    'range' => [
+                        'start' => [
+                            'line' => 9,
+                            'character' => 18
+                        ],
+                        'end' => [
+                            'line' => 9,
+                            'character' => 37
+                        ]
+                    ]
+                ],
+                'containerName' => 'TestNamespace\\TestClass'
             ],
             [
                 'name' => 'testProperty',
@@ -69,12 +123,30 @@ class TextDocumentTest extends TestCase
                     'uri' => 'whatever',
                     'range' => [
                         'start' => [
-                            'line' => 6,
+                            'line' => 10,
                             'character' => 11
                         ],
                         'end' => [
-                            'line' => 6,
+                            'line' => 10,
                             'character' => 24
+                        ]
+                    ]
+                ],
+                'containerName' => 'TestNamespace\\TestClass'
+            ],
+            [
+                'name' => 'staticTestMethod',
+                'kind' => SymbolKind::METHOD,
+                'location' => [
+                    'uri' => 'whatever',
+                    'range' => [
+                        'start' => [
+                            'line' => 12,
+                            'character' => 4
+                        ],
+                        'end' => [
+                            'line' => 15,
+                            'character' => 5
                         ]
                     ]
                 ],
@@ -87,11 +159,11 @@ class TextDocumentTest extends TestCase
                     'uri' => 'whatever',
                     'range' => [
                         'start' => [
-                            'line' => 8,
+                            'line' => 17,
                             'character' => 4
                         ],
                         'end' => [
-                            'line' => 11,
+                            'line' => 20,
                             'character' => 5
                         ]
                     ]
@@ -105,11 +177,11 @@ class TextDocumentTest extends TestCase
                     'uri' => 'whatever',
                     'range' => [
                         'start' => [
-                            'line' => 14,
+                            'line' => 23,
                             'character' => 0
                         ],
                         'end' => [
-                            'line' => 17,
+                            'line' => 26,
                             'character' => 1
                         ]
                     ]
@@ -123,11 +195,11 @@ class TextDocumentTest extends TestCase
                     'uri' => 'whatever',
                     'range' => [
                         'start' => [
-                            'line' => 19,
+                            'line' => 28,
                             'character' => 0
                         ],
                         'end' => [
-                            'line' => 22,
+                            'line' => 31,
                             'character' => 1
                         ]
                     ]

@@ -59,7 +59,7 @@ class SymbolFinder extends NodeVisitorAbstract
     public function enterNode(Node $node)
     {
         $this->nodeStack[] = $node;
-        $containerName = end($this->nameStack);
+        $containerName = empty($this->nameStack) ? null : end($this->nameStack);
 
         // If we enter a named node, push its name onto name stack.
         // Else push the current name onto stack.
