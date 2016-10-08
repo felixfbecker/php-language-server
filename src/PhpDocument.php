@@ -4,7 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer;
 
 use LanguageServer\Protocol\{Diagnostic, DiagnosticSeverity, Range, Position, SymbolKind, TextEdit};
-use LanguageServer\NodeVisitors\{SymbolFinder, ColumnCalculator};
+use LanguageServer\NodeVisitors\{ReferencesAdder, SymbolFinder, ColumnCalculator};
 use PhpParser\{Error, Comment, Node, ParserFactory, NodeTraverser, Lexer, Parser};
 use PhpParser\PrettyPrinter\Standard as PrettyPrinter;
 use PhpParser\NodeVisitor\NameResolver;
@@ -138,13 +138,23 @@ class PhpDocument
         // $stmts can be null in case of a fatal parsing error
         if ($stmts) {
             $traverser = new NodeTraverser;
-            $finder = new SymbolFinder($this->uri);
+
+            // Resolve aliased names to FQNs
             $traverser->addVisitor(new NameResolver);
+
+            // Add parentNode, previousSibling, nextSibling attributes
+            $traverser->addVisitor(new ReferencesAdder);
+
+            // Add column attributes to nodes
             $traverser->addVisitor(new ColumnCalculator($this->content));
-            $traverser->addVisitor($finder);
+
+            // Collect all symbols
+            $symbolFinder = new SymbolFinder($this->uri);
+            $traverser->addVisitor($symbolFinder);
+
             $traverser->traverse($stmts);
 
-            $this->symbols = $finder->symbols;
+            $this->symbols = $symbolFinder->symbols;
         }
 
         return $stmts;
