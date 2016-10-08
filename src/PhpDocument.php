@@ -11,14 +11,52 @@ use PhpParser\NodeVisitor\NameResolver;
 
 class PhpDocument
 {
+    /**
+     * The LanguageClient instance (to report errors etc)
+     *
+     * @var LanguageClient
+     */
     private $client;
+
+    /**
+     * The Project this document belongs to (to register definitions etc)
+     *
+     * @var Project
+     */
     private $project;
+
+    /**
+     * The PHPParser instance
+     *
+     * @var Parser
+     */
     private $parser;
 
+    /**
+     * The URI of the document
+     *
+     * @var string
+     */
     private $uri;
+
+    /**
+     * The content of the document
+     *
+     * @var string
+     */
     private $content;
+
+    /**
+     * @var SymbolInformation[]
+     */
     private $symbols = [];
 
+    /**
+     * @param string         $uri     The URI of the document
+     * @param Project        $project The Project this document belongs to (to register definitions etc)
+     * @param LanguageClient $client  The LanguageClient instance (to report errors etc)
+     * @param Parser         $parser  The PHPParser instance
+     */
     public function __construct(string $uri, Project $project, LanguageClient $client, Parser $parser)
     {
         $this->uri = $uri;
@@ -54,6 +92,7 @@ class PhpDocument
      * Updates the content on this document.
      *
      * @param string $content
+     * @return void
      */
     public function updateContent(string $content)
     {
@@ -73,7 +112,7 @@ class PhpDocument
         $errors = [];
         try {
             $stmts = $this->parser->parse($this->content);
-        } catch(\PhpParser\Error $e) {
+        } catch (\PhpParser\Error $e) {
             // Lexer can throw errors. e.g for unterminated comments
             // unfortunately we don't get a location back
             $errors[] = $e;

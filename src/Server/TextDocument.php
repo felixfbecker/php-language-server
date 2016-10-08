@@ -28,6 +28,9 @@ class TextDocument
      */
     private $client;
 
+    /**
+     * @var Project
+     */
     private $project;
 
     public function __construct(Project $project, LanguageClient $client)
