@@ -57,14 +57,6 @@ class PhpDocument
 
     /**
      * Map from fully qualified name (FQN) to Node
-     * Examples of fully qualified names:
-     *  - testFunction()
-     *  - TestNamespace\TestClass
-     *  - TestNamespace\TestClass::TEST_CONSTANT
-     *  - TestNamespace\TestClass::staticTestProperty
-     *  - TestNamespace\TestClass::testProperty
-     *  - TestNamespace\TestClass::staticTestMethod()
-     *  - TestNamespace\TestClass::testMethod()
      *
      * @var Node[]
      */
@@ -297,6 +289,67 @@ class PhpDocument
     public function isDefined(string $fqn): bool
     {
         return isset($this->definitions[$fqn]);
+    }
+
+    /**
+     * Returns the fully qualified name (FQN) that is defined by a node
+     * Examples of FQNs:
+     *  - testFunction()
+     *  - TestNamespace\TestClass
+     *  - TestNamespace\TestClass::TEST_CONSTANT
+     *  - TestNamespace\TestClass::staticTestProperty
+     *  - TestNamespace\TestClass::testProperty
+     *  - TestNamespace\TestClass::staticTestMethod()
+     *  - TestNamespace\TestClass::testMethod()
+     *
+     * @param Node $node
+     * @return string|null
+     */
+    public function getDefinedFqn(Node $node)
+    {
+        if ($node instanceof Node\Name) {
+            $nameNode = $node;
+            $node = $node->getAttribute('parentNode');
+        }
+        // Only the class node should count as the definition, not the name node
+        // Anonymous classes don't count as a definition
+        if ($node instanceof Node\Stmt\ClassLike && !isset($nameNode) && isset($node->name)) {
+            // Class, interface or trait declaration
+            return (string)$node->namespacedName;
+        } else if ($node instanceof Node\Stmt\Function_) {
+            // Function: use functionName() as the name
+            return (string)$node->namespacedName . '()';
+        } else if ($node instanceof Node\Stmt\ClassMethod) {
+            // Class method: use ClassName::methodName() as name
+            $class = $node->getAttribute('parentNode');
+            if (!isset($class->name)) {
+                // Ignore anonymous classes
+                return null;
+            }
+            return (string)$class->namespacedName . '::' . (string)$node->name . '()';
+        } else if ($node instanceof Node\Stmt\PropertyProperty) {
+            // Property: use ClassName::propertyName as name
+            $class = $node->getAttribute('parentNode')->getAttribute('parentNode');
+            if (!isset($class->name)) {
+                // Ignore anonymous classes
+                return null;
+            }
+            return (string)$class->namespacedName . '::' . (string)$node->name;
+        } else if ($node instanceof Node\Const_) {
+            $parent = $node->getAttribute('parentNode');
+            if ($parent instanceof Node\Stmt\Const_) {
+                // Basic constant: use CONSTANT_NAME as name
+                return (string)$node->namespacedName;
+            }
+            if ($parent instanceof Node\Stmt\ClassConst) {
+                // Class constant: use ClassName::CONSTANT_NAME as name
+                $class = $parent->getAttribute('parentNode');
+                if (!isset($class->name) || $class->name instanceof Node\Expr) {
+                    return null;
+                }
+                return (string)$class->namespacedName . '::' . $node->name;
+            }
+        }
     }
 
     /**

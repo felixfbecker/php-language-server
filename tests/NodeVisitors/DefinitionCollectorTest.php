@@ -6,18 +6,23 @@ namespace LanguageServer\Tests\Server\TextDocument;
 use PHPUnit\Framework\TestCase;
 use PhpParser\{ParserFactory, NodeTraverser, Node};
 use PhpParser\NodeVisitor\NameResolver;
+use LanguageServer\{LanguageClient, Project, PhpDocument};
+use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\NodeVisitors\{ReferencesAdder, DefinitionCollector};
 
 class DefinitionCollectorTest extends TestCase
 {
     public function test()
     {
+        $client = new LanguageClient(new MockProtocolStream());
+        $project = new Project($client);
+        $parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7);
+        $document = new PhpDocument('whatever', $project, $client, $parser);
         $traverser = new NodeTraverser;
         $traverser->addVisitor(new NameResolver);
-        $traverser->addVisitor(new ReferencesAdder);
+        $traverser->addVisitor(new ReferencesAdder($document));
         $definitionCollector = new DefinitionCollector;
         $traverser->addVisitor($definitionCollector);
-        $parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7);
         $stmts = $parser->parse(file_get_contents(__DIR__ . '/../../fixtures/symbols.php'));
         $traverser->traverse($stmts);
         $defs = $definitionCollector->definitions;
