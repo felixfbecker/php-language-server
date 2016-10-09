@@ -21,52 +21,256 @@ class SymbolTest extends TestCase
         $client = new LanguageClient(new MockProtocolStream());
         $project = new Project($client);
         $this->workspace = new Server\Workspace($project, $client);
-
-        // create two documents
-        $project->getDocument('file:///document1.php')->updateContent("<?php\nfunction foo() {}\nfunction bar() {}\n");
-        $project->getDocument('file:///document2.php')->updateContent("<?php\nfunction baz() {}\nfunction frob() {}\n");
+        $project->getDocument('symbols')->updateContent(file_get_contents(__DIR__ . '/../../../fixtures/symbols.php'));
+        $project->getDocument('references')->updateContent(file_get_contents(__DIR__ . '/../../../fixtures/references.php'));
     }
 
-    public function testSymbol()
+    public function testEmptyQueryReturnsAllSymbols()
     {
         // Request symbols
-        $result = $this->workspace->symbol('f');
+        $result = $this->workspace->symbol('');
         $this->assertEquals([
             [
-                'name' => 'foo',
-                'kind' => SymbolKind::FUNCTION,
+                'name' => 'TEST_CONST',
+                'kind' => SymbolKind::CONSTANT,
                 'location' => [
-                    'uri' => 'file:///document1.php',
+                    'uri' => 'symbols',
                     'range' => [
                         'start' => [
-                            'line' => 1,
-                            'character' => 0
+                            'line' => 4,
+                            'character' => 6
                         ],
                         'end' => [
-                            'line' => 1,
-                            'character' => 17
+                            'line' => 4,
+                            'character' => 22
                         ]
                     ]
                 ],
-                'containerName' => null
+                'containerName' => 'TestNamespace'
             ],
             [
-                'name' => 'frob',
-                'kind' => SymbolKind::FUNCTION,
+                'name' => 'TestClass',
+                'kind' => SymbolKind::CLASS_,
                 'location' => [
-                    'uri' => 'file:///document2.php',
+                    'uri' => 'symbols',
                     'range' => [
                         'start' => [
-                            'line' => 2,
+                            'line' => 6,
                             'character' => 0
                         ],
                         'end' => [
-                            'line' => 2,
-                            'character' => 18
+                            'line' => 21,
+                            'character' => 1
                         ]
                     ]
                 ],
-                'containerName' => null
+                'containerName' => 'TestNamespace'
+            ],
+            [
+                'name' => 'TEST_CLASS_CONST',
+                'kind' => SymbolKind::CONSTANT,
+                'location' => [
+                    'uri' => 'symbols',
+                    'range' => [
+                        'start' => [
+                            'line' => 8,
+                            'character' => 10
+                        ],
+                        'end' => [
+                            'line' => 8,
+                            'character' => 32
+                        ]
+                    ]
+                ],
+                'containerName' => 'TestNamespace\\TestClass'
+            ],
+            [
+                'name' => 'staticTestProperty',
+                'kind' => SymbolKind::PROPERTY,
+                'location' => [
+                    'uri' => 'symbols',
+                    'range' => [
+                        'start' => [
+                            'line' => 9,
+                            'character' => 18
+                        ],
+                        'end' => [
+                            'line' => 9,
+                            'character' => 37
+                        ]
+                    ]
+                ],
+                'containerName' => 'TestNamespace\\TestClass'
+            ],
+            [
+                'name' => 'testProperty',
+                'kind' => SymbolKind::PROPERTY,
+                'location' => [
+                    'uri' => 'symbols',
+                    'range' => [
+                        'start' => [
+                            'line' => 10,
+                            'character' => 11
+                        ],
+                        'end' => [
+                            'line' => 10,
+                            'character' => 24
+                        ]
+                    ]
+                ],
+                'containerName' => 'TestNamespace\\TestClass'
+            ],
+            [
+                'name' => 'staticTestMethod',
+                'kind' => SymbolKind::METHOD,
+                'location' => [
+                    'uri' => 'symbols',
+                    'range' => [
+                        'start' => [
+                            'line' => 12,
+                            'character' => 4
+                        ],
+                        'end' => [
+                            'line' => 15,
+                            'character' => 5
+                        ]
+                    ]
+                ],
+                'containerName' => 'TestNamespace\\TestClass'
+            ],
+            [
+                'name' => 'testMethod',
+                'kind' => SymbolKind::METHOD,
+                'location' => [
+                    'uri' => 'symbols',
+                    'range' => [
+                        'start' => [
+                            'line' => 17,
+                            'character' => 4
+                        ],
+                        'end' => [
+                            'line' => 20,
+                            'character' => 5
+                        ]
+                    ]
+                ],
+                'containerName' => 'TestNamespace\\TestClass'
+            ],
+            [
+                'name' => 'TestTrait',
+                'kind' => SymbolKind::CLASS_,
+                'location' => [
+                    'uri' => 'symbols',
+                    'range' => [
+                        'start' => [
+                            'line' => 23,
+                            'character' => 0
+                        ],
+                        'end' => [
+                            'line' => 26,
+                            'character' => 1
+                        ]
+                    ]
+                ],
+                'containerName' => 'TestNamespace'
+            ],
+            [
+                'name' => 'TestInterface',
+                'kind' => SymbolKind::INTERFACE,
+                'location' => [
+                    'uri' => 'symbols',
+                    'range' => [
+                        'start' => [
+                            'line' => 28,
+                            'character' => 0
+                        ],
+                        'end' => [
+                            'line' => 31,
+                            'character' => 1
+                        ]
+                    ]
+                ],
+                'containerName' => 'TestNamespace'
+            ],
+            [
+                'name' => 'test_function',
+                'kind' => SymbolKind::FUNCTION,
+                'location' => [
+                    'uri' => 'symbols',
+                    'range' => [
+                        'start' => [
+                            'line' => 33,
+                            'character' => 0
+                        ],
+                        'end' => [
+                            'line' => 36,
+                            'character' => 1
+                        ]
+                    ]
+                ],
+                'containerName' => 'TestNamespace'
+            ],
+            [
+                'name' => 'whatever',
+                'kind' => SymbolKind::FUNCTION,
+                'location' => [
+                    'uri' => 'references',
+                    'range' => [
+                        'start' => [
+                            'line' => 15,
+                            'character' => 0
+                        ],
+                        'end' => [
+                            'line' => 17,
+                            'character' => 1
+                        ]
+                    ]
+                ],
+                'containerName' => 'TestNamespace'
+            ]
+        ], json_decode(json_encode($result), true));
+    }
+
+    public function testQueryFiltersResults()
+    {
+        // Request symbols
+        $result = $this->workspace->symbol('testmethod');
+        $this->assertEquals([
+            [
+                'name' => 'staticTestMethod',
+                'kind' => SymbolKind::METHOD,
+                'location' => [
+                    'uri' => 'symbols',
+                    'range' => [
+                        'start' => [
+                            'line' => 12,
+                            'character' => 4
+                        ],
+                        'end' => [
+                            'line' => 15,
+                            'character' => 5
+                        ]
+                    ]
+                ],
+                'containerName' => 'TestNamespace\\TestClass'
+            ],
+            [
+                'name' => 'testMethod',
+                'kind' => SymbolKind::METHOD,
+                'location' => [
+                    'uri' => 'symbols',
+                    'range' => [
+                        'start' => [
+                            'line' => 17,
+                            'character' => 4
+                        ],
+                        'end' => [
+                            'line' => 20,
+                            'character' => 5
+                        ]
+                    ]
+                ],
+                'containerName' => 'TestNamespace\\TestClass'
             ]
         ], json_decode(json_encode($result), true));
     }
