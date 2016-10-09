@@ -12,12 +12,12 @@ use LanguageServer\NodeVisitor\{ReferencesAdder, DefinitionCollector};
 
 class DefinitionCollectorTest extends TestCase
 {
-    public function test()
+    public function testCollectsSymbols()
     {
         $client = new LanguageClient(new MockProtocolStream());
         $project = new Project($client);
         $parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7);
-        $document = new PhpDocument('whatever', $project, $client, $parser);
+        $document = new PhpDocument('symbols', $project, $client, $parser);
         $traverser = new NodeTraverser;
         $traverser->addVisitor(new NameResolver);
         $traverser->addVisitor(new ReferencesAdder($document));
@@ -48,5 +48,23 @@ class DefinitionCollectorTest extends TestCase
         $this->assertInstanceOf(Node\Stmt\Trait_::class, $defs['TestNamespace\\TestTrait']);
         $this->assertInstanceOf(Node\Stmt\Interface_::class, $defs['TestNamespace\\TestInterface']);
         $this->assertInstanceOf(Node\Stmt\Function_::class, $defs['TestNamespace\\test_function()']);
+    }
+
+    public function testDoesNotCollectReferences()
+    {
+        $client = new LanguageClient(new MockProtocolStream());
+        $project = new Project($client);
+        $parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7);
+        $document = new PhpDocument('references', $project, $client, $parser);
+        $traverser = new NodeTraverser;
+        $traverser->addVisitor(new NameResolver);
+        $traverser->addVisitor(new ReferencesAdder($document));
+        $definitionCollector = new DefinitionCollector;
+        $traverser->addVisitor($definitionCollector);
+        $stmts = $parser->parse(file_get_contents(__DIR__ . '/../../fixtures/references.php'));
+        $traverser->traverse($stmts);
+        $defs = $definitionCollector->definitions;
+        $this->assertEquals(['TestNamespace\\whatever()'], array_keys($defs));
+        $this->assertInstanceOf(Node\Stmt\Function_::class, $defs['TestNamespace\\whatever()']);
     }
 }

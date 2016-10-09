@@ -133,6 +133,9 @@ class PhpDocument
         if ($symbols === null) {
             return null;
         }
+        if ($query === '') {
+            return $symbols;
+        }
         return array_filter($symbols, function($symbol) use ($query) {
             return stripos($symbol->name, $query) !== false;
         });
@@ -316,7 +319,7 @@ class PhpDocument
         if ($node instanceof Node\Stmt\ClassLike && !isset($nameNode) && isset($node->name)) {
             // Class, interface or trait declaration
             return (string)$node->namespacedName;
-        } else if ($node instanceof Node\Stmt\Function_) {
+        } else if ($node instanceof Node\Stmt\Function_ && !isset($nameNode)) {
             // Function: use functionName() as the name
             return (string)$node->namespacedName . '()';
         } else if ($node instanceof Node\Stmt\ClassMethod) {
