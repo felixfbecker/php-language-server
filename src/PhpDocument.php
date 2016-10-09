@@ -4,7 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer;
 
 use LanguageServer\Protocol\{Diagnostic, DiagnosticSeverity, Range, Position, SymbolInformation, SymbolKind, TextEdit, Location};
-use LanguageServer\NodeVisitors\{NodeAtPositionFinder, ReferencesAdder, DefinitionCollector, ColumnCalculator};
+use LanguageServer\NodeVisitor\{NodeAtPositionFinder, ReferencesAdder, DefinitionCollector, ColumnCalculator};
 use PhpParser\{Error, Comment, Node, ParserFactory, NodeTraverser, Lexer, Parser};
 use PhpParser\PrettyPrinter\Standard as PrettyPrinter;
 use PhpParser\NodeVisitor\NameResolver;

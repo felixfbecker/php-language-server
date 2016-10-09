@@ -8,7 +8,7 @@ use PhpParser\{ParserFactory, NodeTraverser, Node};
 use PhpParser\NodeVisitor\NameResolver;
 use LanguageServer\{LanguageClient, Project, PhpDocument};
 use LanguageServer\Tests\MockProtocolStream;
-use LanguageServer\NodeVisitors\{ReferencesAdder, DefinitionCollector};
+use LanguageServer\NodeVisitor\{ReferencesAdder, DefinitionCollector};
 
 class DefinitionCollectorTest extends TestCase
 {

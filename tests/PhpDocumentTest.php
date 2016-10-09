@@ -6,7 +6,7 @@ namespace LanguageServer\Tests\Server;
 use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\{LanguageClient, Project};
-use LanguageServer\NodeVisitors\NodeAtPositionFinder;
+use LanguageServer\NodeVisitor\NodeAtPositionFinder;
 use LanguageServer\Protocol\{SymbolKind, Position};
 use PhpParser\Node;
 
