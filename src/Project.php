@@ -55,7 +55,6 @@ class Project
      */
     public function getDocument(string $uri)
     {
-        $uri = urldecode($uri);
         if (!isset($this->documents[$uri])) {
             $this->documents[$uri] = new PhpDocument($uri, $this, $this->client, $this->parser);
         }
