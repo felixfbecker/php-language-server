@@ -9,7 +9,7 @@ use LanguageServer\{Server, Client, LanguageClient, Project, PhpDocument};
 use LanguageServer\Protocol\{TextDocumentItem, TextDocumentIdentifier, SymbolKind, DiagnosticSeverity, FormattingOptions};
 use AdvancedJsonRpc\{Request as RequestBody, Response as ResponseBody};
 
-class WorkspaceTest extends TestCase
+class SymbolTest extends TestCase
 {
     /**
      * @var LanguageServer\Workspace $workspace
@@ -24,7 +24,7 @@ class WorkspaceTest extends TestCase
 
         // create two documents
         $project->getDocument('file:///document1.php')->updateContent("<?php\nfunction foo() {}\nfunction bar() {}\n");
-        $project->getDocument('file:///document2.php')->updateContent("<?php\nfunction baz() {}\nfunction frob() {}\n");        
+        $project->getDocument('file:///document2.php')->updateContent("<?php\nfunction baz() {}\nfunction frob() {}\n");
     }
 
     public function testSymbol()
