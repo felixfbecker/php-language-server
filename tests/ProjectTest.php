@@ -41,8 +41,9 @@ class ProjectTest extends TestCase
     {
         $this->project->getDocument('file:///document1.php')->updateContent("<?php\nfunction foo() {}\nfunction bar() {}\n");
         $this->project->getDocument('file:///document2.php')->updateContent("<?php\nfunction baz() {}\nfunction frob() {}\n");
+        $this->project->getDocument('invalid_file')->updateContent(file_get_contents(__DIR__ . '/../fixtures/invalid_file.php'));
 
-        $symbols = $this->project->findSymbols('ba');        
+        $symbols = $this->project->findSymbols('ba');
 
         $this->assertEquals([
             [

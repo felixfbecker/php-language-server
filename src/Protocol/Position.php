@@ -26,4 +26,27 @@ class Position
         $this->line = $line;
         $this->character = $character;
     }
+
+    /**
+     * Compares this position to another position
+     * Returns
+     *  - 0 if the positions match
+     *  - a negative number if $this is before $position
+     *  - a positive number otherwise
+     *
+     * @param Position $position
+     * @return int
+     */
+    public function compare(Position $position): int
+    {
+        if ($this->line === $position->line && $this->character === $position->character) {
+            return 0;
+        }
+
+        if ($this->line !== $position->line) {
+            return $this->line - $position->line;
+        }
+
+        return $this->character - $position->character;
+    }
 }

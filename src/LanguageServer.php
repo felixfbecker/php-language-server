@@ -103,6 +103,9 @@ class LanguageServer extends \AdvancedJsonRpc\Dispatcher
         $serverCapabilities->workspaceSymbolProvider = true;
         // Support "Format Code"
         $serverCapabilities->documentFormattingProvider = true;
+        // Support "Go to definition"
+        $serverCapabilities->definitionProvider = true;
+
         return new InitializeResult($serverCapabilities);
     }
 

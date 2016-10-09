@@ -15,7 +15,15 @@ class Project
      *
      * @var PhpDocument[]
      */
-    private $documents;
+    private $documents = [];
+
+    /**
+     * An associative array [string => PhpDocument]
+     * that maps fully qualified symbol names to loaded PhpDocuments
+     *
+     * @var PhpDocument[]
+     */
+    private $definitions = [];
 
     /**
      * Instance of the PHP parser
@@ -55,6 +63,39 @@ class Project
     }
 
     /**
+     * Adds a document as the container for a specific symbol
+     *
+     * @param string $fqn The fully qualified name of the symbol
+     * @return void
+     */
+    public function addDefinitionDocument(string $fqn, PhpDocument $document)
+    {
+        $this->definitions[$fqn] = $document;
+    }
+
+    /**
+     * Returns the document where a symbol is defined
+     *
+     * @param string $fqn The fully qualified name of the symbol
+     * @return PhpDocument|null
+     */
+    public function getDefinitionDocument(string $fqn)
+    {
+        return $this->definitions[$fqn] ?? null;
+    }
+
+    /**
+     * Returns true if the given FQN is defined in the project
+     *
+     * @param string $fqn The fully qualified name of the symbol
+     * @return bool
+     */
+    public function isDefined(string $fqn): bool
+    {
+        return isset($this->definitions[$fqn]);
+    }
+
+    /**
      * Finds symbols in all documents, filtered by query parameter.
      *
      * @param string $query
@@ -64,7 +105,10 @@ class Project
     {
         $queryResult = [];
         foreach ($this->documents as $uri => $document) {
-            $queryResult = array_merge($queryResult, $document->findSymbols($query));
+            $documentQueryResult = $document->findSymbols($query);
+            if ($documentQueryResult !== null) {
+                $queryResult = array_merge($queryResult, $documentQueryResult);
+            }
         }
         return $queryResult;
     }

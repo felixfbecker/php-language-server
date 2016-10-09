@@ -1,7 +1,7 @@
 <?php
 declare(strict_types = 1);
 
-namespace LanguageServer;
+namespace LanguageServer\NodeVisitor;
 
 use PhpParser\{NodeVisitorAbstract, Node};
 

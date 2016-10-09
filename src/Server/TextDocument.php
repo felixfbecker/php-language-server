@@ -3,7 +3,7 @@ declare(strict_types = 1);
 
 namespace LanguageServer\Server;
 
-use LanguageServer\{LanguageClient, ColumnCalculator, SymbolFinder, Project};
+use LanguageServer\{LanguageClient, ColumnCalculator, Project};
 use LanguageServer\Protocol\{
     TextDocumentItem,
     TextDocumentIdentifier,
@@ -13,7 +13,8 @@ use LanguageServer\Protocol\{
     Range,
     Position,
     FormattingOptions,
-    TextEdit
+    TextEdit,
+    Location
 };
 
 /**
@@ -87,5 +88,27 @@ class TextDocument
     public function formatting(TextDocumentIdentifier $textDocument, FormattingOptions $options)
     {
         return $this->project->getDocument($textDocument->uri)->getFormattedText();
+    }
+
+    /**
+     * The goto definition request is sent from the client to the server to resolve the definition location of a symbol
+     * at a given text document position.
+     *
+     * @param TextDocumentIdentifier $textDocument The text document
+     * @param Position $position The position inside the text document
+     * @return Location|Location[]|null
+     */
+    public function definition(TextDocumentIdentifier $textDocument, Position $position)
+    {
+        $document = $this->project->getDocument($textDocument->uri);
+        $node = $document->getNodeAtPosition($position);
+        if ($node === null) {
+            return null;
+        }
+        $def = $document->getDefinitionByNode($node);
+        if ($def === null) {
+            return null;
+        }
+        return Location::fromNode($def);
     }
 }

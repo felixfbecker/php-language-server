@@ -2,6 +2,8 @@
 
 namespace LanguageServer\Protocol;
 
+use PhpParser\Node;
+
 /**
  * Represents information about programming constructs like variables, classes,
  * interfaces etc.
