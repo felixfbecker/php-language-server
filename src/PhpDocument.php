@@ -525,7 +525,7 @@ class PhpDocument
             }
             // Check each previous sibling node for a variable assignment to that variable
             while ($n->getAttribute('previousSibling') && $n = $n->getAttribute('previousSibling')) {
-                if ($n instanceof Node\Expr\Assign && $n->var->name === $var->name) {
+                if ($n instanceof Node\Expr\Assign && $n->var instanceof Node\Expr\Variable && $n->var->name === $var->name) {
                     return $n;
                 }
             }
