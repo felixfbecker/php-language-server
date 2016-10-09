@@ -71,6 +71,13 @@ class PhpDocument
     private $definitions = [];
 
     /**
+     * Map from fully qualified name (FQN) to array of nodes that reference the symbol
+     *
+     * @var Node[][]
+     */
+    private $references;
+
+    /**
      * @param string         $uri     The URI of the document
      * @param Project        $project The Project this document belongs to (to register definitions etc)
      * @param LanguageClient $client  The LanguageClient instance (to report errors etc)
@@ -284,22 +291,27 @@ class PhpDocument
     }
 
     /**
-     * Returns the definition node for any node
-     * The definition node MAY be in another document, check the ownerDocument attribute
+     * Returns true if the given FQN is defined in this document
+     *
+     * @param string $fqn The fully qualified name of the symbol
+     * @return bool
+     */
+    public function isDefined(string $fqn): bool
+    {
+        return isset($this->definitions[$fqn]);
+    }
+
+    /**
+     * Returns the FQN that is referenced by a node
      *
      * @param Node $node
-     * @return Node|null
+     * @return string|null
      */
-    public function getDefinitionByNode(Node $node)
+    public function getReferencedFqn(Node $node)
     {
         if ($node instanceof Node\Name) {
             $nameNode = $node;
             $node = $node->getAttribute('parentNode');
-        }
-        // Variables always stay in the boundary of the file and need to be searched inside their function scope
-        // by traversing the AST
-        if ($node instanceof Node\Expr\Variable) {
-            return $this->getVariableDefinition($node);
         }
 
         if (
@@ -310,13 +322,15 @@ class PhpDocument
         ) {
             // For extends, implements and type hints use the name directly
             $name = (string)$nameNode;
-        } else if ($node instanceof Node\Stmt\UseUse) {
+        // Only the name node should be considered a reference, not the UseUse node itself
+        } else if ($node instanceof Node\Stmt\UseUse && isset($nameNode)) {
             $name = (string)$node->name;
             $parent = $node->getAttribute('parentNode');
             if ($parent instanceof Node\Stmt\GroupUse) {
                 $name = $parent->prefix . '\\' . $name;
             }
-        } else if ($node instanceof Node\Expr\New_) {
+        // Only the name node should be considered a reference, not the New_ node itself
+        } else if ($node instanceof Node\Expr\New_ && isset($nameNode)) {
             if (!($node->class instanceof Node\Name)) {
                 // Cannot get definition of dynamic calls
                 return null;
@@ -381,25 +395,50 @@ class PhpDocument
         if (!isset($name)) {
             return null;
         }
-        // Search for the document where the class, interface, trait, function, method or property is defined
-        $document = $this->project->getDefinitionDocument($name);
-        if (!$document && $node instanceof Node\Expr\FuncCall) {
+        // If the node is a function or constant, it could be namespaced, but PHP falls back to global
+        // The NameResolver therefor does not resolve these to namespaced names
+        // http://php.net/manual/en/language.namespaces.fallback.php
+        if ($node instanceof Node\Expr\FuncCall || $node instanceof Node\Expr\ConstFetch) {
             // Find and try with namespace
-            // Namespaces aren't added automatically by NameResolver because PHP falls back to global functions
             $n = $node;
             while (isset($n)) {
                 $n = $n->getAttribute('parentNode');
                 if ($n instanceof Node\Stmt\Namespace_) {
-                    $name = (string)$n->name . '\\' . $name;
-                    $document = $this->project->getDefinitionDocument($name);
-                    break;
+                    $namespacedName = (string)$n->name . '\\' . $name;
+                    // If the namespaced version is defined, return that
+                    // Otherwise fall back to global
+                    if ($this->project->isDefined($namespacedName)) {
+                        return $namespacedName;
+                    }
                 }
             }
         }
+        return $name;
+    }
+
+    /**
+     * Returns the definition node for any node
+     * The definition node MAY be in another document, check the ownerDocument attribute
+     *
+     * @param Node $node
+     * @return Node|null
+     */
+    public function getDefinitionByNode(Node $node)
+    {
+        // Variables always stay in the boundary of the file and need to be searched inside their function scope
+        // by traversing the AST
+        if ($node instanceof Node\Expr\Variable) {
+            return $this->getVariableDefinition($node);
+        }
+        $fqn = $this->getReferencedFqn($node);
+        if (!isset($fqn)) {
+            return null;
+        }
+        $document = $this->project->getDefinitionDocument($fqn);
         if (!isset($document)) {
             return null;
         }
-        return $document->getDefinitionByFqn($name);
+        return $document->getDefinitionByFqn($fqn);
     }
 
     /**
