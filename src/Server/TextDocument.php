@@ -109,12 +109,6 @@ class TextDocument
         if ($def === null) {
             return null;
         }
-        return new Location(
-            $def->getAttribute('ownerDocument')->getUri(),
-            new Range(
-                new Position($def->getAttribute('startLine') - 1, $def->getAttribute('startColumn') - 1),
-                new Position($def->getAttribute('endLine') - 1, $def->getAttribute('endColumn') - 1)
-            )
-        );
+        return Location::fromNode($def);
     }
 }

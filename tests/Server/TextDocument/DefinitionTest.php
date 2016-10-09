@@ -39,7 +39,7 @@ class DefinitionTest extends TestCase
                 ],
                 'end' => [
                     'line' => 21,
-                    'character' => 0
+                    'character' => 1
                 ]
             ]
         ], json_decode(json_encode($result), true));
@@ -59,7 +59,7 @@ class DefinitionTest extends TestCase
                 ],
                 'end' => [
                     'line' => 21,
-                    'character' => 0
+                    'character' => 1
                 ]
             ]
         ], json_decode(json_encode($result), true));
@@ -79,7 +79,7 @@ class DefinitionTest extends TestCase
                 ],
                 'end' => [
                     'line' => 31,
-                    'character' => 0
+                    'character' => 1
                 ]
             ]
         ], json_decode(json_encode($result), true));
@@ -99,7 +99,7 @@ class DefinitionTest extends TestCase
                 ],
                 'end' => [
                     'line' => 31,
-                    'character' => 0
+                    'character' => 1
                 ]
             ]
         ], json_decode(json_encode($result), true));
@@ -119,7 +119,7 @@ class DefinitionTest extends TestCase
                 ],
                 'end' => [
                     'line' => 8,
-                    'character' => 31
+                    'character' => 32
                 ]
             ]
         ], json_decode(json_encode($result), true));
@@ -139,7 +139,7 @@ class DefinitionTest extends TestCase
                 ],
                 'end' => [
                     'line' => 4,
-                    'character' => 21
+                    'character' => 22
                 ]
             ]
         ], json_decode(json_encode($result), true));
@@ -159,7 +159,7 @@ class DefinitionTest extends TestCase
                 ],
                 'end' => [
                     'line' => 15,
-                    'character' => 4
+                    'character' => 5
                 ]
             ]
         ], json_decode(json_encode($result), true));
@@ -179,7 +179,7 @@ class DefinitionTest extends TestCase
                 ],
                 'end' => [
                     'line' => 9,
-                    'character' => 36
+                    'character' => 37
                 ]
             ]
         ], json_decode(json_encode($result), true));
@@ -199,7 +199,7 @@ class DefinitionTest extends TestCase
                 ],
                 'end' => [
                     'line' => 20,
-                    'character' => 4
+                    'character' => 5
                 ]
             ]
         ], json_decode(json_encode($result), true));
@@ -219,7 +219,7 @@ class DefinitionTest extends TestCase
                 ],
                 'end' => [
                     'line' => 10,
-                    'character' => 23
+                    'character' => 24
                 ]
             ]
         ], json_decode(json_encode($result), true));
@@ -239,7 +239,7 @@ class DefinitionTest extends TestCase
                 ],
                 'end' => [
                     'line' => 12,
-                    'character' => 9
+                    'character' => 10
                 ]
             ]
         ], json_decode(json_encode($result), true));
@@ -259,7 +259,7 @@ class DefinitionTest extends TestCase
                 ],
                 'end' => [
                     'line' => 21,
-                    'character' => 0
+                    'character' => 1
                 ]
             ]
         ], json_decode(json_encode($result), true));
@@ -278,7 +278,7 @@ class DefinitionTest extends TestCase
                 ],
                 'end' => [
                     'line' => 21,
-                    'character' => 0
+                    'character' => 1
                 ]
             ]
         ], json_decode(json_encode($result), true));
@@ -298,7 +298,7 @@ class DefinitionTest extends TestCase
                 ],
                 'end' => [
                     'line' => 15,
-                    'character' => 33
+                    'character' => 34
                 ]
             ]
         ], json_decode(json_encode($result), true));
@@ -318,7 +318,7 @@ class DefinitionTest extends TestCase
                 ],
                 'end' => [
                     'line' => 19,
-                    'character' => 25
+                    'character' => 26
                 ]
             ]
         ], json_decode(json_encode($result), true));
@@ -338,7 +338,7 @@ class DefinitionTest extends TestCase
                 ],
                 'end' => [
                     'line' => 36,
-                    'character' => 0
+                    'character' => 1
                 ]
             ]
         ], json_decode(json_encode($result), true));

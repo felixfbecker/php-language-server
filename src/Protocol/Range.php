@@ -2,6 +2,8 @@
 
 namespace LanguageServer\Protocol;
 
+use PhpParser\Node;
+
 /**
  * A range in a text document expressed as (zero-based) start and end positions.
  */
@@ -20,6 +22,20 @@ class Range
      * @var Position
      */
     public $end;
+
+    /**
+     * Returns the range the node spans
+     *
+     * @param Node $node
+     * @return self
+     */
+    public static function fromNode(Node $node)
+    {
+        return new self(
+            new Position($node->getAttribute('startLine') - 1, $node->getAttribute('startColumn') - 1),
+            new Position($node->getAttribute('endLine') - 1, $node->getAttribute('endColumn'))
+        );
+    }
 
     public function __construct(Position $start = null, Position $end = null)
     {

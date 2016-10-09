@@ -113,16 +113,14 @@ class PhpDocument
         ];
         $symbols = [];
         foreach ($this->definitions as $fqn => $node) {
+            $class = get_class($node);
+            if (!isset($nodeSymbolKindMap[$class])) {
+                continue;
+            }
             $symbol = new SymbolInformation();
-            $symbol->kind = $nodeSymbolKindMap[get_class($node)];
+            $symbol->kind = $nodeSymbolKindMap[$class];
             $symbol->name = (string)$node->name;
-            $symbol->location = new Location(
-                $this->getUri(),
-                new Range(
-                    new Position($node->getAttribute('startLine') - 1, $node->getAttribute('startColumn') - 1),
-                    new Position($node->getAttribute('endLine') - 1, $node->getAttribute('endColumn'))
-                )
-            );
+            $symbol->location = Location::fromNode($node);
             $parts = preg_split('/(::|\\\\)/', $fqn);
             array_pop($parts);
             $symbol->containerName = implode('\\', $parts);
