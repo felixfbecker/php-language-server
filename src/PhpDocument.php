@@ -4,7 +4,13 @@ declare(strict_types = 1);
 namespace LanguageServer;
 
 use LanguageServer\Protocol\{Diagnostic, DiagnosticSeverity, Range, Position, TextEdit};
-use LanguageServer\NodeVisitor\{NodeAtPositionFinder, ReferencesAdder, DefinitionCollector, ColumnCalculator};
+use LanguageServer\NodeVisitor\{
+    NodeAtPositionFinder,
+    ReferencesAdder,
+    DefinitionCollector,
+    ColumnCalculator,
+    ReferencesCollector
+};
 use PhpParser\{Error, Node, NodeTraverser, Parser};
 use PhpParser\NodeVisitor\NameResolver;
 
@@ -85,6 +91,18 @@ class PhpDocument
     }
 
     /**
+     * Get all references of a fully qualified name
+     *
+     * @param string $fqn The fully qualified name of the symbol
+     * @return Node[]
+     */
+    public function getReferencesByFqn(string $fqn)
+    {
+        return isset($this->references) && isset($this->references[$fqn]) ? $this->references[$fqn] : null;
+    }
+
+    /**
+     * Updates the content on this document.
      * Re-parses a source file, updates symbols and reports parsing errors
      * that may have occured as diagnostics.
      *
@@ -146,8 +164,20 @@ class PhpDocument
                 $this->project->setDefinitionUri($fqn, $this->uri);
             }
 
-            $this->statements = $stmts;
             $this->definitions = $definitionCollector->definitions;
+
+            // Collect all references
+            $traverser = new NodeTraverser;
+            $referencesCollector = new ReferencesCollector($this->definitions);
+            $traverser->addVisitor($referencesCollector);
+            $traverser->traverse($stmts);
+            $this->references = $referencesCollector->references;
+            // Register this document on the project for references
+            foreach ($referencesCollector->references as $fqn => $nodes) {
+                $this->project->addReferenceDocument($fqn, $this);
+            }
+
+            $this->statements = $stmts;
         }
     }
 

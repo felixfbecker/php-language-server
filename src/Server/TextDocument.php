@@ -12,7 +12,8 @@ use LanguageServer\Protocol\{
     FormattingOptions,
     TextEdit,
     Location,
-    SymbolInformation
+    SymbolInformation,
+    ReferenceContext
 };
 
 /**
@@ -30,7 +31,7 @@ class TextDocument
     /**
      * @var Project
      */
-    private $project;
+    public $project;
 
     public function __construct(Project $project, LanguageClient $client)
     {
@@ -102,6 +103,37 @@ class TextDocument
     public function formatting(TextDocumentIdentifier $textDocument, FormattingOptions $options)
     {
         return $this->project->getDocument($textDocument->uri)->getFormattedText();
+    }
+
+    /**
+     * The references request is sent from the client to the server to resolve project-wide references for the symbol
+     * denoted by the given text document position.
+     *
+     * @param ReferenceContext $context
+     * @return Location[]|null
+     */
+    public function references(ReferenceContext $context, TextDocumentIdentifier $textDocument, Position $position)
+    {
+        $document = $this->project->getDocument($textDocument->uri);
+        $node = $document->getNodeAtPosition($position);
+        if ($node === null) {
+            return null;
+        }
+        $fqn = $document->getDefinedFqn($node);
+        if ($fqn === null) {
+            return null;
+        }
+        $refDocuments = $this->project->getReferenceDocuments($fqn);
+        $locations = [];
+        foreach ($refDocuments as $document) {
+            $refs = $document->getReferencesByFqn($fqn);
+            if ($refs !== null) {
+                foreach ($refs as $ref) {
+                    $locations[] = Location::fromNode($ref);
+                }
+            }
+        }
+        return $locations;
     }
 
     /**
