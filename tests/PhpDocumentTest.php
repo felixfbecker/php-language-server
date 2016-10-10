@@ -28,9 +28,7 @@ class PhpDocumentTest extends TestCase
 
         $document->updateContent("<?php\n$\$a = 'foo';\n\$bar = 'baz';\n");
 
-        $symbols = $document->getSymbols();
-
-        $this->assertEquals([], json_decode(json_encode($symbols), true));
+        $this->assertEquals([], $document->getDefinitions());
     }
 
     public function testGetNodeAtPosition()

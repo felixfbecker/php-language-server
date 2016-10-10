@@ -9,6 +9,7 @@ use PhpParser\{Error, Comment, Node, ParserFactory, NodeTraverser, Lexer, Parser
 use PhpParser\PrettyPrinter\Standard as PrettyPrinter;
 use PhpParser\NodeVisitor\NameResolver;
 use Exception;
+use function LanguageServer\uriToPath;
 
 class PhpDocument
 {
@@ -85,83 +86,36 @@ class PhpDocument
     }
 
     /**
-     * Returns all symbols in this document.
+     * Returns true if the content of this document is being held in memory
      *
-     * @return SymbolInformation[]|null
+     * @return bool
      */
-    public function getSymbols()
+    public function isLoaded()
     {
-        if (!isset($this->definitions)) {
-            return null;
-        }
-        $nodeSymbolKindMap = [
-            Node\Stmt\Class_::class           => SymbolKind::CLASS_,
-            Node\Stmt\Trait_::class           => SymbolKind::CLASS_,
-            Node\Stmt\Interface_::class       => SymbolKind::INTERFACE,
-            Node\Stmt\Namespace_::class       => SymbolKind::NAMESPACE,
-            Node\Stmt\Function_::class        => SymbolKind::FUNCTION,
-            Node\Stmt\ClassMethod::class      => SymbolKind::METHOD,
-            Node\Stmt\PropertyProperty::class => SymbolKind::PROPERTY,
-            Node\Const_::class                => SymbolKind::CONSTANT
-        ];
-        $symbols = [];
-        foreach ($this->definitions as $fqn => $node) {
-            $class = get_class($node);
-            if (!isset($nodeSymbolKindMap[$class])) {
-                continue;
-            }
-            $symbol = new SymbolInformation();
-            $symbol->kind = $nodeSymbolKindMap[$class];
-            $symbol->name = (string)$node->name;
-            $symbol->location = Location::fromNode($node);
-            $parts = preg_split('/(::|\\\\)/', $fqn);
-            array_pop($parts);
-            $symbol->containerName = implode('\\', $parts);
-            $symbols[] = $symbol;
-        }
-        return $symbols;
+        return isset($this->content);
     }
 
     /**
-     * Returns symbols in this document filtered by query string.
-     *
-     * @param string $query The search query
-     * @return SymbolInformation[]|null
-     */
-    public function findSymbols(string $query)
-    {
-        $symbols = $this->getSymbols();
-        if ($symbols === null) {
-            return null;
-        }
-        if ($query === '') {
-            return $symbols;
-        }
-        return array_filter($symbols, function($symbol) use ($query) {
-            return stripos($symbol->name, $query) !== false;
-        });
-    }
-
-    /**
-     * Updates the content on this document.
-     *
-     * @param string $content
-     * @return void
-     */
-    public function updateContent(string $content)
-    {
-        $this->content = $content;
-        $this->parse($content);
-    }
-
-    /**
-     * Unloads the content from memory
+     * Loads the content from disk and saves statements and definitions in memory
      *
      * @return void
      */
-    public function removeContent()
+    public function load()
+    {
+        $this->updateContent(file_get_contents(uriToPath($this->getUri())), true);
+    }
+
+    /**
+     * Unloads the content, statements and definitions from memory
+     *
+     * @return void
+     */
+    public function unload()
     {
         unset($this->content);
+        unset($this->statements);
+        unset($this->definitions);
+        unset($this->references);
     }
 
     /**
@@ -169,10 +123,15 @@ class PhpDocument
      * that may have occured as diagnostics.
      *
      * @param string $content
+     * @param bool $keepInMemory Wether to keep content, statements and definitions in memory or only update project definitions
      * @return void
      */
-    public function parse(string $content)
+    public function updateContent(string $content, bool $keepInMemory = true)
     {
+        $keepInMemory = $keepInMemory || $this->isLoaded();
+        if ($keepInMemory) {
+            $this->content = $content;
+        }
         $stmts = null;
         $errors = [];
         try {
@@ -219,13 +178,15 @@ class PhpDocument
 
             $traverser->traverse($stmts);
 
-            $this->definitions = $definitionCollector->definitions;
             // Register this document on the project for all the symbols defined in it
             foreach ($definitionCollector->definitions as $fqn => $node) {
                 $this->project->addDefinitionDocument($fqn, $this);
             }
 
-            $this->statements = $stmts;
+            if ($keepInMemory) {
+                $this->statements = $stmts;
+                $this->definitions = $definitionCollector->definitions;
+            }
         }
     }
 
@@ -261,7 +222,7 @@ class PhpDocument
      *
      * @return Node[]
      */
-    public function getStatements()
+    public function &getStatements()
     {
         if (!isset($this->statements)) {
             $this->parse($this->getContent());
@@ -302,7 +263,21 @@ class PhpDocument
      */
     public function getDefinitionByFqn(string $fqn)
     {
-        return $this->definitions[$fqn] ?? null;
+        return $this->getDefinitions()[$fqn] ?? null;
+    }
+
+    /**
+     * Returns a map from fully qualified name (FQN) to Nodes defined in this document
+     *
+     * @return Node[]
+     * @throws Exception If the definitions are not loaded
+     */
+    public function &getDefinitions()
+    {
+        if (!isset($this->definitions)) {
+            throw new Exception('Definitions of this document are not loaded');
+        }
+        return $this->definitions;
     }
 
     /**
@@ -313,7 +288,7 @@ class PhpDocument
      */
     public function isDefined(string $fqn): bool
     {
-        return isset($this->definitions[$fqn]);
+        return isset($this->getDefinitions()[$fqn]);
     }
 
     /**
@@ -511,6 +486,9 @@ class PhpDocument
             return null;
         }
         $document = $this->project->getDefinitionDocument($fqn);
+        if (!$document->isLoaded()) {
+            $document->load();
+        }
         if (!isset($document)) {
             return null;
         }

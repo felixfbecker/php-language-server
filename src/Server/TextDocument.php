@@ -14,7 +14,8 @@ use LanguageServer\Protocol\{
     Position,
     FormattingOptions,
     TextEdit,
-    Location
+    Location,
+    SymbolInformation
 };
 
 /**
@@ -49,7 +50,11 @@ class TextDocument
      */
     public function documentSymbol(TextDocumentIdentifier $textDocument): array
     {
-        return $this->project->getDocument($textDocument->uri)->getSymbols();
+        $symbols = [];
+        foreach ($this->project->getDocument($textDocument->uri)->getDefinitions() as $fqn => $node) {
+            $symbols[] = SymbolInformation::fromNode($node, $fqn);
+        }
+        return $symbols;
     }
 
     /**
@@ -87,7 +92,7 @@ class TextDocument
      */
     public function didClose(TextDocumentIdentifier $textDocument)
     {
-        $this->project->getDocument($textDocument->uri)->removeContent();
+        $this->project->getDocument($textDocument->uri)->unload();
     }
 
     /**

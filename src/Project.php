@@ -84,6 +84,17 @@ class Project
     }
 
     /**
+     * Returns an associative array [string => PhpDocument]
+     * that maps fully qualified symbol names to loaded PhpDocuments
+     *
+     * @return PhpDocument[]
+     */
+    public function &getDefinitionDocuments()
+    {
+        return $this->definitions;
+    }
+
+    /**
      * Returns true if the given FQN is defined in the project
      *
      * @param string $fqn The fully qualified name of the symbol
@@ -92,23 +103,5 @@ class Project
     public function isDefined(string $fqn): bool
     {
         return isset($this->definitions[$fqn]);
-    }
-
-    /**
-     * Finds symbols in all documents, filtered by query parameter.
-     *
-     * @param string $query
-     * @return SymbolInformation[]
-     */
-    public function findSymbols(string $query)
-    {
-        $queryResult = [];
-        foreach ($this->documents as $uri => $document) {
-            $documentQueryResult = $document->findSymbols($query);
-            if ($documentQueryResult !== null) {
-                $queryResult = array_merge($queryResult, $documentQueryResult);
-            }
-        }
-        return $queryResult;
     }
 }
