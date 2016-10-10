@@ -178,7 +178,7 @@ class PhpDocument
             $diagnostic = new Diagnostic();
             $startLine = max($error->getStartLine() - 1, 0);
             $startColumn = $error->hasColumnInfo() ? $error->getStartColumn($this->content) - 1 : 0;
-            $endLine = $error->getEndLine() === -1 ? $startLine : $error->getEndLine() - 1;
+            $endLine = max($error->getEndLine() - 1, $startLine);
             $endColumn = $error->hasColumnInfo() ? $error->getEndColumn($this->content) : 0;
             $diagnostic->range = new Range(new Position($startLine, $startColumn), new Position($endLine, $endColumn));
             $diagnostic->severity = DiagnosticSeverity::ERROR;
