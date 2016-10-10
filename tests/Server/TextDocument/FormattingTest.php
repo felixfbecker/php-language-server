@@ -57,14 +57,4 @@ class FormattingTest extends TestCase
             'newText' => $expected
         ]], json_decode(json_encode($result), true));
     }
-
-    public function testFormattingInvalidUri()
-    {
-        $client = new LanguageClient(new MockProtocolStream());
-        $project = new Project($client);
-        $textDocument = new Server\TextDocument($project, $client);
-
-        $result = $textDocument->formatting(new TextDocumentIdentifier('whatever'), new FormattingOptions());
-        $this->assertSame([], $result);
-    }
 }
