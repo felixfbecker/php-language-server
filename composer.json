@@ -29,8 +29,27 @@
         "sabre/event": "^4.0",
         "felixfbecker/advanced-json-rpc": "^1.2",
         "squizlabs/php_codesniffer" : "^2.7",
-        "symfony/debug": "^3.1"
+        "symfony/debug": "^3.1",
+        "JetBrains/phpstorm-stubs": "dev-master"
     },
+    "repositories": [
+        {
+            "type": "package",
+            "package": {
+                "name": "JetBrains/phpstorm-stubs",
+                "version": "dev-master",
+                "dist": {
+                    "url": "https://github.com/JetBrains/phpstorm-stubs/archive/master.zip",
+                    "type": "zip"
+                },
+                "source": {
+                    "url": "https://github.com/JetBrains/phpstorm-stubs",
+                    "type": "git",
+                    "reference": "master"
+                }
+            }
+        }
+    ],
     "minimum-stability": "dev",
     "prefer-stable": true,
     "autoload": {
