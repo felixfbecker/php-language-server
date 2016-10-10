@@ -218,20 +218,16 @@ class PhpDocument
     }
 
     /**
-     * Returns this document as formatted text.
+     * Returns array of TextEdit changes to format this document.
      *
-     * @return string
+     * @return \LanguageServer\Protocol\TextEdit[]
      */
     public function getFormattedText()
     {
-        if (empty($this->stmts)) {
+        if (empty($this->getContent())) {
             return [];
         }
-        $prettyPrinter = new PrettyPrinter();
-        $edit = new TextEdit();
-        $edit->range = new Range(new Position(0, 0), new Position(PHP_INT_MAX, PHP_INT_MAX));
-        $edit->newText = $prettyPrinter->prettyPrintFile($this->stmts);
-        return [$edit];
+        return Formatter::format($this->content, $this->uri);
     }
 
     /**

@@ -27,7 +27,8 @@
         "nikic/php-parser": "^3.0.0beta1",
         "phpdocumentor/reflection-docblock": "^3.0",
         "sabre/event": "^4.0",
-        "felixfbecker/advanced-json-rpc": "^1.2"
+        "felixfbecker/advanced-json-rpc": "^1.2",
+        "squizlabs/php_codesniffer" : "^2.7"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,

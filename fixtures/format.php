@@ -1,13 +1,13 @@
 <?php
 
-namespace       TestNamespace;
+namespace TestNamespace;
+
+use     SomeNamespace\Goo;
 
 
-
-
-class TestClass
+class       TestClass
 {
-    public $testProperty;
+    public      $testProperty;
 
                 public function testMethod($testParameter)
     {
