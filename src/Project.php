@@ -18,10 +18,9 @@ class Project
     private $documents = [];
 
     /**
-     * An associative array [string => PhpDocument]
-     * that maps fully qualified symbol names to loaded PhpDocuments
+     * An associative array that maps fully qualified symbol names to document URIs
      *
-     * @var PhpDocument[]
+     * @var string[]
      */
     private $definitions = [];
 
@@ -48,7 +47,8 @@ class Project
     }
 
     /**
-     * Returns the document indicated by uri. Instantiates a new document if none exists.
+     * Returns the document indicated by uri.
+     * If the document is not open, tries to read it from disk, but the document is not added the list of open documents.
      *
      * @param string $uri
      * @return LanguageServer\PhpDocument
@@ -56,9 +56,58 @@ class Project
     public function getDocument(string $uri)
     {
         if (!isset($this->documents[$uri])) {
-            $this->documents[$uri] = new PhpDocument($uri, $this, $this->client, $this->parser);
+            return $this->loadDocument($uri);
+        } else {
+            return $this->documents[$uri];
         }
-        return $this->documents[$uri];
+    }
+
+    /**
+     * Reads a document from disk.
+     * The document is NOT added to the list of open documents, but definitions are registered.
+     *
+     * @param string $uri
+     * @return LanguageServer\PhpDocument
+     */
+    public function loadDocument(string $uri)
+    {
+        $content = file_get_contents(uriToPath($uri));
+        if (isset($this->documents[$uri])) {
+            $document = $this->documents[$uri];
+            $document->updateContent($content);
+        } else {
+            $document = new PhpDocument($uri, $content, $this, $this->client, $this->parser);
+        }
+        return $document;
+    }
+
+    /**
+     * Ensures a document is loaded and added to the list of open documents.
+     *
+     * @param string $uri
+     * @param string $content
+     * @return void
+     */
+    public function openDocument(string $uri, string $content)
+    {
+        if (isset($this->documents[$uri])) {
+            $document = $this->documents[$uri];
+            $document->updateContent($content);
+        } else {
+            $document = new PhpDocument($uri, $content, $this, $this->client, $this->parser);
+            $this->documents[$uri] = $document;
+        }
+        return $document;
+    }
+
+    public function closeDocument(string $uri)
+    {
+        unset($this->documents[$uri]);
+    }
+
+    public function isDocumentOpen(string $uri)
+    {
+        return isset($this->documents[$uri]);
     }
 
     /**
@@ -67,9 +116,9 @@ class Project
      * @param string $fqn The fully qualified name of the symbol
      * @return void
      */
-    public function addDefinitionDocument(string $fqn, PhpDocument $document)
+    public function addDefinitionDocument(string $fqn, string $uri)
     {
-        $this->definitions[$fqn] = $document;
+        $this->definitions[$fqn] = $uri;
     }
 
     /**
@@ -80,12 +129,12 @@ class Project
      */
     public function getDefinitionDocument(string $fqn)
     {
-        return $this->definitions[$fqn] ?? null;
+        return isset($this->definitions[$fqn]) ? $this->getDocument($this->definitions[$fqn]) : null;
     }
 
     /**
-     * Returns an associative array [string => PhpDocument]
-     * that maps fully qualified symbol names to loaded PhpDocuments
+     * Returns an associative array [string => string] that maps fully qualified symbol names
+     * to URIs of the document where the symbol is defined
      *
      * @return PhpDocument[]
      */

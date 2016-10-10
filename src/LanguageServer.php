@@ -153,7 +153,7 @@ class LanguageServer extends \AdvancedJsonRpc\Dispatcher
                 $shortName = substr($file, strlen($rootPath) + 1);
                 $this->client->window->logMessage(MessageType::INFO, "Parsing file $fileNum/$numTotalFiles: $shortName.");
 
-                $this->project->getDocument($uri)->updateContent(file_get_contents($file), false);
+                $this->project->loadDocument($uri);
 
                 Loop\setTimeout($processFile, 0);
             } else {

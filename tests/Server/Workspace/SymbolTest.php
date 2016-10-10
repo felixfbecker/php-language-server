@@ -34,8 +34,8 @@ class SymbolTest extends TestCase
         $this->workspace = new Server\Workspace($project, $client);
         $this->symbolsUri = pathToUri(realpath(__DIR__ . '/../../../fixtures/symbols.php'));
         $this->referencesUri = pathToUri(realpath(__DIR__ . '/../../../fixtures/references.php'));
-        $project->getDocument($this->symbolsUri)->updateContent(file_get_contents($this->symbolsUri), false);
-        $project->getDocument($this->referencesUri)->updateContent(file_get_contents($this->referencesUri), false);
+        $project->loadDocument($this->symbolsUri);
+        $project->loadDocument($this->referencesUri);
     }
 
     public function testEmptyQueryReturnsAllSymbols()

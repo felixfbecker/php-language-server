@@ -77,45 +77,13 @@ class PhpDocument
      * @param LanguageClient $client  The LanguageClient instance (to report errors etc)
      * @param Parser         $parser  The PHPParser instance
      */
-    public function __construct(string $uri, Project $project, LanguageClient $client, Parser $parser)
+    public function __construct(string $uri, string $content, Project $project, LanguageClient $client, Parser $parser)
     {
         $this->uri = $uri;
         $this->project = $project;
         $this->client = $client;
         $this->parser = $parser;
-    }
-
-    /**
-     * Returns true if the content of this document is being held in memory
-     *
-     * @return bool
-     */
-    public function isLoaded()
-    {
-        return isset($this->content);
-    }
-
-    /**
-     * Loads the content from disk and saves statements and definitions in memory
-     *
-     * @return void
-     */
-    public function load()
-    {
-        $this->updateContent(file_get_contents(uriToPath($this->getUri())), true);
-    }
-
-    /**
-     * Unloads the content, statements and definitions from memory
-     *
-     * @return void
-     */
-    public function unload()
-    {
-        unset($this->content);
-        unset($this->statements);
-        unset($this->definitions);
-        unset($this->references);
+        $this->updateContent($content);
     }
 
     /**
@@ -126,12 +94,9 @@ class PhpDocument
      * @param bool $keepInMemory Wether to keep content, statements and definitions in memory or only update project definitions
      * @return void
      */
-    public function updateContent(string $content, bool $keepInMemory = true)
+    public function updateContent(string $content)
     {
-        $keepInMemory = $keepInMemory || $this->isLoaded();
-        if ($keepInMemory) {
-            $this->content = $content;
-        }
+        $this->content = $content;
         $stmts = null;
         $errors = [];
         try {
@@ -180,13 +145,11 @@ class PhpDocument
 
             // Register this document on the project for all the symbols defined in it
             foreach ($definitionCollector->definitions as $fqn => $node) {
-                $this->project->addDefinitionDocument($fqn, $this);
+                $this->project->addDefinitionDocument($fqn, $this->uri);
             }
 
-            if ($keepInMemory) {
-                $this->statements = $stmts;
-                $this->definitions = $definitionCollector->definitions;
-            }
+            $this->statements = $stmts;
+            $this->definitions = $definitionCollector->definitions;
         }
     }
 
@@ -211,9 +174,6 @@ class PhpDocument
      */
     public function getContent()
     {
-        if (!isset($this->content)) {
-            throw new Exception('Content is not loaded');
-        }
         return $this->content;
     }
 
@@ -224,9 +184,6 @@ class PhpDocument
      */
     public function &getStatements()
     {
-        if (!isset($this->statements)) {
-            $this->parse($this->getContent());
-        }
         return $this->statements;
     }
 
@@ -251,7 +208,7 @@ class PhpDocument
         $traverser = new NodeTraverser;
         $finder = new NodeAtPositionFinder($position);
         $traverser->addVisitor($finder);
-        $traverser->traverse($this->getStatements());
+        $traverser->traverse($this->statements);
         return $finder->node;
     }
 
@@ -263,7 +220,7 @@ class PhpDocument
      */
     public function getDefinitionByFqn(string $fqn)
     {
-        return $this->getDefinitions()[$fqn] ?? null;
+        return $this->definitions[$fqn] ?? null;
     }
 
     /**
@@ -274,9 +231,6 @@ class PhpDocument
      */
     public function &getDefinitions()
     {
-        if (!isset($this->definitions)) {
-            throw new Exception('Definitions of this document are not loaded');
-        }
         return $this->definitions;
     }
 
@@ -288,7 +242,7 @@ class PhpDocument
      */
     public function isDefined(string $fqn): bool
     {
-        return isset($this->getDefinitions()[$fqn]);
+        return isset($this->definitions[$fqn]);
     }
 
     /**
@@ -481,9 +435,6 @@ class PhpDocument
             return null;
         }
         $document = $this->project->getDefinitionDocument($fqn);
-        if (!$document->isLoaded()) {
-            $document->load();
-        }
         if (!isset($document)) {
             return null;
         }

@@ -67,7 +67,7 @@ class TextDocument
      */
     public function didOpen(TextDocumentItem $textDocument)
     {
-        $this->project->getDocument($textDocument->uri)->updateContent($textDocument->text);
+        $this->project->openDocument($textDocument->uri, $textDocument->text);
     }
 
     /**
@@ -92,7 +92,7 @@ class TextDocument
      */
     public function didClose(TextDocumentIdentifier $textDocument)
     {
-        $this->project->getDocument($textDocument->uri)->unload();
+        $this->project->closeDocument($textDocument->uri);
     }
 
     /**

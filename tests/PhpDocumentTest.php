@@ -24,17 +24,14 @@ class PhpDocumentTest extends TestCase
 
     public function testParsesVariableVariables()
     {
-        $document = $this->project->getDocument('whatever');
-
-        $document->updateContent("<?php\n$\$a = 'foo';\n\$bar = 'baz';\n");
+        $document = $this->project->openDocument('whatever', "<?php\n$\$a = 'foo';\n\$bar = 'baz';\n");
 
         $this->assertEquals([], $document->getDefinitions());
     }
 
     public function testGetNodeAtPosition()
     {
-        $document = $this->project->getDocument('whatever');
-        $document->updateContent("<?php\n$\$a = new SomeClass;");
+        $document = $this->project->openDocument('whatever', "<?php\n$\$a = new SomeClass;");
         $node = $document->getNodeAtPosition(new Position(1, 13));
         $this->assertInstanceOf(Node\Name\FullyQualified::class, $node);
         $this->assertEquals('SomeClass', (string)$node);

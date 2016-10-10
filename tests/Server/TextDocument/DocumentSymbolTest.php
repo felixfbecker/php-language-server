@@ -20,7 +20,7 @@ class DocumentSymbolTest extends TestCase
         $client = new LanguageClient(new MockProtocolStream());
         $project = new Project($client);
         $this->textDocument = new Server\TextDocument($project, $client);
-        $project->getDocument('symbols')->updateContent(file_get_contents(__DIR__ . '/../../../fixtures/symbols.php'));
+        $project->openDocument('symbols', file_get_contents(__DIR__ . '/../../../fixtures/symbols.php'));
     }
 
     public function test()

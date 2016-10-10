@@ -20,9 +20,9 @@ class DefinitionTest extends TestCase
         $client = new LanguageClient(new MockProtocolStream());
         $project = new Project($client);
         $this->textDocument = new Server\TextDocument($project, $client);
-        $project->getDocument('references')->updateContent(file_get_contents(__DIR__ . '/../../../fixtures/references.php'));
-        $project->getDocument('symbols')->updateContent(file_get_contents(__DIR__ . '/../../../fixtures/symbols.php'));
-        $project->getDocument('use')->updateContent(file_get_contents(__DIR__ . '/../../../fixtures/use.php'));
+        $project->openDocument('references', file_get_contents(__DIR__ . '/../../../fixtures/references.php'));
+        $project->openDocument('symbols', file_get_contents(__DIR__ . '/../../../fixtures/symbols.php'));
+        $project->openDocument('use', file_get_contents(__DIR__ . '/../../../fixtures/use.php'));
     }
 
     public function testDefinitionForClassLike()

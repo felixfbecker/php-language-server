@@ -16,8 +16,7 @@ class DidCloseTest extends TestCase
         $client = new LanguageClient(new MockProtocolStream());
         $project = new Project($client);
         $textDocument = new Server\TextDocument($project, $client);
-        $phpDocument = $project->getDocument('whatever');
-        $phpDocument->updateContent('hello world');
+        $phpDocument = $project->openDocument('whatever', 'hello world');
 
         $textDocumentItem = new TextDocumentItem();
         $textDocumentItem->uri = 'whatever';
@@ -28,7 +27,6 @@ class DidCloseTest extends TestCase
 
         $textDocument->didClose(new TextDocumentIdentifier($textDocumentItem->uri));
 
-        $this->expectException(Exception::class);
-        $phpDocument->getContent();
+        $this->assertFalse($project->isDocumentOpen($textDocumentItem->uri));
     }
 }

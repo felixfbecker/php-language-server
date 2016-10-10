@@ -8,6 +8,7 @@ use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\{Server, Client, LanguageClient, Project, PhpDocument};
 use LanguageServer\Protocol\{TextDocumentItem, TextDocumentIdentifier, SymbolKind, DiagnosticSeverity, FormattingOptions};
 use AdvancedJsonRpc\{Request as RequestBody, Response as ResponseBody};
+use function LanguageServer\pathToUri;
 
 class ProjectTest extends TestCase
 {
@@ -21,18 +22,18 @@ class ProjectTest extends TestCase
         $this->project = new Project(new LanguageClient(new MockProtocolStream()));
     }
 
-    public function testGetDocumentCreatesNewDocument()
+    public function testGetDocumentLoadsDocument()
     {
-        $document = $this->project->getDocument('file:///document1.php');
+        $document = $this->project->getDocument(pathToUri(__FILE__));
 
         $this->assertNotNull($document);
         $this->assertInstanceOf(PhpDocument::class, $document);
     }
 
-    public function testGetDocumentCreatesDocumentOnce()
+    public function testGetDocumentReturnsOpenedInstance()
     {
-        $document1 = $this->project->getDocument('file:///document1.php');
-        $document2 = $this->project->getDocument('file:///document1.php');
+        $document1 = $this->project->openDocument(pathToUri(__FILE__), file_get_contents(__FILE__));
+        $document2 = $this->project->getDocument(pathToUri(__FILE__));
 
         $this->assertSame($document1, $document2);
     }
