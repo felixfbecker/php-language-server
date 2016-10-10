@@ -14,19 +14,13 @@ class ParseErrorsTest extends TestCase
      * @var Server\TextDocument
      */
     private $textDocument;
+    
+    private $args;
 
     public function setUp()
     {
         $client = new LanguageClient(new MockProtocolStream());
-        $project = new Project($client);
-        $this->textDocument = new Server\TextDocument($project, $client);
-    }
-
-    public function testParseErrorsArePublishedAsDiagnostics()
-    {
-        $args = null;
-        $client = new LanguageClient(new MockProtocolStream());
-        $client->textDocument = new class($args) extends Client\TextDocument {
+        $client->textDocument = new class($this->args) extends Client\TextDocument {
             private $args;
             public function __construct(&$args)
             {
@@ -38,18 +32,22 @@ class ParseErrorsTest extends TestCase
                 $this->args = func_get_args();
             }
         };
-
         $project = new Project($client);
-
-        $textDocument = new Server\TextDocument($project, $client);
-
-        // Trigger parsing of source
+        $this->textDocument = new Server\TextDocument($project, $client);
+    }
+    
+    private function openFile($file) {
         $textDocumentItem = new TextDocumentItem();
         $textDocumentItem->uri = 'whatever';
         $textDocumentItem->languageId = 'php';
         $textDocumentItem->version = 1;
-        $textDocumentItem->text = file_get_contents(__DIR__ . '/../../../fixtures/invalid_file.php');
-        $textDocument->didOpen($textDocumentItem);
+        $textDocumentItem->text = file_get_contents($file);
+        $this->textDocument->didOpen($textDocumentItem);
+    }
+
+    public function testParseErrorsArePublishedAsDiagnostics()
+    {
+        $this->openFile(__DIR__ . '/../../../fixtures/invalid_file.php');
         $this->assertEquals([
             'whatever',
             [[
@@ -68,6 +66,30 @@ class ParseErrorsTest extends TestCase
                 'source' => 'php',
                 'message' => "Syntax error, unexpected T_CLASS, expecting T_STRING"
             ]]
-        ], json_decode(json_encode($args), true));
+        ], json_decode(json_encode($this->args), true));
+    }
+
+    public function testParseErrorsWithOnlyStartLine()
+    {
+        $this->openFile(__DIR__ . '/../../../fixtures/namespace_not_first.php');
+        $this->assertEquals([
+            'whatever',
+            [[
+                'range' => [
+                    'start' => [
+                        'line' => 4,
+                        'character' => 0
+                    ],
+                    'end' => [
+                        'line' => 4,
+                        'character' => 0
+                    ]
+                ],
+                'severity' => DiagnosticSeverity::ERROR,
+                'code' => null,
+                'source' => 'php',
+                'message' => "Namespace declaration statement has to be the very first statement in the script"
+            ]]
+        ], json_decode(json_encode($this->args), true));
     }
 }
