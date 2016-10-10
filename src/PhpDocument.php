@@ -307,16 +307,11 @@ class PhpDocument
      */
     public function getDefinedFqn(Node $node)
     {
-        if ($node instanceof Node\Name) {
-            $nameNode = $node;
-            $node = $node->getAttribute('parentNode');
-        }
-        // Only the class node should count as the definition, not the name node
         // Anonymous classes don't count as a definition
-        if ($node instanceof Node\Stmt\ClassLike && !isset($nameNode) && isset($node->name)) {
+        if ($node instanceof Node\Stmt\ClassLike && isset($node->name)) {
             // Class, interface or trait declaration
             return (string)$node->namespacedName;
-        } else if ($node instanceof Node\Stmt\Function_ && !isset($nameNode)) {
+        } else if ($node instanceof Node\Stmt\Function_) {
             // Function: use functionName() as the name
             return (string)$node->namespacedName . '()';
         } else if ($node instanceof Node\Stmt\ClassMethod) {
