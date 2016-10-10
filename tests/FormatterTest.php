@@ -11,21 +11,18 @@ class FormatterTest extends TestCase
 
     public function testFormat()
     {
-        $formatter = new Formatter();
-
         $input = file_get_contents(__DIR__ . '/../fixtures/format.php');
         $output = file_get_contents(__DIR__ . '/../fixtures/format_expected.php');
 
-        $edits = $formatter->format($input, 'file:///whatever');
+        $edits = Formatter::format($input, 'file:///whatever');
         $this->assertSame($output, $edits[0]->newText);
     }
 
     public function testFormatNoChange()
     {
-        $formatter = new Formatter();
         $expected = file_get_contents(__DIR__ . '/../fixtures/format_expected.php');
 
-        $edits = $formatter->format($expected, 'file:///whatever');
+        $edits = Formatter::format($expected, 'file:///whatever');
         $this->assertSame([], $edits);
     }
 }

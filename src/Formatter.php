@@ -3,56 +3,70 @@ declare(strict_types = 1);
 
 namespace LanguageServer;
 
-use LanguageServer\Protocol\{TextEdit, Range, Position, ErrorCode};
-use AdvancedJsonRpc\ResponseError;
+use LanguageServer\Protocol\ {
+    TextEdit, 
+    Range, 
+    Position
+};
 use PHP_CodeSniffer;
+use Exception;
 
-class Formatter
+abstract class Formatter
 {
     /**
+     * Generate array of TextEdit changes for content formatting.
      *
-     * @param string $content
-     * @param string $uri
+     * @param string $content source code to format
+     * @param string $uri URI of document
      *
      * @return \LanguageServer\Protocol\TextEdit[]
-     * @throws \AdvancedJsonRpc\ResponseError
+     * @throws \Exception
      */
-    public function format(string $content, string $uri)
+    public static function format(string $content, string $uri)
     {
         $path = uriToPath($uri);
         $cs = new PHP_CodeSniffer();
-        $cs->initStandard($this->findConfiguration($path));
+        $cs->initStandard(self::findConfiguration($path));
         $file = $cs->processFile(null, $content);
         $fixed = $file->fixer->fixFile();
         if (!$fixed && $file->getErrorCount() > 0) {
-            throw new ResponseError('Unable to format file', ErrorCode::INTERNAL_ERROR);
+            throw new Exception('Unable to format file');
         }
 
         $new = $file->fixer->getContents();
         if ($content === $new) {
             return [];
         }
-        return [new TextEdit(new Range(new Position(0, 0), $this->calculateEndPosition($content)), $new)];
+        return [new TextEdit(new Range(new Position(0, 0), self::calculateEndPosition($content)), $new)];
     }
 
     /**
-     * @param string $content
+     * Calculate position of last character.
+     * 
+     * @param string $content document as string
+     * 
      * @return \LanguageServer\Protocol\Position
      */
-    private function calculateEndPosition(string $content): Position
+    private static function calculateEndPosition(string $content): Position
     {
         $lines = explode("\n", $content);
         return new Position(count($lines) - 1, strlen(end($lines)));
     }
 
     /**
+     * Search for PHP_CodeSniffer configuration file at given directory or its parents. 
+     * If no configuration found then PSR2 standard is loaded by default. 
      *
-     * @param string $path
+     * @param string $path path to file or directory 
      * @return string[]
      */
-    private function findConfiguration(string $path)
+    private static function findConfiguration(string $path)
     {
-        $currentDir = dirname($path);
+        if (is_dir($path)) {
+            $currentDir = $path;
+        } else {
+            $currentDir = dirname($path);
+        }
         do {
             $default = $currentDir . DIRECTORY_SEPARATOR . 'phpcs.xml';
             if (is_file($default)) {

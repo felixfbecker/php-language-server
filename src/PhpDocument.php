@@ -218,17 +218,16 @@ class PhpDocument
     }
 
     /**
-     * Returns this document as formatted text.
+     * Returns array of TextEdit changes to format this document.
      *
-     * @return string
+     * @return \LanguageServer\Protocol\TextEdit[]
      */
     public function getFormattedText()
     {
         if (empty($this->getContent())) {
             return [];
         }
-        $formatter = new Formatter();
-        return $formatter->format($this->getContent(), $this->getUri());
+        return Formatter::format($this->content, $this->uri);
     }
 
     /**
