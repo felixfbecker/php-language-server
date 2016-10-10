@@ -8,6 +8,7 @@ use LanguageServer\NodeVisitor\{NodeAtPositionFinder, ReferencesAdder, Definitio
 use PhpParser\{Error, Comment, Node, ParserFactory, NodeTraverser, Lexer, Parser};
 use PhpParser\PrettyPrinter\Standard as PrettyPrinter;
 use PhpParser\NodeVisitor\NameResolver;
+use Exception;
 
 class PhpDocument
 {
@@ -53,14 +54,14 @@ class PhpDocument
      *
      * @var Node[]
      */
-    private $stmts = [];
+    private $statements;
 
     /**
      * Map from fully qualified name (FQN) to Node
      *
      * @var Node[]
      */
-    private $definitions = [];
+    private $definitions;
 
     /**
      * Map from fully qualified name (FQN) to array of nodes that reference the symbol
@@ -150,21 +151,32 @@ class PhpDocument
     public function updateContent(string $content)
     {
         $this->content = $content;
-        $this->parse();
+        $this->parse($content);
     }
 
     /**
-     * Re-parses a source file, updates symbols, reports parsing errors
-     * that may have occured as diagnostics and returns parsed nodes.
+     * Unloads the content from memory
      *
      * @return void
      */
-    public function parse()
+    public function removeContent()
+    {
+        unset($this->content);
+    }
+
+    /**
+     * Re-parses a source file, updates symbols and reports parsing errors
+     * that may have occured as diagnostics.
+     *
+     * @param string $content
+     * @return void
+     */
+    public function parse(string $content)
     {
         $stmts = null;
         $errors = [];
         try {
-            $stmts = $this->parser->parse($this->content);
+            $stmts = $this->parser->parse($content);
         } catch (\PhpParser\Error $e) {
             // Lexer can throw errors. e.g for unterminated comments
             // unfortunately we don't get a location back
@@ -177,8 +189,8 @@ class PhpDocument
         foreach ($errors as $error) {
             $diagnostic = new Diagnostic();
             $diagnostic->range = new Range(
-                new Position($error->getStartLine() - 1, $error->hasColumnInfo() ? $error->getStartColumn($this->content) - 1 : 0),
-                new Position($error->getEndLine() - 1, $error->hasColumnInfo() ? $error->getEndColumn($this->content) : 0)
+                new Position($error->getStartLine() - 1, $error->hasColumnInfo() ? $error->getStartColumn($content) - 1 : 0),
+                new Position($error->getEndLine() - 1, $error->hasColumnInfo() ? $error->getEndColumn($content) : 0)
             );
             $diagnostic->severity = DiagnosticSeverity::ERROR;
             $diagnostic->source = 'php';
@@ -199,7 +211,7 @@ class PhpDocument
             $traverser->addVisitor(new ReferencesAdder($this));
 
             // Add column attributes to nodes
-            $traverser->addVisitor(new ColumnCalculator($this->content));
+            $traverser->addVisitor(new ColumnCalculator($content));
 
             // Collect all definitions
             $definitionCollector = new DefinitionCollector;
@@ -213,7 +225,7 @@ class PhpDocument
                 $this->project->addDefinitionDocument($fqn, $this);
             }
 
-            $this->stmts = $stmts;
+            $this->statements = $stmts;
         }
     }
 
@@ -234,10 +246,27 @@ class PhpDocument
      * Returns this document's text content.
      *
      * @return string
+     * @throws Exception If the content was not loaded
      */
     public function getContent()
     {
+        if (!isset($this->content)) {
+            throw new Exception('Content is not loaded');
+        }
         return $this->content;
+    }
+
+    /**
+     * Returns this document's AST.
+     *
+     * @return Node[]
+     */
+    public function getStatements()
+    {
+        if (!isset($this->statements)) {
+            $this->parse($this->getContent());
+        }
+        return $this->statements;
     }
 
     /**
@@ -258,13 +287,10 @@ class PhpDocument
      */
     public function getNodeAtPosition(Position $position)
     {
-        if ($this->stmts === null) {
-            return null;
-        }
         $traverser = new NodeTraverser;
         $finder = new NodeAtPositionFinder($position);
         $traverser->addVisitor($finder);
-        $traverser->traverse($this->stmts);
+        $traverser->traverse($this->getStatements());
         return $finder->node;
     }
 
