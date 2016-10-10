@@ -1,9 +1,10 @@
 <?php
 
-ini_set('memory_limit', '-1');
-
 use LanguageServer\{LanguageServer, ProtocolStreamReader, ProtocolStreamWriter};
 use Sabre\Event\Loop;
+
+ini_set('memory_limit', '-1');
+cli_set_process_title('PHP Language Server');
 
 foreach ([__DIR__ . '/../../../autoload.php', __DIR__ . '/../autoload.php', __DIR__ . '/../vendor/autoload.php'] as $file) {
     if (file_exists($file)) {
