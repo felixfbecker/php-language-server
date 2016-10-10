@@ -176,7 +176,7 @@ class PhpDocument
         $diagnostics = [];
         foreach ($errors as $error) {
             $diagnostic = new Diagnostic();
-            $startLine = $error->getStartLine() === -1 ? 0 : $error->getStartLine() - 1;
+            $startLine = max($error->getStartLine() - 1, 0);
             $startColumn = $error->hasColumnInfo() ? $error->getStartColumn($this->content) - 1 : 0;
             $endLine = $error->getEndLine() === -1 ? $startLine : $error->getEndLine() - 1;
             $endColumn = $error->hasColumnInfo() ? $error->getEndColumn($this->content) : 0;
