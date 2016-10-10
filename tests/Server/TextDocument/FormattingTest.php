@@ -24,7 +24,7 @@ class FormattingTest extends TestCase
 
     public function testFormatting()
     {
-        $client =  new LanguageClient(new MockProtocolStream());
+        $client = new LanguageClient(new MockProtocolStream());
         $project = new Project($client);
         $textDocument = new Server\TextDocument($project, $client);
 
@@ -57,11 +57,11 @@ class FormattingTest extends TestCase
 
     public function testFormattingInvalidUri()
     {
-        $client =  new LanguageClient(new MockProtocolStream());
+        $client = new LanguageClient(new MockProtocolStream());
         $project = new Project($client);
         $textDocument = new Server\TextDocument($project, $client);
 
         $result = $textDocument->formatting(new TextDocumentIdentifier('whatever'), new FormattingOptions());
-        $this->assertEquals([], json_decode(json_encode($result), true));
+        $this->assertSame([], $result);
     }
 }
