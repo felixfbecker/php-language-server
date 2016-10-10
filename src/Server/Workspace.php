@@ -53,6 +53,15 @@ class Workspace
      */
     public function symbol(string $query): array
     {
-        return $this->project->findSymbols($query);
+        $symbols = [];
+        foreach ($this->project->getDefinitionDocuments() as $fqn => $document) {
+            if ($query === '' || stripos($fqn, $query) !== false) {
+                if (!$document->isLoaded()) {
+                    $document->load();
+                }
+                $symbols[] = SymbolInformation::fromNode($document->getDefinitionByFqn($fqn), $fqn);
+            }
+        }
+        return $symbols;
     }
 }

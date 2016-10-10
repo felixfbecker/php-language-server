@@ -8,6 +8,8 @@ use LanguageServer\NodeVisitor\{NodeAtPositionFinder, ReferencesAdder, Definitio
 use PhpParser\{Error, Comment, Node, ParserFactory, NodeTraverser, Lexer, Parser};
 use PhpParser\PrettyPrinter\Standard as PrettyPrinter;
 use PhpParser\NodeVisitor\NameResolver;
+use Exception;
+use function LanguageServer\uriToPath;
 
 class PhpDocument
 {
@@ -53,14 +55,14 @@ class PhpDocument
      *
      * @var Node[]
      */
-    private $stmts = [];
+    private $statements;
 
     /**
      * Map from fully qualified name (FQN) to Node
      *
      * @var Node[]
      */
-    private $definitions = [];
+    private $definitions;
 
     /**
      * Map from fully qualified name (FQN) to array of nodes that reference the symbol
@@ -84,87 +86,56 @@ class PhpDocument
     }
 
     /**
-     * Returns all symbols in this document.
+     * Returns true if the content of this document is being held in memory
      *
-     * @return SymbolInformation[]|null
+     * @return bool
      */
-    public function getSymbols()
+    public function isLoaded()
     {
-        if (!isset($this->definitions)) {
-            return null;
-        }
-        $nodeSymbolKindMap = [
-            Node\Stmt\Class_::class           => SymbolKind::CLASS_,
-            Node\Stmt\Trait_::class           => SymbolKind::CLASS_,
-            Node\Stmt\Interface_::class       => SymbolKind::INTERFACE,
-            Node\Stmt\Namespace_::class       => SymbolKind::NAMESPACE,
-            Node\Stmt\Function_::class        => SymbolKind::FUNCTION,
-            Node\Stmt\ClassMethod::class      => SymbolKind::METHOD,
-            Node\Stmt\PropertyProperty::class => SymbolKind::PROPERTY,
-            Node\Const_::class                => SymbolKind::CONSTANT
-        ];
-        $symbols = [];
-        foreach ($this->definitions as $fqn => $node) {
-            $class = get_class($node);
-            if (!isset($nodeSymbolKindMap[$class])) {
-                continue;
-            }
-            $symbol = new SymbolInformation();
-            $symbol->kind = $nodeSymbolKindMap[$class];
-            $symbol->name = (string)$node->name;
-            $symbol->location = Location::fromNode($node);
-            $parts = preg_split('/(::|\\\\)/', $fqn);
-            array_pop($parts);
-            $symbol->containerName = implode('\\', $parts);
-            $symbols[] = $symbol;
-        }
-        return $symbols;
+        return isset($this->content);
     }
 
     /**
-     * Returns symbols in this document filtered by query string.
+     * Loads the content from disk and saves statements and definitions in memory
      *
-     * @param string $query The search query
-     * @return SymbolInformation[]|null
+     * @return void
      */
-    public function findSymbols(string $query)
+    public function load()
     {
-        $symbols = $this->getSymbols();
-        if ($symbols === null) {
-            return null;
-        }
-        if ($query === '') {
-            return $symbols;
-        }
-        return array_filter($symbols, function($symbol) use ($query) {
-            return stripos($symbol->name, $query) !== false;
-        });
+        $this->updateContent(file_get_contents(uriToPath($this->getUri())), true);
     }
 
     /**
-     * Updates the content on this document.
+     * Unloads the content, statements and definitions from memory
+     *
+     * @return void
+     */
+    public function unload()
+    {
+        unset($this->content);
+        unset($this->statements);
+        unset($this->definitions);
+        unset($this->references);
+    }
+
+    /**
+     * Re-parses a source file, updates symbols and reports parsing errors
+     * that may have occured as diagnostics.
      *
      * @param string $content
+     * @param bool $keepInMemory Wether to keep content, statements and definitions in memory or only update project definitions
      * @return void
      */
-    public function updateContent(string $content)
+    public function updateContent(string $content, bool $keepInMemory = true)
     {
-        $this->content = $content;
-        $this->parse();
-    }
-
-    /**
-     * Re-parses a source file, updates symbols, reports parsing errors
-     * that may have occured as diagnostics and returns parsed nodes.
-     *
-     * @return void
-     */
-    public function parse()
-    {
+        $keepInMemory = $keepInMemory || $this->isLoaded();
+        if ($keepInMemory) {
+            $this->content = $content;
+        }
         $stmts = null;
         $errors = [];
         try {
-            $stmts = $this->parser->parse($this->content);
+            $stmts = $this->parser->parse($content);
         } catch (\PhpParser\Error $e) {
             // Lexer can throw errors. e.g for unterminated comments
             // unfortunately we don't get a location back
@@ -177,8 +148,8 @@ class PhpDocument
         foreach ($errors as $error) {
             $diagnostic = new Diagnostic();
             $diagnostic->range = new Range(
-                new Position($error->getStartLine() - 1, $error->hasColumnInfo() ? $error->getStartColumn($this->content) - 1 : 0),
-                new Position($error->getEndLine() - 1, $error->hasColumnInfo() ? $error->getEndColumn($this->content) : 0)
+                new Position($error->getStartLine() - 1, $error->hasColumnInfo() ? $error->getStartColumn($content) - 1 : 0),
+                new Position($error->getEndLine() - 1, $error->hasColumnInfo() ? $error->getEndColumn($content) : 0)
             );
             $diagnostic->severity = DiagnosticSeverity::ERROR;
             $diagnostic->source = 'php';
@@ -199,7 +170,7 @@ class PhpDocument
             $traverser->addVisitor(new ReferencesAdder($this));
 
             // Add column attributes to nodes
-            $traverser->addVisitor(new ColumnCalculator($this->content));
+            $traverser->addVisitor(new ColumnCalculator($content));
 
             // Collect all definitions
             $definitionCollector = new DefinitionCollector;
@@ -207,13 +178,15 @@ class PhpDocument
 
             $traverser->traverse($stmts);
 
-            $this->definitions = $definitionCollector->definitions;
             // Register this document on the project for all the symbols defined in it
             foreach ($definitionCollector->definitions as $fqn => $node) {
                 $this->project->addDefinitionDocument($fqn, $this);
             }
 
-            $this->stmts = $stmts;
+            if ($keepInMemory) {
+                $this->statements = $stmts;
+                $this->definitions = $definitionCollector->definitions;
+            }
         }
     }
 
@@ -234,10 +207,27 @@ class PhpDocument
      * Returns this document's text content.
      *
      * @return string
+     * @throws Exception If the content was not loaded
      */
     public function getContent()
     {
+        if (!isset($this->content)) {
+            throw new Exception('Content is not loaded');
+        }
         return $this->content;
+    }
+
+    /**
+     * Returns this document's AST.
+     *
+     * @return Node[]
+     */
+    public function &getStatements()
+    {
+        if (!isset($this->statements)) {
+            $this->parse($this->getContent());
+        }
+        return $this->statements;
     }
 
     /**
@@ -258,13 +248,10 @@ class PhpDocument
      */
     public function getNodeAtPosition(Position $position)
     {
-        if ($this->stmts === null) {
-            return null;
-        }
         $traverser = new NodeTraverser;
         $finder = new NodeAtPositionFinder($position);
         $traverser->addVisitor($finder);
-        $traverser->traverse($this->stmts);
+        $traverser->traverse($this->getStatements());
         return $finder->node;
     }
 
@@ -276,7 +263,21 @@ class PhpDocument
      */
     public function getDefinitionByFqn(string $fqn)
     {
-        return $this->definitions[$fqn] ?? null;
+        return $this->getDefinitions()[$fqn] ?? null;
+    }
+
+    /**
+     * Returns a map from fully qualified name (FQN) to Nodes defined in this document
+     *
+     * @return Node[]
+     * @throws Exception If the definitions are not loaded
+     */
+    public function &getDefinitions()
+    {
+        if (!isset($this->definitions)) {
+            throw new Exception('Definitions of this document are not loaded');
+        }
+        return $this->definitions;
     }
 
     /**
@@ -287,7 +288,7 @@ class PhpDocument
      */
     public function isDefined(string $fqn): bool
     {
-        return isset($this->definitions[$fqn]);
+        return isset($this->getDefinitions()[$fqn]);
     }
 
     /**
@@ -306,16 +307,11 @@ class PhpDocument
      */
     public function getDefinedFqn(Node $node)
     {
-        if ($node instanceof Node\Name) {
-            $nameNode = $node;
-            $node = $node->getAttribute('parentNode');
-        }
-        // Only the class node should count as the definition, not the name node
         // Anonymous classes don't count as a definition
-        if ($node instanceof Node\Stmt\ClassLike && !isset($nameNode) && isset($node->name)) {
+        if ($node instanceof Node\Stmt\ClassLike && isset($node->name)) {
             // Class, interface or trait declaration
             return (string)$node->namespacedName;
-        } else if ($node instanceof Node\Stmt\Function_ && !isset($nameNode)) {
+        } else if ($node instanceof Node\Stmt\Function_) {
             // Function: use functionName() as the name
             return (string)$node->namespacedName . '()';
         } else if ($node instanceof Node\Stmt\ClassMethod) {
@@ -485,6 +481,9 @@ class PhpDocument
             return null;
         }
         $document = $this->project->getDefinitionDocument($fqn);
+        if (!$document->isLoaded()) {
+            $document->load();
+        }
         if (!isset($document)) {
             return null;
         }

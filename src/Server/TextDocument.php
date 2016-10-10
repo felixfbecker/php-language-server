@@ -14,7 +14,8 @@ use LanguageServer\Protocol\{
     Position,
     FormattingOptions,
     TextEdit,
-    Location
+    Location,
+    SymbolInformation
 };
 
 /**
@@ -49,7 +50,11 @@ class TextDocument
      */
     public function documentSymbol(TextDocumentIdentifier $textDocument): array
     {
-        return $this->project->getDocument($textDocument->uri)->getSymbols();
+        $symbols = [];
+        foreach ($this->project->getDocument($textDocument->uri)->getDefinitions() as $fqn => $node) {
+            $symbols[] = SymbolInformation::fromNode($node, $fqn);
+        }
+        return $symbols;
     }
 
     /**
@@ -77,6 +82,18 @@ class TextDocument
         $this->project->getDocument($textDocument->uri)->updateContent($contentChanges[0]->text);
     }
 
+    /**
+     * The document close notification is sent from the client to the server when the document got closed in the client.
+     * The document's truth now exists where the document's uri points to (e.g. if the document's uri is a file uri the
+     * truth now exists on disk).
+     *
+     * @param \LanguageServer\Protocol\TextDocumentItem $textDocument The document that was closed
+     * @return void
+     */
+    public function didClose(TextDocumentIdentifier $textDocument)
+    {
+        $this->project->getDocument($textDocument->uri)->unload();
+    }
 
     /**
      * The document formatting request is sent from the server to the client to format a whole document.
