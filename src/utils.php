@@ -3,6 +3,8 @@ declare(strict_types = 1);
 
 namespace LanguageServer;
 
+use InvalidArgumentException;
+
 /**
  * Recursively Searches files with matching filename, starting at $path.
  *
@@ -29,18 +31,30 @@ function findFilesRecursive(string $path, string $pattern): array {
  */
 function pathToUri(string $filepath): string {
     $filepath = trim(str_replace('\\', '/', $filepath), '/');
-    $filepath = implode('/', array_map('urlencode', explode('/', $filepath)));
+    $parts = explode('/', $filepath);
+    // Don't %-encode the colon after a Windows drive letter
+    $first = array_shift($parts);
+    if (substr($first, -1) !== ':') {
+        $first = urlencode($first);
+    }
+    $parts = array_map('urlencode', $parts);
+    array_unshift($parts, $first);
+    $filepath = implode('/', $parts);
     return 'file:///' . $filepath;
 }
 
 /**
  * Transforms URI into file path
- * 
+ *
  * @param string $uri
  * @return string
  */
 function uriToPath(string $uri)
 {
-    $filepath = urldecode(parse_url($uri)['path']);
+    $fragments = parse_url($uri);
+    if ($fragments === null || !isset($fragments['scheme']) || $fragments['scheme'] !== 'file') {
+        throw new InvalidArgumentException("Not a valid file URI: $uri");
+    }
+    $filepath = urldecode($fragments['path']);
     return strpos($filepath, ':') === false ? $filepath : str_replace('/', '\\', $filepath);
 }

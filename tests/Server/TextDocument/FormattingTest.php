@@ -7,6 +7,7 @@ use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\{Server, Client, LanguageClient, Project};
 use LanguageServer\Protocol\{TextDocumentIdentifier, TextDocumentItem, FormattingOptions};
+use function LanguageServer\{pathToUri, uriToPath};
 
 class FormattingTest extends TestCase
 {
@@ -27,19 +28,21 @@ class FormattingTest extends TestCase
         $client = new LanguageClient(new MockProtocolStream());
         $project = new Project($client);
         $textDocument = new Server\TextDocument($project, $client);
+        $path = realpath(__DIR__ . '/../../../fixtures/format.php');
+        $uri = pathToUri($path);
 
         // Trigger parsing of source
         $textDocumentItem = new TextDocumentItem();
-        $textDocumentItem->uri = 'whatever';
+        $textDocumentItem->uri = $uri;
         $textDocumentItem->languageId = 'php';
         $textDocumentItem->version = 1;
-        $textDocumentItem->text = file_get_contents(__DIR__ . '/../../../fixtures/format.php');
+        $textDocumentItem->text = file_get_contents($path);
         $textDocument->didOpen($textDocumentItem);
 
         // how code should look after formatting
         $expected = file_get_contents(__DIR__ . '/../../../fixtures/format_expected.php');
         // Request formatting
-        $result = $textDocument->formatting(new TextDocumentIdentifier('whatever'), new FormattingOptions());
+        $result = $textDocument->formatting(new TextDocumentIdentifier($uri), new FormattingOptions());
         $this->assertEquals([0 => [
             'range' => [
                 'start' => [

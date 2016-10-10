@@ -4,6 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer\Tests\Utils;
 
 use PHPUnit\Framework\TestCase;
+use InvalidArgumentException;
 use function LanguageServer\{pathToUri, uriToPath};
 
 class FileUriTest extends TestCase
@@ -24,11 +25,11 @@ class FileUriTest extends TestCase
 
         // special chars are escaped
         $uri = pathToUri('c:/path/to/file/dürüm döner.php');
-        $this->assertEquals('file:///c%3A/path/to/file/d%C3%BCr%C3%BCm+d%C3%B6ner.php', $uri);
+        $this->assertEquals('file:///c:/path/to/file/d%C3%BCr%C3%BCm+d%C3%B6ner.php', $uri);
 
         //backslashes are transformed
         $uri = pathToUri('c:\\foo\\bar.baz');
-        $this->assertEquals('file:///c%3A/foo/bar.baz', $uri);
+        $this->assertEquals('file:///c:/foo/bar.baz', $uri);
     }
 
     public function testUriToPath()
@@ -50,5 +51,19 @@ class FileUriTest extends TestCase
 
         $uri = 'file:///c:/foo/bar.baz';
         $this->assertEquals('c:\\foo\\bar.baz', uriToPath($uri));
+    }
+
+    public function testUriToPathForUnknownProtocol()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $uri = 'vfs:///whatever';
+        uriToPath($uri);
+    }
+
+    public function testUriToPathForInvalidProtocol()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $uri = 'http://www.google.com';
+        uriToPath($uri);
     }
 }
