@@ -8,6 +8,7 @@ use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\{Server, Client, LanguageClient, Project, PhpDocument};
 use LanguageServer\Protocol\{TextDocumentItem, TextDocumentIdentifier, SymbolKind, DiagnosticSeverity, FormattingOptions};
 use AdvancedJsonRpc\{Request as RequestBody, Response as ResponseBody};
+use function LanguageServer\pathToUri;
 
 class ProjectTest extends TestCase
 {
@@ -21,67 +22,19 @@ class ProjectTest extends TestCase
         $this->project = new Project(new LanguageClient(new MockProtocolStream()));
     }
 
-    public function testGetDocumentCreatesNewDocument()
+    public function testGetDocumentLoadsDocument()
     {
-        $document = $this->project->getDocument('file:///document1.php');
+        $document = $this->project->getDocument(pathToUri(__FILE__));
 
         $this->assertNotNull($document);
         $this->assertInstanceOf(PhpDocument::class, $document);
     }
 
-    public function testGetDocumentCreatesDocumentOnce()
+    public function testGetDocumentReturnsOpenedInstance()
     {
-        $document1 = $this->project->getDocument('file:///document1.php');
-        $document2 = $this->project->getDocument('file:///document1.php');
+        $document1 = $this->project->openDocument(pathToUri(__FILE__), file_get_contents(__FILE__));
+        $document2 = $this->project->getDocument(pathToUri(__FILE__));
 
         $this->assertSame($document1, $document2);
-    }
-
-    public function testFindSymbols()
-    {
-        $this->project->getDocument('file:///document1.php')->updateContent("<?php\nfunction foo() {}\nfunction bar() {}\n");
-        $this->project->getDocument('file:///document2.php')->updateContent("<?php\nfunction baz() {}\nfunction frob() {}\n");
-        $this->project->getDocument('invalid_file')->updateContent(file_get_contents(__DIR__ . '/../fixtures/invalid_file.php'));
-
-        $symbols = $this->project->findSymbols('ba');
-
-        $this->assertEquals([
-            [
-                'name' => 'bar',
-                'kind' => SymbolKind::FUNCTION,
-                'location' => [
-                    'uri' => 'file:///document1.php',
-                    'range' => [
-                        'start' => [
-                            'line' => 2,
-                            'character' => 0
-                        ],
-                        'end' => [
-                            'line' => 2,
-                            'character' => 17
-                        ]
-                    ]
-                ],
-                'containerName' => null
-            ],
-            [
-                'name' => 'baz',
-                'kind' => SymbolKind::FUNCTION,
-                'location' => [
-                    'uri' => 'file:///document2.php',
-                    'range' => [
-                        'start' => [
-                            'line' => 1,
-                            'character' => 0
-                        ],
-                        'end' => [
-                            'line' => 1,
-                            'character' => 17
-                        ]
-                    ]
-                ],
-                'containerName' => null
-            ]
-        ], json_decode(json_encode($symbols), true));
     }
 }

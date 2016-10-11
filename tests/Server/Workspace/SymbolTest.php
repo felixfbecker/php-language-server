@@ -1,13 +1,14 @@
 <?php
 declare(strict_types = 1);
 
-namespace LanguageServer\Tests\Server;
+namespace LanguageServer\Tests\Server\Workspace;
 
 use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\{Server, Client, LanguageClient, Project, PhpDocument};
 use LanguageServer\Protocol\{TextDocumentItem, TextDocumentIdentifier, SymbolKind, DiagnosticSeverity, FormattingOptions};
 use AdvancedJsonRpc\{Request as RequestBody, Response as ResponseBody};
+use function LanguageServer\pathToUri;
 
 class SymbolTest extends TestCase
 {
@@ -16,13 +17,25 @@ class SymbolTest extends TestCase
      */
     private $workspace;
 
+    /**
+     * @var string
+     */
+    private $symbolsUri;
+
+    /**
+     * @var string
+     */
+    private $referencesUri;
+
     public function setUp()
     {
         $client = new LanguageClient(new MockProtocolStream());
         $project = new Project($client);
         $this->workspace = new Server\Workspace($project, $client);
-        $project->getDocument('symbols')->updateContent(file_get_contents(__DIR__ . '/../../../fixtures/symbols.php'));
-        $project->getDocument('references')->updateContent(file_get_contents(__DIR__ . '/../../../fixtures/references.php'));
+        $this->symbolsUri = pathToUri(realpath(__DIR__ . '/../../../fixtures/symbols.php'));
+        $this->referencesUri = pathToUri(realpath(__DIR__ . '/../../../fixtures/references.php'));
+        $project->loadDocument($this->symbolsUri);
+        $project->loadDocument($this->referencesUri);
     }
 
     public function testEmptyQueryReturnsAllSymbols()
@@ -34,7 +47,7 @@ class SymbolTest extends TestCase
                 'name' => 'TEST_CONST',
                 'kind' => SymbolKind::CONSTANT,
                 'location' => [
-                    'uri' => 'symbols',
+                    'uri' => $this->symbolsUri,
                     'range' => [
                         'start' => [
                             'line' => 4,
@@ -52,7 +65,7 @@ class SymbolTest extends TestCase
                 'name' => 'TestClass',
                 'kind' => SymbolKind::CLASS_,
                 'location' => [
-                    'uri' => 'symbols',
+                    'uri' => $this->symbolsUri,
                     'range' => [
                         'start' => [
                             'line' => 6,
@@ -70,7 +83,7 @@ class SymbolTest extends TestCase
                 'name' => 'TEST_CLASS_CONST',
                 'kind' => SymbolKind::CONSTANT,
                 'location' => [
-                    'uri' => 'symbols',
+                    'uri' => $this->symbolsUri,
                     'range' => [
                         'start' => [
                             'line' => 8,
@@ -88,7 +101,7 @@ class SymbolTest extends TestCase
                 'name' => 'staticTestProperty',
                 'kind' => SymbolKind::PROPERTY,
                 'location' => [
-                    'uri' => 'symbols',
+                    'uri' => $this->symbolsUri,
                     'range' => [
                         'start' => [
                             'line' => 9,
@@ -106,7 +119,7 @@ class SymbolTest extends TestCase
                 'name' => 'testProperty',
                 'kind' => SymbolKind::PROPERTY,
                 'location' => [
-                    'uri' => 'symbols',
+                    'uri' => $this->symbolsUri,
                     'range' => [
                         'start' => [
                             'line' => 10,
@@ -124,7 +137,7 @@ class SymbolTest extends TestCase
                 'name' => 'staticTestMethod',
                 'kind' => SymbolKind::METHOD,
                 'location' => [
-                    'uri' => 'symbols',
+                    'uri' => $this->symbolsUri,
                     'range' => [
                         'start' => [
                             'line' => 12,
@@ -142,7 +155,7 @@ class SymbolTest extends TestCase
                 'name' => 'testMethod',
                 'kind' => SymbolKind::METHOD,
                 'location' => [
-                    'uri' => 'symbols',
+                    'uri' => $this->symbolsUri,
                     'range' => [
                         'start' => [
                             'line' => 17,
@@ -160,7 +173,7 @@ class SymbolTest extends TestCase
                 'name' => 'TestTrait',
                 'kind' => SymbolKind::CLASS_,
                 'location' => [
-                    'uri' => 'symbols',
+                    'uri' => $this->symbolsUri,
                     'range' => [
                         'start' => [
                             'line' => 23,
@@ -178,7 +191,7 @@ class SymbolTest extends TestCase
                 'name' => 'TestInterface',
                 'kind' => SymbolKind::INTERFACE,
                 'location' => [
-                    'uri' => 'symbols',
+                    'uri' => $this->symbolsUri,
                     'range' => [
                         'start' => [
                             'line' => 28,
@@ -196,7 +209,7 @@ class SymbolTest extends TestCase
                 'name' => 'test_function',
                 'kind' => SymbolKind::FUNCTION,
                 'location' => [
-                    'uri' => 'symbols',
+                    'uri' => $this->symbolsUri,
                     'range' => [
                         'start' => [
                             'line' => 33,
@@ -214,7 +227,7 @@ class SymbolTest extends TestCase
                 'name' => 'whatever',
                 'kind' => SymbolKind::FUNCTION,
                 'location' => [
-                    'uri' => 'references',
+                    'uri' => $this->referencesUri,
                     'range' => [
                         'start' => [
                             'line' => 15,
@@ -240,7 +253,7 @@ class SymbolTest extends TestCase
                 'name' => 'staticTestMethod',
                 'kind' => SymbolKind::METHOD,
                 'location' => [
-                    'uri' => 'symbols',
+                    'uri' => $this->symbolsUri,
                     'range' => [
                         'start' => [
                             'line' => 12,
@@ -258,7 +271,7 @@ class SymbolTest extends TestCase
                 'name' => 'testMethod',
                 'kind' => SymbolKind::METHOD,
                 'location' => [
-                    'uri' => 'symbols',
+                    'uri' => $this->symbolsUri,
                     'range' => [
                         'start' => [
                             'line' => 17,

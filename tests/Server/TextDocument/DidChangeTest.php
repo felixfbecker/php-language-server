@@ -22,8 +22,7 @@ class DidChangeTest extends TestCase
         $client = new LanguageClient(new MockProtocolStream());
         $project = new Project($client);
         $textDocument = new Server\TextDocument($project, $client);
-        $phpDocument = $project->getDocument('whatever');
-        $phpDocument->updateContent("<?php\necho 'Hello, World'\n");
+        $phpDocument = $project->openDocument('whatever', "<?php\necho 'Hello, World'\n");
 
         $identifier = new VersionedTextDocumentIdentifier('whatever');
         $changeEvent = new TextDocumentContentChangeEvent();

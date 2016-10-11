@@ -9,6 +9,7 @@ use PhpParser\NodeVisitor\NameResolver;
 use LanguageServer\{LanguageClient, Project, PhpDocument};
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\NodeVisitor\{ReferencesAdder, DefinitionCollector};
+use function LanguageServer\pathToUri;
 
 class DefinitionCollectorTest extends TestCase
 {
@@ -17,13 +18,14 @@ class DefinitionCollectorTest extends TestCase
         $client = new LanguageClient(new MockProtocolStream());
         $project = new Project($client);
         $parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7);
-        $document = new PhpDocument('symbols', $project, $client, $parser);
+        $uri = pathToUri(realpath(__DIR__ . '/../../fixtures/symbols.php'));
+        $document = $project->loadDocument($uri);
         $traverser = new NodeTraverser;
         $traverser->addVisitor(new NameResolver);
         $traverser->addVisitor(new ReferencesAdder($document));
         $definitionCollector = new DefinitionCollector;
         $traverser->addVisitor($definitionCollector);
-        $stmts = $parser->parse(file_get_contents(__DIR__ . '/../../fixtures/symbols.php'));
+        $stmts = $parser->parse(file_get_contents($uri));
         $traverser->traverse($stmts);
         $defs = $definitionCollector->definitions;
         $this->assertEquals([
@@ -55,13 +57,14 @@ class DefinitionCollectorTest extends TestCase
         $client = new LanguageClient(new MockProtocolStream());
         $project = new Project($client);
         $parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7);
-        $document = new PhpDocument('references', $project, $client, $parser);
+        $uri = pathToUri(realpath(__DIR__ . '/../../fixtures/references.php'));
+        $document = $project->loadDocument($uri);
         $traverser = new NodeTraverser;
         $traverser->addVisitor(new NameResolver);
         $traverser->addVisitor(new ReferencesAdder($document));
         $definitionCollector = new DefinitionCollector;
         $traverser->addVisitor($definitionCollector);
-        $stmts = $parser->parse(file_get_contents(__DIR__ . '/../../fixtures/references.php'));
+        $stmts = $parser->parse(file_get_contents($uri));
         $traverser->traverse($stmts);
         $defs = $definitionCollector->definitions;
         $this->assertEquals(['TestNamespace\\whatever()'], array_keys($defs));
