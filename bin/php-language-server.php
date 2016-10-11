@@ -4,7 +4,9 @@ use LanguageServer\{LanguageServer, ProtocolStreamReader, ProtocolStreamWriter};
 use Sabre\Event\Loop;
 use Symfony\Component\Debug\ErrorHandler;
 
-ini_set('memory_limit', '-1');
+$options = getopt('', ['tcp::', 'memory-limit::']);
+
+ini_set('memory_limit', $options['memory-limit'] ?? -1);
 
 foreach ([__DIR__ . '/../../../autoload.php', __DIR__ . '/../autoload.php', __DIR__ . '/../vendor/autoload.php'] as $file) {
     if (file_exists($file)) {
@@ -17,8 +19,8 @@ ErrorHandler::register();
 
 cli_set_process_title('PHP Language Server');
 
-if (count($argv) >= 3 && $argv[1] === '--tcp') {
-    $address = $argv[2];
+if ($options['tcp']) {
+    $address = $options['tcp'];
     $socket = stream_socket_client('tcp://' . $address, $errno, $errstr);
     if ($socket === false) {
         fwrite(STDERR, "Could not connect to language client. Error $errno\n");
