@@ -96,18 +96,18 @@ class TextDocument
      *
      * @param TextDocumentIdentifier $textDocument The text document
      * @param Position $position The position inside the text document
-     * @return Location|Location[]|null
+     * @return Location|Location[]
      */
     public function definition(TextDocumentIdentifier $textDocument, Position $position)
     {
         $document = $this->project->getDocument($textDocument->uri);
         $node = $document->getNodeAtPosition($position);
         if ($node === null) {
-            return null;
+            return [];
         }
         $def = $document->getDefinitionByNode($node);
         if ($def === null) {
-            return null;
+            return [];
         }
         return Location::fromNode($def);
     }
