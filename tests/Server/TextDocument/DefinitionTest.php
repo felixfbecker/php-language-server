@@ -25,6 +25,18 @@ class DefinitionTest extends TestCase
         $project->openDocument('use', file_get_contents(__DIR__ . '/../../../fixtures/use.php'));
     }
 
+    public function testDefinitionFileBeginning() {
+        // |<?php
+        $result = $this->textDocument->definition(new TextDocumentIdentifier('references'), new Position(0, 0));
+        $this->assertEquals([], json_decode(json_encode($result), true));
+    }
+
+    public function testDefinitionEmptyResult() {
+        // namespace keyword
+        $result = $this->textDocument->definition(new TextDocumentIdentifier('references'), new Position(2, 4));
+        $this->assertEquals([], json_decode(json_encode($result), true));
+    }
+
     public function testDefinitionForClassLike()
     {
         // $obj = new TestClass();

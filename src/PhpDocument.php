@@ -113,10 +113,11 @@ class PhpDocument
         $diagnostics = [];
         foreach ($errors as $error) {
             $diagnostic = new Diagnostic();
-            $diagnostic->range = new Range(
-                new Position($error->getStartLine() - 1, $error->hasColumnInfo() ? $error->getStartColumn($content) - 1 : 0),
-                new Position($error->getEndLine() - 1, $error->hasColumnInfo() ? $error->getEndColumn($content) : 0)
-            );
+            $startLine = max($error->getStartLine() - 1, 0);
+            $startColumn = $error->hasColumnInfo() ? $error->getStartColumn($this->content) - 1 : 0;
+            $endLine = max($error->getEndLine() - 1, $startLine);
+            $endColumn = $error->hasColumnInfo() ? $error->getEndColumn($this->content) : 0;
+            $diagnostic->range = new Range(new Position($startLine, $startColumn), new Position($endLine, $endColumn));
             $diagnostic->severity = DiagnosticSeverity::ERROR;
             $diagnostic->source = 'php';
             // Do not include "on line ..." in the error message
