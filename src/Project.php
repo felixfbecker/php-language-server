@@ -3,9 +3,7 @@ declare(strict_types = 1);
 
 namespace LanguageServer;
 
-use PhpParser\{Error, Comment, Node, ParserFactory, NodeTraverser, Lexer};
-use PhpParser\PrettyPrinter\Standard as PrettyPrinter;
-use PhpParser\NodeVisitor\NameResolver;
+use PhpParser\{ParserFactory, Lexer};
 
 class Project
 {

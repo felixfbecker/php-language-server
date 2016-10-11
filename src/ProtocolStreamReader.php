@@ -5,7 +5,6 @@ namespace LanguageServer;
 
 use LanguageServer\Protocol\Message;
 use AdvancedJsonRpc\Message as MessageBody;
-use Sabre\Event\EventEmitter;
 use Sabre\Event\Loop;
 
 abstract class ParsingMode

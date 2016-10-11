@@ -3,14 +3,11 @@ declare(strict_types = 1);
 
 namespace LanguageServer\Server;
 
-use LanguageServer\{LanguageClient, ColumnCalculator, Project};
+use LanguageServer\{LanguageClient, Project};
 use LanguageServer\Protocol\{
     TextDocumentItem,
     TextDocumentIdentifier,
     VersionedTextDocumentIdentifier,
-    Diagnostic,
-    DiagnosticSeverity,
-    Range,
     Position,
     FormattingOptions,
     TextEdit,
