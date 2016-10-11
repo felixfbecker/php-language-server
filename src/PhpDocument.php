@@ -325,33 +325,31 @@ class PhpDocument
      */
     public function getReferencedFqn(Node $node)
     {
-        if ($node instanceof Node\Name) {
-            $nameNode = $node;
-            $node = $node->getAttribute('parentNode');
-        }
+        $parent = $node->getAttribute('parentNode');
 
         if (
-            ($node instanceof Node\Stmt\ClassLike
-            || $node instanceof Node\Param
-            || $node instanceof Node\Stmt\Function_)
-            && isset($nameNode)
+            $node instanceof Node\Name && (
+                $parent instanceof Node\Stmt\ClassLike
+                || $parent instanceof Node\Param
+                || $parent instanceof Node\Stmt\Function_
+            )
         ) {
             // For extends, implements and type hints use the name directly
-            $name = (string)$nameNode;
+            $name = (string)$node;
         // Only the name node should be considered a reference, not the UseUse node itself
-        } else if ($node instanceof Node\Stmt\UseUse && isset($nameNode)) {
-            $name = (string)$node->name;
-            $parent = $node->getAttribute('parentNode');
-            if ($parent instanceof Node\Stmt\GroupUse) {
-                $name = $parent->prefix . '\\' . $name;
+        } else if ($parent instanceof Node\Stmt\UseUse) {
+            $name = (string)$parent->name;
+            $grandParent = $parent->getAttribute('parentNode');
+            if ($grandParent instanceof Node\Stmt\GroupUse) {
+                $name = $grandParent->prefix . '\\' . $name;
             }
         // Only the name node should be considered a reference, not the New_ node itself
-        } else if ($node instanceof Node\Expr\New_ && isset($nameNode)) {
-            if (!($node->class instanceof Node\Name)) {
+        } else if ($parent instanceof Node\Expr\New_) {
+            if (!($parent->class instanceof Node\Name)) {
                 // Cannot get definition of dynamic calls
                 return null;
             }
-            $name = (string)$node->class;
+            $name = (string)$parent->class;
         } else if ($node instanceof Node\Expr\MethodCall || $node instanceof Node\Expr\PropertyFetch) {
             if ($node->name instanceof Node\Expr || !($node->var instanceof Node\Expr\Variable)) {
                 // Cannot get definition of dynamic calls
@@ -383,13 +381,13 @@ class PhpDocument
                 return null;
             }
             $name .= '::' . (string)$node->name;
-        } else if ($node instanceof Node\Expr\FuncCall) {
-            if ($node->name instanceof Node\Expr) {
+        } else if ($parent instanceof Node\Expr\FuncCall) {
+            if ($parent->name instanceof Node\Expr) {
                 return null;
             }
-            $name = (string)$node->name;
-        } else if ($node instanceof Node\Expr\ConstFetch) {
-            $name = (string)$node->name;
+            $name = (string)$parent->name;
+        } else if ($parent instanceof Node\Expr\ConstFetch) {
+            $name = (string)$parent->name;
         } else if (
             $node instanceof Node\Expr\ClassConstFetch
             || $node instanceof Node\Expr\StaticPropertyFetch
@@ -400,11 +398,13 @@ class PhpDocument
                 return null;
             }
             $name = (string)$node->class . '::' . $node->name;
+        } else {
+            return null;
         }
         if (
             $node instanceof Node\Expr\MethodCall
-            || $node instanceof Node\Expr\FuncCall
             || $node instanceof Node\Expr\StaticCall
+            || $parent instanceof Node\Expr\FuncCall
         ) {
             $name .= '()';
         }
@@ -414,9 +414,9 @@ class PhpDocument
         // If the node is a function or constant, it could be namespaced, but PHP falls back to global
         // The NameResolver therefor does not resolve these to namespaced names
         // http://php.net/manual/en/language.namespaces.fallback.php
-        if ($node instanceof Node\Expr\FuncCall || $node instanceof Node\Expr\ConstFetch) {
+        if ($parent instanceof Node\Expr\FuncCall || $parent instanceof Node\Expr\ConstFetch) {
             // Find and try with namespace
-            $n = $node;
+            $n = $parent;
             while (isset($n)) {
                 $n = $n->getAttribute('parentNode');
                 if ($n instanceof Node\Stmt\Namespace_) {
