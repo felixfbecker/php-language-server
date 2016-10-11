@@ -1,14 +1,15 @@
 <?php
 declare(strict_types = 1);
 
-namespace LanguageServer\Tests\Server\TextDocument;
+namespace LanguageServer\Tests\Server\TextDocument\Definition;
 
 use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\{Server, LanguageClient, Project};
 use LanguageServer\Protocol\{TextDocumentIdentifier, Position};
+use function LanguageServer\pathToUri;
 
-class DefinitionTest extends TestCase
+class NamespacedTest extends TestCase
 {
     /**
      * @var Server\TextDocument
@@ -20,9 +21,9 @@ class DefinitionTest extends TestCase
         $client = new LanguageClient(new MockProtocolStream());
         $project = new Project($client);
         $this->textDocument = new Server\TextDocument($project, $client);
-        $project->openDocument('references', file_get_contents(__DIR__ . '/../../../fixtures/references.php'));
-        $project->openDocument('symbols', file_get_contents(__DIR__ . '/../../../fixtures/symbols.php'));
-        $project->openDocument('use', file_get_contents(__DIR__ . '/../../../fixtures/use.php'));
+        $project->openDocument('references', file_get_contents(__DIR__ . '/../../../../fixtures/references.php'));
+        $project->openDocument('symbols', file_get_contents(__DIR__ . '/../../../../fixtures/symbols.php'));
+        $project->openDocument('use', file_get_contents(__DIR__ . '/../../../../fixtures/use.php'));
     }
 
     public function testDefinitionFileBeginning() {

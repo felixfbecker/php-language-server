@@ -16,11 +16,18 @@ class Project
     private $documents = [];
 
     /**
-     * An associative array that maps fully qualified symbol names to document URIs
+     * An associative array that maps fully qualified symbol names to document URIs that define the symbol
      *
      * @var string[]
      */
     private $definitions = [];
+
+    /**
+     * An associative array that maps fully qualified symbol names to arrays of document URIs that reference the symbol
+     *
+     * @var PhpDocument[][]
+     */
+    private $references = [];
 
     /**
      * Instance of the PHP parser
@@ -141,6 +148,37 @@ class Project
     public function setDefinitionUri(string $fqn, string $uri)
     {
         $this->definitions[$fqn] = $uri;
+    }
+
+    /**
+     * Adds a document URI as a referencee of a specific symbol
+     *
+     * @param string $fqn The fully qualified name of the symbol
+     * @return void
+     */
+    public function addReferenceUri(string $fqn, string $uri)
+    {
+        if (!isset($this->references[$fqn])) {
+            $this->references[$fqn] = [];
+        }
+        // TODO: use DS\Set instead of searching array
+        if (array_search($uri, $this->references[$fqn], true) === false) {
+            $this->references[$fqn][] = $uri;
+        }
+    }
+
+    /**
+     * Returns all documents that reference a symbol
+     *
+     * @param string $fqn The fully qualified name of the symbol
+     * @return PhpDocument[]
+     */
+    public function getReferenceDocuments(string $fqn)
+    {
+        if (!isset($this->references[$fqn])) {
+            return [];
+        }
+        return array_map([$this, 'getDocument'], $this->references[$fqn]);
     }
 
     /**

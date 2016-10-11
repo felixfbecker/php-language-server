@@ -105,6 +105,8 @@ class LanguageServer extends \AdvancedJsonRpc\Dispatcher
         $serverCapabilities->documentFormattingProvider = true;
         // Support "Go to definition"
         $serverCapabilities->definitionProvider = true;
+        // Support "Find all references"
+        $serverCapabilities->referencesProvider = true;
 
         return new InitializeResult($serverCapabilities);
     }

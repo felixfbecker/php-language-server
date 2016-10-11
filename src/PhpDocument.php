@@ -4,7 +4,14 @@ declare(strict_types = 1);
 namespace LanguageServer;
 
 use LanguageServer\Protocol\{Diagnostic, DiagnosticSeverity, Range, Position, TextEdit};
-use LanguageServer\NodeVisitor\{NodeAtPositionFinder, ReferencesAdder, DefinitionCollector, ColumnCalculator};
+use LanguageServer\NodeVisitor\{
+    NodeAtPositionFinder,
+    ReferencesAdder,
+    DefinitionCollector,
+    ColumnCalculator,
+    ReferencesCollector,
+    VariableReferencesCollector
+};
 use PhpParser\{Error, Node, NodeTraverser, Parser};
 use PhpParser\NodeVisitor\NameResolver;
 
@@ -52,7 +59,7 @@ class PhpDocument
      *
      * @var Node[]
      */
-    private $statements;
+    private $stmts;
 
     /**
      * Map from fully qualified name (FQN) to Node
@@ -85,6 +92,18 @@ class PhpDocument
     }
 
     /**
+     * Get all references of a fully qualified name
+     *
+     * @param string $fqn The fully qualified name of the symbol
+     * @return Node[]
+     */
+    public function getReferencesByFqn(string $fqn)
+    {
+        return isset($this->references) && isset($this->references[$fqn]) ? $this->references[$fqn] : null;
+    }
+
+    /**
+     * Updates the content on this document.
      * Re-parses a source file, updates symbols and reports parsing errors
      * that may have occured as diagnostics.
      *
@@ -135,19 +154,32 @@ class PhpDocument
             // Add column attributes to nodes
             $traverser->addVisitor(new ColumnCalculator($content));
 
+            $traverser->traverse($stmts);
+            $traverser = new NodeTraverser;
+
             // Collect all definitions
             $definitionCollector = new DefinitionCollector;
             $traverser->addVisitor($definitionCollector);
 
+            // Collect all references
+            $referencesCollector = new ReferencesCollector($this->definitions);
+            $traverser->addVisitor($referencesCollector);
+
             $traverser->traverse($stmts);
 
             // Register this document on the project for all the symbols defined in it
+            $this->definitions = $definitionCollector->definitions;
             foreach ($definitionCollector->definitions as $fqn => $node) {
                 $this->project->setDefinitionUri($fqn, $this->uri);
             }
 
-            $this->statements = $stmts;
-            $this->definitions = $definitionCollector->definitions;
+            // Register this document on the project for references
+            $this->references = $referencesCollector->references;
+            foreach ($referencesCollector->references as $fqn => $nodes) {
+                $this->project->addReferenceUri($fqn, $this->uri);
+            }
+
+            $this->stmts = $stmts;
         }
     }
 
@@ -185,6 +217,16 @@ class PhpDocument
     }
 
     /**
+     * Returns the AST of the document
+     *
+     * @return Node[]
+     */
+    public function getStmts(): array
+    {
+        return $this->stmts;
+    }
+
+    /**
      * Returns the node at a specified position
      *
      * @param Position $position
@@ -195,7 +237,7 @@ class PhpDocument
         $traverser = new NodeTraverser;
         $finder = new NodeAtPositionFinder($position);
         $traverser->addVisitor($finder);
-        $traverser->traverse($this->statements);
+        $traverser->traverse($this->stmts);
         return $finder->node;
     }
 
@@ -295,33 +337,31 @@ class PhpDocument
      */
     public function getReferencedFqn(Node $node)
     {
-        if ($node instanceof Node\Name) {
-            $nameNode = $node;
-            $node = $node->getAttribute('parentNode');
-        }
+        $parent = $node->getAttribute('parentNode');
 
         if (
-            ($node instanceof Node\Stmt\ClassLike
-            || $node instanceof Node\Param
-            || $node instanceof Node\Stmt\Function_)
-            && isset($nameNode)
+            $node instanceof Node\Name && (
+                $parent instanceof Node\Stmt\ClassLike
+                || $parent instanceof Node\Param
+                || $parent instanceof Node\Stmt\Function_
+            )
         ) {
             // For extends, implements and type hints use the name directly
-            $name = (string)$nameNode;
+            $name = (string)$node;
         // Only the name node should be considered a reference, not the UseUse node itself
-        } else if ($node instanceof Node\Stmt\UseUse && isset($nameNode)) {
-            $name = (string)$node->name;
-            $parent = $node->getAttribute('parentNode');
-            if ($parent instanceof Node\Stmt\GroupUse) {
-                $name = $parent->prefix . '\\' . $name;
+        } else if ($parent instanceof Node\Stmt\UseUse) {
+            $name = (string)$parent->name;
+            $grandParent = $parent->getAttribute('parentNode');
+            if ($grandParent instanceof Node\Stmt\GroupUse) {
+                $name = $grandParent->prefix . '\\' . $name;
             }
         // Only the name node should be considered a reference, not the New_ node itself
-        } else if ($node instanceof Node\Expr\New_ && isset($nameNode)) {
-            if (!($node->class instanceof Node\Name)) {
+        } else if ($parent instanceof Node\Expr\New_) {
+            if (!($parent->class instanceof Node\Name)) {
                 // Cannot get definition of dynamic calls
                 return null;
             }
-            $name = (string)$node->class;
+            $name = (string)$parent->class;
         } else if ($node instanceof Node\Expr\MethodCall || $node instanceof Node\Expr\PropertyFetch) {
             if ($node->name instanceof Node\Expr || !($node->var instanceof Node\Expr\Variable)) {
                 // Cannot get definition of dynamic calls
@@ -353,13 +393,13 @@ class PhpDocument
                 return null;
             }
             $name .= '::' . (string)$node->name;
-        } else if ($node instanceof Node\Expr\FuncCall) {
-            if ($node->name instanceof Node\Expr) {
+        } else if ($parent instanceof Node\Expr\FuncCall) {
+            if ($parent->name instanceof Node\Expr) {
                 return null;
             }
-            $name = (string)$node->name;
-        } else if ($node instanceof Node\Expr\ConstFetch) {
-            $name = (string)$node->name;
+            $name = (string)($node->getAttribute('namespacedName') ?? $parent->name);
+        } else if ($parent instanceof Node\Expr\ConstFetch) {
+            $name = (string)($node->getAttribute('namespacedName') ?? $parent->name);
         } else if (
             $node instanceof Node\Expr\ClassConstFetch
             || $node instanceof Node\Expr\StaticPropertyFetch
@@ -370,34 +410,18 @@ class PhpDocument
                 return null;
             }
             $name = (string)$node->class . '::' . $node->name;
+        } else {
+            return null;
         }
         if (
             $node instanceof Node\Expr\MethodCall
-            || $node instanceof Node\Expr\FuncCall
             || $node instanceof Node\Expr\StaticCall
+            || $parent instanceof Node\Expr\FuncCall
         ) {
             $name .= '()';
         }
         if (!isset($name)) {
             return null;
-        }
-        // If the node is a function or constant, it could be namespaced, but PHP falls back to global
-        // The NameResolver therefor does not resolve these to namespaced names
-        // http://php.net/manual/en/language.namespaces.fallback.php
-        if ($node instanceof Node\Expr\FuncCall || $node instanceof Node\Expr\ConstFetch) {
-            // Find and try with namespace
-            $n = $node;
-            while (isset($n)) {
-                $n = $n->getAttribute('parentNode');
-                if ($n instanceof Node\Stmt\Namespace_) {
-                    $namespacedName = (string)$n->name . '\\' . $name;
-                    // If the namespaced version is defined, return that
-                    // Otherwise fall back to global
-                    if ($this->project->isDefined($namespacedName)) {
-                        return $namespacedName;
-                    }
-                }
-            }
         }
         return $name;
     }
@@ -422,9 +446,66 @@ class PhpDocument
         }
         $document = $this->project->getDefinitionDocument($fqn);
         if (!isset($document)) {
+            // If the node is a function or constant, it could be namespaced, but PHP falls back to global
+            // http://php.net/manual/en/language.namespaces.fallback.php
+            $parent = $node->getAttribute('parentNode');
+            if ($parent instanceof Node\Expr\ConstFetch || $parent instanceof Node\Expr\FuncCall) {
+                $parts = explode('\\', $fqn);
+                $fqn = end($parts);
+                $document = $this->project->getDefinitionDocument($fqn);
+            }
+        }
+        if (!isset($document)) {
             return null;
         }
         return $document->getDefinitionByFqn($fqn);
+    }
+
+    /**
+     * Returns the reference nodes for any node
+     * The references node MAY be in other documents, check the ownerDocument attribute
+     *
+     * @param Node $node
+     * @return Node[]
+     */
+    public function getReferencesByNode(Node $node)
+    {
+        // Variables always stay in the boundary of the file and need to be searched inside their function scope
+        // by traversing the AST
+        if ($node instanceof Node\Expr\Variable || $node instanceof Node\Param) {
+            if ($node->name instanceof Node\Expr) {
+                return null;
+            }
+            // Find function/method/closure scope
+            $n = $node;
+            while (isset($n) && !($n instanceof Node\FunctionLike)) {
+                $n = $n->getAttribute('parentNode');
+            }
+            if (!isset($n)) {
+                $n = $node->getAttribute('ownerDocument');
+            }
+            $traverser = new NodeTraverser;
+            $refCollector = new VariableReferencesCollector($node->name);
+            $traverser->addVisitor($refCollector);
+            $traverser->traverse($n->getStmts());
+            return $refCollector->references;
+        }
+        // Definition with a global FQN
+        $fqn = $this->getDefinedFqn($node);
+        if ($fqn === null) {
+            return [];
+        }
+        $refDocuments = $this->project->getReferenceDocuments($fqn);
+        $nodes = [];
+        foreach ($refDocuments as $document) {
+            $refs = $document->getReferencesByFqn($fqn);
+            if ($refs !== null) {
+                foreach ($refs as $ref) {
+                    $nodes[] = $ref;
+                }
+            }
+        }
+        return $nodes;
     }
 
     /**
@@ -437,7 +518,7 @@ class PhpDocument
     {
         $n = $var;
         // Traverse the AST up
-        while (isset($n) && $n = $n->getAttribute('parentNode')) {
+        do {
             // If a function is met, check the parameters and use statements
             if ($n instanceof Node\FunctionLike) {
                 foreach ($n->getParams() as $param) {
@@ -461,7 +542,7 @@ class PhpDocument
                     return $n;
                 }
             }
-        }
+        } while (isset($n) && $n = $n->getAttribute('parentNode'));
         // Return null if nothing was found
         return null;
     }
