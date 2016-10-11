@@ -103,11 +103,11 @@ class TextDocument
         $document = $this->project->getDocument($textDocument->uri);
         $node = $document->getNodeAtPosition($position);
         if ($node === null) {
-            return array();
+            return [];
         }
         $def = $document->getDefinitionByNode($node);
         if ($def === null) {
-            return array();
+            return [];
         }
         return Location::fromNode($def);
     }
