@@ -4,10 +4,8 @@ declare(strict_types = 1);
 namespace LanguageServer\Client;
 
 use AdvancedJsonRpc\Notification as NotificationBody;
-use PhpParser\{Error, Comment, Node, ParserFactory, NodeTraverser, Lexer};
-use PhpParser\NodeVisitor\NameResolver;
 use LanguageServer\ProtocolWriter;
-use LanguageServer\Protocol\{TextDocumentItem, TextDocumentIdentifier, VersionedTextDocumentIdentifier, Message};
+use LanguageServer\Protocol\Message;
 
 /**
  * Provides method handlers for all textDocument/* methods

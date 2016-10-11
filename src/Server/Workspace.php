@@ -3,22 +3,8 @@ declare(strict_types = 1);
 
 namespace LanguageServer\Server;
 
-use PhpParser\{Error, Comment, Node, ParserFactory, NodeTraverser, Lexer};
-use PhpParser\PrettyPrinter\Standard as PrettyPrinter;
-use PhpParser\NodeVisitor\NameResolver;
-use LanguageServer\{LanguageClient, ColumnCalculator, Project};
-use LanguageServer\Protocol\{
-    TextDocumentItem,
-    TextDocumentIdentifier,
-    VersionedTextDocumentIdentifier,
-    Diagnostic,
-    DiagnosticSeverity,
-    Range,
-    Position,
-    FormattingOptions,
-    TextEdit,
-    SymbolInformation
-};
+use LanguageServer\{LanguageClient, Project};
+use LanguageServer\Protocol\SymbolInformation;
 
 /**
  * Provides method handlers for all workspace/* methods

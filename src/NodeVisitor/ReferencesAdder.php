@@ -4,7 +4,6 @@ declare(strict_types = 1);
 namespace LanguageServer\NodeVisitor;
 
 use PhpParser\{NodeVisitorAbstract, Node};
-use LanguageServer\Protocol\{SymbolInformation, SymbolKind, Range, Position, Location};
 
 /**
  * Decorates all nodes with parent and sibling references (similar to DOM nodes)
