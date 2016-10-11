@@ -14,7 +14,7 @@ class ParseErrorsTest extends TestCase
      * @var Server\TextDocument
      */
     private $textDocument;
-    
+
     private $args;
 
     public function setUp()
@@ -35,7 +35,7 @@ class ParseErrorsTest extends TestCase
         $project = new Project($client);
         $this->textDocument = new Server\TextDocument($project, $client);
     }
-    
+
     private function openFile($file) {
         $textDocumentItem = new TextDocumentItem();
         $textDocumentItem->uri = 'whatever';
