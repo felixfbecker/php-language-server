@@ -1,14 +1,14 @@
 <?php
 declare(strict_types = 1);
 
-namespace LanguageServer\Tests\Server\TextDocument;
+namespace LanguageServer\Tests\Server\TextDocument\Definition;
 
 use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\{Server, LanguageClient, Project};
 use LanguageServer\Protocol\{TextDocumentIdentifier, Position};
 
-class DefinitionTest extends TestCase
+class GlobalTest extends TestCase
 {
     /**
      * @var Server\TextDocument
@@ -20,9 +20,8 @@ class DefinitionTest extends TestCase
         $client = new LanguageClient(new MockProtocolStream());
         $project = new Project($client);
         $this->textDocument = new Server\TextDocument($project, $client);
-        $project->openDocument('references', file_get_contents(__DIR__ . '/../../../fixtures/references.php'));
-        $project->openDocument('symbols', file_get_contents(__DIR__ . '/../../../fixtures/symbols.php'));
-        $project->openDocument('use', file_get_contents(__DIR__ . '/../../../fixtures/use.php'));
+        $project->openDocument('references', file_get_contents(__DIR__ . '/../../../../fixtures/global_references.php'));
+        $project->openDocument('symbols', file_get_contents(__DIR__ . '/../../../../fixtures/global_symbols.php'));
     }
 
     public function testDefinitionFileBeginning() {
@@ -51,46 +50,6 @@ class DefinitionTest extends TestCase
                 ],
                 'end' => [
                     'line' => 21,
-                    'character' => 1
-                ]
-            ]
-        ], json_decode(json_encode($result), true));
-    }
-
-    public function testDefinitionForClassLikeUseStatement()
-    {
-        // use TestNamespace\TestClass;
-        // Get definition for TestClass
-        $result = $this->textDocument->definition(new TextDocumentIdentifier('use'), new Position(4, 22));
-        $this->assertEquals([
-            'uri' => 'symbols',
-            'range' => [
-                'start' => [
-                    'line' => 6,
-                    'character' => 0
-                ],
-                'end' => [
-                    'line' => 21,
-                    'character' => 1
-                ]
-            ]
-        ], json_decode(json_encode($result), true));
-    }
-
-    public function testDefinitionForClassLikeGroupUseStatement()
-    {
-        // use TestNamespace\{TestTrait, TestInterface};
-        // Get definition for TestInterface
-        $result = $this->textDocument->definition(new TextDocumentIdentifier('use'), new Position(5, 37));
-        $this->assertEquals([
-            'uri' => 'symbols',
-            'range' => [
-                'start' => [
-                    'line' => 28,
-                    'character' => 0
-                ],
-                'end' => [
-                    'line' => 31,
                     'character' => 1
                 ]
             ]

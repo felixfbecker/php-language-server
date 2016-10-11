@@ -1,7 +1,7 @@
 <?php
 declare(strict_types = 1);
 
-namespace LanguageServer\Tests\Server\TextDocument;
+namespace LanguageServer\Tests\Server\TextDocument\References;
 
 use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
@@ -9,7 +9,7 @@ use LanguageServer\{Server, LanguageClient, Project};
 use LanguageServer\Protocol\{TextDocumentIdentifier, Position, ReferenceContext};
 use function LanguageServer\pathToUri;
 
-class ReferencesTest extends TestCase
+class NamespacedTest extends TestCase
 {
     /**
      * @var Server\TextDocument
@@ -25,9 +25,9 @@ class ReferencesTest extends TestCase
         $client = new LanguageClient(new MockProtocolStream());
         $project = new Project($client);
         $this->textDocument = new Server\TextDocument($project, $client);
-        $this->symbolsUri = pathToUri(realpath(__DIR__ . '/../../../fixtures/symbols.php'));
-        $this->referencesUri = pathToUri(realpath(__DIR__ . '/../../../fixtures/references.php'));
-        $this->useUri = pathToUri(realpath(__DIR__ . '/../../../fixtures/use.php'));
+        $this->symbolsUri = pathToUri(realpath(__DIR__ . '/../../../../fixtures/symbols.php'));
+        $this->referencesUri = pathToUri(realpath(__DIR__ . '/../../../../fixtures/references.php'));
+        $this->useUri = pathToUri(realpath(__DIR__ . '/../../../../fixtures/use.php'));
         $project->loadDocument($this->referencesUri, file_get_contents($this->referencesUri));
         $project->loadDocument($this->symbolsUri, file_get_contents($this->symbolsUri));
         $project->loadDocument($this->useUri, file_get_contents($this->useUri));

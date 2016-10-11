@@ -412,7 +412,8 @@ class PhpDocument
             return null;
         }
         // If the node is a function or constant, it could be namespaced, but PHP falls back to global
-        // The NameResolver therefor does not resolve these to namespaced names
+        // The NameResolver therefor does not currently resolve these to namespaced names
+        // https://github.com/nikic/PHP-Parser/issues/236
         // http://php.net/manual/en/language.namespaces.fallback.php
         if ($parent instanceof Node\Expr\FuncCall || $parent instanceof Node\Expr\ConstFetch) {
             // Find and try with namespace
@@ -420,12 +421,7 @@ class PhpDocument
             while (isset($n)) {
                 $n = $n->getAttribute('parentNode');
                 if ($n instanceof Node\Stmt\Namespace_) {
-                    $namespacedName = (string)$n->name . '\\' . $name;
-                    // If the namespaced version is defined, return that
-                    // Otherwise fall back to global
-                    if ($this->project->isDefined($namespacedName)) {
-                        return $namespacedName;
-                    }
+                    return (string)$n->name . '\\' . $name;
                 }
             }
         }
