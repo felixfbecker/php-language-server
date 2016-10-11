@@ -73,6 +73,7 @@ class PhpDocument
 
     /**
      * @param string         $uri     The URI of the document
+     * @param string         $content The content of the document
      * @param Project        $project The Project this document belongs to (to register definitions etc)
      * @param LanguageClient $client  The LanguageClient instance (to report errors etc)
      * @param Parser         $parser  The PHPParser instance
