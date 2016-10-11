@@ -2,9 +2,9 @@
 
 use LanguageServer\{LanguageServer, ProtocolStreamReader, ProtocolStreamWriter};
 use Sabre\Event\Loop;
+use Symfony\Component\Debug\ErrorHandler;
 
 ini_set('memory_limit', '-1');
-cli_set_process_title('PHP Language Server');
 
 foreach ([__DIR__ . '/../../../autoload.php', __DIR__ . '/../autoload.php', __DIR__ . '/../vendor/autoload.php'] as $file) {
     if (file_exists($file)) {
@@ -12,6 +12,10 @@ foreach ([__DIR__ . '/../../../autoload.php', __DIR__ . '/../autoload.php', __DI
         break;
     }
 }
+
+ErrorHandler::register();
+
+cli_set_process_title('PHP Language Server');
 
 if (count($argv) >= 3 && $argv[1] === '--tcp') {
     $address = $argv[2];
