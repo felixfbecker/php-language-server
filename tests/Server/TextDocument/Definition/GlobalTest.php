@@ -22,6 +22,10 @@ class GlobalTest extends TestCase
         $this->textDocument = new Server\TextDocument($project, $client);
         $project->openDocument('references', file_get_contents(__DIR__ . '/../../../../fixtures/global_references.php'));
         $project->openDocument('symbols', file_get_contents(__DIR__ . '/../../../../fixtures/global_symbols.php'));
+        // Load this to check that there are no conflicts
+        $project->openDocument('references_namespaced', file_get_contents(__DIR__ . '/../../../../fixtures/references.php'));
+        $project->openDocument('symbols_namespaced', file_get_contents(__DIR__ . '/../../../../fixtures/symbols.php'));
+        $project->openDocument('use', file_get_contents(__DIR__ . '/../../../../fixtures/use.php'));
     }
 
     public function testDefinitionFileBeginning() {

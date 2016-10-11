@@ -9,7 +9,7 @@ use LanguageServer\{Server, LanguageClient, Project};
 use LanguageServer\Protocol\{TextDocumentIdentifier, Position, ReferenceContext};
 use function LanguageServer\pathToUri;
 
-class NamespacedTest extends TestCase
+class GlobalTest extends TestCase
 {
     /**
      * @var Server\TextDocument
@@ -18,22 +18,20 @@ class NamespacedTest extends TestCase
 
     private $symbolsUri;
     private $referencesUri;
-    private $useUri;
 
     public function setUp()
     {
         $client = new LanguageClient(new MockProtocolStream());
         $project = new Project($client);
         $this->textDocument = new Server\TextDocument($project, $client);
-        $this->symbolsUri = pathToUri(realpath(__DIR__ . '/../../../../fixtures/symbols.php'));
-        $this->referencesUri = pathToUri(realpath(__DIR__ . '/../../../../fixtures/references.php'));
-        $this->useUri = pathToUri(realpath(__DIR__ . '/../../../../fixtures/use.php'));
+        $this->symbolsUri = pathToUri(realpath(__DIR__ . '/../../../../fixtures/global_symbols.php'));
+        $this->referencesUri = pathToUri(realpath(__DIR__ . '/../../../../fixtures/global_references.php'));
         $project->loadDocument($this->referencesUri);
         $project->loadDocument($this->symbolsUri);
-        $project->loadDocument($this->useUri);
         // Load this to check that there are no conflicts
-        $project->loadDocument(pathToUri(realpath(__DIR__ . '/../../../../fixtures/global_symbols.php')));
-        $project->loadDocument(pathToUri(realpath(__DIR__ . '/../../../../fixtures/global_references.php')));
+        $project->loadDocument(pathToUri(realpath(__DIR__ . '/../../../../fixtures/symbols.php')));
+        $project->loadDocument(pathToUri(realpath(__DIR__ . '/../../../../fixtures/references.php')));
+        $project->loadDocument(pathToUri(realpath(__DIR__ . '/../../../../fixtures/use.php')));
     }
 
     public function testReferencesForClassLike()
@@ -123,20 +121,6 @@ class NamespacedTest extends TestCase
                     'end' => [
                         'line' => 15,
                         'character' => 46
-                    ]
-                ]
-            ],
-            // use TestNamespace\TestClass;
-            [
-                'uri' => $this->useUri,
-                'range' => [
-                    'start' => [
-                        'line' => 4,
-                        'character' => 4
-                    ],
-                    'end' => [
-                        'line' => 4,
-                        'character' => 27
                     ]
                 ]
             ]
