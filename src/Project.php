@@ -151,19 +151,19 @@ class Project
     }
 
     /**
-     * Adds a document as a referencee of a specific symbol
+     * Adds a document URI as a referencee of a specific symbol
      *
      * @param string $fqn The fully qualified name of the symbol
      * @return void
      */
-    public function addReferenceDocument(string $fqn, PhpDocument $document)
+    public function addReferenceUri(string $fqn, string $uri)
     {
         if (!isset($this->references[$fqn])) {
             $this->references[$fqn] = [];
         }
         // TODO: use DS\Set instead of searching array
-        if (array_search($document, $this->references[$fqn], true) === false) {
-            $this->references[$fqn][] = $document;
+        if (array_search($uri, $this->references[$fqn], true) === false) {
+            $this->references[$fqn][] = $uri;
         }
     }
 
@@ -175,7 +175,10 @@ class Project
      */
     public function getReferenceDocuments(string $fqn)
     {
-        return $this->references[$fqn] ?? [];
+        if (!isset($this->references[$fqn])) {
+            return [];
+        }
+        return array_map([$this, 'getDocument'], $this->references[$fqn]);
     }
 
     /**

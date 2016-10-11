@@ -31,9 +31,6 @@ class NamespacedTest extends TestCase
         $project->loadDocument($this->referencesUri);
         $project->loadDocument($this->symbolsUri);
         $project->loadDocument($this->useUri);
-        // Load this to check that there are no conflicts
-        $project->loadDocument(pathToUri(realpath(__DIR__ . '/../../../../fixtures/global_symbols.php')));
-        $project->loadDocument(pathToUri(realpath(__DIR__ . '/../../../../fixtures/global_references.php')));
     }
 
     public function testReferencesForClassLike()

@@ -24,9 +24,6 @@ class NamespacedTest extends TestCase
         $project->openDocument('references', file_get_contents(__DIR__ . '/../../../../fixtures/references.php'));
         $project->openDocument('symbols', file_get_contents(__DIR__ . '/../../../../fixtures/symbols.php'));
         $project->openDocument('use', file_get_contents(__DIR__ . '/../../../../fixtures/use.php'));
-        // Load this to check that there are no conflicts
-        $project->loadDocument(pathToUri(realpath(__DIR__ . '/../../../../fixtures/global_symbols.php')));
-        $project->loadDocument(pathToUri(realpath(__DIR__ . '/../../../../fixtures/global_references.php')));
     }
 
     public function testDefinitionFileBeginning() {

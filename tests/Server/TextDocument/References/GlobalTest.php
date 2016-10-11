@@ -28,10 +28,6 @@ class GlobalTest extends TestCase
         $this->referencesUri = pathToUri(realpath(__DIR__ . '/../../../../fixtures/global_references.php'));
         $project->loadDocument($this->referencesUri);
         $project->loadDocument($this->symbolsUri);
-        // Load this to check that there are no conflicts
-        $project->loadDocument(pathToUri(realpath(__DIR__ . '/../../../../fixtures/symbols.php')));
-        $project->loadDocument(pathToUri(realpath(__DIR__ . '/../../../../fixtures/references.php')));
-        $project->loadDocument(pathToUri(realpath(__DIR__ . '/../../../../fixtures/use.php')));
     }
 
     public function testReferencesForClassLike()

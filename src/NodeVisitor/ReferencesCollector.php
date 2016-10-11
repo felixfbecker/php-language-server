@@ -16,28 +16,26 @@ class ReferencesCollector extends NodeVisitorAbstract
      *
      * @var Node[][]
      */
-    public $references;
-
-    /**
-     * @var Node[]
-     */
-    private $definitions;
-
-    /**
-     * @param Node[] $definitions The definitions that references should be tracked for
-     */
-    public function __construct(array $definitions)
-    {
-        $this->definitions = $definitions;
-        $this->references = array_fill_keys(array_keys($definitions), []);
-    }
+    public $references = [];
 
     public function enterNode(Node $node)
     {
         // Check if the node references any global symbol
         $fqn = $node->getAttribute('ownerDocument')->getReferencedFqn($node);
         if ($fqn) {
-            $this->references[$fqn][] = $node;
+            $this->addReference($fqn, $node);
+            // Namespaced constant access and function calls also need to register a reference
+            // to the global version because PHP falls back to global at runtime
+            // http://php.net/manual/en/language.namespaces.fallback.php
+            $parent = $node->getAttribute('parentNode');
+            if ($parent instanceof Node\Expr\ConstFetch || $parent instanceof Node\Expr\FuncCall) {
+                $parts = explode('\\', $fqn);
+                if (count($parts) > 1) {
+                    $globalFqn = end($parts);
+                    $this->addReference($globalFqn, $node);
+                }
+            }
+            // Namespaced constant references and function calls also need to register a reference to the global
             // Static method calls, constant and property fetches also need to register a reference to the class
             // A reference like TestNamespace\TestClass::myStaticMethod() registers a reference for
             //  - TestNamespace\TestClass
@@ -48,8 +46,16 @@ class ReferencesCollector extends NodeVisitorAbstract
                 || $node instanceof Node\Expr\ClassConstFetch)
                 && $node->class instanceof Node\Name
             ) {
-                $this->references[(string)$node->class][] = $node->class;
+                $this->addReference((string)$node->class, $node->class);
             }
         }
+    }
+
+    private function addReference(string $fqn, Node $node)
+    {
+        if (!isset($this->references[$fqn])) {
+            $this->references[$fqn] = [];
+        }
+        $this->references[$fqn][] = $node;
     }
 }

@@ -154,28 +154,29 @@ class PhpDocument
             // Add column attributes to nodes
             $traverser->addVisitor(new ColumnCalculator($content));
 
+            $traverser->traverse($stmts);
+            $traverser = new NodeTraverser;
+
             // Collect all definitions
             $definitionCollector = new DefinitionCollector;
             $traverser->addVisitor($definitionCollector);
 
+            // Collect all references
+            $referencesCollector = new ReferencesCollector($this->definitions);
+            $traverser->addVisitor($referencesCollector);
+
             $traverser->traverse($stmts);
 
             // Register this document on the project for all the symbols defined in it
+            $this->definitions = $definitionCollector->definitions;
             foreach ($definitionCollector->definitions as $fqn => $node) {
                 $this->project->setDefinitionUri($fqn, $this->uri);
             }
 
-            $this->definitions = $definitionCollector->definitions;
-
-            // Collect all references
-            $traverser = new NodeTraverser;
-            $referencesCollector = new ReferencesCollector($this->definitions);
-            $traverser->addVisitor($referencesCollector);
-            $traverser->traverse($stmts);
-            $this->references = $referencesCollector->references;
             // Register this document on the project for references
+            $this->references = $referencesCollector->references;
             foreach ($referencesCollector->references as $fqn => $nodes) {
-                $this->project->addReferenceDocument($fqn, $this);
+                $this->project->addReferenceUri($fqn, $this->uri);
             }
 
             $this->stmts = $stmts;
@@ -396,9 +397,9 @@ class PhpDocument
             if ($parent->name instanceof Node\Expr) {
                 return null;
             }
-            $name = (string)$parent->name;
+            $name = (string)($node->getAttribute('namespacedName') ?? $parent->name);
         } else if ($parent instanceof Node\Expr\ConstFetch) {
-            $name = (string)$parent->name;
+            $name = (string)($node->getAttribute('namespacedName') ?? $parent->name);
         } else if (
             $node instanceof Node\Expr\ClassConstFetch
             || $node instanceof Node\Expr\StaticPropertyFetch
@@ -422,20 +423,6 @@ class PhpDocument
         if (!isset($name)) {
             return null;
         }
-        // If the node is a function or constant, it could be namespaced, but PHP falls back to global
-        // The NameResolver therefor does not currently resolve these to namespaced names
-        // https://github.com/nikic/PHP-Parser/issues/236
-        // http://php.net/manual/en/language.namespaces.fallback.php
-        if ($parent instanceof Node\Expr\FuncCall || $parent instanceof Node\Expr\ConstFetch) {
-            // Find and try with namespace
-            $n = $parent;
-            while (isset($n)) {
-                $n = $n->getAttribute('parentNode');
-                if ($n instanceof Node\Stmt\Namespace_) {
-                    return (string)$n->name . '\\' . $name;
-                }
-            }
-        }
         return $name;
     }
 
@@ -458,6 +445,16 @@ class PhpDocument
             return null;
         }
         $document = $this->project->getDefinitionDocument($fqn);
+        if (!isset($document)) {
+            // If the node is a function or constant, it could be namespaced, but PHP falls back to global
+            // http://php.net/manual/en/language.namespaces.fallback.php
+            $parent = $node->getAttribute('parentNode');
+            if ($parent instanceof Node\Expr\ConstFetch || $parent instanceof Node\Expr\FuncCall) {
+                $parts = explode('\\', $fqn);
+                $fqn = end($parts);
+                $document = $this->project->getDefinitionDocument($fqn);
+            }
+        }
         if (!isset($document)) {
             return null;
         }
@@ -521,7 +518,7 @@ class PhpDocument
     {
         $n = $var;
         // Traverse the AST up
-        while (isset($n) && $n = $n->getAttribute('parentNode')) {
+        do {
             // If a function is met, check the parameters and use statements
             if ($n instanceof Node\FunctionLike) {
                 foreach ($n->getParams() as $param) {
@@ -545,7 +542,7 @@ class PhpDocument
                     return $n;
                 }
             }
-        }
+        } while (isset($n) && $n = $n->getAttribute('parentNode'));
         // Return null if nothing was found
         return null;
     }
