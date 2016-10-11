@@ -56,5 +56,11 @@ function uriToPath(string $uri)
         throw new InvalidArgumentException("Not a valid file URI: $uri");
     }
     $filepath = urldecode($fragments['path']);
-    return strpos($filepath, ':') === false ? $filepath : str_replace('/', '\\', $filepath);
+    if (strpos($filepath, ':') !== false) {
+        if ($filepath[0] === '/') {
+            $filepath = substr($filepath, 1);
+        }
+        $filepath = str_replace('/', '\\', $filepath);
+    }
+    return $filepath;
 }

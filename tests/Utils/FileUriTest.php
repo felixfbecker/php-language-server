@@ -51,6 +51,12 @@ class FileUriTest extends TestCase
 
         $uri = 'file:///c:/foo/bar.baz';
         $this->assertEquals('c:\\foo\\bar.baz', uriToPath($uri));
+
+        $uri = 'file:///c%3A/path/to/file/d%C3%BCr%C3%BCm+d%C3%B6ner.php';
+        $this->assertEquals('c:\\path\\to\\file\\dürüm döner.php', uriToPath($uri));
+
+        $uri = 'file:///c%3A/foo/bar.baz';
+        $this->assertEquals('c:\\foo\\bar.baz', uriToPath($uri));
     }
 
     public function testUriToPathForUnknownProtocol()
