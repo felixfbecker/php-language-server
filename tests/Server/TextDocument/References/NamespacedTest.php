@@ -320,43 +320,23 @@ class NamespacedTest extends TestCase
         ], json_decode(json_encode($result), true));
     }
 
-    public function testReferencesForParams()
+    public function testReferencesForFunctionParams()
     {
-        $this->markTestIncomplete();
-        // echo $param;
-        // Get definition for $param
-        $result = $this->textDocument->definition(new TextDocumentIdentifier($this->referencesUri), new Position(16, 13));
+        // function whatever(TestClass $param): TestClass
+        // Get references for $param
+        $result = $this->textDocument->references(new ReferenceContext, new TextDocumentIdentifier($this->referencesUri), new Position(15, 32));
         $this->assertEquals([
-            'uri' => $this->referencesUri,
-            'range' => [
-                'start' => [
-                    'line' => 15,
-                    'character' => 18
-                ],
-                'end' => [
-                    'line' => 15,
-                    'character' => 33
-                ]
-            ]
-        ], json_decode(json_encode($result), true));
-    }
-
-    public function testReferencesForUsedVariables()
-    {
-        $this->markTestIncomplete();
-        // echo $var;
-        // Get definition for $var
-        $result = $this->textDocument->definition(new TextDocumentIdentifier($this->referencesUri), new Position(20, 11));
-        $this->assertEquals([
-            'uri' => $this->referencesUri,
-            'range' => [
-                'start' => [
-                    'line' => 19,
-                    'character' => 22
-                ],
-                'end' => [
-                    'line' => 19,
-                    'character' => 25
+            [
+                'uri' => $this->referencesUri,
+                'range' => [
+                    'start' => [
+                        'line' => 16,
+                        'character' => 9
+                    ],
+                    'end' => [
+                        'line' => 16,
+                        'character' => 15
+                    ]
                 ]
             ]
         ], json_decode(json_encode($result), true));
@@ -364,20 +344,21 @@ class NamespacedTest extends TestCase
 
     public function testReferencesForFunctions()
     {
-        $this->markTestIncomplete();
-        // test_function();
-        // Get definition for test_function
-        $result = $this->textDocument->definition(new TextDocumentIdentifier($this->referencesUri), new Position(10, 4));
+        // function test_function()
+        // Get references for test_function
+        $result = $this->textDocument->references(new ReferenceContext, new TextDocumentIdentifier($this->symbolsUri), new Position(33, 16));
         $this->assertEquals([
-            'uri' => $this->symbolsUri,
-            'range' => [
-                'start' => [
-                    'line' => 33,
-                    'character' => 0
-                ],
-                'end' => [
-                    'line' => 36,
-                    'character' => 0
+            [
+                'uri' => $this->referencesUri,
+                'range' => [
+                    'start' => [
+                        'line' => 10,
+                        'character' => 0
+                    ],
+                    'end' => [
+                        'line' => 10,
+                        'character' => 13
+                    ]
                 ]
             ]
         ], json_decode(json_encode($result), true));

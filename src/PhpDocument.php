@@ -475,7 +475,7 @@ class PhpDocument
     {
         // Variables always stay in the boundary of the file and need to be searched inside their function scope
         // by traversing the AST
-        if ($node instanceof Node\Expr\Variable) {
+        if ($node instanceof Node\Expr\Variable || $node instanceof Node\Param) {
             if ($node->name instanceof Node\Expr) {
                 return null;
             }
