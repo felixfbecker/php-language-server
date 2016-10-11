@@ -36,7 +36,7 @@ The server will try to connect to the specified address.
 
 Example:
 
-    php bin/php-language-server.php --tcp 127.0.0.1:12345
+    php bin/php-language-server.php --tcp=127.0.0.1:12345
 
 ###### --memory-limit=integer (optional)
 Sets memory limit for language server. Equivalent to [memory-limit](http://php.net/manual/en/ini.core.php#ini.memory-limit) *php.ini* directive. By default there is no memory limit.
