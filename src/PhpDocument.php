@@ -92,7 +92,6 @@ class PhpDocument
      * that may have occured as diagnostics.
      *
      * @param string $content
-     * @param bool $keepInMemory Wether to keep content, statements and definitions in memory or only update project definitions
      * @return void
      */
     public function updateContent(string $content)
