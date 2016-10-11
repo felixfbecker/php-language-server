@@ -30,8 +30,7 @@ Run the tests with
 
 ## Command line arguments
 
-    --tcp host:port
-
+###### --tcp=host:port (optional)
 Causes the server to use a tcp connection for communicating with the language client instead of using STDIN/STDOUT.
 The server will try to connect to the specified address.
 
@@ -39,3 +38,9 @@ Example:
 
     php bin/php-language-server.php --tcp 127.0.0.1:12345
 
+###### --memory-limit=integer (optional)
+Sets memory limit for language server. Equivalent to [memory-limit](http://php.net/manual/en/ini.core.php#ini.memory-limit) *php.ini* directive. By default there is no memory limit.
+
+Example:
+
+    php bin/php-language-server.php --memory-limit=256M
