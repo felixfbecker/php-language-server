@@ -100,12 +100,24 @@ class Project
         return $document;
     }
 
+    /**
+     * Removes the document with the specified URI from the list of open documents
+     *
+     * @param string $uri
+     * @return void
+     */
     public function closeDocument(string $uri)
     {
         unset($this->documents[$uri]);
     }
 
-    public function isDocumentOpen(string $uri)
+    /**
+     * Returns true if the document is open (and loaded)
+     *
+     * @param string $uri
+     * @return bool
+     */
+    public function isDocumentOpen(string $uri): bool
     {
         return isset($this->documents[$uri]);
     }
