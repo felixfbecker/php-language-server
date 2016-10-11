@@ -282,12 +282,38 @@ class NamespacedTest extends TestCase
                 'uri' => $this->referencesUri,
                 'range' => [
                     'start' => [
+                        'line' => 12,
+                        'character' => 0
+                    ],
+                    'end' => [
+                        'line' => 12,
+                        'character' => 4
+                    ]
+                ]
+            ],
+            [
+                'uri' => $this->referencesUri,
+                'range' => [
+                    'start' => [
                         'line' => 13,
                         'character' => 5
                     ],
                     'end' => [
                         'line' => 13,
-                        'character' => 8
+                        'character' => 9
+                    ]
+                ]
+            ],
+            [
+                'uri' => $this->referencesUri,
+                'range' => [
+                    'start' => [
+                        'line' => 20,
+                        'character' => 9
+                    ],
+                    'end' => [
+                        'line' => 20,
+                        'character' => 13
                     ]
                 ]
             ]

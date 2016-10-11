@@ -110,28 +110,19 @@ class TextDocument
      * denoted by the given text document position.
      *
      * @param ReferenceContext $context
-     * @return Location[]|null
+     * @return Location[]
      */
-    public function references(ReferenceContext $context, TextDocumentIdentifier $textDocument, Position $position)
+    public function references(ReferenceContext $context, TextDocumentIdentifier $textDocument, Position $position): array
     {
         $document = $this->project->getDocument($textDocument->uri);
         $node = $document->getNodeAtPosition($position);
         if ($node === null) {
-            return null;
+            return [];
         }
-        $fqn = $document->getDefinedFqn($node);
-        if ($fqn === null) {
-            return null;
-        }
-        $refDocuments = $this->project->getReferenceDocuments($fqn);
+        $refs = $document->getReferencesByNode($node);
         $locations = [];
-        foreach ($refDocuments as $document) {
-            $refs = $document->getReferencesByFqn($fqn);
-            if ($refs !== null) {
-                foreach ($refs as $ref) {
-                    $locations[] = Location::fromNode($ref);
-                }
-            }
+        foreach ($refs as $ref) {
+            $locations[] = Location::fromNode($ref);
         }
         return $locations;
     }

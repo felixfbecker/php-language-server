@@ -9,7 +9,8 @@ use LanguageServer\NodeVisitor\{
     ReferencesAdder,
     DefinitionCollector,
     ColumnCalculator,
-    ReferencesCollector
+    ReferencesCollector,
+    VariableReferencesCollector
 };
 use PhpParser\{Error, Node, NodeTraverser, Parser};
 use PhpParser\NodeVisitor\NameResolver;
@@ -58,7 +59,7 @@ class PhpDocument
      *
      * @var Node[]
      */
-    private $statements;
+    private $stmts;
 
     /**
      * Map from fully qualified name (FQN) to Node
@@ -177,7 +178,7 @@ class PhpDocument
                 $this->project->addReferenceDocument($fqn, $this);
             }
 
-            $this->statements = $stmts;
+            $this->stmts = $stmts;
         }
     }
 
@@ -215,6 +216,16 @@ class PhpDocument
     }
 
     /**
+     * Returns the AST of the document
+     *
+     * @return Node[]
+     */
+    public function getStmts(): array
+    {
+        return $this->stmts;
+    }
+
+    /**
      * Returns the node at a specified position
      *
      * @param Position $position
@@ -225,7 +236,7 @@ class PhpDocument
         $traverser = new NodeTraverser;
         $finder = new NodeAtPositionFinder($position);
         $traverser->addVisitor($finder);
-        $traverser->traverse($this->statements);
+        $traverser->traverse($this->stmts);
         return $finder->node;
     }
 
@@ -451,6 +462,53 @@ class PhpDocument
             return null;
         }
         return $document->getDefinitionByFqn($fqn);
+    }
+
+    /**
+     * Returns the reference nodes for any node
+     * The references node MAY be in other documents, check the ownerDocument attribute
+     *
+     * @param Node $node
+     * @return Node[]
+     */
+    public function getReferencesByNode(Node $node)
+    {
+        // Variables always stay in the boundary of the file and need to be searched inside their function scope
+        // by traversing the AST
+        if ($node instanceof Node\Expr\Variable) {
+            if ($node->name instanceof Node\Expr) {
+                return null;
+            }
+            // Find function/method/closure scope
+            $n = $node;
+            while (isset($n) && !($n instanceof Node\FunctionLike)) {
+                $n = $n->getAttribute('parentNode');
+            }
+            if (!isset($n)) {
+                $n = $node->getAttribute('ownerDocument');
+            }
+            $traverser = new NodeTraverser;
+            $refCollector = new VariableReferencesCollector($node->name);
+            $traverser->addVisitor($refCollector);
+            $traverser->traverse($n->getStmts());
+            return $refCollector->references;
+        }
+        // Definition with a global FQN
+        $fqn = $this->getDefinedFqn($node);
+        if ($fqn === null) {
+            return [];
+        }
+        $refDocuments = $this->project->getReferenceDocuments($fqn);
+        $nodes = [];
+        foreach ($refDocuments as $document) {
+            $refs = $document->getReferencesByFqn($fqn);
+            if ($refs !== null) {
+                foreach ($refs as $ref) {
+                    $nodes[] = $ref;
+                }
+            }
+        }
+        return $nodes;
     }
 
     /**
