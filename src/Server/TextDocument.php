@@ -31,7 +31,7 @@ class TextDocument
     /**
      * @var Project
      */
-    public $project;
+    private $project;
 
     public function __construct(Project $project, LanguageClient $client)
     {
