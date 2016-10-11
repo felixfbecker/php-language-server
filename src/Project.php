@@ -123,12 +123,24 @@ class Project
     }
 
     /**
-     * Adds a document as the container for a specific symbol
+     * Returns an associative array [string => string] that maps fully qualified symbol names
+     * to URIs of the document where the symbol is defined
+     *
+     * @return PhpDocument[]
+     */
+    public function getDefinitionUris()
+    {
+        return $this->definitions;
+    }
+
+    /**
+     * Adds a document URI as the container for a specific symbol
      *
      * @param string $fqn The fully qualified name of the symbol
+     * @param string $uri The URI
      * @return void
      */
-    public function addDefinitionDocument(string $fqn, string $uri)
+    public function setDefinitionUri(string $fqn, string $uri)
     {
         $this->definitions[$fqn] = $uri;
     }
@@ -142,17 +154,6 @@ class Project
     public function getDefinitionDocument(string $fqn)
     {
         return isset($this->definitions[$fqn]) ? $this->getDocument($this->definitions[$fqn]) : null;
-    }
-
-    /**
-     * Returns an associative array [string => string] that maps fully qualified symbol names
-     * to URIs of the document where the symbol is defined
-     *
-     * @return PhpDocument[]
-     */
-    public function &getDefinitionDocuments()
-    {
-        return $this->definitions;
     }
 
     /**

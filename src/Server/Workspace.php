@@ -54,7 +54,7 @@ class Workspace
     public function symbol(string $query): array
     {
         $symbols = [];
-        foreach ($this->project->getDefinitionDocuments() as $fqn => $uri) {
+        foreach ($this->project->getDefinitionUris() as $fqn => $uri) {
             if ($query === '' || stripos($fqn, $query) !== false) {
                 $symbols[] = SymbolInformation::fromNode($this->project->getDocument($uri)->getDefinitionByFqn($fqn), $fqn);
             }

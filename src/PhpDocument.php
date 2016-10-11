@@ -145,7 +145,7 @@ class PhpDocument
 
             // Register this document on the project for all the symbols defined in it
             foreach ($definitionCollector->definitions as $fqn => $node) {
-                $this->project->addDefinitionDocument($fqn, $this->uri);
+                $this->project->setDefinitionUri($fqn, $this->uri);
             }
 
             $this->statements = $stmts;
@@ -160,7 +160,7 @@ class PhpDocument
      */
     public function getFormattedText()
     {
-        if (empty($this->getContent())) {
+        if (empty($this->content)) {
             return [];
         }
         return Formatter::format($this->content, $this->uri);
@@ -170,21 +170,10 @@ class PhpDocument
      * Returns this document's text content.
      *
      * @return string
-     * @throws Exception If the content was not loaded
      */
     public function getContent()
     {
         return $this->content;
-    }
-
-    /**
-     * Returns this document's AST.
-     *
-     * @return Node[]
-     */
-    public function &getStatements()
-    {
-        return $this->statements;
     }
 
     /**
@@ -227,9 +216,8 @@ class PhpDocument
      * Returns a map from fully qualified name (FQN) to Nodes defined in this document
      *
      * @return Node[]
-     * @throws Exception If the definitions are not loaded
      */
-    public function &getDefinitions()
+    public function getDefinitions()
     {
         return $this->definitions;
     }
