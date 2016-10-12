@@ -58,6 +58,66 @@ class NamespacedTest extends TestCase
         ], json_decode(json_encode($result), true));
     }
 
+    public function testDefinitionForClassOnStaticMethodCall()
+    {
+        // $obj = new TestClass();
+        // Get definition for TestClass
+        $result = $this->textDocument->definition(new TextDocumentIdentifier('references'), new Position(7, 6));
+        $this->assertEquals([
+            'uri' => 'symbols',
+            'range' => [
+                'start' => [
+                    'line' => 6,
+                    'character' => 0
+                ],
+                'end' => [
+                    'line' => 21,
+                    'character' => 1
+                ]
+            ]
+        ], json_decode(json_encode($result), true));
+    }
+
+    public function testDefinitionForClassOnStaticPropertyFetch()
+    {
+        // $obj = new TestClass();
+        // Get definition for TestClass
+        $result = $this->textDocument->definition(new TextDocumentIdentifier('references'), new Position(8, 10));
+        $this->assertEquals([
+            'uri' => 'symbols',
+            'range' => [
+                'start' => [
+                    'line' => 6,
+                    'character' => 0
+                ],
+                'end' => [
+                    'line' => 21,
+                    'character' => 1
+                ]
+            ]
+        ], json_decode(json_encode($result), true));
+    }
+
+    public function testDefinitionForClassOnConstFetch()
+    {
+        // $obj = new TestClass();
+        // Get definition for TestClass
+        $result = $this->textDocument->definition(new TextDocumentIdentifier('references'), new Position(9, 10));
+        $this->assertEquals([
+            'uri' => 'symbols',
+            'range' => [
+                'start' => [
+                    'line' => 6,
+                    'character' => 0
+                ],
+                'end' => [
+                    'line' => 21,
+                    'character' => 1
+                ]
+            ]
+        ], json_decode(json_encode($result), true));
+    }
+
     public function testDefinitionForClassLikeUseStatement()
     {
         // use TestNamespace\TestClass;

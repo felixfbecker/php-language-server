@@ -344,9 +344,12 @@ class PhpDocument
                 $parent instanceof Node\Stmt\ClassLike
                 || $parent instanceof Node\Param
                 || $parent instanceof Node\Stmt\Function_
+                || $parent instanceof Node\Expr\StaticCall
+                || $parent instanceof Node\Expr\ClassConstFetch
+                || $parent instanceof Node\Expr\StaticPropertyFetch
             )
         ) {
-            // For extends, implements and type hints use the name directly
+            // For extends, implements, type hints and classes of classes of static calls use the name directly
             $name = (string)$node;
         // Only the name node should be considered a reference, not the UseUse node itself
         } else if ($parent instanceof Node\Stmt\UseUse) {
