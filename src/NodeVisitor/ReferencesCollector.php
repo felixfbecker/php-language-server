@@ -35,19 +35,6 @@ class ReferencesCollector extends NodeVisitorAbstract
                     $this->addReference($globalFqn, $node);
                 }
             }
-            // Namespaced constant references and function calls also need to register a reference to the global
-            // Static method calls, constant and property fetches also need to register a reference to the class
-            // A reference like TestNamespace\TestClass::myStaticMethod() registers a reference for
-            //  - TestNamespace\TestClass
-            //  - TestNamespace\TestClass::myStaticMethod()
-            if (
-                ($node instanceof Node\Expr\StaticCall
-                || $node instanceof Node\Expr\StaticPropertyFetch
-                || $node instanceof Node\Expr\ClassConstFetch)
-                && $node->class instanceof Node\Name
-            ) {
-                $this->addReference((string)$node->class, $node->class);
-            }
         }
     }
 
