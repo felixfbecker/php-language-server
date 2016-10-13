@@ -99,7 +99,7 @@ class SymbolTest extends TestCase
             ],
             [
                 'name' => 'staticTestProperty',
-                'kind' => SymbolKind::PROPERTY,
+                'kind' => SymbolKind::FIELD,
                 'location' => [
                     'uri' => $this->symbolsUri,
                     'range' => [
@@ -117,7 +117,7 @@ class SymbolTest extends TestCase
             ],
             [
                 'name' => 'testProperty',
-                'kind' => SymbolKind::PROPERTY,
+                'kind' => SymbolKind::FIELD,
                 'location' => [
                     'uri' => $this->symbolsUri,
                     'range' => [
