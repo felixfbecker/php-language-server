@@ -63,7 +63,11 @@ class SymbolInformation
             throw new Exception("Not a declaration node: $class");
         }
         $symbol = new self;
-        $symbol->kind = $nodeSymbolKindMap[$class];
+        if ($node instanceof Node\Stmt\ClassMethod && $node->name === '__construct') {
+            $symbol->kind = SymbolKind::CONSTRUCTOR;
+        } else {
+            $symbol->kind = $nodeSymbolKindMap[$class];
+        }
         $symbol->name = (string)$node->name;
         $symbol->location = Location::fromNode($node);
         if ($fqn !== null) {
