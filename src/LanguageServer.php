@@ -10,10 +10,12 @@ use LanguageServer\Protocol\{
     TextDocumentSyncKind,
     Message,
     MessageType,
-    InitializeResult
+    InitializeResult,
+    SymbolInformation
 };
 use AdvancedJsonRpc;
 use Sabre\Event\Loop;
+use JsonMapper;
 use Exception;
 use Throwable;
 
@@ -42,6 +44,12 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     private $protocolWriter;
     private $client;
 
+    /**
+     * The root project path that was passed to initialize()
+     *
+     * @var string
+     */
+    private $rootPath;
     private $project;
 
     public function __construct(ProtocolReader $reader, ProtocolWriter $writer)
@@ -91,6 +99,10 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
      */
     public function initialize(int $processId, ClientCapabilities $capabilities, string $rootPath = null): InitializeResult
     {
+        $this->rootPath = $rootPath;
+
+        $this->restoreCache();
+
         // start building project index
         if ($rootPath) {
             $this->indexProject($rootPath);
@@ -124,7 +136,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
      */
     public function shutdown()
     {
-
+        $this->saveCache();
     }
 
     /**
@@ -174,9 +186,62 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                 $duration = (int)(microtime(true) - $startTime);
                 $mem = (int)(memory_get_usage(true) / (1024 * 1024));
                 $this->client->window->logMessage(MessageType::INFO, "All PHP files parsed in $duration seconds. $mem MiB allocated.");
+                $this->saveCache();
             }
         };
 
         Loop\setTimeout($processFile, 0);
+    }
+
+    /**
+     * Restores the definition and reference index from the .phpls cache directory, if available
+     *
+     * @return void
+     */
+    public function restoreCache()
+    {
+        $cacheDir = $this->rootPath . '/.phpls';
+        if (is_dir($cacheDir)) {
+            if (file_exists($cacheDir . '/symbols.json')) {
+                $json = json_decode(file_get_contents($cacheDir . '/symbols.json'));
+                $mapper = new JsonMapper;
+                $symbols = $mapper->mapArray($json, [], SymbolInformation::class);
+                $count = count($symbols);
+                $this->project->setSymbols($symbols);
+                $this->client->window->logMessage(MessageType::INFO, "Restoring $count symbols");
+            }
+            if (file_exists($cacheDir . '/references.json')) {
+                $references = json_decode(file_get_contents($cacheDir . '/references.json'), true);
+                $count = array_sum(array_map('count', $references));
+                $this->project->setReferenceUris($references);
+                $this->client->window->logMessage(MessageType::INFO, "Restoring $count references");
+            }
+        } else {
+            $this->client->window->logMessage(MessageType::INFO, 'No cache found');
+        }
+    }
+
+    /**
+     * Saves the definition and reference index to the .phpls cache directory
+     *
+     * @return void
+     */
+    public function saveCache()
+    {
+        // Cache definitions, references
+        $cacheDir = $this->rootPath . '/.phpls';
+        if (!is_dir($cacheDir)) {
+            mkdir($cacheDir);
+        }
+
+        $symbols = $this->project->getSymbols();
+        $count = count($symbols);
+        $this->client->window->logMessage(MessageType::INFO, "Saving $count symbols to cache");
+        file_put_contents($cacheDir . "/symbols.json", json_encode($symbols, JSON_UNESCAPED_SLASHES));
+
+        $references = $this->project->getReferenceUris();
+        $count = array_sum(array_map('count', $references));
+        $this->client->window->logMessage(MessageType::INFO, "Saving $count references to cache");
+        file_put_contents($cacheDir . "/references.json", json_encode($references, JSON_UNESCAPED_SLASHES));
     }
 }
