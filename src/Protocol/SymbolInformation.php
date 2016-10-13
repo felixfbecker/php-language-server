@@ -58,13 +58,25 @@ class SymbolInformation
             Node\Stmt\PropertyProperty::class => SymbolKind::PROPERTY,
             Node\Const_::class                => SymbolKind::CONSTANT
         ];
-        $class = get_class($node);
-        if (!isset($nodeSymbolKindMap[$class])) {
-            throw new Exception("Not a declaration node: $class");
-        }
         $symbol = new self;
-        $symbol->kind = $nodeSymbolKindMap[$class];
-        $symbol->name = (string)$node->name;
+        if (
+            $node instanceof Node\Expr\FuncCall
+            && $node->name instanceof Node\Name
+            && (string)$node->name === 'define'
+            && isset($node->args[0])
+            && $node->args[0]->value instanceof Node\Scalar\String_
+        ) {
+            // define() constant
+            $symbol->kind = SymbolKind::CONSTANT;
+            $symbol->name = (string)$node->args[0]->value->value;
+        } else {
+            $class = get_class($node);
+            if (!isset($nodeSymbolKindMap[$class])) {
+                throw new Exception("Not a declaration node: $class");
+            }
+            $symbol->kind = $nodeSymbolKindMap[$class];
+            $symbol->name = (string)$node->name;
+        }
         $symbol->location = Location::fromNode($node);
         if ($fqn !== null) {
             $parts = preg_split('/(::|\\\\)/', $fqn);
