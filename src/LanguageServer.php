@@ -181,6 +181,10 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                     }
                 }
 
+                if ($fileNum % 1000 === 0) {
+                    $this->saveCache();
+                }
+
                 Loop\setTimeout($processFile, 0);
             } else {
                 $duration = (int)(microtime(true) - $startTime);
