@@ -84,7 +84,7 @@ class DocumentSymbolTest extends TestCase
             ],
             [
                 'name' => 'staticTestProperty',
-                'kind' => SymbolKind::PROPERTY,
+                'kind' => SymbolKind::FIELD,
                 'location' => [
                     'uri' => 'symbols',
                     'range' => [
@@ -102,7 +102,7 @@ class DocumentSymbolTest extends TestCase
             ],
             [
                 'name' => 'testProperty',
-                'kind' => SymbolKind::PROPERTY,
+                'kind' => SymbolKind::FIELD,
                 'location' => [
                     'uri' => 'symbols',
                     'range' => [

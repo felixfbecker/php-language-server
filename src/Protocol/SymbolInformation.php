@@ -55,7 +55,7 @@ class SymbolInformation
             Node\Stmt\Namespace_::class       => SymbolKind::NAMESPACE,
             Node\Stmt\Function_::class        => SymbolKind::FUNCTION,
             Node\Stmt\ClassMethod::class      => SymbolKind::METHOD,
-            Node\Stmt\PropertyProperty::class => SymbolKind::PROPERTY,
+            Node\Stmt\PropertyProperty::class => SymbolKind::FIELD,
             Node\Const_::class                => SymbolKind::CONSTANT
         ];
         $class = get_class($node);
