@@ -4,10 +4,10 @@ declare(strict_types = 1);
 namespace LanguageServer\Tests\Server\TextDocument\References;
 
 use LanguageServer\Protocol\{TextDocumentIdentifier, Position, ReferenceContext, Location, Range};
-use LanguageServer\Tests\Server\TextDocument\TextDocumentTestCase;
+use LanguageServer\Tests\Server\ServerTestCase;
 use function LanguageServer\pathToUri;
 
-class GlobalTest extends TextDocumentTestCase
+class GlobalTest extends ServerTestCase
 {
     public function testReferencesForClassLike()
     {
