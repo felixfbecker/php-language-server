@@ -10,10 +10,9 @@ class TestClass implements TestInterface
     public static $staticTestProperty;
     public $testProperty;
 
-    public static function staticTestMethod()
-    {
+    public static function staticTestMethod() {}
 
-    }
+    public function __construct() {}
 
     public function testMethod($testParameter)
     {
