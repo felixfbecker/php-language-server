@@ -58,6 +58,7 @@ abstract class TextDocumentTestCase extends TestCase
             // Global
             'TEST_CONST'                             => new Location($globalSymbolsUri, new Range(new Position( 4,  6), new Position(4,  22))),
             'TestClass'                              => new Location($globalSymbolsUri, new Range(new Position( 6,  0), new Position(21,  1))),
+            'TestTrait'                              => new Location($globalSymbolsUri, new Range(new Position(23,  0), new Position(26,  1))),
             'TestInterface'                          => new Location($globalSymbolsUri, new Range(new Position(28,  0), new Position(31,  1))),
             'TestClass::TEST_CLASS_CONST'            => new Location($globalSymbolsUri, new Range(new Position( 8, 10), new Position(8,  32))),
             'TestClass::testProperty'                => new Location($globalSymbolsUri, new Range(new Position(10, 11), new Position(10, 24))),
@@ -70,6 +71,7 @@ abstract class TextDocumentTestCase extends TestCase
             'TestNamespace\\TEST_CONST'                    => new Location($symbolsUri, new Range(new Position( 4,  6), new Position(4,  22))),
             'TestNamespace\\TestClass'                     => new Location($symbolsUri, new Range(new Position( 6,  0), new Position(21,  1))),
             'TestNamespace\\TestInterface'                 => new Location($symbolsUri, new Range(new Position(28,  0), new Position(31,  1))),
+            'TestNamespace\\TestTrait'                     => new Location($symbolsUri, new Range(new Position(23,  0), new Position(26,  1))),
             'TestNamespace\\TestClass::TEST_CLASS_CONST'   => new Location($symbolsUri, new Range(new Position( 8, 10), new Position(8,  32))),
             'TestNamespace\\TestClass::testProperty'       => new Location($symbolsUri, new Range(new Position(10, 11), new Position(10, 24))),
             'TestNamespace\\TestClass::staticTestProperty' => new Location($symbolsUri, new Range(new Position( 9, 18), new Position(9,  37))),
