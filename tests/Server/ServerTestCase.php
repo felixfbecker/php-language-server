@@ -17,6 +17,11 @@ abstract class ServerTestCase extends TestCase
     protected $textDocument;
 
     /**
+     * @var Server\Workspace
+     */
+    protected $workspace;
+
+    /**
      * @var Project
      */
     protected $project;
@@ -40,6 +45,7 @@ abstract class ServerTestCase extends TestCase
         $client             = new LanguageClient(new MockProtocolStream());
         $this->project      = new Project($client);
         $this->textDocument = new Server\TextDocument($this->project, $client);
+        $this->workspace    = new Server\Workspace($this->project, $client);
 
         $globalSymbolsUri    = pathToUri(realpath(__DIR__ . '/../../fixtures/global_symbols.php'));
         $globalReferencesUri = pathToUri(realpath(__DIR__ . '/../../fixtures/global_references.php'));
@@ -56,28 +62,30 @@ abstract class ServerTestCase extends TestCase
         $this->definitionLocations = [
 
             // Global
-            'TEST_CONST'                             => new Location($globalSymbolsUri, new Range(new Position( 4,  6), new Position(4,  22))),
-            'TestClass'                              => new Location($globalSymbolsUri, new Range(new Position( 6,  0), new Position(21,  1))),
-            'TestTrait'                              => new Location($globalSymbolsUri, new Range(new Position(23,  0), new Position(26,  1))),
-            'TestInterface'                          => new Location($globalSymbolsUri, new Range(new Position(28,  0), new Position(31,  1))),
-            'TestClass::TEST_CLASS_CONST'            => new Location($globalSymbolsUri, new Range(new Position( 8, 10), new Position(8,  32))),
-            'TestClass::testProperty'                => new Location($globalSymbolsUri, new Range(new Position(10, 11), new Position(10, 24))),
-            'TestClass::staticTestProperty'          => new Location($globalSymbolsUri, new Range(new Position( 9, 18), new Position(9,  37))),
-            'TestClass::staticTestMethod()'          => new Location($globalSymbolsUri, new Range(new Position(12,  4), new Position(15,  5))),
-            'TestClass::testMethod()'                => new Location($globalSymbolsUri, new Range(new Position(17,  4), new Position(20,  5))),
-            'test_function()'                        => new Location($globalSymbolsUri, new Range(new Position(33,  0), new Position(36,  1))),
+            'TEST_CONST'                             => new Location($globalSymbolsUri,    new Range(new Position( 4,  6), new Position(4,  22))),
+            'TestClass'                              => new Location($globalSymbolsUri,    new Range(new Position( 6,  0), new Position(21,  1))),
+            'TestTrait'                              => new Location($globalSymbolsUri,    new Range(new Position(23,  0), new Position(26,  1))),
+            'TestInterface'                          => new Location($globalSymbolsUri,    new Range(new Position(28,  0), new Position(31,  1))),
+            'TestClass::TEST_CLASS_CONST'            => new Location($globalSymbolsUri,    new Range(new Position( 8, 10), new Position(8,  32))),
+            'TestClass::testProperty'                => new Location($globalSymbolsUri,    new Range(new Position(10, 11), new Position(10, 24))),
+            'TestClass::staticTestProperty'          => new Location($globalSymbolsUri,    new Range(new Position( 9, 18), new Position(9,  37))),
+            'TestClass::staticTestMethod()'          => new Location($globalSymbolsUri,    new Range(new Position(12,  4), new Position(15,  5))),
+            'TestClass::testMethod()'                => new Location($globalSymbolsUri,    new Range(new Position(17,  4), new Position(20,  5))),
+            'test_function()'                        => new Location($globalSymbolsUri,    new Range(new Position(33,  0), new Position(36,  1))),
+            'whatever()'                             => new Location($globalReferencesUri, new Range(new Position(15,  0), new Position(17,  1))),
 
             // Namespaced
-            'TestNamespace\\TEST_CONST'                    => new Location($symbolsUri, new Range(new Position( 4,  6), new Position(4,  22))),
-            'TestNamespace\\TestClass'                     => new Location($symbolsUri, new Range(new Position( 6,  0), new Position(21,  1))),
-            'TestNamespace\\TestInterface'                 => new Location($symbolsUri, new Range(new Position(28,  0), new Position(31,  1))),
-            'TestNamespace\\TestTrait'                     => new Location($symbolsUri, new Range(new Position(23,  0), new Position(26,  1))),
-            'TestNamespace\\TestClass::TEST_CLASS_CONST'   => new Location($symbolsUri, new Range(new Position( 8, 10), new Position(8,  32))),
-            'TestNamespace\\TestClass::testProperty'       => new Location($symbolsUri, new Range(new Position(10, 11), new Position(10, 24))),
-            'TestNamespace\\TestClass::staticTestProperty' => new Location($symbolsUri, new Range(new Position( 9, 18), new Position(9,  37))),
-            'TestNamespace\\TestClass::staticTestMethod()' => new Location($symbolsUri, new Range(new Position(12,  4), new Position(15,  5))),
-            'TestNamespace\\TestClass::testMethod()'       => new Location($symbolsUri, new Range(new Position(17,  4), new Position(20,  5))),
-            'TestNamespace\\test_function()'               => new Location($symbolsUri, new Range(new Position(33,  0), new Position(36,  1)))
+            'TestNamespace\\TEST_CONST'                    => new Location($symbolsUri,    new Range(new Position( 4,  6), new Position(4,  22))),
+            'TestNamespace\\TestClass'                     => new Location($symbolsUri,    new Range(new Position( 6,  0), new Position(21,  1))),
+            'TestNamespace\\TestInterface'                 => new Location($symbolsUri,    new Range(new Position(28,  0), new Position(31,  1))),
+            'TestNamespace\\TestTrait'                     => new Location($symbolsUri,    new Range(new Position(23,  0), new Position(26,  1))),
+            'TestNamespace\\TestClass::TEST_CLASS_CONST'   => new Location($symbolsUri,    new Range(new Position( 8, 10), new Position(8,  32))),
+            'TestNamespace\\TestClass::testProperty'       => new Location($symbolsUri,    new Range(new Position(10, 11), new Position(10, 24))),
+            'TestNamespace\\TestClass::staticTestProperty' => new Location($symbolsUri,    new Range(new Position( 9, 18), new Position(9,  37))),
+            'TestNamespace\\TestClass::staticTestMethod()' => new Location($symbolsUri,    new Range(new Position(12,  4), new Position(15,  5))),
+            'TestNamespace\\TestClass::testMethod()'       => new Location($symbolsUri,    new Range(new Position(17,  4), new Position(20,  5))),
+            'TestNamespace\\test_function()'               => new Location($symbolsUri,    new Range(new Position(33,  0), new Position(36,  1))),
+            'TestNamespace\\whatever()'                    => new Location($referencesUri, new Range(new Position(15,  0), new Position(17,  1)))
         ];
 
         $this->referenceLocations = [
