@@ -73,4 +73,18 @@ class SymbolInformation
         }
         return $symbol;
     }
+
+    /**
+     * @param string $name
+     * @param int $kind
+     * @param Location $location
+     * @param string $containerName
+     */
+    public function __construct($name = null, $kind = null, $location = null, $containerName = null)
+    {
+        $this->name = $name;
+        $this->kind = $kind;
+        $this->location = $location;
+        $this->containerName = $containerName;
+    }
 }
