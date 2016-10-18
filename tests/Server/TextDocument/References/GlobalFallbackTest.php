@@ -7,9 +7,9 @@ use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\{Server, LanguageClient, Project};
 use LanguageServer\Protocol\{TextDocumentIdentifier, Position, ReferenceContext, Location, Range};
-use LanguageServer\Tests\Server\TextDocument\TextDocumentTestCase;
+use LanguageServer\Tests\Server\ServerTestCase;
 
-class GlobalFallbackTest extends TextDocumentTestCase
+class GlobalFallbackTest extends ServerTestCase
 {
     public function setUp()
     {

@@ -3,11 +3,11 @@ declare(strict_types = 1);
 
 namespace LanguageServer\Tests\Server\TextDocument\Definition;
 
-use LanguageServer\Tests\Server\TextDocument\TextDocumentTestCase;
+use LanguageServer\Tests\Server\ServerTestCase;
 use LanguageServer\Protocol\{TextDocumentIdentifier, Position, Location, Range};
 use function LanguageServer\pathToUri;
 
-class GlobalTest extends TextDocumentTestCase
+class GlobalTest extends ServerTestCase
 {
     public function testDefinitionFileBeginning() {
         // |<?php

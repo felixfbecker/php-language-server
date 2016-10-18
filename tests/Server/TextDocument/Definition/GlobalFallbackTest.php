@@ -4,11 +4,11 @@ declare(strict_types = 1);
 namespace LanguageServer\Tests\Server\TextDocument\Definition;
 
 use LanguageServer\Tests\MockProtocolStream;
-use LanguageServer\Tests\Server\TextDocument\TextDocumentTestCase;
+use LanguageServer\Tests\Server\ServerTestCase;
 use LanguageServer\{Server, LanguageClient, Project};
 use LanguageServer\Protocol\{TextDocumentIdentifier, Position, Range, Location};
 
-class GlobalFallbackTest extends TextDocumentTestCase
+class GlobalFallbackTest extends ServerTestCase
 {
     public function setUp()
     {

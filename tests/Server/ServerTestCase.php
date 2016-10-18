@@ -1,7 +1,7 @@
 <?php
 declare(strict_types = 1);
 
-namespace LanguageServer\Tests\Server\TextDocument;
+namespace LanguageServer\Tests\Server;
 
 use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
@@ -9,7 +9,7 @@ use LanguageServer\{Server, LanguageClient, Project};
 use LanguageServer\Protocol\{Position, Location, Range};
 use function LanguageServer\pathToUri;
 
-abstract class TextDocumentTestCase extends TestCase
+abstract class ServerTestCase extends TestCase
 {
     /**
      * @var Server\TextDocument
@@ -41,11 +41,11 @@ abstract class TextDocumentTestCase extends TestCase
         $this->project      = new Project($client);
         $this->textDocument = new Server\TextDocument($this->project, $client);
 
-        $globalSymbolsUri    = pathToUri(realpath(__DIR__ . '/../../../fixtures/global_symbols.php'));
-        $globalReferencesUri = pathToUri(realpath(__DIR__ . '/../../../fixtures/global_references.php'));
-        $symbolsUri          = pathToUri(realpath(__DIR__ . '/../../../fixtures/symbols.php'));
-        $referencesUri       = pathToUri(realpath(__DIR__ . '/../../../fixtures/references.php'));
-        $useUri              = pathToUri(realpath(__DIR__ . '/../../../fixtures/use.php'));
+        $globalSymbolsUri    = pathToUri(realpath(__DIR__ . '/../../fixtures/global_symbols.php'));
+        $globalReferencesUri = pathToUri(realpath(__DIR__ . '/../../fixtures/global_references.php'));
+        $symbolsUri          = pathToUri(realpath(__DIR__ . '/../../fixtures/symbols.php'));
+        $referencesUri       = pathToUri(realpath(__DIR__ . '/../../fixtures/references.php'));
+        $useUri              = pathToUri(realpath(__DIR__ . '/../../fixtures/use.php'));
 
         $this->project->loadDocument($symbolsUri);
         $this->project->loadDocument($referencesUri);

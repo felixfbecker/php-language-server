@@ -3,13 +3,13 @@ declare(strict_types = 1);
 
 namespace LanguageServer\Tests\Server\TextDocument;
 
-use LanguageServer\Tests\Server\TextDocument\TextDocumentTestCase;
+use LanguageServer\Tests\Server\ServerTestCase;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\{Server, LanguageClient, Project};
 use LanguageServer\Protocol\{TextDocumentIdentifier, SymbolInformation, SymbolKind, Position, Location, Range};
 use function LanguageServer\pathToUri;
 
-class DocumentSymbolTest extends TextDocumentTestCase
+class DocumentSymbolTest extends ServerTestCase
 {
     public function test()
     {
