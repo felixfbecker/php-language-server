@@ -72,11 +72,6 @@ class LanguageServer extends \AdvancedJsonRpc\Dispatcher
         });
         $this->protocolWriter = $writer;
         $this->client = new LanguageClient($writer);
-
-        $this->project = new Project($this->client);
-
-        $this->textDocument = new Server\TextDocument($this->project, $this->client);
-        $this->workspace = new Server\Workspace($this->project, $this->client);
     }
 
     /**
@@ -89,6 +84,11 @@ class LanguageServer extends \AdvancedJsonRpc\Dispatcher
      */
     public function initialize(int $processId, ClientCapabilities $capabilities, string $rootPath = null): InitializeResult
     {
+        // Initialize project
+        $this->project = new Project($this->client);
+        $this->textDocument = new Server\TextDocument($this->project, $this->client);
+        $this->workspace = new Server\Workspace($this->project, $this->client);
+
         // start building project index
         if ($rootPath) {
             $this->indexProject($rootPath);
@@ -120,7 +120,7 @@ class LanguageServer extends \AdvancedJsonRpc\Dispatcher
      */
     public function shutdown()
     {
-
+        unset($this->project);
     }
 
     /**
