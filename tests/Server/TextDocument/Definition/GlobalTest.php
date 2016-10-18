@@ -3,380 +3,174 @@ declare(strict_types = 1);
 
 namespace LanguageServer\Tests\Server\TextDocument\Definition;
 
-use PHPUnit\Framework\TestCase;
-use LanguageServer\Tests\MockProtocolStream;
-use LanguageServer\{Server, LanguageClient, Project};
-use LanguageServer\Protocol\{TextDocumentIdentifier, Position};
+use LanguageServer\Tests\Server\TextDocument\TextDocumentTestCase;
+use LanguageServer\Protocol\{TextDocumentIdentifier, Position, Location, Range};
+use function LanguageServer\pathToUri;
 
-class GlobalTest extends TestCase
+class GlobalTest extends TextDocumentTestCase
 {
-    /**
-     * @var Server\TextDocument
-     */
-    private $textDocument;
-
-    public function setUp()
-    {
-        $client = new LanguageClient(new MockProtocolStream());
-        $project = new Project($client);
-        $this->textDocument = new Server\TextDocument($project, $client);
-        $project->openDocument('references', file_get_contents(__DIR__ . '/../../../../fixtures/global_references.php'));
-        $project->openDocument('symbols', file_get_contents(__DIR__ . '/../../../../fixtures/global_symbols.php'));
-        // Load this to check that there are no conflicts
-        $project->openDocument('references_namespaced', file_get_contents(__DIR__ . '/../../../../fixtures/references.php'));
-        $project->openDocument('symbols_namespaced', file_get_contents(__DIR__ . '/../../../../fixtures/symbols.php'));
-        $project->openDocument('use', file_get_contents(__DIR__ . '/../../../../fixtures/use.php'));
-    }
-
     public function testDefinitionFileBeginning() {
         // |<?php
-        $result = $this->textDocument->definition(new TextDocumentIdentifier('references'), new Position(0, 0));
-        $this->assertEquals([], json_decode(json_encode($result), true));
+        $result = $this->textDocument->definition(new TextDocumentIdentifier(pathToUri(realpath(__DIR__ . '/../../../../fixtures/references.php'))), new Position(0, 0));
+        $this->assertEquals([], $result);
     }
 
     public function testDefinitionEmptyResult() {
         // namespace keyword
-        $result = $this->textDocument->definition(new TextDocumentIdentifier('references'), new Position(2, 4));
-        $this->assertEquals([], json_decode(json_encode($result), true));
+        $result = $this->textDocument->definition(new TextDocumentIdentifier(pathToUri(realpath(__DIR__ . '/../../../../fixtures/references.php'))), new Position(2, 4));
+        $this->assertEquals([], $result);
     }
 
     public function testDefinitionForClassLike()
     {
         // $obj = new TestClass();
         // Get definition for TestClass
-        $result = $this->textDocument->definition(new TextDocumentIdentifier('references'), new Position(4, 16));
-        $this->assertEquals([
-            'uri' => 'symbols',
-            'range' => [
-                'start' => [
-                    'line' => 6,
-                    'character' => 0
-                ],
-                'end' => [
-                    'line' => 21,
-                    'character' => 1
-                ]
-            ]
-        ], json_decode(json_encode($result), true));
+        $reference = $this->getReferenceLocations('TestClass')[0];
+        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->start);
+        $this->assertEquals($this->getDefinitionLocation('TestClass'), $result);
     }
-
 
     public function testDefinitionForClassOnStaticMethodCall()
     {
         // $obj = new TestClass();
         // Get definition for TestClass
-        $result = $this->textDocument->definition(new TextDocumentIdentifier('references'), new Position(7, 6));
-        $this->assertEquals([
-            'uri' => 'symbols',
-            'range' => [
-                'start' => [
-                    'line' => 6,
-                    'character' => 0
-                ],
-                'end' => [
-                    'line' => 21,
-                    'character' => 1
-                ]
-            ]
-        ], json_decode(json_encode($result), true));
+        $reference = $this->getReferenceLocations('TestClass')[1];
+        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->start);
+        $this->assertEquals($this->getDefinitionLocation('TestClass'), $result);
     }
 
     public function testDefinitionForClassOnStaticPropertyFetch()
     {
-        // $obj = new TestClass();
+        // echo TestClass::$staticTestProperty;
         // Get definition for TestClass
-        $result = $this->textDocument->definition(new TextDocumentIdentifier('references'), new Position(8, 10));
-        $this->assertEquals([
-            'uri' => 'symbols',
-            'range' => [
-                'start' => [
-                    'line' => 6,
-                    'character' => 0
-                ],
-                'end' => [
-                    'line' => 21,
-                    'character' => 1
-                ]
-            ]
-        ], json_decode(json_encode($result), true));
+        $reference = $this->getReferenceLocations('TestClass')[2];
+        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->start);
+        $this->assertEquals($this->getDefinitionLocation('TestClass'), $result);
     }
 
     public function testDefinitionForClassOnConstFetch()
     {
-        // $obj = new TestClass();
+        // TestClass::TEST_CLASS_CONST;
         // Get definition for TestClass
-        $result = $this->textDocument->definition(new TextDocumentIdentifier('references'), new Position(9, 10));
-        $this->assertEquals([
-            'uri' => 'symbols',
-            'range' => [
-                'start' => [
-                    'line' => 6,
-                    'character' => 0
-                ],
-                'end' => [
-                    'line' => 21,
-                    'character' => 1
-                ]
-            ]
-        ], json_decode(json_encode($result), true));
+        $reference = $this->getReferenceLocations('TestClass')[3];
+        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->start);
+        $this->assertEquals($this->getDefinitionLocation('TestClass'), $result);
     }
 
     public function testDefinitionForImplements()
     {
         // class TestClass implements TestInterface
         // Get definition for TestInterface
-        $result = $this->textDocument->definition(new TextDocumentIdentifier('symbols'), new Position(6, 33));
-        $this->assertEquals([
-            'uri' => 'symbols',
-            'range' => [
-                'start' => [
-                    'line' => 28,
-                    'character' => 0
-                ],
-                'end' => [
-                    'line' => 31,
-                    'character' => 1
-                ]
-            ]
-        ], json_decode(json_encode($result), true));
+        $reference = $this->getReferenceLocations('TestInterface')[0];
+        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->start);
+        $this->assertEquals($this->getDefinitionLocation('TestInterface'), $result);
     }
 
     public function testDefinitionForClassConstants()
     {
         // echo TestClass::TEST_CLASS_CONST;
         // Get definition for TEST_CLASS_CONST
-        $result = $this->textDocument->definition(new TextDocumentIdentifier('references'), new Position(9, 21));
-        $this->assertEquals([
-            'uri' => 'symbols',
-            'range' => [
-                'start' => [
-                    'line' => 8,
-                    'character' => 10
-                ],
-                'end' => [
-                    'line' => 8,
-                    'character' => 32
-                ]
-            ]
-        ], json_decode(json_encode($result), true));
+        $reference = $this->getReferenceLocations('TestClass::TEST_CLASS_CONST')[0];
+        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->start);
+        $this->assertEquals($this->getDefinitionLocation('TestClass::TEST_CLASS_CONST'), $result);
     }
 
     public function testDefinitionForConstants()
     {
         // echo TEST_CONST;
         // Get definition for TEST_CONST
-        $result = $this->textDocument->definition(new TextDocumentIdentifier('references'), new Position(23, 9));
-        $this->assertEquals([
-            'uri' => 'symbols',
-            'range' => [
-                'start' => [
-                    'line' => 4,
-                    'character' => 6
-                ],
-                'end' => [
-                    'line' => 4,
-                    'character' => 22
-                ]
-            ]
-        ], json_decode(json_encode($result), true));
+        $reference = $this->getReferenceLocations('TEST_CONST')[1];
+        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->start);
+        $this->assertEquals($this->getDefinitionLocation('TEST_CONST'), $result);
     }
 
     public function testDefinitionForStaticMethods()
     {
         // TestClass::staticTestMethod();
         // Get definition for staticTestMethod
-        $result = $this->textDocument->definition(new TextDocumentIdentifier('references'), new Position(7, 20));
-        $this->assertEquals([
-            'uri' => 'symbols',
-            'range' => [
-                'start' => [
-                    'line' => 12,
-                    'character' => 4
-                ],
-                'end' => [
-                    'line' => 15,
-                    'character' => 5
-                ]
-            ]
-        ], json_decode(json_encode($result), true));
+        $reference = $this->getReferenceLocations('TestClass::staticTestMethod()')[0];
+        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->end);
+        $this->assertEquals($this->getDefinitionLocation('TestClass::staticTestMethod()'), $result);
     }
 
     public function testDefinitionForStaticProperties()
     {
         // echo TestClass::$staticTestProperty;
         // Get definition for staticTestProperty
-        $result = $this->textDocument->definition(new TextDocumentIdentifier('references'), new Position(8, 25));
-        $this->assertEquals([
-            'uri' => 'symbols',
-            'range' => [
-                'start' => [
-                    'line' => 9,
-                    'character' => 18
-                ],
-                'end' => [
-                    'line' => 9,
-                    'character' => 37
-                ]
-            ]
-        ], json_decode(json_encode($result), true));
+        $reference = $this->getReferenceLocations('TestClass::staticTestProperty')[0];
+        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->end);
+        $this->assertEquals($this->getDefinitionLocation('TestClass::staticTestProperty'), $result);
     }
 
     public function testDefinitionForMethods()
     {
         // $obj->testMethod();
         // Get definition for testMethod
-        $result = $this->textDocument->definition(new TextDocumentIdentifier('references'), new Position(5, 11));
-        $this->assertEquals([
-            'uri' => 'symbols',
-            'range' => [
-                'start' => [
-                    'line' => 17,
-                    'character' => 4
-                ],
-                'end' => [
-                    'line' => 20,
-                    'character' => 5
-                ]
-            ]
-        ], json_decode(json_encode($result), true));
+        $reference = $this->getReferenceLocations('TestClass::testMethod()')[0];
+        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->end);
+        $this->assertEquals($this->getDefinitionLocation('TestClass::testMethod()'), $result);
     }
 
     public function testDefinitionForProperties()
     {
         // echo $obj->testProperty;
         // Get definition for testProperty
-        $result = $this->textDocument->definition(new TextDocumentIdentifier('references'), new Position(6, 18));
-        $this->assertEquals([
-            'uri' => 'symbols',
-            'range' => [
-                'start' => [
-                    'line' => 10,
-                    'character' => 11
-                ],
-                'end' => [
-                    'line' => 10,
-                    'character' => 24
-                ]
-            ]
-        ], json_decode(json_encode($result), true));
+        $reference = $this->getReferenceLocations('TestClass::testProperty')[0];
+        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->end);
+        $this->assertEquals($this->getDefinitionLocation('TestClass::testProperty'), $result);
     }
 
     public function testDefinitionForVariables()
     {
         // echo $var;
         // Get definition for $var
-        $result = $this->textDocument->definition(new TextDocumentIdentifier('references'), new Position(13, 7));
-        $this->assertEquals([
-            'uri' => 'references',
-            'range' => [
-                'start' => [
-                    'line' => 12,
-                    'character' => 0
-                ],
-                'end' => [
-                    'line' => 12,
-                    'character' => 10
-                ]
-            ]
-        ], json_decode(json_encode($result), true));
+        $uri = pathToUri(realpath(__DIR__ . '/../../../../fixtures/references.php'));
+        $result = $this->textDocument->definition(new TextDocumentIdentifier($uri), new Position(13, 7));
+        $this->assertEquals(new Location($uri, new Range(new Position(12, 0), new Position(12, 10))), $result);
     }
 
     public function testDefinitionForParamTypeHints()
     {
         // function whatever(TestClass $param) {
         // Get definition for TestClass
-        $result = $this->textDocument->definition(new TextDocumentIdentifier('references'), new Position(15, 23));
-        $this->assertEquals([
-            'uri' => 'symbols',
-            'range' => [
-                'start' => [
-                    'line' => 6,
-                    'character' => 0
-                ],
-                'end' => [
-                    'line' => 21,
-                    'character' => 1
-                ]
-            ]
-        ], json_decode(json_encode($result), true));
+        $reference = $this->getReferenceLocations('TestClass')[4];
+        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->start);
+        $this->assertEquals($this->getDefinitionLocation('TestClass'), $result);
     }
+
     public function testDefinitionForReturnTypeHints()
     {
-        // function whatever(TestClass $param) {
+        // function whatever(TestClass $param): TestClass {
         // Get definition for TestClass
-        $result = $this->textDocument->definition(new TextDocumentIdentifier('references'), new Position(15, 42));
-        $this->assertEquals([
-            'uri' => 'symbols',
-            'range' => [
-                'start' => [
-                    'line' => 6,
-                    'character' => 0
-                ],
-                'end' => [
-                    'line' => 21,
-                    'character' => 1
-                ]
-            ]
-        ], json_decode(json_encode($result), true));
+        $reference = $this->getReferenceLocations('TestClass')[5];
+        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->start);
+        $this->assertEquals($this->getDefinitionLocation('TestClass'), $result);
     }
 
     public function testDefinitionForParams()
     {
         // echo $param;
         // Get definition for $param
-        $result = $this->textDocument->definition(new TextDocumentIdentifier('references'), new Position(16, 13));
-        $this->assertEquals([
-            'uri' => 'references',
-            'range' => [
-                'start' => [
-                    'line' => 15,
-                    'character' => 18
-                ],
-                'end' => [
-                    'line' => 15,
-                    'character' => 34
-                ]
-            ]
-        ], json_decode(json_encode($result), true));
+        $uri = pathToUri(realpath(__DIR__ . '/../../../../fixtures/references.php'));
+        $result = $this->textDocument->definition(new TextDocumentIdentifier($uri), new Position(16, 13));
+        $this->assertEquals(new Location($uri, new Range(new Position(15, 18), new Position(15, 34))), $result);
     }
 
     public function testDefinitionForUsedVariables()
     {
         // echo $var;
         // Get definition for $var
-        $result = $this->textDocument->definition(new TextDocumentIdentifier('references'), new Position(20, 11));
-        $this->assertEquals([
-            'uri' => 'references',
-            'range' => [
-                'start' => [
-                    'line' => 19,
-                    'character' => 22
-                ],
-                'end' => [
-                    'line' => 19,
-                    'character' => 26
-                ]
-            ]
-        ], json_decode(json_encode($result), true));
+        $uri = pathToUri(realpath(__DIR__ . '/../../../../fixtures/references.php'));
+        $result = $this->textDocument->definition(new TextDocumentIdentifier($uri), new Position(20, 11));
+        $this->assertEquals(new Location($uri, new Range(new Position(19, 22), new Position(19, 26))), $result);
     }
 
     public function testDefinitionForFunctions()
     {
         // test_function();
         // Get definition for test_function
-        $result = $this->textDocument->definition(new TextDocumentIdentifier('references'), new Position(10, 4));
-        $this->assertEquals([
-            'uri' => 'symbols',
-            'range' => [
-                'start' => [
-                    'line' => 33,
-                    'character' => 0
-                ],
-                'end' => [
-                    'line' => 36,
-                    'character' => 1
-                ]
-            ]
-        ], json_decode(json_encode($result), true));
+        $reference = $this->getReferenceLocations('test_function()')[0];
+        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->start);
+        $this->assertEquals($this->getDefinitionLocation('test_function()'), $result);
     }
 }
