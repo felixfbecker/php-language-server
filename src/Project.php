@@ -151,6 +151,18 @@ class Project
     }
 
     /**
+     * Unsets a document URI as the container for a specific symbol
+     * and removes all references pointing to that symbol
+     *
+     * @param string $fqn The fully qualified name of the symbol
+     * @return void
+     */
+    public function removeDefinition(string $fqn) {
+        unset($this->definitions[$fqn]);
+        unset($this->references[$fqn]);
+    }
+
+    /**
      * Adds a document URI as a referencee of a specific symbol
      *
      * @param string $fqn The fully qualified name of the symbol
@@ -165,6 +177,24 @@ class Project
         if (array_search($uri, $this->references[$fqn], true) === false) {
             $this->references[$fqn][] = $uri;
         }
+    }
+
+    /**
+     * Removes a document URI as the container for a specific symbol
+     *
+     * @param string $fqn The fully qualified name of the symbol
+     * @param string $uri The URI
+     * @return void
+     */
+    public function removeReferenceUri(string $fqn, string $uri) {
+        if (!isset($this->references[$fqn])) {
+            return;
+        }
+        $index = array_search($fqn, $this->references[$fqn], true);
+        if ($index === false) {
+            return;
+        }
+        array_splice($this->references[$fqn], $index, 1);
     }
 
     /**

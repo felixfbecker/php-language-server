@@ -167,12 +167,24 @@ class PhpDocument
 
             $traverser->traverse($stmts);
 
+            // Unregister old definitions
+            if (isset($this->definitions)) {
+                foreach ($this->definitions as $fqn => $node) {
+                    $this->project->removeDefinition($fqn);
+                }
+            }
             // Register this document on the project for all the symbols defined in it
             $this->definitions = $definitionCollector->definitions;
             foreach ($definitionCollector->definitions as $fqn => $node) {
                 $this->project->setDefinitionUri($fqn, $this->uri);
             }
 
+            // Unregister old references
+            if (isset($this->references)) {
+                foreach ($this->references as $fqn => $node) {
+                    $this->project->removeReferenceUri($fqn, $this->uri);
+                }
+            }
             // Register this document on the project for references
             $this->references = $referencesCollector->references;
             foreach ($referencesCollector->references as $fqn => $nodes) {
