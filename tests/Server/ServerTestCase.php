@@ -107,7 +107,7 @@ abstract class ServerTestCase extends TestCase
                 0 => new Location($symbolsUri,    new Range(new Position( 6, 27), new Position( 6, 40))) // class TestClass implements TestInterface
             ],
             'TestNamespace\\TestClass::TEST_CLASS_CONST' => [
-                0 => new Location($referencesUri, new Range(new Position( 9, 16), new Position( 9, 32)))
+                0 => new Location($referencesUri, new Range(new Position( 9,  5), new Position( 9, 32)))
             ],
             'TestNamespace\\TestClass::testProperty' => [
                 0 => new Location($referencesUri, new Range(new Position( 6,  5), new Position( 6, 23)))
@@ -142,7 +142,7 @@ abstract class ServerTestCase extends TestCase
                 0 => new Location($globalSymbolsUri,    new Range(new Position( 6, 27), new Position( 6, 40)))  // class TestClass implements TestInterface
             ],
             'TestClass::TEST_CLASS_CONST' => [
-                0 => new Location($globalReferencesUri, new Range(new Position( 9, 16), new Position( 9, 32)))
+                0 => new Location($globalReferencesUri, new Range(new Position( 9,  5), new Position( 9, 32)))
             ],
             'TestClass::testProperty' => [
                 0 => new Location($globalReferencesUri, new Range(new Position( 6,  5), new Position( 6, 23)))
