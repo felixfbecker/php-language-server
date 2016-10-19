@@ -22,9 +22,9 @@ class GlobalTest extends ServerTestCase
     {
         // const TEST_CLASS_CONST = 123;
         // Get references for TEST_CLASS_CONST
-        $definition = $this->getDefinitionLocation('TestClass');
+        $definition = $this->getDefinitionLocation('TestClass::TEST_CLASS_CONST');
         $result = $this->textDocument->references(new ReferenceContext, new TextDocumentIdentifier($definition->uri), $definition->range->start);
-        $this->assertEquals($this->getReferenceLocations('TestClass'), $result);
+        $this->assertEquals($this->getReferenceLocations('TestClass::TEST_CLASS_CONST'), $result);
     }
 
     public function testReferencesForConstants()
