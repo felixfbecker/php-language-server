@@ -178,10 +178,6 @@ class TextDocument
             return null;
         }
         $contents = [];
-        $docBlock = $def->getAttribute('docBlock');
-        if ($docBlock !== null) {
-            $contents[] = $docBlock->getSummary();
-        }
         $defLine = clone $def;
         $defLine->setAttribute('comments', []);
         if (isset($defLine->stmts)) {
@@ -190,7 +186,11 @@ class TextDocument
         $defText = $this->prettyPrinter->prettyPrint([$defLine]);
         $lines = explode("\n", $defText);
         if (isset($lines[0])) {
-            $contents[] = new MarkedString('php', $lines[0]);
+            $contents[] = new MarkedString('php', "<?php\n" . $lines[0]);
+        }
+        $docBlock = $def->getAttribute('docBlock');
+        if ($docBlock !== null) {
+            $contents[] = $docBlock->getSummary();
         }
         return new Hover($contents, Range::fromNode($node));
     }
