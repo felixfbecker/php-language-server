@@ -115,6 +115,15 @@ class GlobalTest extends ServerTestCase
     {
         // echo $obj->testProperty;
         // Get definition for testProperty
+        $reference = $this->getReferenceLocations('TestClass::testProperty')[1];
+        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->end);
+        $this->assertEquals($this->getDefinitionLocation('TestClass::testProperty'), $result);
+    }
+
+    public function testDefinitionForPropertiesOnThis()
+    {
+        // $this->testProperty = $testParameter;
+        // Get definition for testProperty
         $reference = $this->getReferenceLocations('TestClass::testProperty')[0];
         $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->end);
         $this->assertEquals($this->getDefinitionLocation('TestClass::testProperty'), $result);
