@@ -14,6 +14,7 @@ use LanguageServer\Protocol\{
 };
 use AdvancedJsonRpc\{Dispatcher, ResponseError, Response as ResponseBody, Request as RequestBody};
 use Sabre\Event\Loop;
+use Exception;
 
 class LanguageServer extends \AdvancedJsonRpc\Dispatcher
 {
@@ -160,7 +161,11 @@ class LanguageServer extends \AdvancedJsonRpc\Dispatcher
                     $this->client->window->logMessage(MessageType::INFO, "Not parsing $shortName because it exceeds size limit of 0.5MB");
                 } else {
                     $this->client->window->logMessage(MessageType::INFO, "Parsing file $fileNum/$numTotalFiles: $shortName.");
-                    $this->project->loadDocument($uri);
+                    try {
+                        $this->project->loadDocument($uri);
+                    } catch (Exception $e) {
+                        $this->client->window->logMessage(MessageType::ERROR, "Error parsing file $shortName: " . $e->getMessage());
+                    }
                 }
 
                 Loop\setTimeout($processFile, 0);
