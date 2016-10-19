@@ -395,29 +395,47 @@ class PhpDocument
                 return null;
             }
             // Need to resolve variable to a class
-            $varDef = $this->getVariableDefinition($node->var);
-            if (!isset($varDef)) {
-                return null;
-            }
-            if ($varDef instanceof Node\Param) {
-                if (!isset($varDef->type)) {
-                    // Cannot resolve to class without a type hint
-                    // TODO: parse docblock
-                    return null;
-                }
-                $name = (string)$varDef->type;
-            } else if ($varDef instanceof Node\Expr\Assign) {
-                if ($varDef->expr instanceof Node\Expr\New_) {
-                    if (!($varDef->expr->class instanceof Node\Name)) {
-                        // Cannot get definition of dynamic calls
-                        return null;
+            if ($node->var->name === 'this') {
+                // $this resolved to the class it is contained in
+                $n = $node;
+                while ($n = $n->getAttribute('parentNode')) {
+                    if ($n instanceof Node\Stmt\Class_) {
+                        if ($n->isAnonymous()) {
+                            return null;
+                        }
+                        $name = (string)$n->namespacedName;
+                        break;
                     }
-                    $name = (string)$varDef->expr->class;
-                } else {
+                }
+                if (!isset($name)) {
                     return null;
                 }
             } else {
-                return null;
+                // Other variables resolve to their definition
+                $varDef = $this->getVariableDefinition($node->var);
+                if (!isset($varDef)) {
+                    return null;
+                }
+                if ($varDef instanceof Node\Param) {
+                    if (!isset($varDef->type)) {
+                        // Cannot resolve to class without a type hint
+                        // TODO: parse docblock
+                        return null;
+                    }
+                    $name = (string)$varDef->type;
+                } else if ($varDef instanceof Node\Expr\Assign) {
+                    if ($varDef->expr instanceof Node\Expr\New_) {
+                        if (!($varDef->expr->class instanceof Node\Name)) {
+                            // Cannot get definition of dynamic calls
+                            return null;
+                        }
+                        $name = (string)$varDef->expr->class;
+                    } else {
+                        return null;
+                    }
+                } else {
+                    return null;
+                }
             }
             $name .= '::' . (string)$node->name;
         } else if ($parent instanceof Node\Expr\FuncCall) {

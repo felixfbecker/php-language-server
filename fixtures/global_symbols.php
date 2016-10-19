@@ -57,7 +57,7 @@ class TestClass implements TestInterface
      */
     public function testMethod($testParameter)
     {
-        $testVariable = 123;
+        $this->testProperty = $testParameter;
     }
 }
 
