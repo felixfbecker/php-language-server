@@ -2,6 +2,8 @@
 
 namespace LanguageServer\Protocol;
 
+use PhpParser\Error;
+
 /**
  * Represents a diagnostic, such as a compiler error or warning. Diagnostic objects are only valid in the scope of a
  * resource.
@@ -44,4 +46,40 @@ class Diagnostic
      * @var string
      */
     public $message;
+
+    /**
+     * Creates a diagnostic from a PhpParser Error
+     *
+     * @param  Error  $error    Message and code will be used
+     * @param  string $content  The file content to calculate the column info
+     * @param  int    $severity DiagnosticSeverity
+     * @param  string $source   A human-readable string describing the source of this diagnostic
+     * @return self
+     */
+    public static function fromError(Error $error, string $content, int $severity = null, string $source = null): self
+    {
+        return new self(
+            $error->getRawMessage(), // Do not include "on line ..." in the error message
+            Range::fromError($error, $content),
+            $error->getCode(),
+            $severity,
+            $source
+        );
+    }
+
+    /**
+     * @param  string $message  The diagnostic's message
+     * @param  Range  $range    The range at which the message applies
+     * @param  int    $code     The diagnostic's code
+     * @param  int    $severity DiagnosticSeverity
+     * @param  string $source   A human-readable string describing the source of this diagnostic
+     */
+    public function __construct(string $message = null, Range $range = null, int $code = null, int $severity = null, string $source = null)
+    {
+        $this->message = $message;
+        $this->range = $range;
+        $this->code = $code;
+        $this->severity = $severity;
+        $this->source = $source;
+    }
 }

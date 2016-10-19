@@ -3,9 +3,11 @@ declare(strict_types = 1);
 
 namespace LanguageServer\NodeVisitor;
 
-use PhpParser\{NodeVisitorAbstract, Node};
+use PhpParser;
+use PhpParser\{NodeVisitorAbstract, Node, Comment};
 use phpDocumentor\Reflection\DocBlockFactory;
 use phpDocumentor\Reflection\Types\Context;
+use Exception;
 
 /**
  * Decorates all nodes with a docBlock attribute that is an instance of phpDocumentor\Reflection\DocBlock
@@ -31,6 +33,11 @@ class DocBlockParser extends NodeVisitorAbstract
      */
     private $aliases;
 
+    /**
+     * @var PhpParser\Error[]
+     */
+    public $errors = [];
+
     public function __construct(DocBlockFactory $docBlockFactory)
     {
         $this->docBlockFactory = $docBlockFactory;
@@ -54,8 +61,17 @@ class DocBlockParser extends NodeVisitorAbstract
             return;
         }
         $context = new Context($this->namespace, $this->aliases);
-        $docBlock = $this->docBlockFactory->create($docComment->getText(), $context);
-        $node->setAttribute('docBlock', $docBlock);
+        try {
+            $docBlock = $this->docBlockFactory->create($docComment->getText(), $context);
+            $node->setAttribute('docBlock', $docBlock);
+        } catch (Exception $e) {
+            $this->errors[] = new PhpParser\Error($e->getMessage(), [
+                'startFilePos' => $docComment->getFilePos(),
+                'endFilePos'   => $docComment->getFilePos() + strlen($docComment->getText()),
+                'startLine'    => $docComment->getLine(),
+                'endLine'      => $docComment->getLine() + preg_match_all('/[\\n\\r]/', $docComment->getText()) + 1
+            ]);
+        }
     }
 
     public function leaveNode(Node $node)

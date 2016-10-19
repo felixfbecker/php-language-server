@@ -138,19 +138,8 @@ class PhpDocument
 
         $diagnostics = [];
         foreach ($errors as $error) {
-            $diagnostic = new Diagnostic();
-            $startLine = max($error->getStartLine() - 1, 0);
-            $startColumn = $error->hasColumnInfo() ? $error->getStartColumn($this->content) - 1 : 0;
-            $endLine = max($error->getEndLine() - 1, $startLine);
-            $endColumn = $error->hasColumnInfo() ? $error->getEndColumn($this->content) : 0;
-            $diagnostic->range = new Range(new Position($startLine, $startColumn), new Position($endLine, $endColumn));
-            $diagnostic->severity = DiagnosticSeverity::ERROR;
-            $diagnostic->source = 'php';
-            // Do not include "on line ..." in the error message
-            $diagnostic->message = $error->getRawMessage();
-            $diagnostics[] = $diagnostic;
+            $diagnostics[] = Diagnostic::fromError($error, $this->content, DiagnosticSeverity::ERROR, 'php');
         }
-        $this->client->textDocument->publishDiagnostics($this->uri, $diagnostics);
 
         // $stmts can be null in case of a fatal parsing error
         if ($stmts) {
@@ -166,9 +155,16 @@ class PhpDocument
             $traverser->addVisitor(new ColumnCalculator($content));
 
             // Parse docblocks and add docBlock attributes to nodes
-            $traverser->addVisitor(new DocBlockParser($this->docBlockFactory));
+            $docBlockParser = new DocBlockParser($this->docBlockFactory);
+            $traverser->addVisitor($docBlockParser);
 
             $traverser->traverse($stmts);
+
+            // Report errors from parsing docblocks
+            foreach ($docBlockParser->errors as $error) {
+                $diagnostics[] = Diagnostic::fromError($error, $this->content, DiagnosticSeverity::WARNING, 'php');
+            }
+
             $traverser = new NodeTraverser;
 
             // Collect all definitions
@@ -195,6 +191,8 @@ class PhpDocument
 
             $this->stmts = $stmts;
         }
+
+        $this->client->textDocument->publishDiagnostics($this->uri, $diagnostics);
     }
 
     /**
