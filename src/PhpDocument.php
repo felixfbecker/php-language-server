@@ -172,7 +172,7 @@ class PhpDocument
             $traverser->addVisitor($definitionCollector);
 
             // Collect all references
-            $referencesCollector = new ReferencesCollector($this->definitions);
+            $referencesCollector = new ReferencesCollector;
             $traverser->addVisitor($referencesCollector);
 
             $traverser->traverse($stmts);
