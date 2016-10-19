@@ -4,6 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer\NodeVisitor;
 
 use PhpParser\{NodeVisitorAbstract, Node};
+use function LanguageServer\Fqn\getDefinedFqn;
 
 /**
  * Collects definitions of classes, interfaces, traits, methods, properties and constants
@@ -20,7 +21,7 @@ class DefinitionCollector extends NodeVisitorAbstract
 
     public function enterNode(Node $node)
     {
-        $fqn = $node->getAttribute('ownerDocument')->getDefinedFqn($node);
+        $fqn = getDefinedFqn($node);
         if ($fqn !== null) {
             $this->definitions[$fqn] = $node;
         }

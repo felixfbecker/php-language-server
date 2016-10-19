@@ -37,7 +37,10 @@
         "psr-4": {
             "LanguageServer\\": "src/"
         },
-        "files" : ["src/utils.php"]
+        "files" : [
+            "src/utils.php",
+            "src/Fqn.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
