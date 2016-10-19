@@ -32,7 +32,7 @@ class GlobalTest extends ServerTestCase
 
     public function testDefinitionForClassOnStaticMethodCall()
     {
-        // $obj = new TestClass();
+        // TestClass::staticTestMethod();
         // Get definition for TestClass
         $reference = $this->getReferenceLocations('TestClass')[1];
         $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->start);
@@ -152,8 +152,8 @@ class GlobalTest extends ServerTestCase
         // echo $param;
         // Get definition for $param
         $uri = pathToUri(realpath(__DIR__ . '/../../../../fixtures/references.php'));
-        $result = $this->textDocument->definition(new TextDocumentIdentifier($uri), new Position(16, 13));
-        $this->assertEquals(new Location($uri, new Range(new Position(15, 18), new Position(15, 34))), $result);
+        $result = $this->textDocument->definition(new TextDocumentIdentifier($uri), new Position(22, 13));
+        $this->assertEquals(new Location($uri, new Range(new Position(21, 18), new Position(21, 34))), $result);
     }
 
     public function testDefinitionForUsedVariables()
@@ -161,8 +161,8 @@ class GlobalTest extends ServerTestCase
         // echo $var;
         // Get definition for $var
         $uri = pathToUri(realpath(__DIR__ . '/../../../../fixtures/references.php'));
-        $result = $this->textDocument->definition(new TextDocumentIdentifier($uri), new Position(20, 11));
-        $this->assertEquals(new Location($uri, new Range(new Position(19, 22), new Position(19, 26))), $result);
+        $result = $this->textDocument->definition(new TextDocumentIdentifier($uri), new Position(26, 11));
+        $this->assertEquals(new Location($uri, new Range(new Position(25, 22), new Position(25, 26))), $result);
     }
 
     public function testDefinitionForFunctions()

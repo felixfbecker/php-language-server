@@ -32,7 +32,7 @@ class GlobalFallbackTest extends ServerTestCase
         // echo TEST_CONST;
         // Get definition for TEST_CONST
         $result = $this->textDocument->definition(new TextDocumentIdentifier('global_fallback'), new Position(6, 10));
-        $this->assertEquals(new Location('global_symbols', new Range(new Position(4, 6), new Position(4, 22))), $result);
+        $this->assertEquals(new Location('global_symbols', new Range(new Position(9, 6), new Position(9, 22))), $result);
     }
 
     public function testFallsBackForFunctions()
@@ -40,6 +40,6 @@ class GlobalFallbackTest extends ServerTestCase
         // test_function();
         // Get definition for test_function
         $result = $this->textDocument->definition(new TextDocumentIdentifier('global_fallback'), new Position(5, 6));
-        $this->assertEquals(new Location('global_symbols', new Range(new Position(33, 0), new Position(36, 1))), $result);
+        $this->assertEquals(new Location('global_symbols', new Range(new Position(78, 0), new Position(81, 1))), $result);
     }
 }
