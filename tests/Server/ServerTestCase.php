@@ -104,7 +104,8 @@ abstract class ServerTestCase extends TestCase
                 6 => new Location($useUri,        new Range(new Position( 4,  4), new Position( 4, 27))), // use TestNamespace\TestClass;
             ],
             'TestNamespace\\TestInterface' => [
-                0 => new Location($symbolsUri,    new Range(new Position(20, 27), new Position(20, 40))) // class TestClass implements TestInterface
+                0 => new Location($symbolsUri,    new Range(new Position(20, 27), new Position(20, 40))), // class TestClass implements TestInterface
+                1 => new Location($symbolsUri,    new Range(new Position(57, 48), new Position(57, 61)))  // public function testMethod($testParameter): TestInterface
             ],
             'TestNamespace\\TestClass::TEST_CLASS_CONST' => [
                 0 => new Location($referencesUri, new Range(new Position( 9,  5), new Position( 9, 32)))
@@ -139,7 +140,8 @@ abstract class ServerTestCase extends TestCase
                 5 => new Location($globalReferencesUri, new Range(new Position(21, 37), new Position(21, 46))), // function whatever(TestClass $param): TestClass
             ],
             'TestInterface' => [
-                0 => new Location($globalSymbolsUri,    new Range(new Position(20, 27), new Position(20, 40)))  // class TestClass implements TestInterface
+                0 => new Location($globalSymbolsUri,    new Range(new Position(20, 27), new Position(20, 40))), // class TestClass implements TestInterface
+                1 => new Location($globalSymbolsUri,    new Range(new Position(57, 48), new Position(57, 61)))  // public function testMethod($testParameter): TestInterface
             ],
             'TestClass::TEST_CLASS_CONST' => [
                 0 => new Location($globalReferencesUri, new Range(new Position( 9,  5), new Position( 9, 32)))

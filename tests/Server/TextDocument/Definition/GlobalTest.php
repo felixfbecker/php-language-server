@@ -147,6 +147,15 @@ class GlobalTest extends ServerTestCase
         $this->assertEquals($this->getDefinitionLocation('TestClass'), $result);
     }
 
+    public function testDefinitionForMethodReturnTypeHints()
+    {
+        // public function testMethod($testParameter): TestInterface
+        // Get definition for TestInterface
+        $reference = $this->getReferenceLocations('TestInterface')[1];
+        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->start);
+        $this->assertEquals($this->getDefinitionLocation('TestInterface'), $result);
+    }
+
     public function testDefinitionForParams()
     {
         // echo $param;

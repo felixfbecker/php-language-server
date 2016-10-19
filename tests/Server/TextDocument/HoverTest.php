@@ -30,7 +30,7 @@ class HoverTest extends ServerTestCase
         $reference = $this->getReferenceLocations('TestClass::testMethod()')[0];
         $result = $this->textDocument->hover(new TextDocumentIdentifier($reference->uri), $reference->range->end);
         $this->assertEquals(new Hover([
-            new MarkedString('php', "<?php\npublic function testMethod(\$testParameter)"),
+            new MarkedString('php', "<?php\npublic function testMethod(\$testParameter) : \TestInterface"),
             'Non culpa nostrud mollit esse sunt laboris in irure ullamco cupidatat amet.'
         ], $reference->range), $result);
     }

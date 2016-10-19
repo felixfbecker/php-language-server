@@ -367,7 +367,7 @@ class PhpDocument
             $node instanceof Node\Name && (
                 $parent instanceof Node\Stmt\ClassLike
                 || $parent instanceof Node\Param
-                || $parent instanceof Node\Stmt\Function_
+                || $parent instanceof Node\FunctionLike
                 || $parent instanceof Node\Expr\StaticCall
                 || $parent instanceof Node\Expr\ClassConstFetch
                 || $parent instanceof Node\Expr\StaticPropertyFetch
