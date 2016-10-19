@@ -101,11 +101,10 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     {
         $this->rootPath = $rootPath;
 
-        $this->restoreCache();
-
         // start building project index
-        if ($rootPath) {
-            $this->indexProject($rootPath);
+        if ($rootPath !== null) {
+            $this->restoreCache();
+            $this->indexProject();
         }
 
         $serverCapabilities = new ServerCapabilities();
@@ -136,7 +135,9 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
      */
     public function shutdown()
     {
-        $this->saveCache();
+        if ($this->rootPath !== null) {
+            $this->saveCache();
+        }
     }
 
     /**
@@ -152,23 +153,23 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     /**
      * Parses workspace files, one at a time.
      *
-     * @param string $rootPath The rootPath of the workspace.
      * @return void
      */
-    private function indexProject(string $rootPath)
+    private function indexProject()
     {
-        $fileList = findFilesRecursive($rootPath, '/^.+\.php$/i');
+        $fileList = findFilesRecursive($this->rootPath, '/^.+\.php$/i');
         $numTotalFiles = count($fileList);
 
         $startTime = microtime(true);
         $fileNum = 0;
 
-        $processFile = function() use (&$fileList, &$fileNum, &$processFile, $rootPath, $numTotalFiles, $startTime) {
+        $processFile = function() use (&$fileList, &$fileNum, &$processFile, $numTotalFiles, $startTime) {
             if ($fileNum < $numTotalFiles) {
                 $file = $fileList[$fileNum];
                 $uri = pathToUri($file);
                 $fileNum++;
-                $shortName = substr($file, strlen($rootPath) + 1);
+                $shortName = substr($file, strlen($this->rootPath) + 1);
+                $this->client->window->logMessage(MessageType::INFO, "Parsing file $fileNum/$numTotalFiles: $shortName.");
 
                 if (filesize($file) > 500000) {
                     $this->client->window->logMessage(MessageType::INFO, "Not parsing $shortName because it exceeds size limit of 0.5MB");
