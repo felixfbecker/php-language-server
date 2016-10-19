@@ -19,7 +19,7 @@ ErrorHandler::register();
 
 cli_set_process_title('PHP Language Server');
 
-if ($options['tcp']) {
+if (!empty($options['tcp'])) {
     $address = $options['tcp'];
     $socket = stream_socket_client('tcp://' . $address, $errno, $errstr);
     if ($socket === false) {
