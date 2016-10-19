@@ -3,211 +3,30 @@ declare(strict_types = 1);
 
 namespace LanguageServer\Tests\Server\TextDocument;
 
-use PHPUnit\Framework\TestCase;
+use LanguageServer\Tests\Server\ServerTestCase;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\{Server, LanguageClient, Project};
-use LanguageServer\Protocol\{TextDocumentIdentifier, SymbolKind};
+use LanguageServer\Protocol\{TextDocumentIdentifier, SymbolInformation, SymbolKind, Position, Location, Range};
+use function LanguageServer\pathToUri;
 
-class DocumentSymbolTest extends TestCase
+class DocumentSymbolTest extends ServerTestCase
 {
-    /**
-     * @var Server\TextDocument
-     */
-    private $textDocument;
-
-    public function setUp()
-    {
-        $client = new LanguageClient(new MockProtocolStream());
-        $project = new Project($client);
-        $this->textDocument = new Server\TextDocument($project, $client);
-        $project->openDocument('symbols', file_get_contents(__DIR__ . '/../../../fixtures/symbols.php'));
-    }
-
     public function test()
     {
         // Request symbols
-        $result = $this->textDocument->documentSymbol(new TextDocumentIdentifier('symbols'));
+        $uri = pathToUri(realpath(__DIR__ . '/../../../fixtures/symbols.php'));
+        $result = $this->textDocument->documentSymbol(new TextDocumentIdentifier($uri));
         $this->assertEquals([
-            [
-                'name' => 'TEST_CONST',
-                'kind' => SymbolKind::CONSTANT,
-                'location' => [
-                    'uri' => 'symbols',
-                    'range' => [
-                        'start' => [
-                            'line' => 4,
-                            'character' => 6
-                        ],
-                        'end' => [
-                            'line' => 4,
-                            'character' => 22
-                        ]
-                    ]
-                ],
-                'containerName' => 'TestNamespace'
-            ],
-            [
-                'name' => 'TestClass',
-                'kind' => SymbolKind::CLASS_,
-                'location' => [
-                    'uri' => 'symbols',
-                    'range' => [
-                        'start' => [
-                            'line' => 6,
-                            'character' => 0
-                        ],
-                        'end' => [
-                            'line' => 21,
-                            'character' => 1
-                        ]
-                    ]
-                ],
-                'containerName' => 'TestNamespace'
-            ],
-            [
-                'name' => 'TEST_CLASS_CONST',
-                'kind' => SymbolKind::CONSTANT,
-                'location' => [
-                    'uri' => 'symbols',
-                    'range' => [
-                        'start' => [
-                            'line' => 8,
-                            'character' => 10
-                        ],
-                        'end' => [
-                            'line' => 8,
-                            'character' => 32
-                        ]
-                    ]
-                ],
-                'containerName' => 'TestNamespace\\TestClass'
-            ],
-            [
-                'name' => 'staticTestProperty',
-                'kind' => SymbolKind::FIELD,
-                'location' => [
-                    'uri' => 'symbols',
-                    'range' => [
-                        'start' => [
-                            'line' => 9,
-                            'character' => 18
-                        ],
-                        'end' => [
-                            'line' => 9,
-                            'character' => 37
-                        ]
-                    ]
-                ],
-                'containerName' => 'TestNamespace\\TestClass'
-            ],
-            [
-                'name' => 'testProperty',
-                'kind' => SymbolKind::FIELD,
-                'location' => [
-                    'uri' => 'symbols',
-                    'range' => [
-                        'start' => [
-                            'line' => 10,
-                            'character' => 11
-                        ],
-                        'end' => [
-                            'line' => 10,
-                            'character' => 24
-                        ]
-                    ]
-                ],
-                'containerName' => 'TestNamespace\\TestClass'
-            ],
-            [
-                'name' => 'staticTestMethod',
-                'kind' => SymbolKind::METHOD,
-                'location' => [
-                    'uri' => 'symbols',
-                    'range' => [
-                        'start' => [
-                            'line' => 12,
-                            'character' => 4
-                        ],
-                        'end' => [
-                            'line' => 15,
-                            'character' => 5
-                        ]
-                    ]
-                ],
-                'containerName' => 'TestNamespace\\TestClass'
-            ],
-            [
-                'name' => 'testMethod',
-                'kind' => SymbolKind::METHOD,
-                'location' => [
-                    'uri' => 'symbols',
-                    'range' => [
-                        'start' => [
-                            'line' => 17,
-                            'character' => 4
-                        ],
-                        'end' => [
-                            'line' => 20,
-                            'character' => 5
-                        ]
-                    ]
-                ],
-                'containerName' => 'TestNamespace\\TestClass'
-            ],
-            [
-                'name' => 'TestTrait',
-                'kind' => SymbolKind::CLASS_,
-                'location' => [
-                    'uri' => 'symbols',
-                    'range' => [
-                        'start' => [
-                            'line' => 23,
-                            'character' => 0
-                        ],
-                        'end' => [
-                            'line' => 26,
-                            'character' => 1
-                        ]
-                    ]
-                ],
-                'containerName' => 'TestNamespace'
-            ],
-            [
-                'name' => 'TestInterface',
-                'kind' => SymbolKind::INTERFACE,
-                'location' => [
-                    'uri' => 'symbols',
-                    'range' => [
-                        'start' => [
-                            'line' => 28,
-                            'character' => 0
-                        ],
-                        'end' => [
-                            'line' => 31,
-                            'character' => 1
-                        ]
-                    ]
-                ],
-                'containerName' => 'TestNamespace'
-            ],
-            [
-                'name' => 'test_function',
-                'kind' => SymbolKind::FUNCTION,
-                'location' => [
-                    'uri' => 'symbols',
-                    'range' => [
-                        'start' => [
-                            'line' => 33,
-                            'character' => 0
-                        ],
-                        'end' => [
-                            'line' => 36,
-                            'character' => 1
-                        ]
-                    ]
-                ],
-                'containerName' => 'TestNamespace'
-            ]
-        ], json_decode(json_encode($result), true));
+            new SymbolInformation('TEST_CONST',         SymbolKind::CONSTANT,  $this->getDefinitionLocation('TestNamespace\\TEST_CONST'),                    'TestNamespace'),
+            new SymbolInformation('TestClass',          SymbolKind::CLASS_,    $this->getDefinitionLocation('TestNamespace\\TestClass'),                     'TestNamespace'),
+            new SymbolInformation('TEST_CLASS_CONST',   SymbolKind::CONSTANT,  $this->getDefinitionLocation('TestNamespace\\TestClass::TEST_CLASS_CONST'),   'TestNamespace\\TestClass'),
+            new SymbolInformation('staticTestProperty', SymbolKind::FIELD,     $this->getDefinitionLocation('TestNamespace\\TestClass::staticTestProperty'), 'TestNamespace\\TestClass'),
+            new SymbolInformation('testProperty',       SymbolKind::FIELD,     $this->getDefinitionLocation('TestNamespace\\TestClass::testProperty'),       'TestNamespace\\TestClass'),
+            new SymbolInformation('staticTestMethod',   SymbolKind::METHOD,    $this->getDefinitionLocation('TestNamespace\\TestClass::staticTestMethod()'), 'TestNamespace\\TestClass'),
+            new SymbolInformation('testMethod',         SymbolKind::METHOD,    $this->getDefinitionLocation('TestNamespace\\TestClass::testMethod()'),       'TestNamespace\\TestClass'),
+            new SymbolInformation('TestTrait',          SymbolKind::CLASS_,    $this->getDefinitionLocation('TestNamespace\\TestTrait'),                     'TestNamespace'),
+            new SymbolInformation('TestInterface',      SymbolKind::INTERFACE, $this->getDefinitionLocation('TestNamespace\\TestInterface'),                 'TestNamespace'),
+            new SymbolInformation('test_function',      SymbolKind::FUNCTION,  $this->getDefinitionLocation('TestNamespace\\test_function()'),               'TestNamespace'),
+        ], $result);
     }
 }

@@ -4,16 +4,21 @@ declare(strict_types = 1);
 namespace LanguageServer\Server;
 
 use LanguageServer\{LanguageClient, Project};
+use PhpParser\PrettyPrinter\Standard as PrettyPrinter;
+use PhpParser\Node;
 use LanguageServer\Protocol\{
     TextDocumentItem,
     TextDocumentIdentifier,
     VersionedTextDocumentIdentifier,
     Position,
+    Range,
     FormattingOptions,
     TextEdit,
     Location,
     SymbolInformation,
-    ReferenceContext
+    ReferenceContext,
+    Hover,
+    MarkedString
 };
 
 /**
@@ -33,10 +38,16 @@ class TextDocument
      */
     private $project;
 
+    /**
+     * @var PrettyPrinter
+     */
+    private $prettyPrinter;
+
     public function __construct(Project $project, LanguageClient $client)
     {
         $this->project = $project;
         $this->client = $client;
+        $this->prettyPrinter = new PrettyPrinter();
     }
 
     /**
@@ -147,5 +158,73 @@ class TextDocument
             return [];
         }
         return Location::fromNode($def);
+    }
+
+    /**
+     * The hover request is sent from the client to the server to request hover information at a given text document position.
+     *
+     * @param TextDocumentIdentifier $textDocument The text document
+     * @param Position $position The position inside the text document
+     * @return Hover
+     */
+    public function hover(TextDocumentIdentifier $textDocument, Position $position): Hover
+    {
+        $document = $this->project->getDocument($textDocument->uri);
+        // Find the node under the cursor
+        $node = $document->getNodeAtPosition($position);
+        if ($node === null) {
+            return new Hover([]);
+        }
+        $range = Range::fromNode($node);
+        // Get the definition node for whatever node is under the cursor
+        $def = $document->getDefinitionByNode($node);
+        if ($def === null) {
+            return new Hover([], $range);
+        }
+        $contents = [];
+
+        // Build a declaration string
+        if ($def instanceof Node\Stmt\PropertyProperty || $def instanceof Node\Const_) {
+            // Properties and constants can have multiple declarations
+            // Use the parent node (that includes the modifiers), but only render the requested declaration
+            $child = $def;
+            $def = $def->getAttribute('parentNode');
+            $defLine = clone $def;
+            $defLine->props = [$child];
+        } else {
+            $defLine = clone $def;
+        }
+        // Don't include the docblock in the declaration string
+        $defLine->setAttribute('comments', []);
+        if (isset($defLine->stmts)) {
+            $defLine->stmts = [];
+        }
+        $defText = $this->prettyPrinter->prettyPrint([$defLine]);
+        $lines = explode("\n", $defText);
+        if (isset($lines[0])) {
+            $contents[] = new MarkedString('php', "<?php\n" . $lines[0]);
+        }
+
+        // Get the documentation string
+        if ($def instanceof Node\Param) {
+            $fn = $def->getAttribute('parentNode');
+            $docBlock = $fn->getAttribute('docBlock');
+            if ($docBlock !== null) {
+                $tags = $docBlock->getTagsByName('param');
+                foreach ($tags as $tag) {
+                    if ($tag->getVariableName() === $def->name) {
+                        $contents[] = $tag->getDescription()->render();
+                        break;
+                    }
+                }
+            }
+        } else {
+            $docBlock = $def->getAttribute('docBlock');
+            if ($docBlock !== null) {
+                $contents[] = $docBlock->getSummary();
+            }
+        }
+
+        return new Hover($contents, $range);
     }
 }

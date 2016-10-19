@@ -2,7 +2,7 @@
 
 namespace LanguageServer\Protocol;
 
-use PhpParser\Node;
+use PhpParser\{Error, Node};
 
 /**
  * A range in a text document expressed as (zero-based) start and end positions.
@@ -35,6 +35,22 @@ class Range
             new Position($node->getAttribute('startLine') - 1, $node->getAttribute('startColumn') - 1),
             new Position($node->getAttribute('endLine') - 1, $node->getAttribute('endColumn'))
         );
+    }
+
+    /**
+     * Returns the range where an error occured
+     *
+     * @param \PhpParser\Error $error
+     * @param string $content
+     * @return self
+     */
+    public static function fromError(Error $error, string $content)
+    {
+        $startLine   = max($error->getStartLine() - 1, 0);
+        $endLine     = max($error->getEndLine() - 1, $startLine);
+        $startColumn = $error->hasColumnInfo() ? $error->getStartColumn($content) - 1 : 0;
+        $endColumn   = $error->hasColumnInfo() ? $error->getEndColumn($content) : 0;
+        return new self(new Position($startLine, $startColumn), new Position($endLine, $endColumn));
     }
 
     public function __construct(Position $start = null, Position $end = null)

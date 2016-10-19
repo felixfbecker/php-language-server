@@ -107,6 +107,8 @@ class LanguageServer extends \AdvancedJsonRpc\Dispatcher
         $serverCapabilities->definitionProvider = true;
         // Support "Find all references"
         $serverCapabilities->referencesProvider = true;
+        // Support "Hover"
+        $serverCapabilities->hoverProvider = true;
 
         return new InitializeResult($serverCapabilities);
     }

@@ -3,18 +3,13 @@ declare(strict_types = 1);
 
 namespace LanguageServer\Tests\Server\TextDocument\Definition;
 
-use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
+use LanguageServer\Tests\Server\ServerTestCase;
 use LanguageServer\{Server, LanguageClient, Project};
-use LanguageServer\Protocol\{TextDocumentIdentifier, Position};
+use LanguageServer\Protocol\{TextDocumentIdentifier, Position, Range, Location};
 
-class GlobalFallbackTest extends TestCase
+class GlobalFallbackTest extends ServerTestCase
 {
-    /**
-     * @var Server\TextDocument
-     */
-    private $textDocument;
-
     public function setUp()
     {
         $client = new LanguageClient(new MockProtocolStream());
@@ -37,19 +32,7 @@ class GlobalFallbackTest extends TestCase
         // echo TEST_CONST;
         // Get definition for TEST_CONST
         $result = $this->textDocument->definition(new TextDocumentIdentifier('global_fallback'), new Position(6, 10));
-        $this->assertEquals([
-            'uri' => 'global_symbols',
-            'range' => [
-                'start' => [
-                    'line' => 4,
-                    'character' => 6
-                ],
-                'end' => [
-                    'line' => 4,
-                    'character' => 22
-                ]
-            ]
-        ], json_decode(json_encode($result), true));
+        $this->assertEquals(new Location('global_symbols', new Range(new Position(9, 6), new Position(9, 22))), $result);
     }
 
     public function testFallsBackForFunctions()
@@ -57,18 +40,6 @@ class GlobalFallbackTest extends TestCase
         // test_function();
         // Get definition for test_function
         $result = $this->textDocument->definition(new TextDocumentIdentifier('global_fallback'), new Position(5, 6));
-        $this->assertEquals([
-            'uri' => 'global_symbols',
-            'range' => [
-                'start' => [
-                    'line' => 33,
-                    'character' => 0
-                ],
-                'end' => [
-                    'line' => 36,
-                    'character' => 1
-                ]
-            ]
-        ], json_decode(json_encode($result), true));
+        $this->assertEquals(new Location('global_symbols', new Range(new Position(78, 0), new Position(81, 1))), $result);
     }
 }

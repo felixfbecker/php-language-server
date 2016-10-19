@@ -4,10 +4,10 @@ declare(strict_types = 1);
 namespace LanguageServer\Tests\Server\TextDocument\References;
 
 use LanguageServer\Protocol\{TextDocumentIdentifier, Position, ReferenceContext, Location, Range};
-use LanguageServer\Tests\Server\TextDocument\TextDocumentTestCase;
+use LanguageServer\Tests\Server\ServerTestCase;
 use function LanguageServer\pathToUri;
 
-class GlobalTest extends TextDocumentTestCase
+class GlobalTest extends ServerTestCase
 {
     public function testReferencesForClassLike()
     {
@@ -22,9 +22,9 @@ class GlobalTest extends TextDocumentTestCase
     {
         // const TEST_CLASS_CONST = 123;
         // Get references for TEST_CLASS_CONST
-        $definition = $this->getDefinitionLocation('TestClass');
+        $definition = $this->getDefinitionLocation('TestClass::TEST_CLASS_CONST');
         $result = $this->textDocument->references(new ReferenceContext, new TextDocumentIdentifier($definition->uri), $definition->range->start);
-        $this->assertEquals($this->getReferenceLocations('TestClass'), $result);
+        $this->assertEquals($this->getReferenceLocations('TestClass::TEST_CLASS_CONST'), $result);
     }
 
     public function testReferencesForConstants()
@@ -77,11 +77,11 @@ class GlobalTest extends TextDocumentTestCase
         // $var = 123;
         // Get definition for $var
         $uri = pathToUri(realpath(__DIR__ . '/../../../../fixtures/references.php'));
-        $result = $this->textDocument->references(new ReferenceContext, new TextDocumentIdentifier($uri), new Position(13, 7));
+        $result = $this->textDocument->references(new ReferenceContext, new TextDocumentIdentifier($uri), new Position(12, 3));
         $this->assertEquals([
             new Location($uri, new Range(new Position(12, 0), new Position(12, 4))),
             new Location($uri, new Range(new Position(13, 5), new Position(13, 9))),
-            new Location($uri, new Range(new Position(20, 9), new Position(20, 13)))
+            new Location($uri, new Range(new Position(26, 9), new Position(26, 13)))
         ], $result);
     }
 
@@ -90,8 +90,8 @@ class GlobalTest extends TextDocumentTestCase
         // function whatever(TestClass $param): TestClass
         // Get references for $param
         $uri = pathToUri(realpath(__DIR__ . '/../../../../fixtures/references.php'));
-        $result = $this->textDocument->references(new ReferenceContext, new TextDocumentIdentifier($uri), new Position(15, 32));
-        $this->assertEquals([new Location($uri, new Range(new Position(16, 9), new Position(16, 15)))], $result);
+        $result = $this->textDocument->references(new ReferenceContext, new TextDocumentIdentifier($uri), new Position(21, 32));
+        $this->assertEquals([new Location($uri, new Range(new Position(22, 9), new Position(22, 15)))], $result);
     }
 
     public function testReferencesForFunctions()
@@ -100,7 +100,7 @@ class GlobalTest extends TextDocumentTestCase
         // Get references for test_function
         $referencesUri = pathToUri(realpath(__DIR__ . '/../../../../fixtures/references.php'));
         $symbolsUri    = pathToUri(realpath(__DIR__ . '/../../../../fixtures/symbols.php'));
-        $result = $this->textDocument->references(new ReferenceContext, new TextDocumentIdentifier($symbolsUri), new Position(33, 16));
+        $result = $this->textDocument->references(new ReferenceContext, new TextDocumentIdentifier($symbolsUri), new Position(78, 16));
         $this->assertEquals([new Location($referencesUri, new Range(new Position(10, 0), new Position(10, 13)))], $result);
     }
 }
