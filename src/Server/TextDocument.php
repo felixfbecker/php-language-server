@@ -5,6 +5,7 @@ namespace LanguageServer\Server;
 
 use LanguageServer\{LanguageClient, Project};
 use PhpParser\PrettyPrinter\Standard as PrettyPrinter;
+use PhpParser\Node;
 use LanguageServer\Protocol\{
     TextDocumentItem,
     TextDocumentIdentifier,
@@ -164,21 +165,36 @@ class TextDocument
      *
      * @param TextDocumentIdentifier $textDocument The text document
      * @param Position $position The position inside the text document
-     * @return Hover|null
+     * @return Hover
      */
-    public function hover(TextDocumentIdentifier $textDocument, Position $position)
+    public function hover(TextDocumentIdentifier $textDocument, Position $position): Hover
     {
         $document = $this->project->getDocument($textDocument->uri);
+        // Find the node under the cursor
         $node = $document->getNodeAtPosition($position);
         if ($node === null) {
-            return null;
+            return new Hover([]);
         }
+        $range = Range::fromNode($node);
+        // Get the definition node for whatever node is under the cursor
         $def = $document->getDefinitionByNode($node);
         if ($def === null) {
-            return null;
+            return new Hover([], $range);
         }
         $contents = [];
-        $defLine = clone $def;
+
+        // Build a declaration string
+        if ($def instanceof Node\Stmt\PropertyProperty || $def instanceof Node\Const_) {
+            // Properties and constants can have multiple declarations
+            // Use the parent node (that includes the modifiers), but only render the requested declaration
+            $child = $def;
+            $def = $def->getAttribute('parentNode');
+            $defLine = clone $def;
+            $defLine->props = [$child];
+        } else {
+            $defLine = clone $def;
+        }
+        // Don't include the docblock in the declaration string
         $defLine->setAttribute('comments', []);
         if (isset($defLine->stmts)) {
             $defLine->stmts = [];
@@ -188,10 +204,27 @@ class TextDocument
         if (isset($lines[0])) {
             $contents[] = new MarkedString('php', "<?php\n" . $lines[0]);
         }
-        $docBlock = $def->getAttribute('docBlock');
-        if ($docBlock !== null) {
-            $contents[] = $docBlock->getSummary();
+
+        // Get the documentation string
+        if ($def instanceof Node\Param) {
+            $fn = $def->getAttribute('parentNode');
+            $docBlock = $fn->getAttribute('docBlock');
+            if ($docBlock !== null) {
+                $tags = $docBlock->getTagsByName('param');
+                foreach ($tags as $tag) {
+                    if ($tag->getVariableName() === $def->name) {
+                        $contents[] = $tag->getDescription()->render();
+                        break;
+                    }
+                }
+            }
+        } else {
+            $docBlock = $def->getAttribute('docBlock');
+            if ($docBlock !== null) {
+                $contents[] = $docBlock->getSummary();
+            }
         }
-        return new Hover($contents, Range::fromNode($node));
+
+        return new Hover($contents, $range);
     }
 }
