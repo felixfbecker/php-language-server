@@ -454,7 +454,29 @@ class PhpDocument
                 // Cannot get definition of dynamic names
                 return null;
             }
-            $name = (string)$node->class . '::' . $node->name;
+            $className = (string)$node->class;
+            if ($className === 'self' || $className === 'static' || $className === 'parent') {
+                // self and static are resolved to the containing class
+                $n = $node;
+                while ($n = $n->getAttribute('parentNode')) {
+                    if ($n instanceof Node\Stmt\Class_) {
+                        if ($n->isAnonymous()) {
+                            return null;
+                        }
+                        if ($className === 'parent') {
+                            // parent is resolved to the parent class
+                            if (!isset($n->extends)) {
+                                return null;
+                            }
+                            $className = (string)$n->extends;
+                        } else {
+                            $className = (string)$n->namespacedName;
+                        }
+                        break;
+                    }
+                }
+            }
+            $name = (string)$className . '::' . $node->name;
         } else {
             return null;
         }

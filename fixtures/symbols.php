@@ -46,7 +46,7 @@ class TestClass implements TestInterface
      */
     public static function staticTestMethod()
     {
-
+        echo self::TEST_CLASS_CONST;
     }
 
     /**

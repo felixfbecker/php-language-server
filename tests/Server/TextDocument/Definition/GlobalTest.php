@@ -70,6 +70,15 @@ class GlobalTest extends ServerTestCase
     {
         // echo TestClass::TEST_CLASS_CONST;
         // Get definition for TEST_CLASS_CONST
+        $reference = $this->getReferenceLocations('TestClass::TEST_CLASS_CONST')[1];
+        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->end);
+        $this->assertEquals($this->getDefinitionLocation('TestClass::TEST_CLASS_CONST'), $result);
+    }
+
+    public function testDefinitionForClassConstantsOnSelf()
+    {
+        // echo self::TEST_CLASS_CONST;
+        // Get definition for TEST_CLASS_CONST
         $reference = $this->getReferenceLocations('TestClass::TEST_CLASS_CONST')[0];
         $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->end);
         $this->assertEquals($this->getDefinitionLocation('TestClass::TEST_CLASS_CONST'), $result);
