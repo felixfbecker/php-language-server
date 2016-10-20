@@ -21,7 +21,7 @@ class SymbolInformation
     /**
      * The kind of this symbol.
      *
-     * @var number
+     * @var int
      */
     public $kind;
 
@@ -55,7 +55,7 @@ class SymbolInformation
             Node\Stmt\Namespace_::class       => SymbolKind::NAMESPACE,
             Node\Stmt\Function_::class        => SymbolKind::FUNCTION,
             Node\Stmt\ClassMethod::class      => SymbolKind::METHOD,
-            Node\Stmt\PropertyProperty::class => SymbolKind::FIELD,
+            Node\Stmt\PropertyProperty::class => SymbolKind::PROPERTY,
             Node\Const_::class                => SymbolKind::CONSTANT
         ];
         $class = get_class($node);

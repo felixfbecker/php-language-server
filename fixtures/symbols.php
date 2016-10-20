@@ -46,7 +46,7 @@ class TestClass implements TestInterface
      */
     public static function staticTestMethod()
     {
-
+        echo self::TEST_CLASS_CONST;
     }
 
     /**
@@ -57,7 +57,7 @@ class TestClass implements TestInterface
      */
     public function testMethod($testParameter): TestInterface
     {
-        $testVariable = 123;
+        $this->testProperty = $testParameter;
     }
 }
 

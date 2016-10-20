@@ -2,4 +2,5 @@
 .vscode
 .idea
 vendor/
+.phpls/
 composer.lock

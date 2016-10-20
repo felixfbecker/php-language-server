@@ -35,11 +35,6 @@ class NodeAtPositionFinder extends NodeVisitorAbstract
     public function leaveNode(Node $node)
     {
         $range = Range::fromNode($node);
-        // Workaround for https://github.com/nikic/PHP-Parser/issues/311
-        $parent = $node->getAttribute('parentNode');
-        if (isset($parent) && $parent instanceof Node\Stmt\GroupUse && $parent->prefix === $node) {
-            return;
-        }
         if (!isset($this->node) && $range->includes($this->position)) {
             $this->node = $node;
         }

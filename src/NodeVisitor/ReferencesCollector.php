@@ -3,6 +3,7 @@ declare(strict_types = 1);
 
 namespace LanguageServer\NodeVisitor;
 
+use function LanguageServer\Fqn\getReferencedFqn;
 use PhpParser\{NodeVisitorAbstract, Node};
 
 /**
@@ -21,7 +22,7 @@ class ReferencesCollector extends NodeVisitorAbstract
     public function enterNode(Node $node)
     {
         // Check if the node references any global symbol
-        $fqn = $node->getAttribute('ownerDocument')->getReferencedFqn($node);
+        $fqn = getReferencedFqn($node);
         if ($fqn) {
             $this->addReference($fqn, $node);
             // Namespaced constant access and function calls also need to register a reference
