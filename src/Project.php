@@ -3,6 +3,7 @@ declare(strict_types = 1);
 
 namespace LanguageServer;
 
+use LanguageServer\Protocol\SymbolInformation;
 use phpDocumentor\Reflection\DocBlockFactory;
 use PhpParser\{ParserFactory, Lexer};
 
@@ -17,11 +18,11 @@ class Project
     private $documents = [];
 
     /**
-     * An associative array that maps fully qualified symbol names to document URIs that define the symbol
+     * An associative array that maps fully qualified symbol names to SymbolInformations
      *
-     * @var string[]
+     * @var SymbolInformation[]
      */
-    private $definitions = [];
+    private $symbols = [];
 
     /**
      * An associative array that maps fully qualified symbol names to arrays of document URIs that reference the symbol
@@ -140,34 +141,34 @@ class Project
      * Returns an associative array [string => string] that maps fully qualified symbol names
      * to URIs of the document where the symbol is defined
      *
-     * @return PhpDocument[]
+     * @return SymbolInformation[]
      */
-    public function getDefinitionUris()
+    public function getSymbols()
     {
-        return $this->definitions;
+        return $this->symbols;
     }
 
     /**
-     * Adds a document URI as the container for a specific symbol
+     * Adds a SymbolInformation for a specific symbol
      *
      * @param string $fqn The fully qualified name of the symbol
      * @param string $uri The URI
      * @return void
      */
-    public function setDefinitionUri(string $fqn, string $uri)
+    public function setSymbol(string $fqn, SymbolInformation $symbol)
     {
-        $this->definitions[$fqn] = $uri;
+        $this->symbols[$fqn] = $symbol;
     }
 
     /**
-     * Unsets a document URI as the container for a specific symbol
+     * Unsets the SymbolInformation for a specific symbol
      * and removes all references pointing to that symbol
      *
      * @param string $fqn The fully qualified name of the symbol
      * @return void
      */
-    public function removeDefinition(string $fqn) {
-        unset($this->definitions[$fqn]);
+    public function removeSymbol(string $fqn) {
+        unset($this->symbols[$fqn]);
         unset($this->references[$fqn]);
     }
 
@@ -228,7 +229,7 @@ class Project
      */
     public function getDefinitionDocument(string $fqn)
     {
-        return isset($this->definitions[$fqn]) ? $this->getDocument($this->definitions[$fqn]) : null;
+        return isset($this->symbols[$fqn]) ? $this->getDocument($this->symbols[$fqn]->location->uri) : null;
     }
 
     /**
