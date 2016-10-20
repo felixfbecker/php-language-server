@@ -21,7 +21,7 @@ class SymbolInformation
     /**
      * The kind of this symbol.
      *
-     * @var number
+     * @var int
      */
     public $kind;
 

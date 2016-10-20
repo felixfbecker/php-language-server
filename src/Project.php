@@ -161,6 +161,17 @@ class Project
     }
 
     /**
+     * Sets the SymbolInformation index
+     *
+     * @param SymbolInformation[] $symbols
+     * @return void
+     */
+    public function setSymbols(array $symbols)
+    {
+        $this->symbols = $symbols;
+    }
+
+    /**
      * Unsets the SymbolInformation for a specific symbol
      * and removes all references pointing to that symbol
      *
@@ -219,6 +230,28 @@ class Project
             return [];
         }
         return array_map([$this, 'getDocument'], $this->references[$fqn]);
+    }
+
+    /**
+     * Returns an associative array [string => string[]] that maps fully qualified symbol names
+     * to URIs of the document where the symbol is referenced
+     *
+     * @return string[][]
+     */
+    public function getReferenceUris()
+    {
+        return $this->references;
+    }
+
+    /**
+     * Sets the reference index
+     *
+     * @param string[][] $references an associative array [string => string[]] from FQN to URIs
+     * @return void
+     */
+    public function setReferenceUris(array $references)
+    {
+        $this->references = $references;
     }
 
     /**
