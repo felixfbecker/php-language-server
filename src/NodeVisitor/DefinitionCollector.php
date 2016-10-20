@@ -4,6 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer\NodeVisitor;
 
 use PhpParser\{NodeVisitorAbstract, Node};
+use LanguageServer\Protocol\SymbolInformation;
 use function LanguageServer\Fqn\getDefinedFqn;
 
 /**
@@ -19,11 +20,21 @@ class DefinitionCollector extends NodeVisitorAbstract
      */
     public $definitions = [];
 
+    /**
+     * Map from FQN to SymbolInformation
+     *
+     * @var SymbolInformation
+     */
+    public $symbols = [];
+
     public function enterNode(Node $node)
     {
         $fqn = getDefinedFqn($node);
-        if ($fqn !== null) {
-            $this->definitions[$fqn] = $node;
+        if ($fqn === null) {
+            return;
         }
+        $this->definitions[$fqn] = $node;
+        $symbol = SymbolInformation::fromNode($node, $fqn);
+        $this->symbols[$fqn] = $symbol;
     }
 }

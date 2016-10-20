@@ -59,11 +59,7 @@ class TextDocument
      */
     public function documentSymbol(TextDocumentIdentifier $textDocument): array
     {
-        $symbols = [];
-        foreach ($this->project->getDocument($textDocument->uri)->getDefinitions() as $fqn => $node) {
-            $symbols[] = SymbolInformation::fromNode($node, $fqn);
-        }
-        return $symbols;
+        return array_values($this->project->getDocument($textDocument->uri)->getSymbols());
     }
 
     /**
