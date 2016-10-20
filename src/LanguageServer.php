@@ -207,16 +207,14 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     {
         $cacheDir = $this->rootPath . '/.phpls';
         if (is_dir($cacheDir)) {
-            if (file_exists($cacheDir . '/symbols.json')) {
-                $json = json_decode(file_get_contents($cacheDir . '/symbols.json'));
-                $mapper = new JsonMapper;
-                $symbols = $mapper->mapArray($json, [], SymbolInformation::class);
+            if (file_exists($cacheDir . '/symbols')) {
+                $symbols = unserialize(file_get_contents($cacheDir . '/symbols'));
                 $count = count($symbols);
                 $this->project->setSymbols($symbols);
                 $this->client->window->logMessage(MessageType::INFO, "Restoring $count symbols");
             }
-            if (file_exists($cacheDir . '/references.json')) {
-                $references = json_decode(file_get_contents($cacheDir . '/references.json'), true);
+            if (file_exists($cacheDir . '/references')) {
+                $references = unserialize(file_get_contents($cacheDir . '/references'));
                 $count = array_sum(array_map('count', $references));
                 $this->project->setReferenceUris($references);
                 $this->client->window->logMessage(MessageType::INFO, "Restoring $count references");
@@ -242,11 +240,11 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
         $symbols = $this->project->getSymbols();
         $count = count($symbols);
         $this->client->window->logMessage(MessageType::INFO, "Saving $count symbols to cache");
-        file_put_contents($cacheDir . "/symbols.json", json_encode($symbols, JSON_UNESCAPED_SLASHES));
+        file_put_contents($cacheDir . "/symbols", serialize($symbols));
 
         $references = $this->project->getReferenceUris();
         $count = array_sum(array_map('count', $references));
         $this->client->window->logMessage(MessageType::INFO, "Saving $count references to cache");
-        file_put_contents($cacheDir . "/references.json", json_encode($references, JSON_UNESCAPED_SLASHES));
+        file_put_contents($cacheDir . "/references", serialize($references));
     }
 }
