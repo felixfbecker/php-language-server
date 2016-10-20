@@ -12,11 +12,12 @@ use LanguageServer\Protocol\{
     MessageType,
     InitializeResult
 };
-use AdvancedJsonRpc\{Dispatcher, ResponseError, Response as ResponseBody, Request as RequestBody};
+use AdvancedJsonRpc;
 use Sabre\Event\Loop;
 use Exception;
+use Throwable;
 
-class LanguageServer extends \AdvancedJsonRpc\Dispatcher
+class LanguageServer extends AdvancedJsonRpc\Dispatcher
 {
     /**
      * Handles textDocument/* method calls
@@ -48,27 +49,22 @@ class LanguageServer extends \AdvancedJsonRpc\Dispatcher
         parent::__construct($this, '/');
         $this->protocolReader = $reader;
         $this->protocolReader->onMessage(function (Message $msg) {
-            $err = null;
-            $result = null;
             try {
                 // Invoke the method handler to get a result
                 $result = $this->dispatch($msg->body);
-            } catch (ResponseError $e) {
+                $responseBody = new AdvancedJsonRpc\SuccessResponse($msg->body->id, $result);
+            } catch (AdvancedJsonRpc\Error $error) {
                 // If a ResponseError is thrown, send it back in the Response (result will be null)
-                $err = $e;
+                $responseBody = new AdvancedJsonRpc\ErrorResponse($msg->body->id, $error);
             } catch (Throwable $e) {
-                // If an unexpected error occured, send back an INTERNAL_ERROR error response (result will be null)
-                $err = new ResponseError(
-                    $e->getMessage(),
-                    $e->getCode() === 0 ? ErrorCode::INTERNAL_ERROR : $e->getCode(),
-                    null,
-                    $e
-                );
+                // If an unexpected error occured, send back an INTERNAL_ERROR error response
+                $error = new AdvancedJsonRpc\Error($e->getMessage(), AdvancedJsonRpc\ErrorCode::INTERNAL_ERROR, null, $e);
+                $responseBody = new AdvancedJsonRpc\ErrorResponse($msg->body->id, $error);
             }
             // Only send a Response for a Request
             // Notifications do not send Responses
-            if (RequestBody::isRequest($msg->body)) {
-                $this->protocolWriter->write(new Message(new ResponseBody($msg->body->id, $result, $err)));
+            if (AdvancedJsonRpc\Request::isRequest($msg->body)) {
+                $this->protocolWriter->write(new Message($responseBody));
             }
         });
         $this->protocolWriter = $writer;

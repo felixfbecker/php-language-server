@@ -6,7 +6,7 @@ namespace LanguageServer\Tests;
 use PHPUnit\Framework\TestCase;
 use LanguageServer\LanguageServer;
 use LanguageServer\Protocol\{Message, ClientCapabilities, TextDocumentSyncKind};
-use AdvancedJsonRpc\{Request as RequestBody, Response as ResponseBody};
+use AdvancedJsonRpc;
 
 class LanguageServerTest extends TestCase
 {
@@ -19,14 +19,13 @@ class LanguageServerTest extends TestCase
         $writer->onMessage(function (Message $message) use (&$msg) {
             $msg = $message;
         });
-        $reader->write(new Message(new RequestBody(1, 'initialize', [
+        $reader->write(new Message(new AdvancedJsonRpc\Request(1, 'initialize', [
             'rootPath' => __DIR__,
             'processId' => getmypid(),
             'capabilities' => new ClientCapabilities()
         ])));
         $this->assertNotNull($msg, 'onMessage callback should be called');
-        $this->assertInstanceOf(ResponseBody::class, $msg->body);
-        $this->assertNull($msg->body->error);
+        $this->assertInstanceOf(AdvancedJsonRpc\SuccessResponse::class, $msg->body);
         $this->assertEquals((object)[
             'capabilities' => (object)[
                 'textDocumentSync' => TextDocumentSyncKind::FULL,
