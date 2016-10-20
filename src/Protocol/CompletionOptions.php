@@ -18,7 +18,7 @@ class CompletionOptions
     /**
      * The characters that trigger completion automatically.
      *
-     * @var string|null
+     * @var string[]|null
      */
     public $triggerCharacters;
 }
