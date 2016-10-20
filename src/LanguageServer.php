@@ -169,7 +169,6 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                 $uri = pathToUri($file);
                 $fileNum++;
                 $shortName = substr($file, strlen($this->rootPath) + 1);
-                $this->client->window->logMessage(MessageType::INFO, "Parsing file $fileNum/$numTotalFiles: $shortName.");
 
                 if (filesize($file) > 500000) {
                     $this->client->window->logMessage(MessageType::INFO, "Not parsing $shortName because it exceeds size limit of 0.5MB");
@@ -178,7 +177,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                     try {
                         $this->project->loadDocument($uri);
                     } catch (Exception $e) {
-                        $this->client->window->logMessage(MessageType::ERROR, "Error parsing file $shortName: " . $e->getMessage());
+                        $this->client->window->logMessage(MessageType::ERROR, "Error parsing file $shortName: " . (string)$e);
                     }
                 }
 
