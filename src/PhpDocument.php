@@ -86,6 +86,13 @@ class PhpDocument
     private $references;
 
     /**
+     * Map from fully qualified name (FQN) to SymbolInformation
+     *
+     * @var SymbolInformation[]
+     */
+    private $symbols;
+
+    /**
      * @param string          $uri             The URI of the document
      * @param string          $content         The content of the document
      * @param Project         $project         The Project this document belongs to (to register definitions etc)
@@ -181,13 +188,14 @@ class PhpDocument
             // Unregister old definitions
             if (isset($this->definitions)) {
                 foreach ($this->definitions as $fqn => $node) {
-                    $this->project->removeDefinition($fqn);
+                    $this->project->removeSymbol($fqn);
                 }
             }
             // Register this document on the project for all the symbols defined in it
             $this->definitions = $definitionCollector->definitions;
-            foreach ($definitionCollector->definitions as $fqn => $node) {
-                $this->project->setDefinitionUri($fqn, $this->uri);
+            $this->symbols = $definitionCollector->symbols;
+            foreach ($definitionCollector->symbols as $fqn => $symbol) {
+                $this->project->setSymbol($fqn, $symbol);
             }
 
             // Unregister old references
@@ -285,6 +293,16 @@ class PhpDocument
     public function getDefinitions()
     {
         return $this->definitions;
+    }
+
+    /**
+     * Returns a map from fully qualified name (FQN) to SymbolInformation
+     *
+     * @return SymbolInformation[]
+     */
+    public function getSymbols()
+    {
+        return $this->symbols;
     }
 
     /**
