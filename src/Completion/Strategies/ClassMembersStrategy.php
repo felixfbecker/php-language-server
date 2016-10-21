@@ -18,7 +18,7 @@ class ClassMembersStrategy implements ICompletionStrategy
      */
     public function apply(CompletionContext $context, CompletionReporter $reporter)
     {
-        if (!$this->isValidContext($context)) {
+        if (!$context->isObjectContext()) {
             return;
         }
         $range = $context->getReplacementRange();
@@ -28,7 +28,7 @@ class ClassMembersStrategy implements ICompletionStrategy
                 $nodeRange = Range::fromNode($node);
                 if ($nodeRange->includes($context->getPosition())) {
                     foreach ($nodes as $childFqn => $child) {
-                        if (stripos($childFqn, $fqn) == 0 && $childFqn !== $fqn) {
+                        if (stripos($childFqn, $fqn) === 0 && $childFqn !== $fqn) {
                             $reporter->reportByNode($child, $range, $childFqn);
                         }
                     }
@@ -38,20 +38,4 @@ class ClassMembersStrategy implements ICompletionStrategy
         }
     }
 
-    private function isValidContext(CompletionContext $context)
-    {
-        $line = $context->getLine($context->getPosition()->line);
-        if (empty($line)) {
-            return false;
-        }
-        $range = $context->getReplacementRange($context);
-        if (preg_match_all('@(\$this->|self::)@', $line, $matches, PREG_OFFSET_CAPTURE)) {
-            foreach ($matches[0] as $match) {
-                if (($match[1] + strlen($match[0])) === $range->start->character) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
 }

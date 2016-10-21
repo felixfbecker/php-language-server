@@ -29,6 +29,11 @@ class CompletionContext
      */
     private $lines;
 
+    /**
+     * @var \LanguageServer\Protocol\Range
+     */
+    private $replacementRange;
+
     public function __construct(PhpDocument $phpDocument)
     {
         $this->phpDocument = $phpDocument;
@@ -36,6 +41,11 @@ class CompletionContext
     }
 
     public function getReplacementRange(): Range
+    {
+        return $this->replacementRange;
+    }
+
+    private function calculateReplacementRange(): Range
     {
         $line = $this->getLine($this->position->line);
         if (!empty($line)) {
@@ -64,6 +74,24 @@ class CompletionContext
     public function setPosition(Position $position)
     {
         $this->position = $position;
+        $this->replacementRange = $this->calculateReplacementRange();
+    }
+
+    public function isObjectContext()
+    {
+        $line = $this->getLine($this->getPosition()->line);
+        if (empty($line)) {
+            return false;
+        }
+        $range = $this->getReplacementRange();
+        if (preg_match_all('@(\$this->|self::)@', $line, $matches, PREG_OFFSET_CAPTURE)) {
+            foreach ($matches[0] as $match) {
+                if (($match[1] + strlen($match[0])) === $range->start->character) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public function getLine(int $line)

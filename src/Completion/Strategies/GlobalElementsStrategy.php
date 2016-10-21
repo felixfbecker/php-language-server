@@ -20,6 +20,9 @@ class GlobalElementsStrategy implements ICompletionStrategy
      */
     public function apply(CompletionContext $context, CompletionReporter $reporter)
     {
+        if ($context->isObjectContext()) {
+            return;
+        }
         $range = $context->getReplacementRange($context);
         $project = $context->getPhpDocument()->project;
         foreach ($project->getSymbols() as $fqn => $symbol) {

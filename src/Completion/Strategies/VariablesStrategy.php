@@ -59,7 +59,7 @@ class VariablesStrategy implements ICompletionStrategy
 
     private function isValid(SymbolInformation $symbol)
     {
-        return $symbol->kind == SymbolKind::FUNCTION || $symbol->kind == SymbolKind::METHOD;
+        return $symbol->kind === SymbolKind::FUNCTION || $symbol->kind === SymbolKind::METHOD;
     }
 
 }

@@ -98,6 +98,9 @@ class KeywordsStrategy implements ICompletionStrategy
      */
     public function apply(CompletionContext $context, CompletionReporter $reporter)
     {
+        if ($context->isObjectContext()) {
+            return;
+        }
         $range = $context->getReplacementRange();
         foreach (self::KEYWORDS as $keyword) {
             $reporter->report($keyword, CompletionItemKind::KEYWORD, $keyword, $range);
