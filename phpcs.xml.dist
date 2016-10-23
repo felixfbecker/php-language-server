@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<ruleset name="PHP Language Server">
+    <rule ref="PSR2"/>
+</ruleset>
