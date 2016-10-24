@@ -30,7 +30,7 @@ class ProtocolStreamWriter implements ProtocolWriter
         $totalBytesWritten = 0;
 
         while ($totalBytesWritten < $msgSize) {
-            $bytesWritten = fwrite($this->output, substr($data, $totalBytesWritten));
+            $bytesWritten = @fwrite($this->output, substr($data, $totalBytesWritten));
             $totalBytesWritten += $bytesWritten;
         }
     }
