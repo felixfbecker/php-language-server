@@ -13,7 +13,7 @@ class       TestClass
     {
         $testVariable = 123;
         
-                if (  empty($testParameter)){
+                if (empty($testParameter)){
                     echo 'Empty';
         }
     }
