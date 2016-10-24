@@ -31,7 +31,7 @@ class ProtocolStreamReader implements ProtocolReader
         $this->input = $input;
         Loop\addReadStream($this->input, function() {
             if (feof($this->input)) {
-                throw new RuntimeException("Stream is closed.");
+                throw new RuntimeException('Stream is closed');
             }
 
             while (($c = fgetc($this->input)) !== false && $c !== '') {
