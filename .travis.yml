@@ -11,7 +11,7 @@ install:
  - composer install
 
 script:
- - vendor/bin/phpcs
+ - vendor/bin/phpcs -n
  - vendor/bin/phpunit --coverage-clover=coverage.xml
 
 after_success:
