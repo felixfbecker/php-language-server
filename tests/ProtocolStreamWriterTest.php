@@ -7,6 +7,7 @@ use PHPUnit\Framework\TestCase;
 use LanguageServer\ProtocolStreamWriter;
 use LanguageServer\Protocol\Message;
 use AdvancedJsonRpc\{Request as RequestBody};
+use Sabre\Event\Loop;
 
 class ProtocolStreamWriterTest extends TestCase
 {
@@ -21,7 +22,14 @@ class ProtocolStreamWriterTest extends TestCase
         $msg = new Message(new RequestBody(1, 'aMethod', ['arg' => str_repeat('X', 100000)]));
         $msgString = (string)$msg;
 
-        $writer->write($msg);
+        $promise = $writer->write($msg);
+        $promise->then(function() {
+            Loop\stop();
+        }, function() {
+            Loop\stop();
+        });
+
+        Loop\run();
 
         fclose($writeHandle);
 
