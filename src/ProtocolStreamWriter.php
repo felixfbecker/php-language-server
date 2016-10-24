@@ -57,7 +57,8 @@ class ProtocolStreamWriter implements ProtocolWriter
      *
      * @return void
      */
-    public function writeData() {
+    public function writeData()
+    {
         $message = $this->messages[0]['message'];
         $promise = $this->messages[0]['promise'];
 
@@ -72,8 +73,7 @@ class ProtocolStreamWriter implements ProtocolWriter
             } else {
                 throw new RuntimeException('Could not write message');
             }
-        }
-        else if ($bytesWritten > 0) {
+        } else if ($bytesWritten > 0) {
             $message = substr($message, $bytesWritten);
         }
 
@@ -87,8 +87,7 @@ class ProtocolStreamWriter implements ProtocolWriter
             }
 
             $promise->fulfill();
-        }
-        else {
+        } else {
             $this->messages[0]['message'] = $message;
         }
     }

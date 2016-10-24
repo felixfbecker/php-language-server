@@ -23,9 +23,9 @@ class ProtocolStreamWriterTest extends TestCase
         $msgString = (string)$msg;
 
         $promise = $writer->write($msg);
-        $promise->then(function() {
+        $promise->then(function () {
             Loop\stop();
-        }, function() {
+        }, function () {
             Loop\stop();
         });
 
