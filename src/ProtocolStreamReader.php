@@ -6,6 +6,7 @@ namespace LanguageServer;
 use LanguageServer\Protocol\Message;
 use AdvancedJsonRpc\Message as MessageBody;
 use Sabre\Event\Loop;
+use RuntimeException;
 
 abstract class ParsingMode
 {
@@ -30,7 +31,7 @@ class ProtocolStreamReader implements ProtocolReader
         $this->input = $input;
         Loop\addReadStream($this->input, function() {
             if (feof($this->input)) {
-                die;
+                throw new RuntimeException("Stream is closed.");
             }
 
             while (($c = fgetc($this->input)) !== false && $c !== '') {

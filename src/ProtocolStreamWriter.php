@@ -4,7 +4,6 @@ declare(strict_types = 1);
 namespace LanguageServer;
 
 use LanguageServer\Protocol\Message;
-use RuntimeException;
 
 class ProtocolStreamWriter implements ProtocolWriter
 {
