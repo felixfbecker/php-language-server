@@ -21,7 +21,7 @@ class ProtocolStreamWriter implements ProtocolWriter
     public function __construct($output)
     {
         $this->output = $output;
-        Loop\addWriteStream($this->output, function() {
+        Loop\addWriteStream($this->output, function () {
             $msgSize = strlen($this->buffer);
             $bytesWritten = @fwrite($this->output, $this->buffer);
             if ($bytesWritten > 0) {
