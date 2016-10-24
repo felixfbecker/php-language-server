@@ -163,7 +163,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
         $startTime = microtime(true);
         $fileNum = 0;
 
-        $processFile = function() use (&$fileList, &$fileNum, &$processFile, $numTotalFiles, $startTime) {
+        $processFile = function () use (&$fileList, &$fileNum, &$processFile, $numTotalFiles, $startTime) {
             if ($fileNum < $numTotalFiles) {
                 $file = $fileList[$fileNum];
                 $uri = pathToUri($file);

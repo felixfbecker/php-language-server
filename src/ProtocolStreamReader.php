@@ -29,7 +29,7 @@ class ProtocolStreamReader implements ProtocolReader
     public function __construct($input)
     {
         $this->input = $input;
-        Loop\addReadStream($this->input, function() {
+        Loop\addReadStream($this->input, function () {
             if (feof($this->input)) {
                 throw new RuntimeException('Stream is closed');
             }
