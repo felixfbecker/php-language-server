@@ -29,6 +29,10 @@ class ProtocolStreamReader implements ProtocolReader
     {
         $this->input = $input;
         Loop\addReadStream($this->input, function() {
+            if (feof($this->input)) {
+                die;
+            }
+
             while (($c = fgetc($this->input)) !== false && $c !== '') {
                 $this->buffer .= $c;
                 switch ($this->parsingMode) {

@@ -31,16 +31,7 @@ class ProtocolStreamWriter implements ProtocolWriter
         $totalBytesWritten = 0;
 
         while ($totalBytesWritten < $msgSize) {
-            error_clear_last();
-            $bytesWritten = @fwrite($this->output, substr($data, $totalBytesWritten));
-            if ($bytesWritten === false) {
-                $error = error_get_last();
-                if ($error !== null) {
-                    throw new RuntimeException('Could not write message: ' . error_get_last()['message']);
-                } else {
-                    throw new RuntimeException('Could not write message');
-                }
-            }
+            $bytesWritten = fwrite($this->output, substr($data, $totalBytesWritten));
             $totalBytesWritten += $bytesWritten;
         }
     }
