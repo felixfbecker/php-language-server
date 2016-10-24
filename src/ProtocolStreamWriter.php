@@ -4,10 +4,16 @@ declare(strict_types = 1);
 namespace LanguageServer;
 
 use LanguageServer\Protocol\Message;
+use Sabre\Event\Loop;
 
 class ProtocolStreamWriter implements ProtocolWriter
 {
     private $output;
+
+    /**
+     * @var string $buffer
+     */
+    private $buffer;
 
     /**
      * @param resource $output
@@ -15,6 +21,13 @@ class ProtocolStreamWriter implements ProtocolWriter
     public function __construct($output)
     {
         $this->output = $output;
+        Loop\addWriteStream($this->output, function() {
+            $msgSize = strlen($this->buffer);
+            $bytesWritten = @fwrite($this->output, $this->buffer);
+            if ($bytesWritten > 0) {
+                $this->buffer = substr($this->buffer, $bytesWritten);
+            }
+        });
     }
 
     /**
@@ -25,13 +38,6 @@ class ProtocolStreamWriter implements ProtocolWriter
      */
     public function write(Message $msg)
     {
-        $data = (string)$msg;
-        $msgSize = strlen($data);
-        $totalBytesWritten = 0;
-
-        while ($totalBytesWritten < $msgSize) {
-            $bytesWritten = fwrite($this->output, substr($data, $totalBytesWritten));
-            $totalBytesWritten += $bytesWritten;
-        }
+        $this->buffer .= $msg;
     }
 }
