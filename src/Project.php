@@ -178,7 +178,8 @@ class Project
      * @param string $fqn The fully qualified name of the symbol
      * @return void
      */
-    public function removeSymbol(string $fqn) {
+    public function removeSymbol(string $fqn)
+    {
         unset($this->symbols[$fqn]);
         unset($this->references[$fqn]);
     }
@@ -207,7 +208,8 @@ class Project
      * @param string $uri The URI
      * @return void
      */
-    public function removeReferenceUri(string $fqn, string $uri) {
+    public function removeReferenceUri(string $fqn, string $uri)
+    {
         if (!isset($this->references[$fqn])) {
             return;
         }

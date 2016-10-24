@@ -36,7 +36,8 @@ class ParseErrorsTest extends TestCase
         $this->textDocument = new Server\TextDocument($project, $client);
     }
 
-    private function openFile($file) {
+    private function openFile($file)
+    {
         $textDocumentItem = new TextDocumentItem();
         $textDocumentItem->uri = 'whatever';
         $textDocumentItem->languageId = 'php';

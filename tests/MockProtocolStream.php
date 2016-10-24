@@ -36,4 +36,3 @@ class MockProtocolStream implements ProtocolReader, ProtocolWriter
         $this->listener = $listener;
     }
 }
-

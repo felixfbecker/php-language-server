@@ -8,16 +8,13 @@ use AdvancedJsonRpc\Message as MessageBody;
 use Sabre\Event\Loop;
 use RuntimeException;
 
-abstract class ParsingMode
-{
-    const HEADERS = 1;
-    const BODY = 2;
-}
-
 class ProtocolStreamReader implements ProtocolReader
 {
+    const PARSE_HEADERS = 1;
+    const PARSE_BODY = 2;
+
     private $input;
-    private $parsingMode = ParsingMode::HEADERS;
+    private $parsingMode = self::PARSE_HEADERS;
     private $buffer = '';
     private $headers = [];
     private $contentLength;
@@ -29,7 +26,7 @@ class ProtocolStreamReader implements ProtocolReader
     public function __construct($input)
     {
         $this->input = $input;
-        Loop\addReadStream($this->input, function() {
+        Loop\addReadStream($this->input, function () {
             if (feof($this->input)) {
                 throw new RuntimeException('Stream is closed');
             }
@@ -37,9 +34,9 @@ class ProtocolStreamReader implements ProtocolReader
             while (($c = fgetc($this->input)) !== false && $c !== '') {
                 $this->buffer .= $c;
                 switch ($this->parsingMode) {
-                    case ParsingMode::HEADERS:
+                    case self::PARSE_HEADERS:
                         if ($this->buffer === "\r\n") {
-                            $this->parsingMode = ParsingMode::BODY;
+                            $this->parsingMode = self::PARSE_BODY;
                             $this->contentLength = (int)$this->headers['Content-Length'];
                             $this->buffer = '';
                         } else if (substr($this->buffer, -2) === "\r\n") {
@@ -48,14 +45,14 @@ class ProtocolStreamReader implements ProtocolReader
                             $this->buffer = '';
                         }
                         break;
-                    case ParsingMode::BODY:
+                    case self::PARSE_BODY:
                         if (strlen($this->buffer) === $this->contentLength) {
                             if (isset($this->listener)) {
                                 $msg = new Message(MessageBody::parse($this->buffer), $this->headers);
                                 $listener = $this->listener;
                                 $listener($msg);
                             }
-                            $this->parsingMode = ParsingMode::HEADERS;
+                            $this->parsingMode = self::PARSE_HEADERS;
                             $this->headers = [];
                             $this->buffer = '';
                         }

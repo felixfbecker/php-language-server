@@ -4,8 +4,8 @@ declare(strict_types = 1);
 namespace LanguageServer;
 
 use LanguageServer\Protocol\ {
-    TextEdit, 
-    Range, 
+    TextEdit,
+    Range,
     Position
 };
 use PHP_CodeSniffer;
@@ -42,9 +42,9 @@ abstract class Formatter
 
     /**
      * Calculate position of last character.
-     * 
+     *
      * @param string $content document as string
-     * 
+     *
      * @return \LanguageServer\Protocol\Position
      */
     private static function calculateEndPosition(string $content): Position
@@ -54,10 +54,10 @@ abstract class Formatter
     }
 
     /**
-     * Search for PHP_CodeSniffer configuration file at given directory or its parents. 
-     * If no configuration found then PSR2 standard is loaded by default. 
+     * Search for PHP_CodeSniffer configuration file at given directory or its parents.
+     * If no configuration found then PSR2 standard is loaded by default.
      *
-     * @param string $path path to file or directory 
+     * @param string $path path to file or directory
      * @return string[]
      */
     private static function findConfiguration(string $path)
@@ -85,5 +85,4 @@ abstract class Formatter
         $standard = PHP_CodeSniffer::getConfigData('default_standard') ?? 'PSR2';
         return explode(',', $standard);
     }
-
 }

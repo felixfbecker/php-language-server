@@ -9,13 +9,15 @@ use function LanguageServer\pathToUri;
 
 class GlobalTest extends ServerTestCase
 {
-    public function testDefinitionFileBeginning() {
+    public function testDefinitionFileBeginning()
+    {
         // |<?php
         $result = $this->textDocument->definition(new TextDocumentIdentifier(pathToUri(realpath(__DIR__ . '/../../../../fixtures/references.php'))), new Position(0, 0));
         $this->assertEquals([], $result);
     }
 
-    public function testDefinitionEmptyResult() {
+    public function testDefinitionEmptyResult()
+    {
         // namespace keyword
         $result = $this->textDocument->definition(new TextDocumentIdentifier(pathToUri(realpath(__DIR__ . '/../../../../fixtures/references.php'))), new Position(2, 4));
         $this->assertEquals([], $result);
