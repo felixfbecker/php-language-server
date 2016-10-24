@@ -5,6 +5,7 @@ namespace LanguageServer;
 
 use LanguageServer\Protocol\Message;
 use Sabre\Event\Loop;
+use RuntimeException;
 
 class ProtocolStreamWriter implements ProtocolWriter
 {
@@ -22,9 +23,17 @@ class ProtocolStreamWriter implements ProtocolWriter
     {
         $this->output = $output;
         Loop\addWriteStream($this->output, function () {
-            $msgSize = strlen($this->buffer);
+            error_clear_last();
             $bytesWritten = @fwrite($this->output, $this->buffer);
-            if ($bytesWritten > 0) {
+            if ($bytesWritten === false) {
+                $error = error_get_last();
+                if ($error !== null) {
+                    throw new RuntimeException('Could not write message: ' . error_get_last()['message']);
+                } else {
+                    throw new RuntimeException('Could not write message');
+                }
+            }
+            else if ($bytesWritten > 0) {
                 $this->buffer = substr($this->buffer, $bytesWritten);
             }
         });
