@@ -59,6 +59,7 @@ abstract class ServerTestCase extends TestCase
         $this->project->loadDocument($globalReferencesUri);
         $this->project->loadDocument($useUri);
 
+        // @codingStandardsIgnoreStart
         $this->definitionLocations = [
 
             // Global
@@ -166,6 +167,7 @@ abstract class ServerTestCase extends TestCase
                 0 => new Location($globalReferencesUri, new Range(new Position(10,  0), new Position(10, 13)))
             ]
         ];
+        // @codingStandardsIgnoreEnd
     }
 
     protected function getDefinitionLocation(string $fqn): Location
