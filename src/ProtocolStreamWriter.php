@@ -64,7 +64,6 @@ class ProtocolStreamWriter implements ProtocolWriter
             $message = $this->messages[0]['message'];
             $promise = $this->messages[0]['promise'];
 
-            error_clear_last();
             $bytesWritten = @fwrite($this->output, $message);
 
             if ($bytesWritten > 0) {
