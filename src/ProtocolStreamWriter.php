@@ -59,36 +59,33 @@ class ProtocolStreamWriter implements ProtocolWriter
      */
     public function writeData()
     {
-        $message = $this->messages[0]['message'];
-        $promise = $this->messages[0]['promise'];
+        $keepWriting = true;
+        while ($keepWriting) {
+            $message = $this->messages[0]['message'];
+            $promise = $this->messages[0]['promise'];
 
-        error_clear_last();
-        $bytesWritten = @fwrite($this->output, $message);
+            error_clear_last();
+            $bytesWritten = @fwrite($this->output, $message);
 
-        if ($bytesWritten === false) {
-            $error = error_get_last();
-            $promise->reject($error);
-            if ($error !== null) {
-                throw new RuntimeException('Could not write message: ' . error_get_last()['message']);
+            if ($bytesWritten > 0) {
+                $message = substr($message, $bytesWritten);
+            }
+
+            // Determine if this message was completely sent
+            if (strlen($message) === 0) {
+                array_shift($this->messages);
+
+                // This was the last message in the queue, remove the write handler.
+                if (count($this->messages) === 0) {
+                    Loop\removeWriteStream($this->output);
+                    $keepWriting = false;
+                }
+
+                $promise->fulfill();
             } else {
-                throw new RuntimeException('Could not write message');
+                $this->messages[0]['message'] = $message;
+                $keepWriting = false;
             }
-        } else if ($bytesWritten > 0) {
-            $message = substr($message, $bytesWritten);
-        }
-
-        // Determine if this message was completely sent
-        if (strlen($message) === 0) {
-            array_shift($this->messages);
-
-            // This was the last message in the queue, remove the write handler.
-            if (count($this->messages) === 0) {
-                Loop\removeWriteStream($this->output);
-            }
-
-            $promise->fulfill();
-        } else {
-            $this->messages[0]['message'] = $message;
         }
     }
 }
