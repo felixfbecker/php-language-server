@@ -34,13 +34,15 @@ class ProtocolStreamWriter implements ProtocolWriter
      * Sends a Message to the client
      *
      * @param Message $msg
-     * @return void
+     * @return Promise Resolved when the message has been fully written out to the output stream
      */
     public function write(Message $msg)
     {
         // if the message queue is currently empty, register a write handler.
         if (empty($this->messages)) {
-            Loop\addWriteStream($this->output, [$this, 'writeData']);
+            Loop\addWriteStream($this->output, function () {
+                $this->flush();
+            });
         }
 
         $promise = new Promise();
@@ -53,11 +55,10 @@ class ProtocolStreamWriter implements ProtocolWriter
 
     /**
      * Writes pending messages to the output stream.
-     * Must be public to be able to be used as a callback.
      *
      * @return void
      */
-    public function writeData()
+    private function flush()
     {
         $keepWriting = true;
         while ($keepWriting) {
