@@ -211,4 +211,13 @@ class GlobalTest extends ServerTestCase
         $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->start);
         $this->assertEquals($this->getDefinitionLocation('test_function()'), $result);
     }
+
+    public function testDefinitionForInstanceOf()
+    {
+        // if ($abc instanceof TestInterface) {
+        // Get definition for TestInterface
+        $reference = $this->getReferenceLocations('TestInterface')[2];
+        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->start);
+        $this->assertEquals($this->getDefinitionLocation('TestInterface'), $result);
+    }
 }

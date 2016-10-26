@@ -106,7 +106,8 @@ abstract class ServerTestCase extends TestCase
             ],
             'TestNamespace\\TestInterface' => [
                 0 => new Location($symbolsUri,    new Range(new Position(20, 27), new Position(20, 40))), // class TestClass implements TestInterface
-                1 => new Location($symbolsUri,    new Range(new Position(57, 48), new Position(57, 61)))  // public function testMethod($testParameter): TestInterface
+                1 => new Location($symbolsUri,    new Range(new Position(57, 48), new Position(57, 61))), // public function testMethod($testParameter): TestInterface
+                2 => new Location($referencesUri, new Range(new Position(33, 20), new Position(33, 33)))  // if ($abc instanceof TestInterface)
             ],
             'TestNamespace\\TestClass::TEST_CLASS_CONST' => [
                 0 => new Location($symbolsUri,    new Range(new Position(48, 13), new Position(48, 35))), // echo self::TEST_CLASS_CONSTANT
@@ -145,7 +146,8 @@ abstract class ServerTestCase extends TestCase
             ],
             'TestInterface' => [
                 0 => new Location($globalSymbolsUri,    new Range(new Position(20, 27), new Position(20, 40))), // class TestClass implements TestInterface
-                1 => new Location($globalSymbolsUri,    new Range(new Position(57, 48), new Position(57, 61)))  // public function testMethod($testParameter): TestInterface
+                1 => new Location($globalSymbolsUri,    new Range(new Position(57, 48), new Position(57, 61))), // public function testMethod($testParameter): TestInterface
+                2 => new Location($globalReferencesUri, new Range(new Position(33, 20), new Position(33, 33)))  // if ($abc instanceof TestInterface)
             ],
             'TestClass::TEST_CLASS_CONST' => [
                 0 => new Location($globalSymbolsUri,    new Range(new Position(48, 13), new Position(48, 35))), // echo self::TEST_CLASS_CONSTANT
