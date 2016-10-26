@@ -5,7 +5,6 @@ namespace LanguageServer;
 
 use LanguageServer\Protocol\SymbolInformation;
 use phpDocumentor\Reflection\DocBlockFactory;
-use PhpParser\{ParserFactory, Lexer};
 
 class Project
 {
@@ -34,7 +33,7 @@ class Project
     /**
      * Instance of the PHP parser
      *
-     * @var ParserAbstract
+     * @var Parser
      */
     private $parser;
 
@@ -56,8 +55,7 @@ class Project
     {
         $this->client = $client;
 
-        $lexer = new Lexer(['usedAttributes' => ['comments', 'startLine', 'endLine', 'startFilePos', 'endFilePos']]);
-        $this->parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7, $lexer, ['throwOnError' => false]);
+        $this->parser = new Parser;
         $this->docBlockFactory = DocBlockFactory::createInstance();
     }
 
