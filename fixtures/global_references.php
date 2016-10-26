@@ -31,6 +31,6 @@ echo TEST_CONST;
 
 use function test_function;
 
-if ($abc instanceof TestInterface){
+if ($abc instanceof TestInterface) {
 
 }
