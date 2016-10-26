@@ -103,7 +103,6 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
 
         // start building project index
         if ($rootPath !== null) {
-            $this->restoreCache();
             $this->indexProject();
         }
 
@@ -135,9 +134,6 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
      */
     public function shutdown()
     {
-        if ($this->rootPath !== null) {
-            $this->saveCache();
-        }
     }
 
     /**
@@ -181,69 +177,14 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                     }
                 }
 
-                if ($fileNum % 1000 === 0) {
-                    $this->saveCache();
-                }
-
                 Loop\setTimeout($processFile, 0);
             } else {
                 $duration = (int)(microtime(true) - $startTime);
                 $mem = (int)(memory_get_usage(true) / (1024 * 1024));
                 $this->client->window->logMessage(MessageType::INFO, "All PHP files parsed in $duration seconds. $mem MiB allocated.");
-                $this->saveCache();
             }
         };
 
         Loop\setTimeout($processFile, 0);
-    }
-
-    /**
-     * Restores the definition and reference index from the .phpls cache directory, if available
-     *
-     * @return void
-     */
-    public function restoreCache()
-    {
-        $cacheDir = $this->rootPath . '/.phpls';
-        if (is_dir($cacheDir)) {
-            if (file_exists($cacheDir . '/symbols')) {
-                $symbols = unserialize(file_get_contents($cacheDir . '/symbols'));
-                $count = count($symbols);
-                $this->project->setSymbols($symbols);
-                $this->client->window->logMessage(MessageType::INFO, "Restoring $count symbols");
-            }
-            if (file_exists($cacheDir . '/references')) {
-                $references = unserialize(file_get_contents($cacheDir . '/references'));
-                $count = array_sum(array_map('count', $references));
-                $this->project->setReferenceUris($references);
-                $this->client->window->logMessage(MessageType::INFO, "Restoring $count references");
-            }
-        } else {
-            $this->client->window->logMessage(MessageType::INFO, 'No cache found');
-        }
-    }
-
-    /**
-     * Saves the definition and reference index to the .phpls cache directory
-     *
-     * @return void
-     */
-    public function saveCache()
-    {
-        // Cache definitions, references
-        $cacheDir = $this->rootPath . '/.phpls';
-        if (!is_dir($cacheDir)) {
-            mkdir($cacheDir);
-        }
-
-        $symbols = $this->project->getSymbols();
-        $count = count($symbols);
-        $this->client->window->logMessage(MessageType::INFO, "Saving $count symbols to cache");
-        file_put_contents($cacheDir . "/symbols", serialize($symbols));
-
-        $references = $this->project->getReferenceUris();
-        $count = array_sum(array_map('count', $references));
-        $this->client->window->logMessage(MessageType::INFO, "Saving $count references to cache");
-        file_put_contents($cacheDir . "/references", serialize($references));
     }
 }
