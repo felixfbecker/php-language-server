@@ -26,7 +26,7 @@
         "php": ">=7.0",
         "nikic/php-parser": "dev-master#c0f0edf0441f0ddcff0604407b7600a40993faf2",
         "phpdocumentor/reflection-docblock": "^3.0",
-        "sabre/event": "^4.0",
+        "sabre/event": "^5.0",
         "felixfbecker/advanced-json-rpc": "^2.0",
         "squizlabs/php_codesniffer" : "^2.7",
         "symfony/debug": "^3.1"
