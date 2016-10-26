@@ -101,6 +101,9 @@ class GlobalTest extends ServerTestCase
         $referencesUri = pathToUri(realpath(__DIR__ . '/../../../../fixtures/references.php'));
         $symbolsUri    = pathToUri(realpath(__DIR__ . '/../../../../fixtures/symbols.php'));
         $result = $this->textDocument->references(new ReferenceContext, new TextDocumentIdentifier($symbolsUri), new Position(78, 16));
-        $this->assertEquals([new Location($referencesUri, new Range(new Position(10, 0), new Position(10, 13)))], $result);
+        $this->assertEquals([
+            new Location($referencesUri, new Range(new Position(10, 0), new Position(10, 13))),
+            new Location($referencesUri, new Range(new Position(31, 13), new Position(31, 40)))
+        ], $result);
     }
 }

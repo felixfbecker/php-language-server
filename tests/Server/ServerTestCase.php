@@ -126,7 +126,8 @@ abstract class ServerTestCase extends TestCase
                 0 => new Location($referencesUri, new Range(new Position( 5,  0), new Position( 5, 18)))
             ],
             'TestNamespace\\test_function()' => [
-                0 => new Location($referencesUri, new Range(new Position(10,  0), new Position(10, 13)))
+                0 => new Location($referencesUri, new Range(new Position(10,  0), new Position(10, 13))),
+                1 => new Location($referencesUri, new Range(new Position(31, 13), new Position(31, 40)))
             ],
 
             // Global
@@ -164,7 +165,8 @@ abstract class ServerTestCase extends TestCase
                 0 => new Location($globalReferencesUri, new Range(new Position( 5,  0), new Position( 5, 18)))
             ],
             'test_function()' => [
-                0 => new Location($globalReferencesUri, new Range(new Position(10,  0), new Position(10, 13)))
+                0 => new Location($globalReferencesUri, new Range(new Position(10,  0), new Position(10, 13))),
+                1 => new Location($globalReferencesUri, new Range(new Position(31, 13), new Position(31, 40)))
             ]
         ];
         // @codingStandardsIgnoreEnd
