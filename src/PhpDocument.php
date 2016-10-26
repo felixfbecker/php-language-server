@@ -13,7 +13,7 @@ use LanguageServer\NodeVisitor\{
     ReferencesCollector,
     VariableReferencesCollector
 };
-use PhpParser\{Error, Node, NodeTraverser, Parser};
+use PhpParser\{Error, ErrorHandler, Node, NodeTraverser};
 use PhpParser\NodeVisitor\NameResolver;
 use phpDocumentor\Reflection\DocBlockFactory;
 use function LanguageServer\Fqn\{getDefinedFqn, getVariableDefinition, getReferencedFqn};
@@ -133,19 +133,12 @@ class PhpDocument
     {
         $this->content = $content;
         $stmts = null;
-        $errors = [];
-        try {
-            $stmts = $this->parser->parse($content);
-        } catch (\PhpParser\Error $e) {
-            // Lexer can throw errors. e.g for unterminated comments
-            // unfortunately we don't get a location back
-            $errors[] = $e;
-        }
 
-        $errors = array_merge($this->parser->getErrors(), $errors);
+        $errorHandler = new ErrorHandler\Collecting;
+        $stmts = $this->parser->parse($content, $errorHandler);
 
         $diagnostics = [];
-        foreach ($errors as $error) {
+        foreach ($errorHandler->getErrors() as $error) {
             $diagnostics[] = Diagnostic::fromError($error, $this->content, DiagnosticSeverity::ERROR, 'php');
         }
 
@@ -154,7 +147,7 @@ class PhpDocument
             $traverser = new NodeTraverser;
 
             // Resolve aliased names to FQNs
-            $traverser->addVisitor(new NameResolver);
+            $traverser->addVisitor(new NameResolver($errorHandler));
 
             // Add parentNode, previousSibling, nextSibling attributes
             $traverser->addVisitor(new ReferencesAdder($this));

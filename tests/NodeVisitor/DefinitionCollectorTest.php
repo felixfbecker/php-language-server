@@ -4,9 +4,9 @@ declare(strict_types = 1);
 namespace LanguageServer\Tests\Server\TextDocument;
 
 use PHPUnit\Framework\TestCase;
-use PhpParser\{ParserFactory, NodeTraverser, Node};
+use PhpParser\{NodeTraverser, Node};
 use PhpParser\NodeVisitor\NameResolver;
-use LanguageServer\{LanguageClient, Project, PhpDocument};
+use LanguageServer\{LanguageClient, Project, PhpDocument, Parser};
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\NodeVisitor\{ReferencesAdder, DefinitionCollector};
 use function LanguageServer\pathToUri;
@@ -17,7 +17,7 @@ class DefinitionCollectorTest extends TestCase
     {
         $client = new LanguageClient(new MockProtocolStream());
         $project = new Project($client);
-        $parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7);
+        $parser = new Parser;
         $uri = pathToUri(realpath(__DIR__ . '/../../fixtures/symbols.php'));
         $document = $project->loadDocument($uri);
         $traverser = new NodeTraverser;
@@ -56,7 +56,7 @@ class DefinitionCollectorTest extends TestCase
     {
         $client = new LanguageClient(new MockProtocolStream());
         $project = new Project($client);
-        $parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7);
+        $parser = new Parser;
         $uri = pathToUri(realpath(__DIR__ . '/../../fixtures/references.php'));
         $document = $project->loadDocument($uri);
         $traverser = new NodeTraverser;
