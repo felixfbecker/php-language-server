@@ -45,6 +45,8 @@ function getReferencedFqn(Node $node)
         $grandParent = $parent->getAttribute('parentNode');
         if ($grandParent instanceof Node\Stmt\GroupUse) {
             $name = $grandParent->prefix . '\\' . $name;
+        } else if ($grandParent instanceof Node\Stmt\Use_ && $grandParent->type === Node\Stmt\Use_::TYPE_FUNCTION) {
+            $name .= '()';
         }
     // Only the name node should be considered a reference, not the New_ node itself
     } else if ($parent instanceof Node\Expr\New_) {

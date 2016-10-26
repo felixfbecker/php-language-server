@@ -202,4 +202,13 @@ class GlobalTest extends ServerTestCase
         $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->start);
         $this->assertEquals($this->getDefinitionLocation('test_function()'), $result);
     }
+
+    public function testDefinitionForUseFunctions()
+    {
+        // use function test_function;
+        // Get definition for test_function
+        $reference = $this->getReferenceLocations('test_function()')[1];
+        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->start);
+        $this->assertEquals($this->getDefinitionLocation('test_function()'), $result);
+    }
 }
