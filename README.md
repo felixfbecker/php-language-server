@@ -104,6 +104,14 @@ and consume 76 MB on a Surface Pro 3.
 The language server is fully operational while indexing and can respond to requests with the definitions already indexed.
 Follow-up requests will be almost instant because the index is kept in memory.
 
+## Versioning
+
+This project follows [semver](http://semver.org/) for the protocol communication and command line parameters,
+e.g. a major version increase of the LSP will result in a major version increase of the PHP LS.
+New features like request implementations will result in a new minor version.
+Everything else will be a patch release.
+All classes are considered internal and are not subject to semver.
+
 ## Used by
  - [vscode-php-intellisense](https://github.com/felixfbecker/vscode-php-intellisense)
 
