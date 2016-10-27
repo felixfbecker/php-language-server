@@ -17,7 +17,7 @@ foreach ([__DIR__ . '/../../../autoload.php', __DIR__ . '/../autoload.php', __DI
 
 ErrorHandler::register();
 
-cli_set_process_title('PHP Language Server');
+@cli_set_process_title('PHP Language Server');
 
 if (!empty($options['tcp'])) {
     $address = $options['tcp'];
