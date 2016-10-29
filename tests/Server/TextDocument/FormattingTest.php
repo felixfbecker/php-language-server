@@ -18,14 +18,14 @@ class FormattingTest extends TestCase
 
     public function setUp()
     {
-        $client = new LanguageClient(new MockProtocolStream());
+        $client = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
         $project = new Project($client);
         $this->textDocument = new Server\TextDocument($project, $client);
     }
 
     public function testFormatting()
     {
-        $client = new LanguageClient(new MockProtocolStream());
+        $client = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
         $project = new Project($client);
         $textDocument = new Server\TextDocument($project, $client);
         $path = realpath(__DIR__ . '/../../../fixtures/format.php');

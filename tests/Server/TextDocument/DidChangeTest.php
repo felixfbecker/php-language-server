@@ -19,7 +19,7 @@ class DidChangeTest extends TestCase
 {
     public function test()
     {
-        $client = new LanguageClient(new MockProtocolStream());
+        $client = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
         $project = new Project($client);
         $textDocument = new Server\TextDocument($project, $client);
         $phpDocument = $project->openDocument('whatever', "<?php\necho 'Hello, World'\n");

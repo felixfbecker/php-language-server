@@ -15,7 +15,7 @@ class DefinitionCollectorTest extends TestCase
 {
     public function testCollectsSymbols()
     {
-        $client = new LanguageClient(new MockProtocolStream());
+        $client = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
         $project = new Project($client);
         $parser = new Parser;
         $uri = pathToUri(realpath(__DIR__ . '/../../fixtures/symbols.php'));
@@ -54,7 +54,7 @@ class DefinitionCollectorTest extends TestCase
 
     public function testDoesNotCollectReferences()
     {
-        $client = new LanguageClient(new MockProtocolStream());
+        $client = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
         $project = new Project($client);
         $parser = new Parser;
         $uri = pathToUri(realpath(__DIR__ . '/../../fixtures/references.php'));
