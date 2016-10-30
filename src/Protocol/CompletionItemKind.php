@@ -7,7 +7,8 @@ use PhpParser\Node;
 /**
  * The kind of a completion entry.
  */
-abstract class CompletionItemKind {
+abstract class CompletionItemKind
+{
     const TEXT = 1;
     const METHOD = 2;
     const FUNCTION = 3;

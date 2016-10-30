@@ -28,3 +28,9 @@ $fn = function() use ($var) {
 };
 
 echo TEST_CONST;
+
+use function TestNamespace\test_function;
+
+if ($abc instanceof TestInterface) {
+
+}

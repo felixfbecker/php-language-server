@@ -9,13 +9,15 @@ use function LanguageServer\pathToUri;
 
 class GlobalTest extends ServerTestCase
 {
-    public function testDefinitionFileBeginning() {
+    public function testDefinitionFileBeginning()
+    {
         // |<?php
         $result = $this->textDocument->definition(new TextDocumentIdentifier(pathToUri(realpath(__DIR__ . '/../../../../fixtures/references.php'))), new Position(0, 0));
         $this->assertEquals([], $result);
     }
 
-    public function testDefinitionEmptyResult() {
+    public function testDefinitionEmptyResult()
+    {
         // namespace keyword
         $result = $this->textDocument->definition(new TextDocumentIdentifier(pathToUri(realpath(__DIR__ . '/../../../../fixtures/references.php'))), new Position(2, 4));
         $this->assertEquals([], $result);
@@ -199,5 +201,23 @@ class GlobalTest extends ServerTestCase
         $reference = $this->getReferenceLocations('test_function()')[0];
         $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->start);
         $this->assertEquals($this->getDefinitionLocation('test_function()'), $result);
+    }
+
+    public function testDefinitionForUseFunctions()
+    {
+        // use function test_function;
+        // Get definition for test_function
+        $reference = $this->getReferenceLocations('test_function()')[1];
+        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->start);
+        $this->assertEquals($this->getDefinitionLocation('test_function()'), $result);
+    }
+
+    public function testDefinitionForInstanceOf()
+    {
+        // if ($abc instanceof TestInterface) {
+        // Get definition for TestInterface
+        $reference = $this->getReferenceLocations('TestInterface')[2];
+        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->start);
+        $this->assertEquals($this->getDefinitionLocation('TestInterface'), $result);
     }
 }

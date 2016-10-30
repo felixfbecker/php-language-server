@@ -59,6 +59,7 @@ abstract class ServerTestCase extends TestCase
         $this->project->loadDocument($globalReferencesUri);
         $this->project->loadDocument($useUri);
 
+        // @codingStandardsIgnoreStart
         $this->definitionLocations = [
 
             // Global
@@ -105,7 +106,8 @@ abstract class ServerTestCase extends TestCase
             ],
             'TestNamespace\\TestInterface' => [
                 0 => new Location($symbolsUri,    new Range(new Position(20, 27), new Position(20, 40))), // class TestClass implements TestInterface
-                1 => new Location($symbolsUri,    new Range(new Position(57, 48), new Position(57, 61)))  // public function testMethod($testParameter): TestInterface
+                1 => new Location($symbolsUri,    new Range(new Position(57, 48), new Position(57, 61))), // public function testMethod($testParameter): TestInterface
+                2 => new Location($referencesUri, new Range(new Position(33, 20), new Position(33, 33)))  // if ($abc instanceof TestInterface)
             ],
             'TestNamespace\\TestClass::TEST_CLASS_CONST' => [
                 0 => new Location($symbolsUri,    new Range(new Position(48, 13), new Position(48, 35))), // echo self::TEST_CLASS_CONSTANT
@@ -125,7 +127,8 @@ abstract class ServerTestCase extends TestCase
                 0 => new Location($referencesUri, new Range(new Position( 5,  0), new Position( 5, 18)))
             ],
             'TestNamespace\\test_function()' => [
-                0 => new Location($referencesUri, new Range(new Position(10,  0), new Position(10, 13)))
+                0 => new Location($referencesUri, new Range(new Position(10,  0), new Position(10, 13))),
+                1 => new Location($referencesUri, new Range(new Position(31, 13), new Position(31, 40)))
             ],
 
             // Global
@@ -143,7 +146,8 @@ abstract class ServerTestCase extends TestCase
             ],
             'TestInterface' => [
                 0 => new Location($globalSymbolsUri,    new Range(new Position(20, 27), new Position(20, 40))), // class TestClass implements TestInterface
-                1 => new Location($globalSymbolsUri,    new Range(new Position(57, 48), new Position(57, 61)))  // public function testMethod($testParameter): TestInterface
+                1 => new Location($globalSymbolsUri,    new Range(new Position(57, 48), new Position(57, 61))), // public function testMethod($testParameter): TestInterface
+                2 => new Location($globalReferencesUri, new Range(new Position(33, 20), new Position(33, 33)))  // if ($abc instanceof TestInterface)
             ],
             'TestClass::TEST_CLASS_CONST' => [
                 0 => new Location($globalSymbolsUri,    new Range(new Position(48, 13), new Position(48, 35))), // echo self::TEST_CLASS_CONSTANT
@@ -163,9 +167,11 @@ abstract class ServerTestCase extends TestCase
                 0 => new Location($globalReferencesUri, new Range(new Position( 5,  0), new Position( 5, 18)))
             ],
             'test_function()' => [
-                0 => new Location($globalReferencesUri, new Range(new Position(10,  0), new Position(10, 13)))
+                0 => new Location($globalReferencesUri, new Range(new Position(10,  0), new Position(10, 13))),
+                1 => new Location($globalReferencesUri, new Range(new Position(31, 13), new Position(31, 40)))
             ]
         ];
+        // @codingStandardsIgnoreEnd
     }
 
     protected function getDefinitionLocation(string $fqn): Location

@@ -35,6 +35,7 @@ function getReferencedFqn(Node $node)
             || $parent instanceof Node\Expr\StaticCall
             || $parent instanceof Node\Expr\ClassConstFetch
             || $parent instanceof Node\Expr\StaticPropertyFetch
+            || $parent instanceof Node\Expr\Instanceof_
         )
     ) {
         // For extends, implements, type hints and classes of classes of static calls use the name directly
@@ -45,6 +46,8 @@ function getReferencedFqn(Node $node)
         $grandParent = $parent->getAttribute('parentNode');
         if ($grandParent instanceof Node\Stmt\GroupUse) {
             $name = $grandParent->prefix . '\\' . $name;
+        } else if ($grandParent instanceof Node\Stmt\Use_ && $grandParent->type === Node\Stmt\Use_::TYPE_FUNCTION) {
+            $name .= '()';
         }
     // Only the name node should be considered a reference, not the New_ node itself
     } else if ($parent instanceof Node\Expr\New_) {

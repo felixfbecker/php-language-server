@@ -16,6 +16,7 @@ class SymbolTest extends ServerTestCase
     {
         // Request symbols
         $result = $this->workspace->symbol('');
+        // @codingStandardsIgnoreStart
         $this->assertEquals([
             // Namespaced
             new SymbolInformation('TEST_CONST',         SymbolKind::CONSTANT,  $this->getDefinitionLocation('TestNamespace\\TEST_CONST'),                    'TestNamespace'),
@@ -42,17 +43,20 @@ class SymbolTest extends ServerTestCase
             new SymbolInformation('test_function',      SymbolKind::FUNCTION,  $this->getDefinitionLocation('test_function()'),                              ''),
             new SymbolInformation('whatever',           SymbolKind::FUNCTION,  $this->getDefinitionLocation('whatever()'),                                   '')
         ], $result);
+        // @codingStandardsIgnoreEnd
     }
 
     public function testQueryFiltersResults()
     {
         // Request symbols
         $result = $this->workspace->symbol('testmethod');
+        // @codingStandardsIgnoreStart
         $this->assertEquals([
             new SymbolInformation('staticTestMethod',   SymbolKind::METHOD,    $this->getDefinitionLocation('TestNamespace\\TestClass::staticTestMethod()'), 'TestNamespace\\TestClass'),
             new SymbolInformation('testMethod',         SymbolKind::METHOD,    $this->getDefinitionLocation('TestNamespace\\TestClass::testMethod()'),       'TestNamespace\\TestClass'),
             new SymbolInformation('staticTestMethod',   SymbolKind::METHOD,    $this->getDefinitionLocation('TestClass::staticTestMethod()'),                'TestClass'),
             new SymbolInformation('testMethod',         SymbolKind::METHOD,    $this->getDefinitionLocation('TestClass::testMethod()'),                      'TestClass')
         ], $result);
+        // @codingStandardsIgnoreEnd
     }
 }

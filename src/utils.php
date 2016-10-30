@@ -12,7 +12,8 @@ use InvalidArgumentException;
  * @param string $pattern
  * @return array
  */
-function findFilesRecursive(string $path, string $pattern): array {
+function findFilesRecursive(string $path, string $pattern): array
+{
     $dir = new \RecursiveDirectoryIterator($path);
     $ite = new \RecursiveIteratorIterator($dir);
     $files = new \RegexIterator($ite, $pattern, \RegexIterator::GET_MATCH);
@@ -29,7 +30,8 @@ function findFilesRecursive(string $path, string $pattern): array {
  * @param string $filepath
  * @return string
  */
-function pathToUri(string $filepath): string {
+function pathToUri(string $filepath): string
+{
     $filepath = trim(str_replace('\\', '/', $filepath), '/');
     $parts = explode('/', $filepath);
     // Don't %-encode the colon after a Windows drive letter
