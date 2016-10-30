@@ -14,6 +14,7 @@ use LanguageServer\Protocol\{
 };
 use AdvancedJsonRpc;
 use Sabre\Event\Loop;
+use function Sabre\Event\coroutine;
 use Exception;
 use Throwable;
 
@@ -37,6 +38,11 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     public $window;
     public $completionItem;
     public $codeLens;
+
+    /**
+     * ClientCapabilities
+     */
+    private $clientCapabilities;
 
     private $protocolReader;
     private $protocolWriter;
@@ -155,38 +161,38 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
      */
     private function indexProject()
     {
-        $fileList = findFilesRecursive($this->rootPath, '/^.+\.php$/i');
-        $numTotalFiles = count($fileList);
+        coroutine(function () {
+            $textDocuments = $this->client->workspace->xGlob('**/*.php');
+            $count = count($textDocuments);
 
-        $startTime = microtime(true);
-        $fileNum = 0;
+            $startTime = microtime(true);
 
-        $processFile = function () use (&$fileList, &$fileNum, &$processFile, $numTotalFiles, $startTime) {
-            if ($fileNum < $numTotalFiles) {
-                $file = $fileList[$fileNum];
-                $uri = pathToUri($file);
-                $fileNum++;
-                $shortName = substr($file, strlen($this->rootPath) + 1);
+            foreach ($textDocuments as $i => $textDocument) {
+
+                // Give LS to the chance to handle requests while indexing
+                Loop\tick();
+
+                try {
+                    $shortName = substr(uriToPath($textDocument->uri), strlen($this->rootPath) + 1);
+                } catch (Exception $e) {
+                    $shortName = $textDocument->uri;
+                }
 
                 if (filesize($file) > 500000) {
                     $this->client->window->logMessage(MessageType::INFO, "Not parsing $shortName because it exceeds size limit of 0.5MB");
                 } else {
-                    $this->client->window->logMessage(MessageType::INFO, "Parsing file $fileNum/$numTotalFiles: $shortName.");
+                    $this->client->window->logMessage(MessageType::INFO, "Parsing file $i/$count: $shortName.");
                     try {
-                        $this->project->loadDocument($uri);
+                        $this->project->loadDocument($textDocument->uri);
                     } catch (Exception $e) {
                         $this->client->window->logMessage(MessageType::ERROR, "Error parsing file $shortName: " . (string)$e);
                     }
                 }
-
-                Loop\setTimeout($processFile, 0);
-            } else {
-                $duration = (int)(microtime(true) - $startTime);
-                $mem = (int)(memory_get_usage(true) / (1024 * 1024));
-                $this->client->window->logMessage(MessageType::INFO, "All PHP files parsed in $duration seconds. $mem MiB allocated.");
             }
-        };
 
-        Loop\setTimeout($processFile, 0);
+            $duration = (int)(microtime(true) - $startTime);
+            $mem = (int)(memory_get_usage(true) / (1024 * 1024));
+            $this->client->window->logMessage(MessageType::INFO, "All PHP files parsed in $duration seconds. $mem MiB allocated.");
+        });
     }
 }

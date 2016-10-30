@@ -3,6 +3,8 @@ declare(strict_types = 1);
 
 namespace LanguageServer;
 
+use JsonMapper;
+
 class LanguageClient
 {
     /**
@@ -29,6 +31,7 @@ class LanguageClient
     public function __construct(ProtocolReader $reader, ProtocolWriter $writer)
     {
         $handler = new ClientHandler($reader, $writer);
+        $mapper = new JsonMapper;
 
         $this->textDocument = new Client\TextDocument($handler);
         $this->window = new Client\Window($handler);
