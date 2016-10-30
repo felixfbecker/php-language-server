@@ -19,11 +19,19 @@ class LanguageClient
      */
     public $window;
 
+    /**
+     * Handles workspace/* methods
+     *
+     * @var Client\Workspace
+     */
+    public $workspace;
+
     public function __construct(ProtocolReader $reader, ProtocolWriter $writer)
     {
         $handler = new ClientHandler($reader, $writer);
 
         $this->textDocument = new Client\TextDocument($handler);
         $this->window = new Client\Window($handler);
+        $this->workspace = new Client\Workspace($handler, $mapper);
     }
 }
