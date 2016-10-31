@@ -4,7 +4,6 @@ declare(strict_types = 1);
 namespace LanguageServer\Tests;
 
 use PHPUnit\Framework\TestCase;
-use LanguageServer\LanguageServer;
 use LanguageServer\ClientHandler;
 use LanguageServer\Protocol\Message;
 use AdvancedJsonRpc;
