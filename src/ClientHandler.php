@@ -11,17 +11,17 @@ class ClientHandler
     /**
      * @var ProtocolReader
      */
-    private $protocolReader;
+    public $protocolReader;
 
     /**
      * @var ProtocolWriter
      */
-    private $protocolWriter;
+    public $protocolWriter;
 
     /**
      * @var IdGenerator
      */
-    private $idGenerator;
+    public $idGenerator;
 
     public function __construct(ProtocolReader $protocolReader, ProtocolWriter $protocolWriter)
     {
@@ -45,20 +45,20 @@ class ClientHandler
                 new AdvancedJsonRpc\Request($id, $method, (object)$params)
             )
         )->then(function () use ($id) {
-            return new Promise(function ($resolve, $reject) use ($id) {
-                $listener = function (Protocol\Message $msg) use ($id, $listener) {
-                    if (AdvancedJsonRpc\Response::isResponse($msg->body) && $msg->body->id === $id) {
-                        // Received a response
-                        $this->protocolReader->removeListener($listener);
-                        if (AdvancedJsonRpc\SuccessResponse::isSuccessResponse($msg->body)) {
-                            $resolve($msg->body->result);
-                        } else {
-                            $reject($msg->body->error);
-                        }
+            $promise = new Promise;
+            $listener = function (Protocol\Message $msg) use ($id, $promise, &$listener) {
+                if (AdvancedJsonRpc\Response::isResponse($msg->body) && $msg->body->id === $id) {
+                    // Received a response
+                    $this->protocolReader->removeListener('message', $listener);
+                    if (AdvancedJsonRpc\SuccessResponse::isSuccessResponse($msg->body)) {
+                        $promise->fulfill($msg->body->result);
+                    } else {
+                        $promise->reject($msg->body->error);
                     }
-                };
-                $this->protocolReader->on('message', $listener);
-            });
+                }
+            };
+            $this->protocolReader->on('message', $listener);
+            return $promise;
         });
     }
 
