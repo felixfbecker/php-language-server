@@ -23,11 +23,9 @@ class ClientHandlerTest extends TestCase
                 $reader->write(new Message(new AdvancedJsonRpc\SuccessResponse($msg->body->id, 'pong')));
             }, 0);
         });
-        $promise = $handler->request('testMethod', ['ping'])->then(function ($result) {
+        $handler->request('testMethod', ['ping'])->then(function ($result) {
             $this->assertEquals('pong', $result);
-        });
-        Loop\tick();
-        $promise->wait();
+        })->wait();
         // No event listeners
         $this->assertEquals([], $reader->listeners('message'));
         $this->assertEquals([], $writer->listeners('message'));
@@ -38,9 +36,7 @@ class ClientHandlerTest extends TestCase
         $reader = new MockProtocolStream;
         $writer = new MockProtocolStream;
         $handler = new ClientHandler($reader, $writer);
-        $promise = $handler->notify('testMethod', ['ping']);
-        Loop\tick();
-        $promise->wait();
+        $handler->notify('testMethod', ['ping'])->wait();
         // No event listeners
         $this->assertEquals([], $reader->listeners('message'));
         $this->assertEquals([], $writer->listeners('message'));
