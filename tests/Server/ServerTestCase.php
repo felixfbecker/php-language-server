@@ -42,7 +42,7 @@ abstract class ServerTestCase extends TestCase
 
     public function setUp()
     {
-        $client             = new LanguageClient(new MockProtocolStream());
+        $client             = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
         $this->project      = new Project($client);
         $this->textDocument = new Server\TextDocument($this->project, $client);
         $this->workspace    = new Server\Workspace($this->project, $client);

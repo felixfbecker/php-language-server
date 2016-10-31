@@ -3,9 +3,6 @@ declare(strict_types = 1);
 
 namespace LanguageServer;
 
-use LanguageServer\Client\TextDocument;
-use LanguageServer\Client\Window;
-
 class LanguageClient
 {
     /**
@@ -21,13 +18,12 @@ class LanguageClient
      * @var Client\Window
      */
     public $window;
-    
-    private $protocolWriter;
 
-    public function __construct(ProtocolWriter $writer)
+    public function __construct(ProtocolReader $reader, ProtocolWriter $writer)
     {
-        $this->protocolWriter = $writer;
-        $this->textDocument = new TextDocument($writer);
-        $this->window = new Window($writer);
+        $handler = new ClientHandler($reader, $writer);
+
+        $this->textDocument = new Client\TextDocument($handler);
+        $this->window = new Client\Window($handler);
     }
 }

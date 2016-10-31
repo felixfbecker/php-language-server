@@ -12,7 +12,7 @@ class GlobalFallbackTest extends ServerTestCase
 {
     public function setUp()
     {
-        $client = new LanguageClient(new MockProtocolStream());
+        $client = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
         $project = new Project($client);
         $this->textDocument = new Server\TextDocument($project, $client);
         $project->openDocument('global_fallback', file_get_contents(__DIR__ . '/../../../../fixtures/global_fallback.php'));

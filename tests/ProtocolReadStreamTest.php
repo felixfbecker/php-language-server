@@ -18,7 +18,7 @@ class ProtocolStreamReaderTest extends TestCase
         $writeHandle = fopen($tmpfile, 'w');
         $reader = new ProtocolStreamReader(fopen($tmpfile, 'r'));
         $msg = null;
-        $reader->onMessage(function (Message $message) use (&$msg) {
+        $reader->on('message', function (Message $message) use (&$msg) {
             $msg = $message;
         });
         $ret = fwrite($writeHandle, (string)new Message(new RequestBody(1, 'aMethod', ['arg' => 'Hello World'])));

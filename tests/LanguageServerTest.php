@@ -16,7 +16,7 @@ class LanguageServerTest extends TestCase
         $writer = new MockProtocolStream();
         $server = new LanguageServer($reader, $writer);
         $msg = null;
-        $writer->onMessage(function (Message $message) use (&$msg) {
+        $writer->on('message', function (Message $message) use (&$msg) {
             $msg = $message;
         });
         $reader->write(new Message(new AdvancedJsonRpc\Request(1, 'initialize', [
@@ -24,7 +24,7 @@ class LanguageServerTest extends TestCase
             'processId' => getmypid(),
             'capabilities' => new ClientCapabilities()
         ])));
-        $this->assertNotNull($msg, 'onMessage callback should be called');
+        $this->assertNotNull($msg, 'message event should be emitted');
         $this->assertInstanceOf(AdvancedJsonRpc\SuccessResponse::class, $msg->body);
         $this->assertEquals((object)[
             'capabilities' => (object)[
