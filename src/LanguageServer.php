@@ -162,13 +162,12 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     private function indexProject()
     {
         coroutine(function () {
-            $textDocuments = $this->client->workspace->xGlob('**/*.php');
+            $textDocuments = yield $this->client->workspace->xGlob('**/*.php');
             $count = count($textDocuments);
 
             $startTime = microtime(true);
 
             foreach ($textDocuments as $i => $textDocument) {
-
                 // Give LS to the chance to handle requests while indexing
                 Loop\tick();
 
