@@ -31,12 +31,9 @@ class ProtocolStreamWriter implements ProtocolWriter
     }
 
     /**
-     * Sends a Message to the client
-     *
-     * @param Message $msg
-     * @return Promise Resolved when the message has been fully written out to the output stream
+     * {@inheritdoc}
      */
-    public function write(Message $msg)
+    public function write(Message $msg): Promise
     {
         // if the message queue is currently empty, register a write handler.
         if (empty($this->messages)) {

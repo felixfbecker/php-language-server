@@ -19,7 +19,7 @@ class ProjectTest extends TestCase
 
     public function setUp()
     {
-        $this->project = new Project(new LanguageClient(new MockProtocolStream()));
+        $this->project = new Project(new LanguageClient(new MockProtocolStream, new MockProtocolStream));
     }
 
     public function testGetDocumentLoadsDocument()

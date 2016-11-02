@@ -3,9 +3,9 @@ declare(strict_types = 1);
 
 namespace LanguageServer\Client;
 
-use AdvancedJsonRpc\Notification as NotificationBody;
-use LanguageServer\ProtocolWriter;
+use LanguageServer\ClientHandler;
 use LanguageServer\Protocol\Message;
+use Sabre\Event\Promise;
 
 /**
  * Provides method handlers for all window/* methods
@@ -13,30 +13,26 @@ use LanguageServer\Protocol\Message;
 class Window
 {
     /**
-     * @var ProtocolWriter
+     * @var ClientHandler
      */
-    private $protocolWriter;
+    private $handler;
 
-    public function __construct(ProtocolWriter $protocolWriter)
+    public function __construct(ClientHandler $handler)
     {
-        $this->protocolWriter = $protocolWriter;
+        $this->handler = $handler;
     }
 
     /**
-     * The show message notification is sent from a server to a client to ask the client to display a particular message in the user interface.
+     * The show message notification is sent from a server to a client
+     * to ask the client to display a particular message in the user interface.
      *
      * @param int $type
      * @param string $message
+     * @return Promise <void>
      */
-    public function showMessage(int $type, string $message)
+    public function showMessage(int $type, string $message): Promise
     {
-        $this->protocolWriter->write(new Message(new NotificationBody(
-            'window/showMessage',
-            (object)[
-                'type' => $type,
-                'message' => $message
-            ]
-        )));
+        return $this->handler->notify('window/showMessage', ['type' => $type, 'message' => $message]);
     }
 
     /**
@@ -44,15 +40,10 @@ class Window
      *
      * @param int $type
      * @param string $message
+     * @return Promise <void>
      */
-    public function logMessage(int $type, string $message)
+    public function logMessage(int $type, string $message): Promise
     {
-        $this->protocolWriter->write(new Message(new NotificationBody(
-            'window/logMessage',
-            (object)[
-                'type' => $type,
-                'message' => $message
-            ]
-        )));
+        return $this->handler->notify('window/logMessage', ['type' => $type, 'message' => $message]);
     }
 }

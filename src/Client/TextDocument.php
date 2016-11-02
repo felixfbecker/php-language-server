@@ -3,9 +3,9 @@ declare(strict_types = 1);
 
 namespace LanguageServer\Client;
 
-use AdvancedJsonRpc\Notification as NotificationBody;
-use LanguageServer\ProtocolWriter;
+use LanguageServer\ClientHandler;
 use LanguageServer\Protocol\Message;
+use Sabre\Event\Promise;
 
 /**
  * Provides method handlers for all textDocument/* methods
@@ -13,13 +13,13 @@ use LanguageServer\Protocol\Message;
 class TextDocument
 {
     /**
-     * @var ProtocolWriter
+     * @var ClientHandler
      */
-    private $protocolWriter;
+    private $handler;
 
-    public function __construct(ProtocolWriter $protocolWriter)
+    public function __construct(ClientHandler $handler)
     {
-        $this->protocolWriter = $protocolWriter;
+        $this->handler = $handler;
     }
 
     /**
@@ -27,15 +27,13 @@ class TextDocument
      *
      * @param string $uri
      * @param Diagnostic[] $diagnostics
+     * @return Promise <void>
      */
-    public function publishDiagnostics(string $uri, array $diagnostics)
+    public function publishDiagnostics(string $uri, array $diagnostics): Promise
     {
-        $this->protocolWriter->write(new Message(new NotificationBody(
-            'textDocument/publishDiagnostics',
-            (object)[
-                'uri' => $uri,
-                'diagnostics' => $diagnostics
-            ]
-        )));
+        return $this->handler->notify('textDocument/publishDiagnostics', [
+            'uri' => $uri,
+            'diagnostics' => $diagnostics
+        ]);
     }
 }

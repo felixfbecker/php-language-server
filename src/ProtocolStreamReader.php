@@ -5,9 +5,9 @@ namespace LanguageServer;
 
 use LanguageServer\Protocol\Message;
 use AdvancedJsonRpc\Message as MessageBody;
-use Sabre\Event\Loop;
+use Sabre\Event\{Loop, Emitter};
 
-class ProtocolStreamReader implements ProtocolReader
+class ProtocolStreamReader extends Emitter implements ProtocolReader
 {
     const PARSE_HEADERS = 1;
     const PARSE_BODY = 2;
@@ -17,7 +17,6 @@ class ProtocolStreamReader implements ProtocolReader
     private $buffer = '';
     private $headers = [];
     private $contentLength;
-    private $listener;
 
     /**
      * @param resource $input
@@ -43,11 +42,8 @@ class ProtocolStreamReader implements ProtocolReader
                         break;
                     case self::PARSE_BODY:
                         if (strlen($this->buffer) === $this->contentLength) {
-                            if (isset($this->listener)) {
-                                $msg = new Message(MessageBody::parse($this->buffer), $this->headers);
-                                $listener = $this->listener;
-                                $listener($msg);
-                            }
+                            $msg = new Message(MessageBody::parse($this->buffer), $this->headers);
+                            $this->emit('message', [$msg]);
                             $this->parsingMode = self::PARSE_HEADERS;
                             $this->headers = [];
                             $this->buffer = '';
@@ -56,14 +52,5 @@ class ProtocolStreamReader implements ProtocolReader
                 }
             }
         });
-    }
-
-    /**
-     * @param callable $listener Is called with a Message object
-     * @return void
-     */
-    public function onMessage(callable $listener)
-    {
-        $this->listener = $listener;
     }
 }

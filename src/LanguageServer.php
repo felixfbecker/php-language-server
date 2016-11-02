@@ -3,7 +3,6 @@ declare(strict_types = 1);
 
 namespace LanguageServer;
 
-use LanguageServer\Server\TextDocument;
 use LanguageServer\Protocol\{
     ServerCapabilities,
     ClientCapabilities,
@@ -55,7 +54,11 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     {
         parent::__construct($this, '/');
         $this->protocolReader = $reader;
-        $this->protocolReader->onMessage(function (Message $msg) {
+        $this->protocolReader->on('message', function (Message $msg) {
+            // Ignore responses, this is the handler for requests and notifications
+            if (AdvancedJsonRpc\Response::isResponse($msg->body)) {
+                return;
+            }
             $result = null;
             $error = null;
             try {
@@ -80,7 +83,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
             }
         });
         $this->protocolWriter = $writer;
-        $this->client = new LanguageClient($writer);
+        $this->client = new LanguageClient($reader, $writer);
 
         $this->project = new Project($this->client);
 
