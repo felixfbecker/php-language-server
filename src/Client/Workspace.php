@@ -35,9 +35,9 @@ class Workspace
      * @param string $pattern A glob pattern
      * @return Promise <TextDocumentIdentifier[]> Array of documents that match the glob pattern
      */
-    public function xGlob(string $pattern): Promise
+    public function _glob(string $pattern): Promise
     {
-        return $this->handler->request('workspace/xGlob', ['pattern' => $pattern])->then(function ($textDocuments) {
+        return $this->handler->request('workspace/_glob', ['pattern' => $pattern])->then(function ($textDocuments) {
             return $this->mapper->mapArray($textDocuments, [], TextDocumentIdentifier::class);
         });
     }
