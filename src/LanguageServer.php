@@ -18,6 +18,8 @@ use function Sabre\Event\coroutine;
 use Exception;
 use Throwable;
 use Generator;
+use Webmozart\Glob\Iterator\GlobIterator;
+use Webmozart\PathUril\Path;
 
 class LanguageServer extends AdvancedJsonRpc\Dispatcher
 {
@@ -182,32 +184,15 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     private function indexProject()
     {
         return coroutine(function () {
-            if ($this->clientCapabilities->xglobProvider) {
-                $textDocuments = yield $this->client->workspace->xglob('**/*.php');
-                $uris = array_map(function ($textDocument) {
-                    return $textDocument->uri;
-                }, $textDocuments);
-            } else {
-                $uris = array_map(function ($path) {
-                    return pathToUri($path);
-                }, findFilesRecursive($this->rootPath, '/^.+\.php$/i'));
-            }
+            $textDocuments = yield $this->globWorkspace('**/*.php');
             $count = count($uris);
 
             $startTime = microtime(true);
 
-            foreach ($uris as $i => $uri) {
+            foreach ($textDocuments as $i => $textDocument) {
                 // Give LS to the chance to handle requests while indexing
                 Loop\tick();
-
-                try {
-                    $shortName = substr(uriToPath($uri), strlen($this->rootPath) + 1);
-                } catch (Exception $e) {
-                    $shortName = $uri;
-                }
-
-
-                $this->client->window->logMessage(MessageType::INFO, "Parsing file $i/$count: $shortName.");
+                $this->client->window->logMessage(MessageType::INFO, "Parsing file $i/$count: {$textDocument->uri}");
                 try {
                     $this->project->loadDocument($uri);
                 } catch (Exception $e) {
@@ -219,5 +204,37 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
             $mem = (int)(memory_get_usage(true) / (1024 * 1024));
             $this->client->window->logMessage(MessageType::INFO, "All PHP files parsed in $duration seconds. $mem MiB allocated.");
         });
+    }
+
+    /**
+     * Returns all files matching a glob pattern.
+     * If the client does not support workspace/xglob, it falls back to globbing the file system directly.
+     *
+     * @param string $pattern
+     * @return Promise <TextDocumentIdentifier[]>
+     */
+    private function globWorkspace(string $pattern): Promise
+    {
+        if ($this->clientCapabilities->xglobProvider) {
+            // Use xglob request
+            return $this->client->workspace->xglob($pattern);
+        } else {
+            // Use the file system
+            $promise = new Promise;
+            $textDocuments = [];
+            $pattern = Path::makeAbsolute($pattern, $this->rootPath);
+            $iterator = new GlobIterator($pattern);
+            $next = function () use ($iterator, &$textDocuments, $promise, &$next) {
+                if (!$iterator->valid()) {
+                    $promise->resolve($textDocuments);
+                    return;
+                }
+                $textDocuments[] = new TextDocumentIdentifier(pathToUri($iterator->current()));
+                $iterator->next();
+                Loop\setTimeout($next, 0);
+            };
+            Loop\setTimeout($next, 0);
+            return $promise;
+        }
     }
 }
