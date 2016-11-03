@@ -17,6 +17,7 @@ use Sabre\Event\Loop;
 use function Sabre\Event\coroutine;
 use Exception;
 use Throwable;
+use Generator;
 
 class LanguageServer extends AdvancedJsonRpc\Dispatcher
 {
@@ -61,32 +62,44 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
         parent::__construct($this, '/');
         $this->protocolReader = $reader;
         $this->protocolReader->on('message', function (Message $msg) {
-            // Ignore responses, this is the handler for requests and notifications
-            if (AdvancedJsonRpc\Response::isResponse($msg->body)) {
-                return;
-            }
-            $result = null;
-            $error = null;
-            try {
-                // Invoke the method handler to get a result
-                $result = $this->dispatch($msg->body);
-            } catch (AdvancedJsonRpc\Error $e) {
-                // If a ResponseError is thrown, send it back in the Response
-                $error = $e;
-            } catch (Throwable $e) {
-                // If an unexpected error occured, send back an INTERNAL_ERROR error response
-                $error = new AdvancedJsonRpc\Error($e->getMessage(), AdvancedJsonRpc\ErrorCode::INTERNAL_ERROR, null, $e);
-            }
-            // Only send a Response for a Request
-            // Notifications do not send Responses
-            if (AdvancedJsonRpc\Request::isRequest($msg->body)) {
-                if ($error !== null) {
-                    $responseBody = new AdvancedJsonRpc\ErrorResponse($msg->body->id, $error);
-                } else {
-                    $responseBody = new AdvancedJsonRpc\SuccessResponse($msg->body->id, $result);
+            coroutine(function () use ($msg) {
+                // Ignore responses, this is the handler for requests and notifications
+                if (AdvancedJsonRpc\Response::isResponse($msg->body)) {
+                    return;
                 }
-                $this->protocolWriter->write(new Message($responseBody));
-            }
+                $result = null;
+                $error = null;
+                try {
+                    // Invoke the method handler to get a result
+                    $result = $this->dispatch($msg->body);
+                    if ($result instanceof Generator) {
+                        $result = yield from $result;
+                    } else if ($result instanceof Promise) {
+                        $result = yield $result;
+                    }
+                } catch (AdvancedJsonRpc\Error $e) {
+                    // If a ResponseError is thrown, send it back in the Response
+                    $error = $e;
+                } catch (Throwable $e) {
+                    // If an unexpected error occured, send back an INTERNAL_ERROR error response
+                    $error = new AdvancedJsonRpc\Error((string)$e, AdvancedJsonRpc\ErrorCode::INTERNAL_ERROR, null, $e);
+                }
+                // Only send a Response for a Request
+                // Notifications do not send Responses
+                if (AdvancedJsonRpc\Request::isRequest($msg->body)) {
+                    if ($error !== null) {
+                        $responseBody = new AdvancedJsonRpc\ErrorResponse($msg->body->id, $error);
+                    } else {
+                        $responseBody = new AdvancedJsonRpc\SuccessResponse($msg->body->id, $result);
+                    }
+                    $this->protocolWriter->write(new Message($responseBody));
+                }
+            })->otherwise(function ($err) {
+                // Crash process
+                Loop\nextTick(function () use ($err) {
+                    throw $err;
+                });
+            });
         });
         $this->protocolWriter = $writer;
         $this->client = new LanguageClient($reader, $writer);
@@ -107,11 +120,18 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
      */
     public function initialize(int $processId, ClientCapabilities $capabilities, string $rootPath = null): InitializeResult
     {
+
         $this->rootPath = $rootPath;
+        $this->clientCapabilities = $capabilities;
 
         // start building project index
         if ($rootPath !== null) {
-            $this->indexProject();
+            $this->indexProject()->otherwise(function ($err) {
+                // Crash process
+                Loop\nextTick(function () use ($err) {
+                    throw $err;
+                });
+            });
         }
 
         $serverCapabilities = new ServerCapabilities();
@@ -157,35 +177,41 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     /**
      * Parses workspace files, one at a time.
      *
-     * @return void
+     * @return Promise <void>
      */
     private function indexProject()
     {
-        coroutine(function () {
-            $textDocuments = yield $this->client->workspace->xGlob('**/*.php');
-            $count = count($textDocuments);
+        return coroutine(function () {
+            if ($this->clientCapabilities->xglobProvider) {
+                $textDocuments = yield $this->client->workspace->xglob('**/*.php');
+                $uris = array_map(function ($textDocument) {
+                    return $textDocument->uri;
+                }, $textDocuments);
+            } else {
+                $uris = array_map(function ($path) {
+                    return pathToUri($path);
+                }, findFilesRecursive($this->rootPath, '/^.+\.php$/i'));
+            }
+            $count = count($uris);
 
             $startTime = microtime(true);
 
-            foreach ($textDocuments as $i => $textDocument) {
+            foreach ($uris as $i => $uri) {
                 // Give LS to the chance to handle requests while indexing
                 Loop\tick();
 
                 try {
-                    $shortName = substr(uriToPath($textDocument->uri), strlen($this->rootPath) + 1);
+                    $shortName = substr(uriToPath($uri), strlen($this->rootPath) + 1);
                 } catch (Exception $e) {
-                    $shortName = $textDocument->uri;
+                    $shortName = $uri;
                 }
 
-                if (filesize($file) > 500000) {
-                    $this->client->window->logMessage(MessageType::INFO, "Not parsing $shortName because it exceeds size limit of 0.5MB");
-                } else {
-                    $this->client->window->logMessage(MessageType::INFO, "Parsing file $i/$count: $shortName.");
-                    try {
-                        $this->project->loadDocument($textDocument->uri);
-                    } catch (Exception $e) {
-                        $this->client->window->logMessage(MessageType::ERROR, "Error parsing file $shortName: " . (string)$e);
-                    }
+
+                $this->client->window->logMessage(MessageType::INFO, "Parsing file $i/$count: $shortName.");
+                try {
+                    $this->project->loadDocument($uri);
+                } catch (Exception $e) {
+                    $this->client->window->logMessage(MessageType::ERROR, "Error parsing file $shortName: " . (string)$e);
                 }
             }
 
