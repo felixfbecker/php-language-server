@@ -173,7 +173,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     private function indexProject(): Promise
     {
         return coroutine(function () {
-            $textDocuments = yield $this->globWorkspace('**/*.php');
+            $textDocuments = yield $this->globWorkspace(['**/*.php']);
             $count = count($textDocuments);
 
             $startTime = microtime(true);
@@ -207,23 +207,26 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
      * Returns all files matching a glob pattern.
      * If the client does not support workspace/xglob, it falls back to globbing the file system directly.
      *
-     * @param string $pattern
+     * @param string $patterns
      * @return Promise <TextDocumentIdentifier[]>
      */
-    private function globWorkspace(string $pattern): Promise
+    private function globWorkspace(array $patterns): Promise
     {
         if ($this->clientCapabilities->xglobProvider) {
             // Use xglob request
-            return $this->client->workspace->xglob($pattern);
+            return $this->client->workspace->xglob($patterns);
         } else {
             // Use the file system
-            return coroutine(function () use ($pattern) {
                 $textDocuments = [];
+            return Promise\all(array_map(function ($pattern) use (&$textDocuments) {
+                return coroutine(function () use ($pattern, &$textDocuments) {
                 $pattern = Path::makeAbsolute($pattern, $this->rootPath);
                 foreach (new GlobIterator($pattern) as $path) {
                     $textDocuments[] = new TextDocumentIdentifier(pathToUri($path));
                     yield timeout();
                 }
+                });
+            }, $patterns))->then(function () use ($textDocuments) {
                 return $textDocuments;
             });
         }
