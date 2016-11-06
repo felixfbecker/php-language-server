@@ -4,8 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer\Tests;
 
 use PHPUnit\Framework\TestCase;
-use LanguageServer\LanguageServer;
-use LanguageServer\ProtocolStreamReader;
+use LanguageServer\{LanguageServer, ProtocolStreamReader, ProtocolStreamWriter};
 use LanguageServer\Protocol\Message;
 use AdvancedJsonRpc\{Request as RequestBody, Response as ResponseBody};
 use Sabre\Event\Loop;
