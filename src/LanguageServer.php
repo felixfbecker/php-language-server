@@ -19,7 +19,6 @@ use function Sabre\Event\coroutine;
 use Exception;
 use RuntimeException;
 use Throwable;
-use Generator;
 use Webmozart\Glob\Iterator\GlobIterator;
 use Webmozart\PathUtil\Path;
 
