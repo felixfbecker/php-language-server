@@ -93,7 +93,8 @@ class Project
     }
 
     /**
-     * Reads a document from disk.
+     * Loads the document by doing a textDocument/xcontent request to the client.
+     * If the client does not support textDocument/xcontent, tries to read the file from the file system.
      * The document is NOT added to the list of open documents, but definitions are registered.
      *
      * @param string $uri
