@@ -2,7 +2,7 @@
 
 namespace LanguageServer\Protocol;
 
-class TextDocumentContentResult
+class Content
 {
     /**
      * The content of the text document

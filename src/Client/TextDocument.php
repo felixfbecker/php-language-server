@@ -4,7 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer\Client;
 
 use LanguageServer\ClientHandler;
-use LanguageServer\Protocol\Message;
+use LanguageServer\Protocol\{Message, Content};
 use Sabre\Event\Promise;
 use JsonMapper;
 
@@ -49,7 +49,7 @@ class TextDocument
      * to request the current content of a text document identified by the URI
      *
      * @param TextDocumentIdentifier $textDocument The document to get the content for
-     * @return Promise <TextDocumentContentResult> The document's current content
+     * @return Promise <Content> The document's current content
      */
     public function xcontent(TextDocumentIdentifier $textDocument): Promise
     {
@@ -57,7 +57,7 @@ class TextDocument
             'textDocument/xcontent',
             ['textDocument' => $textDocument]
         )->then(function ($result) {
-            return $this->mapper->map($result, new TextDocumentContentResult);
+            return $this->mapper->map($result, new Content);
         });
     }
 }
