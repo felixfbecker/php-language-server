@@ -81,7 +81,12 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                     $error = $e;
                 } catch (Throwable $e) {
                     // If an unexpected error occured, send back an INTERNAL_ERROR error response
-                    $error = new AdvancedJsonRpc\Error((string)$e, AdvancedJsonRpc\ErrorCode::INTERNAL_ERROR, null, $e);
+                    $error = new AdvancedJsonRpc\Error(
+                        $e->getMessage(),
+                        AdvancedJsonRpc\ErrorCode::INTERNAL_ERROR,
+                        null,
+                        $e
+                    );
                 }
                 // Only send a Response for a Request
                 // Notifications do not send Responses
