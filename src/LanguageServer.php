@@ -167,7 +167,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
      *
      * @return Promise <void>
      */
-    private function indexProject()
+    private function indexProject(): Promise
     {
         return coroutine(function () {
             $textDocuments = yield $this->globWorkspace('**/*.php');
@@ -175,16 +175,24 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
 
             $startTime = microtime(true);
 
-            foreach ($textDocuments as $i => $textDocument) {
-                // Give LS to the chance to handle requests while indexing
-                yield timeout();
-                $this->client->window->logMessage(MessageType::INFO, "Parsing file $i/$count: {$textDocument->uri}");
-                try {
-                    $this->project->loadDocument($textDocument->uri);
-                } catch (Exception $e) {
-                    $this->client->window->logMessage(MessageType::ERROR, "Error parsing file $shortName: " . (string)$e);
-                }
-            }
+            yield Promise\all(array_map(function ($textDocument, $i) use ($count) {
+                return coroutine(function () use ($textDocument, $i, $count) {
+                    // Give LS to the chance to handle requests while indexing
+                    yield timeout();
+                    $this->client->window->logMessage(
+                        MessageType::INFO,
+                        "Parsing file $i/$count: {$textDocument->uri}"
+                    );
+                    try {
+                        yield $this->project->loadDocument($textDocument->uri);
+                    } catch (Exception $e) {
+                        $this->client->window->logMessage(
+                            MessageType::ERROR,
+                            "Error parsing file $shortName: " . (string)$e
+                        );
+                    }
+                });
+            }, $textDocuments, array_keys($textDocuments)));
 
             $duration = (int)(microtime(true) - $startTime);
             $mem = (int)(memory_get_usage(true) / (1024 * 1024));

@@ -23,7 +23,10 @@ class NamespacedTest extends GlobalTest
         // echo TEST_CONST;
         // Get definition for TEST_CONST
         $reference = $this->getReferenceLocations('TEST_CONST')[0];
-        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->start);
+        $result = $this->textDocument->definition(
+            new TextDocumentIdentifier($reference->uri),
+            $reference->range->start
+        )->wait();
         $this->assertEquals($this->getDefinitionLocation('TEST_CONST'), $result);
     }
 
@@ -32,7 +35,10 @@ class NamespacedTest extends GlobalTest
         // use TestNamespace\TestClass;
         // Get definition for TestClass
         $reference = $this->getReferenceLocations('TestClass')[6];
-        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->start);
+        $result = $this->textDocument->definition(
+            new TextDocumentIdentifier($reference->uri),
+            $reference->range->start
+        )->wait();
         $this->assertEquals($this->getDefinitionLocation('TestClass'), $result);
     }
 
@@ -41,7 +47,10 @@ class NamespacedTest extends GlobalTest
         // use TestNamespace\{TestTrait, TestInterface};
         // Get definition for TestInterface
         $reference = $this->getReferenceLocations('TestClass')[0];
-        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->start);
+        $result = $this->textDocument->definition(
+            new TextDocumentIdentifier($reference->uri),
+            $reference->range->start
+        )->wait();
         $this->assertEquals($this->getDefinitionLocation('TestClass'), $result);
     }
 }

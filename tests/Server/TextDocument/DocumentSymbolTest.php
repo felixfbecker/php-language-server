@@ -15,7 +15,7 @@ class DocumentSymbolTest extends ServerTestCase
     {
         // Request symbols
         $uri = pathToUri(realpath(__DIR__ . '/../../../fixtures/symbols.php'));
-        $result = $this->textDocument->documentSymbol(new TextDocumentIdentifier($uri));
+        $result = $this->textDocument->documentSymbol(new TextDocumentIdentifier($uri))->wait();
         // @codingStandardsIgnoreStart
         $this->assertEquals([
             new SymbolInformation('TEST_CONST',         SymbolKind::CONSTANT,  $this->getDefinitionLocation('TestNamespace\\TEST_CONST'),                    'TestNamespace'),

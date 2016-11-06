@@ -6,7 +6,15 @@ namespace LanguageServer\Tests\Server\TextDocument;
 use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\{Server, Client, LanguageClient, Project};
-use LanguageServer\Protocol\{TextDocumentIdentifier, TextDocumentItem, FormattingOptions, ClientCapabilities};
+use LanguageServer\Protocol\{
+    TextDocumentIdentifier,
+    TextDocumentItem,
+    FormattingOptions,
+    ClientCapabilities,
+    TextEdit,
+    Range,
+    Position
+};
 use function LanguageServer\{pathToUri, uriToPath};
 
 class FormattingTest extends TestCase
@@ -42,19 +50,7 @@ class FormattingTest extends TestCase
         // how code should look after formatting
         $expected = file_get_contents(__DIR__ . '/../../../fixtures/format_expected.php');
         // Request formatting
-        $result = $textDocument->formatting(new TextDocumentIdentifier($uri), new FormattingOptions());
-        $this->assertEquals([0 => [
-            'range' => [
-                'start' => [
-                    'line' => 0,
-                    'character' => 0
-                ],
-                'end' => [
-                    'line' => 20,
-                    'character' => 0
-                ]
-            ],
-            'newText' => $expected
-        ]], json_decode(json_encode($result), true));
+        $result = $textDocument->formatting(new TextDocumentIdentifier($uri), new FormattingOptions())->wait();
+        $this->assertEquals([new TextEdit(new Range(new Position(0, 0), new Position(20, 0)), $expected)], $result);
     }
 }

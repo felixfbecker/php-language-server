@@ -30,9 +30,9 @@ class ProjectTest extends TestCase
         $this->project = new Project($client, new ClientCapabilities);
     }
 
-    public function testGetDocumentLoadsDocument()
+    public function testGetOrLoadDocumentLoadsDocument()
     {
-        $document = $this->project->getDocument(pathToUri(__FILE__));
+        $document = $this->project->getOrLoadDocument(pathToUri(__FILE__))->wait();
 
         $this->assertNotNull($document);
         $this->assertInstanceOf(PhpDocument::class, $document);

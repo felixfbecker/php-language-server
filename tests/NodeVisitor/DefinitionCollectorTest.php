@@ -20,7 +20,7 @@ class DefinitionCollectorTest extends TestCase
         $project = new Project($client, new ClientCapabilities);
         $parser = new Parser;
         $uri = pathToUri(realpath(__DIR__ . '/../../fixtures/symbols.php'));
-        $document = $project->loadDocument($uri);
+        $document = $project->loadDocument($uri)->wait();
         $traverser = new NodeTraverser;
         $traverser->addVisitor(new NameResolver);
         $traverser->addVisitor(new ReferencesAdder($document));
@@ -59,7 +59,7 @@ class DefinitionCollectorTest extends TestCase
         $project = new Project($client, new ClientCapabilities);
         $parser = new Parser;
         $uri = pathToUri(realpath(__DIR__ . '/../../fixtures/references.php'));
-        $document = $project->loadDocument($uri);
+        $document = $project->loadDocument($uri)->wait();
         $traverser = new NodeTraverser;
         $traverser->addVisitor(new NameResolver);
         $traverser->addVisitor(new ReferencesAdder($document));
