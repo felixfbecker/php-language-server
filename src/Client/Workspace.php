@@ -37,7 +37,7 @@ class Workspace
      */
     public function xglob(string $pattern): Promise
     {
-        return $this->handler->request('workspace/_glob', ['pattern' => $pattern])->then(function ($textDocuments) {
+        return $this->handler->request('workspace/xglob', ['pattern' => $pattern])->then(function ($textDocuments) {
             return $this->mapper->mapArray($textDocuments, [], TextDocumentIdentifier::class);
         });
     }
