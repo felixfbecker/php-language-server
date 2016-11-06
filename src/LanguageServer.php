@@ -75,12 +75,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                 $error = null;
                 try {
                     // Invoke the method handler to get a result
-                    $result = $this->dispatch($msg->body);
-                    if ($result instanceof Generator) {
-                        $result = yield from $result;
-                    } else if ($result instanceof Promise) {
-                        $result = yield $result;
-                    }
+                    $result = yield $this->dispatch($msg->body);
                 } catch (AdvancedJsonRpc\Error $e) {
                     // If a ResponseError is thrown, send it back in the Response
                     $error = $e;
