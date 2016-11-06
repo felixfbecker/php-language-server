@@ -46,4 +46,19 @@ class LanguageServerTest extends TestCase
             ]
         ], $msg->body->result);
     }
+
+    public function testIndexing()
+    {
+        $input = new MockProtocolStream;
+        $output = new MockProtocolStream;
+        $output->on('message', function (Message $msg) {
+            var_dump($msg);
+        });
+        $server = new LanguageServer($input, $output);
+        $capabilities = new ClientCapabilities;
+        $capabilities->xcontent = true;
+        $capabilities->xglob = true;
+        $server->initialize(getmypid(), $capabilities, __DIR__);
+        \Sabre\Event\Loop\run();
+    }
 }

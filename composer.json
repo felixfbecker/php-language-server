@@ -29,7 +29,8 @@
         "sabre/event": "^5.0",
         "felixfbecker/advanced-json-rpc": "^2.0",
         "squizlabs/php_codesniffer" : "^2.7",
-        "symfony/debug": "^3.1"
+        "symfony/debug": "^3.1",
+        "monolog/monolog": "^1.21"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
