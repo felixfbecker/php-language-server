@@ -10,16 +10,18 @@ use LanguageServer\Protocol\{
     Message,
     MessageType,
     InitializeResult,
-    SymbolInformation
+    SymbolInformation,
+    TextDocumentIdentifier
 };
 use AdvancedJsonRpc;
-use Sabre\Event\Loop;
+use Sabre\Event\{Loop, Promise};
 use function Sabre\Event\coroutine;
 use Exception;
+use RuntimeException;
 use Throwable;
 use Generator;
 use Webmozart\Glob\Iterator\GlobIterator;
-use Webmozart\PathUril\Path;
+use Webmozart\PathUtil\Path;
 
 class LanguageServer extends AdvancedJsonRpc\Dispatcher
 {
@@ -96,20 +98,10 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                     }
                     $this->protocolWriter->write(new Message($responseBody));
                 }
-            })->otherwise(function ($err) {
-                // Crash process
-                Loop\nextTick(function () use ($err) {
-                    throw $err;
-                });
-            });
+            })->otherwise('\\LanguageServer\\crash');
         });
         $this->protocolWriter = $writer;
         $this->client = new LanguageClient($reader, $writer);
-
-        $this->project = new Project($this->client);
-
-        $this->textDocument = new Server\TextDocument($this->project, $this->client);
-        $this->workspace = new Server\Workspace($this->project, $this->client);
     }
 
     /**
@@ -125,15 +117,13 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
 
         $this->rootPath = $rootPath;
         $this->clientCapabilities = $capabilities;
+        $this->project = new Project($this->client, $capabilities);
+        $this->textDocument = new Server\TextDocument($this->project, $this->client);
+        $this->workspace = new Server\Workspace($this->project, $this->client);
 
         // start building project index
         if ($rootPath !== null) {
-            $this->indexProject()->otherwise(function ($err) {
-                // Crash process
-                Loop\nextTick(function () use ($err) {
-                    throw $err;
-                });
-            });
+            $this->indexProject()->otherwise('\\LanguageServer\\crash');
         }
 
         $serverCapabilities = new ServerCapabilities();
@@ -164,6 +154,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
      */
     public function shutdown()
     {
+        unset($this->project);
     }
 
     /**
@@ -185,16 +176,16 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     {
         return coroutine(function () {
             $textDocuments = yield $this->globWorkspace('**/*.php');
-            $count = count($uris);
+            $count = count($textDocuments);
 
             $startTime = microtime(true);
 
             foreach ($textDocuments as $i => $textDocument) {
                 // Give LS to the chance to handle requests while indexing
-                Loop\tick();
+                yield timeout();
                 $this->client->window->logMessage(MessageType::INFO, "Parsing file $i/$count: {$textDocument->uri}");
                 try {
-                    $this->project->loadDocument($uri);
+                    $this->project->loadDocument($textDocument->uri);
                 } catch (Exception $e) {
                     $this->client->window->logMessage(MessageType::ERROR, "Error parsing file $shortName: " . (string)$e);
                 }
@@ -220,21 +211,15 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
             return $this->client->workspace->xglob($pattern);
         } else {
             // Use the file system
-            $promise = new Promise;
-            $textDocuments = [];
-            $pattern = Path::makeAbsolute($pattern, $this->rootPath);
-            $iterator = new GlobIterator($pattern);
-            $next = function () use ($iterator, &$textDocuments, $promise, &$next) {
-                if (!$iterator->valid()) {
-                    $promise->resolve($textDocuments);
-                    return;
+            return coroutine(function () use ($pattern) {
+                $textDocuments = [];
+                $pattern = Path::makeAbsolute($pattern, $this->rootPath);
+                foreach (new GlobIterator($pattern) as $path) {
+                    $textDocuments[] = new TextDocumentIdentifier(pathToUri($path));
+                    yield timeout();
                 }
-                $textDocuments[] = new TextDocumentIdentifier(pathToUri($iterator->current()));
-                $iterator->next();
-                Loop\setTimeout($next, 0);
-            };
-            Loop\setTimeout($next, 0);
-            return $promise;
+                return $textDocuments;
+            });
         }
     }
 }

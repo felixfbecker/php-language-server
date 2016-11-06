@@ -7,7 +7,7 @@ use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\{LanguageClient, Project};
 use LanguageServer\NodeVisitor\NodeAtPositionFinder;
-use LanguageServer\Protocol\{SymbolKind, Position};
+use LanguageServer\Protocol\{SymbolKind, Position, ClientCapabilities};
 use PhpParser\Node;
 
 class PhpDocumentTest extends TestCase
@@ -19,7 +19,8 @@ class PhpDocumentTest extends TestCase
 
     public function setUp()
     {
-        $this->project = new Project(new LanguageClient(new MockProtocolStream, new MockProtocolStream));
+        $client = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
+        $this->project = new Project($client, new ClientCapabilities);
     }
 
     public function testParsesVariableVariables()

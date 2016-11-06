@@ -12,7 +12,8 @@ use LanguageServer\Protocol\{
     VersionedTextDocumentIdentifier,
     TextDocumentContentChangeEvent,
     Range,
-    Position
+    Position,
+    ClientCapabilities
 };
 
 class DidChangeTest extends TestCase
@@ -20,7 +21,7 @@ class DidChangeTest extends TestCase
     public function test()
     {
         $client = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
-        $project = new Project($client);
+        $project = new Project($client, new ClientCapabilities);
         $textDocument = new Server\TextDocument($project, $client);
         $phpDocument = $project->openDocument('whatever', "<?php\necho 'Hello, World'\n");
 

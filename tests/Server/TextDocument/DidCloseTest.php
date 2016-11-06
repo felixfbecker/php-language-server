@@ -6,7 +6,7 @@ namespace LanguageServer\Tests\Server\TextDocument;
 use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\{Server, Client, LanguageClient, Project};
-use LanguageServer\Protocol\{TextDocumentItem, TextDocumentIdentifier};
+use LanguageServer\Protocol\{TextDocumentItem, TextDocumentIdentifier, ClientCapabilities};
 use Exception;
 
 class DidCloseTest extends TestCase
@@ -14,7 +14,7 @@ class DidCloseTest extends TestCase
     public function test()
     {
         $client = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
-        $project = new Project($client);
+        $project = new Project($client, new ClientCapabilities);
         $textDocument = new Server\TextDocument($project, $client);
         $phpDocument = $project->openDocument('whatever', 'hello world');
 

@@ -3,7 +3,7 @@ declare(strict_types = 1);
 
 namespace LanguageServer;
 
-use LanguageServer\Protocol\SymbolInformation;
+use LanguageServer\Protocol\{SymbolInformation, TextDocumentIdentifier, ClientCapabilities};
 use phpDocumentor\Reflection\DocBlockFactory;
 
 class Project
@@ -51,10 +51,17 @@ class Project
      */
     private $client;
 
-    public function __construct(LanguageClient $client)
+    /**
+     * The client's capabilities
+     *
+     * @var ClientCapabilities
+     */
+    private $clientCapabilities;
+
+    public function __construct(LanguageClient $client, ClientCapabilities $clientCapabilities)
     {
         $this->client = $client;
-
+        $this->clientCapabilities = $clientCapabilities;
         $this->parser = new Parser;
         $this->docBlockFactory = DocBlockFactory::createInstance();
     }
@@ -80,11 +87,16 @@ class Project
      * The document is NOT added to the list of open documents, but definitions are registered.
      *
      * @param string $uri
-     * @return LanguageServer\PhpDocument
+     * @return Promise <LanguageServer\PhpDocument>
      */
     public function loadDocument(string $uri)
     {
-        $content = file_get_contents(uriToPath($uri));
+        if ($this->clientCapabilities->xcontentProvider) {
+            // TODO: make this whole method async instead of calling wait()
+            $content = $this->client->textDocument->xcontent(new TextDocumentIdentifier($uri))->wait()->text;
+        } else {
+            $content = file_get_contents(uriToPath($uri));
+        }
         if (isset($this->documents[$uri])) {
             $document = $this->documents[$uri];
             $document->updateContent($content);

@@ -6,8 +6,9 @@ namespace LanguageServer\Tests\Server\TextDocument;
 use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\{Server, Client, LanguageClient, Project, ClientHandler};
-use LanguageServer\Protocol\{TextDocumentIdentifier, TextDocumentItem, DiagnosticSeverity};
+use LanguageServer\Protocol\{TextDocumentIdentifier, TextDocumentItem, DiagnosticSeverity, ClientCapabilities};
 use Sabre\Event\Promise;
+use JsonMapper;
 
 class ParseErrorsTest extends TestCase
 {
@@ -25,7 +26,7 @@ class ParseErrorsTest extends TestCase
             private $args;
             public function __construct(&$args)
             {
-                parent::__construct(new ClientHandler(new MockProtocolStream, new MockProtocolStream));
+                parent::__construct(new ClientHandler(new MockProtocolStream, new MockProtocolStream), new JsonMapper);
                 $this->args = &$args;
             }
             public function publishDiagnostics(string $uri, array $diagnostics): Promise
@@ -34,7 +35,7 @@ class ParseErrorsTest extends TestCase
                 return Promise\resolve(null);
             }
         };
-        $project = new Project($client);
+        $project = new Project($client, new ClientCapabilities);
         $this->textDocument = new Server\TextDocument($project, $client);
     }
 
