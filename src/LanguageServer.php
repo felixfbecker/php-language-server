@@ -114,7 +114,6 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
      */
     public function initialize(int $processId, ClientCapabilities $capabilities, string $rootPath = null): InitializeResult
     {
-
         $this->rootPath = $rootPath;
         $this->clientCapabilities = $capabilities;
         $this->project = new Project($this->client, $capabilities);
