@@ -3,6 +3,8 @@
 use LanguageServer\{LanguageServer, ProtocolStreamReader, ProtocolStreamWriter};
 use Sabre\Event\Loop;
 use Symfony\Component\Debug\ErrorHandler;
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
 
 $options = getopt('', ['tcp::', 'memory-limit::']);
 
@@ -15,7 +17,11 @@ foreach ([__DIR__ . '/../../../autoload.php', __DIR__ . '/../autoload.php', __DI
     }
 }
 
-ErrorHandler::register();
+$logger = new Logger('Errors');
+$logger->pushHandler(new StreamHandler(STDERR));
+$errorHandler = new ErrorHandler;
+$errorHandler->setDefaultLogger($logger);
+ErrorHandler::register($errorHandler);
 
 @cli_set_process_title('PHP Language Server');
 
