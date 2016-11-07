@@ -3,7 +3,7 @@ declare(strict_types = 1);
 
 namespace LanguageServer;
 
-use LanguageServer\Protocol\{Diagnostic, DiagnosticSeverity, Range, Position, TextEdit};
+use LanguageServer\Protocol\{Diagnostic, DiagnosticSeverity, Position, TextEdit};
 use LanguageServer\NodeVisitor\{
     NodeAtPositionFinder,
     ReferencesAdder,
@@ -17,6 +17,7 @@ use PhpParser\{Error, ErrorHandler, Node, NodeTraverser};
 use PhpParser\NodeVisitor\NameResolver;
 use phpDocumentor\Reflection\DocBlockFactory;
 use function LanguageServer\Fqn\{getDefinedFqn, getVariableDefinition, getReferencedFqn};
+use LanguageServer\Completion\CompletionReporter;
 
 class PhpDocument
 {
@@ -93,6 +94,12 @@ class PhpDocument
     private $symbols;
 
     /**
+     *
+     * @var \LanguageServer\Completion\CompletionReporter
+     */
+    private $completionReporter;
+
+    /**
      * @param string          $uri             The URI of the document
      * @param string          $content         The content of the document
      * @param Project         $project         The Project this document belongs to (to register definitions etc)
@@ -132,6 +139,8 @@ class PhpDocument
     public function updateContent(string $content)
     {
         $this->content = $content;
+        $this->completionReporter = new CompletionReporter($this);
+
         $stmts = null;
 
         $errorHandler = new ErrorHandler\Collecting;
@@ -220,6 +229,17 @@ class PhpDocument
             return [];
         }
         return Formatter::format($this->content, $this->uri);
+    }
+
+    /**
+     * @param Position $position
+     *
+     * @return \LanguageServer\Protocol\CompletionList
+     */
+    public function complete(Position $position)
+    {
+        $this->completionReporter->complete($position);
+        return $this->completionReporter->getCompletionList();
     }
 
     /**

@@ -10,7 +10,7 @@ use LanguageServer\Protocol\{
     Message,
     MessageType,
     InitializeResult,
-    SymbolInformation
+    CompletionOptions
 };
 use AdvancedJsonRpc;
 use Sabre\Event\Loop;
@@ -89,6 +89,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
 
         $this->textDocument = new Server\TextDocument($this->project, $this->client);
         $this->workspace = new Server\Workspace($this->project, $this->client);
+        $this->completionItem = new Server\CompletionItemResolver($this->project);
     }
 
     /**
@@ -123,7 +124,11 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
         $serverCapabilities->referencesProvider = true;
         // Support "Hover"
         $serverCapabilities->hoverProvider = true;
-
+        // Support code completion
+        $completionOptions = new CompletionOptions();
+        $completionOptions->resolveProvider = true;
+        $completionOptions->triggerCharacters = [':', '$', '>'];
+        $serverCapabilities->completionProvider = $completionOptions;
         return new InitializeResult($serverCapabilities);
     }
 

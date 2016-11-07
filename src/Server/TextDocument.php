@@ -223,4 +223,17 @@ class TextDocument
 
         return new Hover($contents, $range);
     }
+
+    /**
+     * @param \LanguageServer\Protocol\TextDocumentIdentifier $textDocument
+     * @param \LanguageServer\Protocol\Position $position
+     *
+     * @return \LanguageServer\Protocol\CompletionList
+     */
+    public function completion(TextDocumentIdentifier $textDocument, Position $position)
+    {
+        $document = $this->project->getDocument($textDocument->uri);
+        return $document->complete($position);
+    }
+
 }
