@@ -5,8 +5,10 @@ namespace LanguageServer\Tests;
 
 use PHPUnit\Framework\TestCase;
 use LanguageServer\LanguageServer;
-use LanguageServer\Protocol\{Message, ClientCapabilities, TextDocumentSyncKind};
+use LanguageServer\Protocol\{Message, ClientCapabilities, TextDocumentSyncKind, MessageType};
 use AdvancedJsonRpc;
+use Sabre\Event\Promise;
+use function LanguageServer\pathToUri;
 
 class LanguageServerTest extends TestCase
 {
@@ -45,5 +47,25 @@ class LanguageServerTest extends TestCase
                 'renameProvider' => null
             ]
         ], $msg->body->result);
+    }
+
+    public function testIndexing()
+    {
+        $promise = new Promise;
+        $input = new MockProtocolStream;
+        $output = new MockProtocolStream;
+        $output->on('message', function (Message $msg) use ($promise) {
+            if ($msg->body->method === 'window/logMessage') {
+                if ($msg->body->params->type === MessageType::ERROR) {
+                    $promise->reject();
+                } else if (strpos($msg->body->params->message, 'All 10 PHP files parsed') !== false) {
+                    $promise->fulfill();
+                }
+            }
+        });
+        $server = new LanguageServer($input, $output);
+        $capabilities = new ClientCapabilities;
+        $server->initialize(getmypid(), $capabilities, realpath(__DIR__ . '/../fixtures'));
+        $promise->wait();
     }
 }

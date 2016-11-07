@@ -183,7 +183,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
             } else {
                 $duration = (int)(microtime(true) - $startTime);
                 $mem = (int)(memory_get_usage(true) / (1024 * 1024));
-                $this->client->window->logMessage(MessageType::INFO, "All PHP files parsed in $duration seconds. $mem MiB allocated.");
+                $this->client->window->logMessage(MessageType::INFO, "All $numTotalFiles PHP files parsed in $duration seconds. $mem MiB allocated.");
             }
         };
 
