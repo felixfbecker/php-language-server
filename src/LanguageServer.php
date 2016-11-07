@@ -220,11 +220,11 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                 $textDocuments = [];
             return Promise\all(array_map(function ($pattern) use (&$textDocuments) {
                 return coroutine(function () use ($pattern, &$textDocuments) {
-                $pattern = Path::makeAbsolute($pattern, $this->rootPath);
-                foreach (new GlobIterator($pattern) as $path) {
-                    $textDocuments[] = new TextDocumentIdentifier(pathToUri($path));
-                    yield timeout();
-                }
+                    $pattern = Path::makeAbsolute($pattern, $this->rootPath);
+                    foreach (new GlobIterator($pattern) as $path) {
+                        $textDocuments[] = new TextDocumentIdentifier(pathToUri($path));
+                        yield timeout();
+                    }
                 });
             }, $patterns))->then(function () use ($textDocuments) {
                 return $textDocuments;
