@@ -25,7 +25,7 @@ class FileUriTest extends TestCase
 
         // special chars are escaped
         $uri = pathToUri('c:/path/to/file/dürüm döner.php');
-        $this->assertEquals('file:///c:/path/to/file/d%C3%BCr%C3%BCm+d%C3%B6ner.php', $uri);
+        $this->assertEquals('file:///c:/path/to/file/d%C3%BCr%C3%BCm%20d%C3%B6ner.php', $uri);
 
         //backslashes are transformed
         $uri = pathToUri('c:\\foo\\bar.baz');
