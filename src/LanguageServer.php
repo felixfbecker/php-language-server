@@ -191,7 +191,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                     } catch (Exception $e) {
                         $this->client->window->logMessage(
                             MessageType::ERROR,
-                            "Error parsing file $shortName: " . (string)$e
+                            "Error parsing file {$textDocument->uri}: " . (string)$e
                         );
                     }
                 });
