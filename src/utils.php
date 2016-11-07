@@ -22,7 +22,7 @@ function pathToUri(string $filepath): string
     if (substr($first, -1) !== ':') {
         $first = urlencode($first);
     }
-    $parts = array_map('urlencode', $parts);
+    $parts = array_map('rawurlencode', $parts);
     array_unshift($parts, $first);
     $filepath = implode('/', $parts);
     return 'file:///' . $filepath;

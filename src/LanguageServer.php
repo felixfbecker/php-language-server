@@ -199,7 +199,10 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
 
             $duration = (int)(microtime(true) - $startTime);
             $mem = (int)(memory_get_usage(true) / (1024 * 1024));
-            $this->client->window->logMessage(MessageType::INFO, "All PHP files parsed in $duration seconds. $mem MiB allocated.");
+            $this->client->window->logMessage(
+                MessageType::INFO,
+                "All $count PHP files parsed in $duration seconds. $mem MiB allocated."
+            );
         });
     }
 
@@ -217,7 +220,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
             return $this->client->workspace->xglob($patterns);
         } else {
             // Use the file system
-                $textDocuments = [];
+            $textDocuments = [];
             return Promise\all(array_map(function ($pattern) use (&$textDocuments) {
                 return coroutine(function () use ($pattern, &$textDocuments) {
                     $pattern = Path::makeAbsolute($pattern, $this->rootPath);
@@ -226,7 +229,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                         yield timeout();
                     }
                 });
-            }, $patterns))->then(function () use ($textDocuments) {
+            }, $patterns))->then(function () use (&$textDocuments) {
                 return $textDocuments;
             });
         }
