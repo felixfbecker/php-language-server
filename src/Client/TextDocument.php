@@ -4,7 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer\Client;
 
 use LanguageServer\ClientHandler;
-use LanguageServer\Protocol\{Message, Content, TextDocumentIdentifier};
+use LanguageServer\Protocol\{Message, TextDocumentItem, TextDocumentIdentifier};
 use Sabre\Event\Promise;
 use JsonMapper;
 
@@ -57,7 +57,7 @@ class TextDocument
             'textDocument/xcontent',
             ['textDocument' => $textDocument]
         )->then(function ($result) {
-            return $this->mapper->map($result, new Content);
+            return $this->mapper->map($result, new TextDocumentItem);
         });
     }
 }

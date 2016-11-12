@@ -5,11 +5,11 @@ namespace LanguageServer\Protocol;
 class ClientCapabilities
 {
     /**
-     * The client supports workspace/xglob requests
+     * The client supports workspace/xfiles requests
      *
      * @var bool|null
      */
-    public $xglobProvider;
+    public $xfilesProvider;
 
     /**
      * The client supports textDocument/xcontent requests

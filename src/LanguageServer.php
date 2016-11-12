@@ -173,7 +173,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     private function indexProject(): Promise
     {
         return coroutine(function () {
-            $textDocuments = yield $this->globWorkspace(['**/*.php']);
+            $textDocuments = yield $this->findPhpFiles();
             $count = count($textDocuments);
 
             $startTime = microtime(true);
@@ -207,31 +207,27 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     }
 
     /**
-     * Returns all files matching a glob pattern.
-     * If the client does not support workspace/xglob, it falls back to globbing the file system directly.
+     * Returns all PHP files in the workspace.
+     * If the client does not support workspace/files, it falls back to searching the file system directly.
      *
-     * @param string $patterns
      * @return Promise <TextDocumentIdentifier[]>
      */
-    private function globWorkspace(array $patterns): Promise
+    private function findPhpFiles(): Promise
     {
-        if ($this->clientCapabilities->xglobProvider) {
-            // Use xglob request
-            return $this->client->workspace->xglob($patterns);
-        } else {
-            // Use the file system
-            $textDocuments = [];
-            return Promise\all(array_map(function ($pattern) use (&$textDocuments) {
-                return coroutine(function () use ($pattern, &$textDocuments) {
-                    $pattern = Path::makeAbsolute($pattern, $this->rootPath);
-                    foreach (new GlobIterator($pattern) as $path) {
-                        $textDocuments[] = new TextDocumentIdentifier(pathToUri($path));
-                        yield timeout();
-                    }
-                });
-            }, $patterns))->then(function () use (&$textDocuments) {
+        return coroutine(function () {
+            if ($this->clientCapabilities->xfilesProvider) {
+                // Use xfiles request
+                return yield $this->client->workspace->xfiles($patterns);
+            } else {
+                // Use the file system
+                $textDocuments = [];
+                $pattern = Path::makeAbsolute('**/*.php', $this->rootPath);
+                foreach (new GlobIterator($pattern) as $path) {
+                    $textDocuments[] = new TextDocumentIdentifier(pathToUri($path));
+                    yield timeout();
+                }
                 return $textDocuments;
-            });
-        }
+            }
+        });
     }
 }
