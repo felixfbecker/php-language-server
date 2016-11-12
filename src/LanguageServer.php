@@ -20,7 +20,9 @@ use Exception;
 use RuntimeException;
 use Throwable;
 use Webmozart\Glob\Iterator\GlobIterator;
+use Webmozart\Glob\Glob;
 use Webmozart\PathUtil\Path;
+use Sabre\Uri;
 
 class LanguageServer extends AdvancedJsonRpc\Dispatcher
 {
@@ -215,19 +217,24 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     private function findPhpFiles(): Promise
     {
         return coroutine(function () {
+            $textDocuments = [];
+            $pattern = Path::makeAbsolute('**/*.php', $this->rootPath);
             if ($this->clientCapabilities->xfilesProvider) {
                 // Use xfiles request
-                return yield $this->client->workspace->xfiles($patterns);
+                foreach (yield $this->client->workspace->xfiles() as $textDocument) {
+                    $path = Uri\parse($textDocument->uri)['path'];
+                    if (Glob::match($path, $pattern)) {
+                        $textDocuments[] = $textDocument;
+                    }
+                }
             } else {
                 // Use the file system
-                $textDocuments = [];
-                $pattern = Path::makeAbsolute('**/*.php', $this->rootPath);
                 foreach (new GlobIterator($pattern) as $path) {
                     $textDocuments[] = new TextDocumentIdentifier(pathToUri($path));
                     yield timeout();
                 }
-                return $textDocuments;
             }
+            return $textDocuments;
         });
     }
 }

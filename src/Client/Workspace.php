@@ -30,16 +30,16 @@ class Workspace
     }
 
     /**
-     * Returns a list of all files in the workspace that match any of the given glob patterns
+     * Returns a list of all files in a directory
      *
-     * @param string[] $patterns Glob patterns
-     * @return Promise <TextDocumentIdentifier[]> Array of documents that match the glob patterns
+     * @param string $base The base directory (defaults to the workspace)
+     * @return Promise <TextDocumentIdentifier[]> Array of documents
      */
-    public function xglob(array $patterns): Promise
+    public function xfiles(string $base = null): Promise
     {
         return $this->handler->request(
-            'workspace/xglob',
-            ['patterns' => $patterns]
+            'workspace/xfiles',
+            ['base' => $base]
         )->then(function (array $textDocuments) {
             return $this->mapper->mapArray($textDocuments, [], TextDocumentIdentifier::class);
         });

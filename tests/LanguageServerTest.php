@@ -5,7 +5,8 @@ namespace LanguageServer\Tests;
 
 use PHPUnit\Framework\TestCase;
 use LanguageServer\LanguageServer;
-use LanguageServer\Protocol\{Message, ClientCapabilities, TextDocumentSyncKind, MessageType, Content};
+use LanguageServer\Protocol\{
+    Message, ClientCapabilities, TextDocumentSyncKind, MessageType, TextDocumentItem, TextDocumentIdentifier};
 use AdvancedJsonRpc;
 use Webmozart\Glob\Glob;
 use Webmozart\PathUtil\Path;
@@ -71,31 +72,32 @@ class LanguageServerTest extends TestCase
         $promise->wait();
     }
 
-    public function testIndexingWithGlobAndContentRequests()
+    public function testIndexingWithFilesAndContentRequests()
     {
         $promise = new Promise;
-        $globCalled = false;
+        $filesCalled = false;
         $contentCalled = false;
         $rootPath = realpath(__DIR__ . '/../fixtures');
         $input = new MockProtocolStream;
         $output = new MockProtocolStream;
-        $output->on('message', function (Message $msg) use ($promise, $input, $rootPath, &$globCalled, &$contentCalled) {
+        $output->on('message', function (Message $msg) use ($promise, $input, $rootPath, &$filesCalled, &$contentCalled) {
             if ($msg->body->method === 'textDocument/xcontent') {
                 // Document content requested
                 $contentCalled = true;
-                $input->write(new Message(new AdvancedJsonRpc\SuccessResponse(
-                    $msg->body->id,
-                    new Content(file_get_contents($msg->body->params->textDocument->uri))
-                )));
-            } else if ($msg->body->method === 'workspace/xglob') {
+                $textDocumentItem = new TextDocumentItem;
+                $textDocumentItem->uri = $msg->body->params->textDocument->uri;
+                $textDocumentItem->version = 1;
+                $textDocumentItem->languageId = 'php';
+                $textDocumentItem->text = file_get_contents($msg->body->params->textDocument->uri);
+                $input->write(new Message(new AdvancedJsonRpc\SuccessResponse($msg->body->id, $textDocumentItem)));
+            } else if ($msg->body->method === 'workspace/xfiles') {
                 // Glob requested
-                $globCalled = true;
-                $files = array_map(
-                    '\\LanguageServer\\pathToUri',
-                    array_merge(...array_map(function (string $pattern) use ($rootPath) {
-                        return Glob::glob(Path::makeAbsolute($pattern, $rootPath));
-                    }, $msg->body->params->patterns))
-                );
+                $filesCalled = true;
+                $pattern = Path::makeAbsolute('**/*.php', $msg->body->params->base ?? $rootPath);
+                $files = [];
+                foreach (Glob::glob($pattern) as $path) {
+                    $files[] = new TextDocumentIdentifier(pathToUri($path));
+                }
                 $input->write(new Message(new AdvancedJsonRpc\SuccessResponse($msg->body->id, $files)));
             } else if ($msg->body->method === 'window/logMessage') {
                 // Message logged
@@ -112,11 +114,11 @@ class LanguageServerTest extends TestCase
         });
         $server = new LanguageServer($input, $output);
         $capabilities = new ClientCapabilities;
-        $capabilities->xglobProvider = true;
+        $capabilities->xfilesProvider = true;
         $capabilities->xcontentProvider = true;
         $server->initialize(getmypid(), $capabilities, $rootPath);
         $promise->wait();
-        $this->assertTrue($globCalled);
+        $this->assertTrue($filesCalled);
         $this->assertTrue($contentCalled);
     }
 }
