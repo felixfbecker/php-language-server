@@ -91,7 +91,7 @@ class LanguageServerTest extends TestCase
                 $textDocumentItem->text = file_get_contents($msg->body->params->textDocument->uri);
                 $input->write(new Message(new AdvancedJsonRpc\SuccessResponse($msg->body->id, $textDocumentItem)));
             } else if ($msg->body->method === 'workspace/xfiles') {
-                // Glob requested
+                // Files requested
                 $filesCalled = true;
                 $pattern = Path::makeAbsolute('**/*.php', $msg->body->params->base ?? $rootPath);
                 $files = [];
