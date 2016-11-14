@@ -16,7 +16,10 @@ class HoverTest extends ServerTestCase
         // $obj = new TestClass();
         // Get hover for TestClass
         $reference = $this->getReferenceLocations('TestClass')[0];
-        $result = $this->textDocument->hover(new TextDocumentIdentifier($reference->uri), $reference->range->start);
+        $result = $this->textDocument->hover(
+            new TextDocumentIdentifier($reference->uri),
+            $reference->range->start
+        )->wait();
         $this->assertEquals(new Hover([
             new MarkedString('php', "<?php\nclass TestClass implements \\TestInterface"),
             'Pariatur ut laborum tempor voluptate consequat ea deserunt.'
@@ -28,7 +31,10 @@ class HoverTest extends ServerTestCase
         // $obj->testMethod();
         // Get hover for testMethod
         $reference = $this->getReferenceLocations('TestClass::testMethod()')[0];
-        $result = $this->textDocument->hover(new TextDocumentIdentifier($reference->uri), $reference->range->end);
+        $result = $this->textDocument->hover(
+            new TextDocumentIdentifier($reference->uri),
+            $reference->range->end
+        )->wait();
         $this->assertEquals(new Hover([
             new MarkedString('php', "<?php\npublic function testMethod(\$testParameter) : \TestInterface"),
             'Non culpa nostrud mollit esse sunt laboris in irure ullamco cupidatat amet.'
@@ -40,7 +46,10 @@ class HoverTest extends ServerTestCase
         // echo $obj->testProperty;
         // Get hover for testProperty
         $reference = $this->getReferenceLocations('TestClass::testProperty')[0];
-        $result = $this->textDocument->hover(new TextDocumentIdentifier($reference->uri), $reference->range->end);
+        $result = $this->textDocument->hover(
+            new TextDocumentIdentifier($reference->uri),
+            $reference->range->end
+        )->wait();
         $this->assertEquals(new Hover([
             new MarkedString('php', "<?php\npublic \$testProperty;"),
             'Reprehenderit magna velit mollit ipsum do.'
@@ -52,7 +61,10 @@ class HoverTest extends ServerTestCase
         // TestClass::staticTestMethod();
         // Get hover for staticTestMethod
         $reference = $this->getReferenceLocations('TestClass::staticTestMethod()')[0];
-        $result = $this->textDocument->hover(new TextDocumentIdentifier($reference->uri), $reference->range->end);
+        $result = $this->textDocument->hover(
+            new TextDocumentIdentifier($reference->uri),
+            $reference->range->end
+        )->wait();
         $this->assertEquals(new Hover([
             new MarkedString('php', "<?php\npublic static function staticTestMethod()"),
             'Do magna consequat veniam minim proident eiusmod incididunt aute proident.'
@@ -64,7 +76,10 @@ class HoverTest extends ServerTestCase
         // echo TestClass::staticTestProperty;
         // Get hover for staticTestProperty
         $reference = $this->getReferenceLocations('TestClass::staticTestProperty')[0];
-        $result = $this->textDocument->hover(new TextDocumentIdentifier($reference->uri), $reference->range->end);
+        $result = $this->textDocument->hover(
+            new TextDocumentIdentifier($reference->uri),
+            $reference->range->end
+        )->wait();
         $this->assertEquals(new Hover([
             new MarkedString('php', "<?php\npublic static \$staticTestProperty;"),
             'Lorem excepteur officia sit anim velit veniam enim.'
@@ -76,7 +91,10 @@ class HoverTest extends ServerTestCase
         // echo TestClass::TEST_CLASS_CONST;
         // Get hover for TEST_CLASS_CONST
         $reference = $this->getReferenceLocations('TestClass::TEST_CLASS_CONST')[0];
-        $result = $this->textDocument->hover(new TextDocumentIdentifier($reference->uri), $reference->range->end);
+        $result = $this->textDocument->hover(
+            new TextDocumentIdentifier($reference->uri),
+            $reference->range->end
+        )->wait();
         $this->assertEquals(new Hover([
             new MarkedString('php', "<?php\nconst TEST_CLASS_CONST = 123;"),
             'Anim labore veniam consectetur laboris minim quis aute aute esse nulla ad.'
@@ -88,7 +106,10 @@ class HoverTest extends ServerTestCase
         // test_function();
         // Get hover for test_function
         $reference = $this->getReferenceLocations('test_function()')[0];
-        $result = $this->textDocument->hover(new TextDocumentIdentifier($reference->uri), $reference->range->end);
+        $result = $this->textDocument->hover(
+            new TextDocumentIdentifier($reference->uri),
+            $reference->range->end
+        )->wait();
         $this->assertEquals(new Hover([
             new MarkedString('php', "<?php\nfunction test_function()"),
             'Officia aliquip adipisicing et nulla et laboris dolore labore.'
@@ -100,7 +121,10 @@ class HoverTest extends ServerTestCase
         // echo TEST_CONST;
         // Get hover for TEST_CONST
         $reference = $this->getReferenceLocations('TEST_CONST')[0];
-        $result = $this->textDocument->hover(new TextDocumentIdentifier($reference->uri), $reference->range->end);
+        $result = $this->textDocument->hover(
+            new TextDocumentIdentifier($reference->uri),
+            $reference->range->end
+        )->wait();
         $this->assertEquals(new Hover([
             new MarkedString('php', "<?php\nconst TEST_CONST = 123;"),
             'Esse commodo excepteur pariatur Lorem est aute incididunt reprehenderit.'
@@ -112,7 +136,7 @@ class HoverTest extends ServerTestCase
         // echo $var;
         // Get hover for $var
         $uri = pathToUri(realpath(__DIR__ . '/../../../fixtures/references.php'));
-        $result = $this->textDocument->hover(new TextDocumentIdentifier($uri), new Position(13, 7));
+        $result = $this->textDocument->hover(new TextDocumentIdentifier($uri), new Position(13, 7))->wait();
         $this->assertEquals(new Hover(
             [new MarkedString('php', "<?php\n\$var = 123;")],
             new Range(new Position(13, 5), new Position(13, 9))
@@ -124,7 +148,7 @@ class HoverTest extends ServerTestCase
         // echo $param;
         // Get hover for $param
         $uri = pathToUri(realpath(__DIR__ . '/../../../fixtures/references.php'));
-        $result = $this->textDocument->hover(new TextDocumentIdentifier($uri), new Position(22, 11));
+        $result = $this->textDocument->hover(new TextDocumentIdentifier($uri), new Position(22, 11))->wait();
         $this->assertEquals(new Hover(
             [
                 new MarkedString('php', "<?php\n\TestNamespace\TestClass \$param"),

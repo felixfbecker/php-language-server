@@ -6,7 +6,14 @@ namespace LanguageServer\Tests\Server;
 use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\{Server, Client, LanguageClient, Project, PhpDocument};
-use LanguageServer\Protocol\{TextDocumentItem, TextDocumentIdentifier, SymbolKind, DiagnosticSeverity, FormattingOptions};
+use LanguageServer\Protocol\{
+    TextDocumentItem,
+    TextDocumentIdentifier,
+    SymbolKind,
+    DiagnosticSeverity,
+    FormattingOptions,
+    ClientCapabilities
+};
 use AdvancedJsonRpc\{Request as RequestBody, Response as ResponseBody};
 use function LanguageServer\pathToUri;
 
@@ -19,12 +26,13 @@ class ProjectTest extends TestCase
 
     public function setUp()
     {
-        $this->project = new Project(new LanguageClient(new MockProtocolStream, new MockProtocolStream));
+        $client = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
+        $this->project = new Project($client, new ClientCapabilities);
     }
 
-    public function testGetDocumentLoadsDocument()
+    public function testGetOrLoadDocumentLoadsDocument()
     {
-        $document = $this->project->getDocument(pathToUri(__FILE__));
+        $document = $this->project->getOrLoadDocument(pathToUri(__FILE__))->wait();
 
         $this->assertNotNull($document);
         $this->assertInstanceOf(PhpDocument::class, $document);

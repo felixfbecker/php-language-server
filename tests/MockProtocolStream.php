@@ -5,7 +5,7 @@ namespace LanguageServer\Tests;
 
 use LanguageServer\{ProtocolReader, ProtocolWriter};
 use LanguageServer\Protocol\Message;
-use Sabre\Event\{Emitter, Promise};
+use Sabre\Event\{Loop, Emitter, Promise};
 
 /**
  * A fake duplex protocol stream
@@ -20,7 +20,9 @@ class MockProtocolStream extends Emitter implements ProtocolReader, ProtocolWrit
      */
     public function write(Message $msg): Promise
     {
-        $this->emit('message', [Message::parse((string)$msg)]);
+        Loop\nextTick(function () use ($msg) {
+            $this->emit('message', [Message::parse((string)$msg)]);
+        });
         return Promise\resolve(null);
     }
 }

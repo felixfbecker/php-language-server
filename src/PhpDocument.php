@@ -17,6 +17,8 @@ use PhpParser\{Error, ErrorHandler, Node, NodeTraverser};
 use PhpParser\NodeVisitor\NameResolver;
 use phpDocumentor\Reflection\DocBlockFactory;
 use function LanguageServer\Fqn\{getDefinedFqn, getVariableDefinition, getReferencedFqn};
+use Sabre\Event\Promise;
+use function Sabre\Event\coroutine;
 
 class PhpDocument
 {
@@ -314,34 +316,36 @@ class PhpDocument
      * The definition node MAY be in another document, check the ownerDocument attribute
      *
      * @param Node $node
-     * @return Node|null
+     * @return Promise <Node|null>
      */
-    public function getDefinitionByNode(Node $node)
+    public function getDefinitionByNode(Node $node): Promise
     {
-        // Variables always stay in the boundary of the file and need to be searched inside their function scope
-        // by traversing the AST
-        if ($node instanceof Node\Expr\Variable) {
-            return getVariableDefinition($node);
-        }
-        $fqn = getReferencedFqn($node);
-        if (!isset($fqn)) {
-            return null;
-        }
-        $document = $this->project->getDefinitionDocument($fqn);
-        if (!isset($document)) {
-            // If the node is a function or constant, it could be namespaced, but PHP falls back to global
-            // http://php.net/manual/en/language.namespaces.fallback.php
-            $parent = $node->getAttribute('parentNode');
-            if ($parent instanceof Node\Expr\ConstFetch || $parent instanceof Node\Expr\FuncCall) {
-                $parts = explode('\\', $fqn);
-                $fqn = end($parts);
-                $document = $this->project->getDefinitionDocument($fqn);
+        return coroutine(function () use ($node) {
+            // Variables always stay in the boundary of the file and need to be searched inside their function scope
+            // by traversing the AST
+            if ($node instanceof Node\Expr\Variable) {
+                return getVariableDefinition($node);
             }
-        }
-        if (!isset($document)) {
-            return null;
-        }
-        return $document->getDefinitionByFqn($fqn);
+            $fqn = getReferencedFqn($node);
+            if (!isset($fqn)) {
+                return null;
+            }
+            $document = yield $this->project->getDefinitionDocument($fqn);
+            if (!isset($document)) {
+                // If the node is a function or constant, it could be namespaced, but PHP falls back to global
+                // http://php.net/manual/en/language.namespaces.fallback.php
+                $parent = $node->getAttribute('parentNode');
+                if ($parent instanceof Node\Expr\ConstFetch || $parent instanceof Node\Expr\FuncCall) {
+                    $parts = explode('\\', $fqn);
+                    $fqn = end($parts);
+                    $document = yield $this->project->getDefinitionDocument($fqn);
+                }
+            }
+            if (!isset($document)) {
+                return null;
+            }
+            return $document->getDefinitionByFqn($fqn);
+        });
     }
 
     /**
@@ -349,45 +353,47 @@ class PhpDocument
      * The references node MAY be in other documents, check the ownerDocument attribute
      *
      * @param Node $node
-     * @return Node[]
+     * @return Promise <Node[]>
      */
-    public function getReferencesByNode(Node $node)
+    public function getReferencesByNode(Node $node): Promise
     {
-        // Variables always stay in the boundary of the file and need to be searched inside their function scope
-        // by traversing the AST
-        if ($node instanceof Node\Expr\Variable || $node instanceof Node\Param) {
-            if ($node->name instanceof Node\Expr) {
-                return null;
+        return coroutine(function () use ($node) {
+            // Variables always stay in the boundary of the file and need to be searched inside their function scope
+            // by traversing the AST
+            if ($node instanceof Node\Expr\Variable || $node instanceof Node\Param) {
+                if ($node->name instanceof Node\Expr) {
+                    return null;
+                }
+                // Find function/method/closure scope
+                $n = $node;
+                while (isset($n) && !($n instanceof Node\FunctionLike)) {
+                    $n = $n->getAttribute('parentNode');
+                }
+                if (!isset($n)) {
+                    $n = $node->getAttribute('ownerDocument');
+                }
+                $traverser = new NodeTraverser;
+                $refCollector = new VariableReferencesCollector($node->name);
+                $traverser->addVisitor($refCollector);
+                $traverser->traverse($n->getStmts());
+                return $refCollector->references;
             }
-            // Find function/method/closure scope
-            $n = $node;
-            while (isset($n) && !($n instanceof Node\FunctionLike)) {
-                $n = $n->getAttribute('parentNode');
+            // Definition with a global FQN
+            $fqn = getDefinedFqn($node);
+            if ($fqn === null) {
+                return [];
             }
-            if (!isset($n)) {
-                $n = $node->getAttribute('ownerDocument');
-            }
-            $traverser = new NodeTraverser;
-            $refCollector = new VariableReferencesCollector($node->name);
-            $traverser->addVisitor($refCollector);
-            $traverser->traverse($n->getStmts());
-            return $refCollector->references;
-        }
-        // Definition with a global FQN
-        $fqn = getDefinedFqn($node);
-        if ($fqn === null) {
-            return [];
-        }
-        $refDocuments = $this->project->getReferenceDocuments($fqn);
-        $nodes = [];
-        foreach ($refDocuments as $document) {
-            $refs = $document->getReferencesByFqn($fqn);
-            if ($refs !== null) {
-                foreach ($refs as $ref) {
-                    $nodes[] = $ref;
+            $refDocuments = yield $this->project->getReferenceDocuments($fqn);
+            $nodes = [];
+            foreach ($refDocuments as $document) {
+                $refs = $document->getReferencesByFqn($fqn);
+                if ($refs !== null) {
+                    foreach ($refs as $ref) {
+                        $nodes[] = $ref;
+                    }
                 }
             }
-        }
-        return $nodes;
+            return $nodes;
+        });
     }
 }

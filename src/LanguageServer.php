@@ -10,12 +10,18 @@ use LanguageServer\Protocol\{
     Message,
     MessageType,
     InitializeResult,
-    SymbolInformation
+    SymbolInformation,
+    TextDocumentIdentifier
 };
 use AdvancedJsonRpc;
-use Sabre\Event\Loop;
+use Sabre\Event\{Loop, Promise};
+use function Sabre\Event\coroutine;
 use Exception;
 use Throwable;
+use Webmozart\Glob\Iterator\GlobIterator;
+use Webmozart\Glob\Glob;
+use Webmozart\PathUtil\Path;
+use Sabre\Uri;
 
 class LanguageServer extends AdvancedJsonRpc\Dispatcher
 {
@@ -38,6 +44,11 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     public $completionItem;
     public $codeLens;
 
+    /**
+     * ClientCapabilities
+     */
+    private $clientCapabilities;
+
     private $protocolReader;
     private $protocolWriter;
     private $client;
@@ -55,40 +66,42 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
         parent::__construct($this, '/');
         $this->protocolReader = $reader;
         $this->protocolReader->on('message', function (Message $msg) {
-            // Ignore responses, this is the handler for requests and notifications
-            if (AdvancedJsonRpc\Response::isResponse($msg->body)) {
-                return;
-            }
-            $result = null;
-            $error = null;
-            try {
-                // Invoke the method handler to get a result
-                $result = $this->dispatch($msg->body);
-            } catch (AdvancedJsonRpc\Error $e) {
-                // If a ResponseError is thrown, send it back in the Response
-                $error = $e;
-            } catch (Throwable $e) {
-                // If an unexpected error occured, send back an INTERNAL_ERROR error response
-                $error = new AdvancedJsonRpc\Error($e->getMessage(), AdvancedJsonRpc\ErrorCode::INTERNAL_ERROR, null, $e);
-            }
-            // Only send a Response for a Request
-            // Notifications do not send Responses
-            if (AdvancedJsonRpc\Request::isRequest($msg->body)) {
-                if ($error !== null) {
-                    $responseBody = new AdvancedJsonRpc\ErrorResponse($msg->body->id, $error);
-                } else {
-                    $responseBody = new AdvancedJsonRpc\SuccessResponse($msg->body->id, $result);
+            coroutine(function () use ($msg) {
+                // Ignore responses, this is the handler for requests and notifications
+                if (AdvancedJsonRpc\Response::isResponse($msg->body)) {
+                    return;
                 }
-                $this->protocolWriter->write(new Message($responseBody));
-            }
+                $result = null;
+                $error = null;
+                try {
+                    // Invoke the method handler to get a result
+                    $result = yield $this->dispatch($msg->body);
+                } catch (AdvancedJsonRpc\Error $e) {
+                    // If a ResponseError is thrown, send it back in the Response
+                    $error = $e;
+                } catch (Throwable $e) {
+                    // If an unexpected error occured, send back an INTERNAL_ERROR error response
+                    $error = new AdvancedJsonRpc\Error(
+                        $e->getMessage(),
+                        AdvancedJsonRpc\ErrorCode::INTERNAL_ERROR,
+                        null,
+                        $e
+                    );
+                }
+                // Only send a Response for a Request
+                // Notifications do not send Responses
+                if (AdvancedJsonRpc\Request::isRequest($msg->body)) {
+                    if ($error !== null) {
+                        $responseBody = new AdvancedJsonRpc\ErrorResponse($msg->body->id, $error);
+                    } else {
+                        $responseBody = new AdvancedJsonRpc\SuccessResponse($msg->body->id, $result);
+                    }
+                    $this->protocolWriter->write(new Message($responseBody));
+                }
+            })->otherwise('\\LanguageServer\\crash');
         });
         $this->protocolWriter = $writer;
         $this->client = new LanguageClient($reader, $writer);
-
-        $this->project = new Project($this->client);
-
-        $this->textDocument = new Server\TextDocument($this->project, $this->client);
-        $this->workspace = new Server\Workspace($this->project, $this->client);
     }
 
     /**
@@ -102,10 +115,14 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     public function initialize(int $processId, ClientCapabilities $capabilities, string $rootPath = null): InitializeResult
     {
         $this->rootPath = $rootPath;
+        $this->clientCapabilities = $capabilities;
+        $this->project = new Project($this->client, $capabilities);
+        $this->textDocument = new Server\TextDocument($this->project, $this->client);
+        $this->workspace = new Server\Workspace($this->project, $this->client);
 
         // start building project index
         if ($rootPath !== null) {
-            $this->indexProject();
+            $this->indexProject()->otherwise('\\LanguageServer\\crash');
         }
 
         $serverCapabilities = new ServerCapabilities();
@@ -136,6 +153,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
      */
     public function shutdown()
     {
+        unset($this->project);
     }
 
     /**
@@ -151,42 +169,71 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     /**
      * Parses workspace files, one at a time.
      *
-     * @return void
+     * @return Promise <void>
      */
-    private function indexProject()
+    private function indexProject(): Promise
     {
-        $fileList = findFilesRecursive($this->rootPath, '/^.+\.php$/i');
-        $numTotalFiles = count($fileList);
+        return coroutine(function () {
+            $textDocuments = yield $this->findPhpFiles();
+            $count = count($textDocuments);
 
-        $startTime = microtime(true);
-        $fileNum = 0;
+            $startTime = microtime(true);
 
-        $processFile = function () use (&$fileList, &$fileNum, &$processFile, $numTotalFiles, $startTime) {
-            if ($fileNum < $numTotalFiles) {
-                $file = $fileList[$fileNum];
-                $uri = pathToUri($file);
-                $fileNum++;
-                $shortName = substr($file, strlen($this->rootPath) + 1);
-
-                if (filesize($file) > 500000) {
-                    $this->client->window->logMessage(MessageType::INFO, "Not parsing $shortName because it exceeds size limit of 0.5MB");
-                } else {
-                    $this->client->window->logMessage(MessageType::INFO, "Parsing file $fileNum/$numTotalFiles: $shortName.");
+            yield Promise\all(array_map(function ($textDocument, $i) use ($count) {
+                return coroutine(function () use ($textDocument, $i, $count) {
+                    // Give LS to the chance to handle requests while indexing
+                    yield timeout();
+                    $this->client->window->logMessage(
+                        MessageType::INFO,
+                        "Parsing file $i/$count: {$textDocument->uri}"
+                    );
                     try {
-                        $this->project->loadDocument($uri);
+                        yield $this->project->loadDocument($textDocument->uri);
                     } catch (Exception $e) {
-                        $this->client->window->logMessage(MessageType::ERROR, "Error parsing file $shortName: " . (string)$e);
+                        $this->client->window->logMessage(
+                            MessageType::ERROR,
+                            "Error parsing file {$textDocument->uri}: " . (string)$e
+                        );
+                    }
+                });
+            }, $textDocuments, array_keys($textDocuments)));
+
+            $duration = (int)(microtime(true) - $startTime);
+            $mem = (int)(memory_get_usage(true) / (1024 * 1024));
+            $this->client->window->logMessage(
+                MessageType::INFO,
+                "All $count PHP files parsed in $duration seconds. $mem MiB allocated."
+            );
+        });
+    }
+
+    /**
+     * Returns all PHP files in the workspace.
+     * If the client does not support workspace/files, it falls back to searching the file system directly.
+     *
+     * @return Promise <TextDocumentIdentifier[]>
+     */
+    private function findPhpFiles(): Promise
+    {
+        return coroutine(function () {
+            $textDocuments = [];
+            $pattern = Path::makeAbsolute('**/*.php', $this->rootPath);
+            if ($this->clientCapabilities->xfilesProvider) {
+                // Use xfiles request
+                foreach (yield $this->client->workspace->xfiles() as $textDocument) {
+                    $path = Uri\parse($textDocument->uri)['path'];
+                    if (Glob::match($path, $pattern)) {
+                        $textDocuments[] = $textDocument;
                     }
                 }
-
-                Loop\setTimeout($processFile, 0);
             } else {
-                $duration = (int)(microtime(true) - $startTime);
-                $mem = (int)(memory_get_usage(true) / (1024 * 1024));
-                $this->client->window->logMessage(MessageType::INFO, "All $numTotalFiles PHP files parsed in $duration seconds. $mem MiB allocated.");
+                // Use the file system
+                foreach (new GlobIterator($pattern) as $path) {
+                    $textDocuments[] = new TextDocumentIdentifier(pathToUri($path));
+                    yield timeout();
+                }
             }
-        };
-
-        Loop\setTimeout($processFile, 0);
+            return $textDocuments;
+        });
     }
 }

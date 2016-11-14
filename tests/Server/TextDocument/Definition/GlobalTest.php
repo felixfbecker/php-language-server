@@ -12,14 +12,20 @@ class GlobalTest extends ServerTestCase
     public function testDefinitionFileBeginning()
     {
         // |<?php
-        $result = $this->textDocument->definition(new TextDocumentIdentifier(pathToUri(realpath(__DIR__ . '/../../../../fixtures/references.php'))), new Position(0, 0));
+        $result = $this->textDocument->definition(
+            new TextDocumentIdentifier(pathToUri(realpath(__DIR__ . '/../../../../fixtures/references.php'))),
+            new Position(0, 0)
+        )->wait();
         $this->assertEquals([], $result);
     }
 
     public function testDefinitionEmptyResult()
     {
         // namespace keyword
-        $result = $this->textDocument->definition(new TextDocumentIdentifier(pathToUri(realpath(__DIR__ . '/../../../../fixtures/references.php'))), new Position(2, 4));
+        $result = $this->textDocument->definition(
+            new TextDocumentIdentifier(pathToUri(realpath(__DIR__ . '/../../../../fixtures/references.php'))),
+            new Position(2, 4)
+        )->wait();
         $this->assertEquals([], $result);
     }
 
@@ -28,7 +34,10 @@ class GlobalTest extends ServerTestCase
         // $obj = new TestClass();
         // Get definition for TestClass
         $reference = $this->getReferenceLocations('TestClass')[0];
-        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->start);
+        $result = $this->textDocument->definition(
+            new TextDocumentIdentifier($reference->uri),
+            $reference->range->start
+        )->wait();
         $this->assertEquals($this->getDefinitionLocation('TestClass'), $result);
     }
 
@@ -37,7 +46,10 @@ class GlobalTest extends ServerTestCase
         // TestClass::staticTestMethod();
         // Get definition for TestClass
         $reference = $this->getReferenceLocations('TestClass')[1];
-        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->start);
+        $result = $this->textDocument->definition(
+            new TextDocumentIdentifier($reference->uri),
+            $reference->range->start
+        )->wait();
         $this->assertEquals($this->getDefinitionLocation('TestClass'), $result);
     }
 
@@ -46,7 +58,10 @@ class GlobalTest extends ServerTestCase
         // echo TestClass::$staticTestProperty;
         // Get definition for TestClass
         $reference = $this->getReferenceLocations('TestClass')[2];
-        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->start);
+        $result = $this->textDocument->definition(
+            new TextDocumentIdentifier($reference->uri),
+            $reference->range->start
+        )->wait();
         $this->assertEquals($this->getDefinitionLocation('TestClass'), $result);
     }
 
@@ -55,7 +70,10 @@ class GlobalTest extends ServerTestCase
         // TestClass::TEST_CLASS_CONST;
         // Get definition for TestClass
         $reference = $this->getReferenceLocations('TestClass')[3];
-        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->start);
+        $result = $this->textDocument->definition(
+            new TextDocumentIdentifier($reference->uri),
+            $reference->range->start
+        )->wait();
         $this->assertEquals($this->getDefinitionLocation('TestClass'), $result);
     }
 
@@ -64,7 +82,10 @@ class GlobalTest extends ServerTestCase
         // class TestClass implements TestInterface
         // Get definition for TestInterface
         $reference = $this->getReferenceLocations('TestInterface')[0];
-        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->start);
+        $result = $this->textDocument->definition(
+            new TextDocumentIdentifier($reference->uri),
+            $reference->range->start
+        )->wait();
         $this->assertEquals($this->getDefinitionLocation('TestInterface'), $result);
     }
 
@@ -73,7 +94,10 @@ class GlobalTest extends ServerTestCase
         // echo TestClass::TEST_CLASS_CONST;
         // Get definition for TEST_CLASS_CONST
         $reference = $this->getReferenceLocations('TestClass::TEST_CLASS_CONST')[1];
-        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->end);
+        $result = $this->textDocument->definition(
+            new TextDocumentIdentifier($reference->uri),
+            $reference->range->end
+        )->wait();
         $this->assertEquals($this->getDefinitionLocation('TestClass::TEST_CLASS_CONST'), $result);
     }
 
@@ -82,7 +106,10 @@ class GlobalTest extends ServerTestCase
         // echo self::TEST_CLASS_CONST;
         // Get definition for TEST_CLASS_CONST
         $reference = $this->getReferenceLocations('TestClass::TEST_CLASS_CONST')[0];
-        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->end);
+        $result = $this->textDocument->definition(
+            new TextDocumentIdentifier($reference->uri),
+            $reference->range->end
+        )->wait();
         $this->assertEquals($this->getDefinitionLocation('TestClass::TEST_CLASS_CONST'), $result);
     }
 
@@ -91,7 +118,10 @@ class GlobalTest extends ServerTestCase
         // echo TEST_CONST;
         // Get definition for TEST_CONST
         $reference = $this->getReferenceLocations('TEST_CONST')[1];
-        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->start);
+        $result = $this->textDocument->definition(
+            new TextDocumentIdentifier($reference->uri),
+            $reference->range->start
+        )->wait();
         $this->assertEquals($this->getDefinitionLocation('TEST_CONST'), $result);
     }
 
@@ -100,7 +130,10 @@ class GlobalTest extends ServerTestCase
         // TestClass::staticTestMethod();
         // Get definition for staticTestMethod
         $reference = $this->getReferenceLocations('TestClass::staticTestMethod()')[0];
-        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->end);
+        $result = $this->textDocument->definition(
+            new TextDocumentIdentifier($reference->uri),
+            $reference->range->end
+        )->wait();
         $this->assertEquals($this->getDefinitionLocation('TestClass::staticTestMethod()'), $result);
     }
 
@@ -109,7 +142,10 @@ class GlobalTest extends ServerTestCase
         // echo TestClass::$staticTestProperty;
         // Get definition for staticTestProperty
         $reference = $this->getReferenceLocations('TestClass::staticTestProperty')[0];
-        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->end);
+        $result = $this->textDocument->definition(
+            new TextDocumentIdentifier($reference->uri),
+            $reference->range->end
+        )->wait();
         $this->assertEquals($this->getDefinitionLocation('TestClass::staticTestProperty'), $result);
     }
 
@@ -118,7 +154,10 @@ class GlobalTest extends ServerTestCase
         // $obj->testMethod();
         // Get definition for testMethod
         $reference = $this->getReferenceLocations('TestClass::testMethod()')[0];
-        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->end);
+        $result = $this->textDocument->definition(
+            new TextDocumentIdentifier($reference->uri),
+            $reference->range->end
+        )->wait();
         $this->assertEquals($this->getDefinitionLocation('TestClass::testMethod()'), $result);
     }
 
@@ -127,7 +166,10 @@ class GlobalTest extends ServerTestCase
         // echo $obj->testProperty;
         // Get definition for testProperty
         $reference = $this->getReferenceLocations('TestClass::testProperty')[1];
-        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->end);
+        $result = $this->textDocument->definition(
+            new TextDocumentIdentifier($reference->uri),
+            $reference->range->end
+        )->wait();
         $this->assertEquals($this->getDefinitionLocation('TestClass::testProperty'), $result);
     }
 
@@ -136,7 +178,10 @@ class GlobalTest extends ServerTestCase
         // $this->testProperty = $testParameter;
         // Get definition for testProperty
         $reference = $this->getReferenceLocations('TestClass::testProperty')[0];
-        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->end);
+        $result = $this->textDocument->definition(
+            new TextDocumentIdentifier($reference->uri),
+            $reference->range->end
+        )->wait();
         $this->assertEquals($this->getDefinitionLocation('TestClass::testProperty'), $result);
     }
 
@@ -145,7 +190,10 @@ class GlobalTest extends ServerTestCase
         // echo $var;
         // Get definition for $var
         $uri = pathToUri(realpath(__DIR__ . '/../../../../fixtures/references.php'));
-        $result = $this->textDocument->definition(new TextDocumentIdentifier($uri), new Position(13, 7));
+        $result = $this->textDocument->definition(
+            new TextDocumentIdentifier($uri),
+            new Position(13, 7)
+        )->wait();
         $this->assertEquals(new Location($uri, new Range(new Position(12, 0), new Position(12, 10))), $result);
     }
 
@@ -154,7 +202,10 @@ class GlobalTest extends ServerTestCase
         // function whatever(TestClass $param) {
         // Get definition for TestClass
         $reference = $this->getReferenceLocations('TestClass')[4];
-        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->start);
+        $result = $this->textDocument->definition(
+            new TextDocumentIdentifier($reference->uri),
+            $reference->range->start
+        )->wait();
         $this->assertEquals($this->getDefinitionLocation('TestClass'), $result);
     }
 
@@ -163,7 +214,10 @@ class GlobalTest extends ServerTestCase
         // function whatever(TestClass $param): TestClass {
         // Get definition for TestClass
         $reference = $this->getReferenceLocations('TestClass')[5];
-        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->start);
+        $result = $this->textDocument->definition(
+            new TextDocumentIdentifier($reference->uri),
+            $reference->range->start
+        )->wait();
         $this->assertEquals($this->getDefinitionLocation('TestClass'), $result);
     }
 
@@ -172,7 +226,10 @@ class GlobalTest extends ServerTestCase
         // public function testMethod($testParameter): TestInterface
         // Get definition for TestInterface
         $reference = $this->getReferenceLocations('TestInterface')[1];
-        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->start);
+        $result = $this->textDocument->definition(
+            new TextDocumentIdentifier($reference->uri),
+            $reference->range->start
+        )->wait();
         $this->assertEquals($this->getDefinitionLocation('TestInterface'), $result);
     }
 
@@ -181,7 +238,10 @@ class GlobalTest extends ServerTestCase
         // echo $param;
         // Get definition for $param
         $uri = pathToUri(realpath(__DIR__ . '/../../../../fixtures/references.php'));
-        $result = $this->textDocument->definition(new TextDocumentIdentifier($uri), new Position(22, 13));
+        $result = $this->textDocument->definition(
+            new TextDocumentIdentifier($uri),
+            new Position(22, 13)
+        )->wait();
         $this->assertEquals(new Location($uri, new Range(new Position(21, 18), new Position(21, 34))), $result);
     }
 
@@ -190,7 +250,10 @@ class GlobalTest extends ServerTestCase
         // echo $var;
         // Get definition for $var
         $uri = pathToUri(realpath(__DIR__ . '/../../../../fixtures/references.php'));
-        $result = $this->textDocument->definition(new TextDocumentIdentifier($uri), new Position(26, 11));
+        $result = $this->textDocument->definition(
+            new TextDocumentIdentifier($uri),
+            new Position(26, 11)
+        )->wait();
         $this->assertEquals(new Location($uri, new Range(new Position(25, 22), new Position(25, 26))), $result);
     }
 
@@ -199,7 +262,10 @@ class GlobalTest extends ServerTestCase
         // test_function();
         // Get definition for test_function
         $reference = $this->getReferenceLocations('test_function()')[0];
-        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->start);
+        $result = $this->textDocument->definition(
+            new TextDocumentIdentifier($reference->uri),
+            $reference->range->start
+        )->wait();
         $this->assertEquals($this->getDefinitionLocation('test_function()'), $result);
     }
 
@@ -208,7 +274,10 @@ class GlobalTest extends ServerTestCase
         // use function test_function;
         // Get definition for test_function
         $reference = $this->getReferenceLocations('test_function()')[1];
-        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->start);
+        $result = $this->textDocument->definition(
+            new TextDocumentIdentifier($reference->uri),
+            $reference->range->start
+        )->wait();
         $this->assertEquals($this->getDefinitionLocation('test_function()'), $result);
     }
 
@@ -217,7 +286,10 @@ class GlobalTest extends ServerTestCase
         // if ($abc instanceof TestInterface) {
         // Get definition for TestInterface
         $reference = $this->getReferenceLocations('TestInterface')[2];
-        $result = $this->textDocument->definition(new TextDocumentIdentifier($reference->uri), $reference->range->start);
+        $result = $this->textDocument->definition(
+            new TextDocumentIdentifier($reference->uri),
+            $reference->range->start
+        )->wait();
         $this->assertEquals($this->getDefinitionLocation('TestInterface'), $result);
     }
 }

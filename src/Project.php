@@ -3,8 +3,10 @@ declare(strict_types = 1);
 
 namespace LanguageServer;
 
-use LanguageServer\Protocol\SymbolInformation;
+use LanguageServer\Protocol\{SymbolInformation, TextDocumentIdentifier, ClientCapabilities};
 use phpDocumentor\Reflection\DocBlockFactory;
+use Sabre\Event\Promise;
+use function Sabre\Event\coroutine;
 
 class Project
 {
@@ -51,47 +53,69 @@ class Project
      */
     private $client;
 
-    public function __construct(LanguageClient $client)
+    /**
+     * The client's capabilities
+     *
+     * @var ClientCapabilities
+     */
+    private $clientCapabilities;
+
+    public function __construct(LanguageClient $client, ClientCapabilities $clientCapabilities)
     {
         $this->client = $client;
-
+        $this->clientCapabilities = $clientCapabilities;
         $this->parser = new Parser;
         $this->docBlockFactory = DocBlockFactory::createInstance();
     }
 
     /**
      * Returns the document indicated by uri.
-     * If the document is not open, tries to read it from disk, but the document is not added the list of open documents.
+     * Returns null if the document if not loaded.
      *
      * @param string $uri
-     * @return LanguageServer\PhpDocument
+     * @return PhpDocument|null
      */
     public function getDocument(string $uri)
     {
-        if (!isset($this->documents[$uri])) {
-            return $this->loadDocument($uri);
-        } else {
-            return $this->documents[$uri];
-        }
+        return $this->documents[$uri] ?? null;
     }
 
     /**
-     * Reads a document from disk.
+     * Returns the document indicated by uri.
+     * If the document is not open, loads it.
+     *
+     * @param string $uri
+     * @return Promise <PhpDocument>
+     */
+    public function getOrLoadDocument(string $uri)
+    {
+        return isset($this->documents[$uri]) ? Promise\resolve($this->documents[$uri]) : $this->loadDocument($uri);
+    }
+
+    /**
+     * Loads the document by doing a textDocument/xcontent request to the client.
+     * If the client does not support textDocument/xcontent, tries to read the file from the file system.
      * The document is NOT added to the list of open documents, but definitions are registered.
      *
      * @param string $uri
-     * @return LanguageServer\PhpDocument
+     * @return Promise <PhpDocument>
      */
-    public function loadDocument(string $uri)
+    public function loadDocument(string $uri): Promise
     {
-        $content = file_get_contents(uriToPath($uri));
-        if (isset($this->documents[$uri])) {
-            $document = $this->documents[$uri];
-            $document->updateContent($content);
-        } else {
-            $document = new PhpDocument($uri, $content, $this, $this->client, $this->parser, $this->docBlockFactory);
-        }
-        return $document;
+        return coroutine(function () use ($uri) {
+            if ($this->clientCapabilities->xcontentProvider) {
+                $content = (yield $this->client->textDocument->xcontent(new TextDocumentIdentifier($uri)))->text;
+            } else {
+                $content = file_get_contents(uriToPath($uri));
+            }
+            if (isset($this->documents[$uri])) {
+                $document = $this->documents[$uri];
+                $document->updateContent($content);
+            } else {
+                $document = new PhpDocument($uri, $content, $this, $this->client, $this->parser, $this->docBlockFactory);
+            }
+            return $document;
+        });
     }
 
     /**
@@ -222,14 +246,14 @@ class Project
      * Returns all documents that reference a symbol
      *
      * @param string $fqn The fully qualified name of the symbol
-     * @return PhpDocument[]
+     * @return Promise <PhpDocument[]>
      */
-    public function getReferenceDocuments(string $fqn)
+    public function getReferenceDocuments(string $fqn): Promise
     {
         if (!isset($this->references[$fqn])) {
-            return [];
+            return Promise\resolve([]);
         }
-        return array_map([$this, 'getDocument'], $this->references[$fqn]);
+        return Promise\all(array_map([$this, 'getOrLoadDocument'], $this->references[$fqn]));
     }
 
     /**
@@ -258,11 +282,14 @@ class Project
      * Returns the document where a symbol is defined
      *
      * @param string $fqn The fully qualified name of the symbol
-     * @return PhpDocument|null
+     * @return Promise <PhpDocument|null>
      */
-    public function getDefinitionDocument(string $fqn)
+    public function getDefinitionDocument(string $fqn): Promise
     {
-        return isset($this->symbols[$fqn]) ? $this->getDocument($this->symbols[$fqn]->location->uri) : null;
+        if (!isset($this->symbols[$fqn])) {
+            return Promise\resolve(null);
+        }
+        return $this->getOrLoadDocument($this->symbols[$fqn]->location->uri);
     }
 
     /**

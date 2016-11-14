@@ -7,6 +7,7 @@ use PHPUnit\Framework\TestCase;
 use PhpParser\{NodeTraverser, Node};
 use PhpParser\NodeVisitor\NameResolver;
 use LanguageServer\{LanguageClient, Project, PhpDocument, Parser};
+use LanguageServer\Protocol\ClientCapabilities;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\NodeVisitor\{ReferencesAdder, DefinitionCollector};
 use function LanguageServer\pathToUri;
@@ -16,10 +17,10 @@ class DefinitionCollectorTest extends TestCase
     public function testCollectsSymbols()
     {
         $client = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
-        $project = new Project($client);
+        $project = new Project($client, new ClientCapabilities);
         $parser = new Parser;
         $uri = pathToUri(realpath(__DIR__ . '/../../fixtures/symbols.php'));
-        $document = $project->loadDocument($uri);
+        $document = $project->loadDocument($uri)->wait();
         $traverser = new NodeTraverser;
         $traverser->addVisitor(new NameResolver);
         $traverser->addVisitor(new ReferencesAdder($document));
@@ -55,10 +56,10 @@ class DefinitionCollectorTest extends TestCase
     public function testDoesNotCollectReferences()
     {
         $client = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
-        $project = new Project($client);
+        $project = new Project($client, new ClientCapabilities);
         $parser = new Parser;
         $uri = pathToUri(realpath(__DIR__ . '/../../fixtures/references.php'));
-        $document = $project->loadDocument($uri);
+        $document = $project->loadDocument($uri)->wait();
         $traverser = new NodeTraverser;
         $traverser->addVisitor(new NameResolver);
         $traverser->addVisitor(new ReferencesAdder($document));

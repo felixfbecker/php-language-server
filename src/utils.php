@@ -3,26 +3,9 @@ declare(strict_types = 1);
 
 namespace LanguageServer;
 
+use Throwable;
 use InvalidArgumentException;
-
-/**
- * Recursively Searches files with matching filename, starting at $path.
- *
- * @param string $path
- * @param string $pattern
- * @return array
- */
-function findFilesRecursive(string $path, string $pattern): array
-{
-    $dir = new \RecursiveDirectoryIterator($path);
-    $ite = new \RecursiveIteratorIterator($dir);
-    $files = new \RegexIterator($ite, $pattern, \RegexIterator::GET_MATCH);
-    $fileList = [];
-    foreach ($files as $file) {
-        $fileList = array_merge($fileList, $file);
-    }
-    return $fileList;
-}
+use Sabre\Event\{Loop, Promise};
 
 /**
  * Transforms an absolute file path into a URI as used by the language server protocol.
@@ -65,4 +48,32 @@ function uriToPath(string $uri)
         $filepath = str_replace('/', '\\', $filepath);
     }
     return $filepath;
+}
+
+/**
+ * Throws an exception on the next tick.
+ * Useful for letting a promise crash the process on rejection.
+ *
+ * @param Throwable $err
+ * @return void
+ */
+function crash(Throwable $err)
+{
+    Loop\nextTick(function () use ($err) {
+        throw $err;
+    });
+}
+
+/**
+ * Returns a promise that is resolved after x seconds.
+ * Useful for giving back control to the event loop inside a coroutine.
+ *
+ * @param int $seconds
+ * @return Promise <void>
+ */
+function timeout($seconds = 0): Promise
+{
+    $promise = new Promise;
+    Loop\setTimeout([$promise, 'fulfill'], $seconds);
+    return $promise;
 }
