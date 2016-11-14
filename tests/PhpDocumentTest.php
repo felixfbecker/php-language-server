@@ -37,4 +37,22 @@ class PhpDocumentTest extends TestCase
         $this->assertInstanceOf(Node\Name\FullyQualified::class, $node);
         $this->assertEquals('SomeClass', (string)$node);
     }
+
+    public function testIsVendored()
+    {
+        $document = $this->project->openDocument('file:///dir/vendor/x.php', "<?php\n$\$a = new SomeClass;");
+        $this->assertEquals(true, $document->isVendored());
+
+        $document = $this->project->openDocument('file:///c:/dir/vendor/x.php', "<?php\n$\$a = new SomeClass;");
+        $this->assertEquals(true, $document->isVendored());
+
+        $document = $this->project->openDocument('file:///vendor/x.php', "<?php\n$\$a = new SomeClass;");
+        $this->assertEquals(true, $document->isVendored());
+
+        $document = $this->project->openDocument('file:///dir/vendor.php', "<?php\n$\$a = new SomeClass;");
+        $this->assertEquals(false, $document->isVendored());
+
+        $document = $this->project->openDocument('file:///dir/x.php', "<?php\n$\$a = new SomeClass;");
+        $this->assertEquals(false, $document->isVendored());
+    }
 }
