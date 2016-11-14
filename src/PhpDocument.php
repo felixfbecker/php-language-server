@@ -19,6 +19,7 @@ use phpDocumentor\Reflection\DocBlockFactory;
 use function LanguageServer\Fqn\{getDefinedFqn, getVariableDefinition, getReferencedFqn};
 use Sabre\Event\Promise;
 use function Sabre\Event\coroutine;
+use Sabre\Uri;
 
 class PhpDocument
 {
@@ -208,7 +209,20 @@ class PhpDocument
             $this->stmts = $stmts;
         }
 
-        $this->client->textDocument->publishDiagnostics($this->uri, $diagnostics);
+        if (!$this->isVendored()) {
+            $this->client->textDocument->publishDiagnostics($this->uri, $diagnostics);
+        }
+    }
+
+    /**
+     * Returns true if the document is a dependency
+     *
+     * @return bool
+     */
+    public function isVendored(): bool
+    {
+        $path = Uri\parse($this->uri)['path'];
+        return strpos($path, '/vendor/') !== false;
     }
 
     /**
