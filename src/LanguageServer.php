@@ -17,7 +17,6 @@ use AdvancedJsonRpc;
 use Sabre\Event\{Loop, Promise};
 use function Sabre\Event\coroutine;
 use Exception;
-use RuntimeException;
 use Throwable;
 use Webmozart\Glob\Iterator\GlobIterator;
 use Webmozart\Glob\Glob;
