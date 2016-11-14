@@ -49,7 +49,7 @@ class TextDocument
      * to request the current content of a text document identified by the URI
      *
      * @param TextDocumentIdentifier $textDocument The document to get the content for
-     * @return Promise <Content> The document's current content
+     * @return Promise <TextDocumentItem> The document's current content
      */
     public function xcontent(TextDocumentIdentifier $textDocument): Promise
     {
