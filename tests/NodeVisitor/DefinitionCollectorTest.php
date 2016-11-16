@@ -28,7 +28,7 @@ class DefinitionCollectorTest extends TestCase
         $traverser->addVisitor($definitionCollector);
         $stmts = $parser->parse(file_get_contents($uri));
         $traverser->traverse($stmts);
-        $defs = $definitionCollector->definitions;
+        $defNodes = $definitionCollector->nodes;
         $this->assertEquals([
             'TestNamespace\\TEST_CONST',
             'TestNamespace\\TestClass',
@@ -40,17 +40,17 @@ class DefinitionCollectorTest extends TestCase
             'TestNamespace\\TestTrait',
             'TestNamespace\\TestInterface',
             'TestNamespace\\test_function()'
-        ], array_keys($defs));
-        $this->assertInstanceOf(Node\Const_::class, $defs['TestNamespace\\TEST_CONST']);
-        $this->assertInstanceOf(Node\Stmt\Class_::class, $defs['TestNamespace\\TestClass']);
-        $this->assertInstanceOf(Node\Const_::class, $defs['TestNamespace\\TestClass::TEST_CLASS_CONST']);
-        $this->assertInstanceOf(Node\Stmt\PropertyProperty::class, $defs['TestNamespace\\TestClass::staticTestProperty']);
-        $this->assertInstanceOf(Node\Stmt\PropertyProperty::class, $defs['TestNamespace\\TestClass::testProperty']);
-        $this->assertInstanceOf(Node\Stmt\ClassMethod::class, $defs['TestNamespace\\TestClass::staticTestMethod()']);
-        $this->assertInstanceOf(Node\Stmt\ClassMethod::class, $defs['TestNamespace\\TestClass::testMethod()']);
-        $this->assertInstanceOf(Node\Stmt\Trait_::class, $defs['TestNamespace\\TestTrait']);
-        $this->assertInstanceOf(Node\Stmt\Interface_::class, $defs['TestNamespace\\TestInterface']);
-        $this->assertInstanceOf(Node\Stmt\Function_::class, $defs['TestNamespace\\test_function()']);
+        ], array_keys($defNodes));
+        $this->assertInstanceOf(Node\Const_::class, $defNodes['TestNamespace\\TEST_CONST']);
+        $this->assertInstanceOf(Node\Stmt\Class_::class, $defNodes['TestNamespace\\TestClass']);
+        $this->assertInstanceOf(Node\Const_::class, $defNodes['TestNamespace\\TestClass::TEST_CLASS_CONST']);
+        $this->assertInstanceOf(Node\Stmt\PropertyProperty::class, $defNodes['TestNamespace\\TestClass::staticTestProperty']);
+        $this->assertInstanceOf(Node\Stmt\PropertyProperty::class, $defNodes['TestNamespace\\TestClass::testProperty']);
+        $this->assertInstanceOf(Node\Stmt\ClassMethod::class, $defNodes['TestNamespace\\TestClass::staticTestMethod()']);
+        $this->assertInstanceOf(Node\Stmt\ClassMethod::class, $defNodes['TestNamespace\\TestClass::testMethod()']);
+        $this->assertInstanceOf(Node\Stmt\Trait_::class, $defNodes['TestNamespace\\TestTrait']);
+        $this->assertInstanceOf(Node\Stmt\Interface_::class, $defNodes['TestNamespace\\TestInterface']);
+        $this->assertInstanceOf(Node\Stmt\Function_::class, $defNodes['TestNamespace\\test_function()']);
     }
 
     public function testDoesNotCollectReferences()
@@ -67,8 +67,8 @@ class DefinitionCollectorTest extends TestCase
         $traverser->addVisitor($definitionCollector);
         $stmts = $parser->parse(file_get_contents($uri));
         $traverser->traverse($stmts);
-        $defs = $definitionCollector->definitions;
-        $this->assertEquals(['TestNamespace\\whatever()'], array_keys($defs));
-        $this->assertInstanceOf(Node\Stmt\Function_::class, $defs['TestNamespace\\whatever()']);
+        $defNodes = $definitionCollector->nodes;
+        $this->assertEquals(['TestNamespace\\whatever()'], array_keys($defNodes));
+        $this->assertInstanceOf(Node\Stmt\Function_::class, $defNodes['TestNamespace\\whatever()']);
     }
 }

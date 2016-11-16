@@ -75,25 +75,25 @@ class PhpDocument
     private $stmts;
 
     /**
+     * Map from fully qualified name (FQN) to Definition
+     *
+     * @var Definition[]
+     */
+    private $definitions;
+
+    /**
      * Map from fully qualified name (FQN) to Node
      *
      * @var Node[]
      */
-    private $definitions;
+    private $definitionNodes;
 
     /**
      * Map from fully qualified name (FQN) to array of nodes that reference the symbol
      *
      * @var Node[][]
      */
-    private $references;
-
-    /**
-     * Map from fully qualified name (FQN) to SymbolInformation
-     *
-     * @var SymbolInformation[]
-     */
-    private $symbols;
+    private $referenceNodes;
 
     /**
      * @param string          $uri             The URI of the document
@@ -121,7 +121,7 @@ class PhpDocument
      */
     public function getReferencesByFqn(string $fqn)
     {
-        return isset($this->references) && isset($this->references[$fqn]) ? $this->references[$fqn] : null;
+        return isset($this->referenceNodes) && isset($this->referenceNodes[$fqn]) ? $this->referenceNodes[$fqn] : null;
     }
 
     /**
@@ -183,26 +183,26 @@ class PhpDocument
 
             // Unregister old definitions
             if (isset($this->definitions)) {
-                foreach ($this->definitions as $fqn => $node) {
-                    $this->project->removeSymbol($fqn);
+                foreach ($this->definitions as $fqn => $definition) {
+                    $this->project->removeDefinition($fqn);
                 }
             }
             // Register this document on the project for all the symbols defined in it
             $this->definitions = $definitionCollector->definitions;
-            $this->symbols = $definitionCollector->symbols;
-            foreach ($definitionCollector->symbols as $fqn => $symbol) {
-                $this->project->setSymbol($fqn, $symbol);
+            $this->definitionNodes = $definitionCollector->nodes;
+            foreach ($definitionCollector->definitions as $fqn => $definition) {
+                $this->project->setDefinition($fqn, $definition);
             }
 
             // Unregister old references
-            if (isset($this->references)) {
-                foreach ($this->references as $fqn => $node) {
+            if (isset($this->referenceNodes)) {
+                foreach ($this->referenceNodes as $fqn => $node) {
                     $this->project->removeReferenceUri($fqn, $this->uri);
                 }
             }
             // Register this document on the project for references
-            $this->references = $referencesCollector->references;
-            foreach ($referencesCollector->references as $fqn => $nodes) {
+            $this->referenceNodes = $referencesCollector->nodes;
+            foreach ($referencesCollector->nodes as $fqn => $nodes) {
                 $this->project->addReferenceUri($fqn, $this->uri);
             }
 
@@ -289,9 +289,9 @@ class PhpDocument
      * @param string $fqn
      * @return Node|null
      */
-    public function getDefinitionByFqn(string $fqn)
+    public function getDefinitionNodeByFqn(string $fqn)
     {
-        return $this->definitions[$fqn] ?? null;
+        return $this->definitionNodes[$fqn] ?? null;
     }
 
     /**
@@ -299,19 +299,19 @@ class PhpDocument
      *
      * @return Node[]
      */
-    public function getDefinitions()
+    public function getDefinitionNodes()
     {
-        return $this->definitions;
+        return $this->definitionNodes;
     }
 
     /**
-     * Returns a map from fully qualified name (FQN) to SymbolInformation
+     * Returns a map from fully qualified name (FQN) to Definition defined in this document
      *
-     * @return SymbolInformation[]
+     * @return Definition[]
      */
-    public function getSymbols()
+    public function getDefinitions()
     {
-        return $this->symbols;
+        return $this->definitions;
     }
 
     /**
@@ -332,7 +332,7 @@ class PhpDocument
      * @param Node $node
      * @return Promise <Node|null>
      */
-    public function getDefinitionByNode(Node $node): Promise
+    public function getDefinitionNodeByNode(Node $node): Promise
     {
         return coroutine(function () use ($node) {
             // Variables always stay in the boundary of the file and need to be searched inside their function scope
@@ -358,7 +358,7 @@ class PhpDocument
             if (!isset($document)) {
                 return null;
             }
-            return $document->getDefinitionByFqn($fqn);
+            return $document->getDefinitionNodeByFqn($fqn);
         });
     }
 
@@ -369,7 +369,7 @@ class PhpDocument
      * @param Node $node
      * @return Promise <Node[]>
      */
-    public function getReferencesByNode(Node $node): Promise
+    public function getReferenceNodesByNode(Node $node): Promise
     {
         return coroutine(function () use ($node) {
             // Variables always stay in the boundary of the file and need to be searched inside their function scope
@@ -390,7 +390,7 @@ class PhpDocument
                 $refCollector = new VariableReferencesCollector($node->name);
                 $traverser->addVisitor($refCollector);
                 $traverser->traverse($n->getStmts());
-                return $refCollector->references;
+                return $refCollector->nodes;
             }
             // Definition with a global FQN
             $fqn = getDefinedFqn($node);

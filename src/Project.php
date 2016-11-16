@@ -19,11 +19,11 @@ class Project
     private $documents = [];
 
     /**
-     * An associative array that maps fully qualified symbol names to SymbolInformations
+     * An associative array that maps fully qualified symbol names to Definitions
      *
-     * @var SymbolInformation[]
+     * @var Definition[]
      */
-    private $symbols = [];
+    private $definitions = [];
 
     /**
      * An associative array that maps fully qualified symbol names to arrays of document URIs that reference the symbol
@@ -170,49 +170,49 @@ class Project
     }
 
     /**
-     * Returns an associative array [string => string] that maps fully qualified symbol names
-     * to URIs of the document where the symbol is defined
+     * Returns an associative array [string => Definition] that maps fully qualified symbol names
+     * to Definitions
      *
-     * @return SymbolInformation[]
+     * @return Definitions[]
      */
-    public function getSymbols()
+    public function getDefinitions()
     {
-        return $this->symbols;
+        return $this->definitions;
     }
 
     /**
-     * Adds a SymbolInformation for a specific symbol
+     * Registers a definition
      *
      * @param string $fqn The fully qualified name of the symbol
-     * @param string $uri The URI
+     * @param string $definition The Definition object
      * @return void
      */
-    public function setSymbol(string $fqn, SymbolInformation $symbol)
+    public function setDefinition(string $fqn, Definition $definition)
     {
-        $this->symbols[$fqn] = $symbol;
+        $this->definitions[$fqn] = $definition;
     }
 
     /**
      * Sets the SymbolInformation index
      *
-     * @param SymbolInformation[] $symbols
+     * @param Definition[] $symbols
      * @return void
      */
-    public function setSymbols(array $symbols)
+    public function setDefinitions(array $definitions)
     {
-        $this->symbols = $symbols;
+        $this->definitions = $definitions;
     }
 
     /**
-     * Unsets the SymbolInformation for a specific symbol
+     * Unsets the Definition for a specific symbol
      * and removes all references pointing to that symbol
      *
      * @param string $fqn The fully qualified name of the symbol
      * @return void
      */
-    public function removeSymbol(string $fqn)
+    public function removeDefinition(string $fqn)
     {
-        unset($this->symbols[$fqn]);
+        unset($this->definitions[$fqn]);
         unset($this->references[$fqn]);
     }
 
@@ -296,10 +296,10 @@ class Project
      */
     public function getDefinitionDocument(string $fqn): Promise
     {
-        if (!isset($this->symbols[$fqn])) {
+        if (!isset($this->definitions[$fqn])) {
             return Promise\resolve(null);
         }
-        return $this->getOrLoadDocument($this->symbols[$fqn]->location->uri);
+        return $this->getOrLoadDocument($this->definitions[$fqn]->symbolInformation->location->uri);
     }
 
     /**

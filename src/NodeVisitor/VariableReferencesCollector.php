@@ -15,7 +15,7 @@ class VariableReferencesCollector extends NodeVisitorAbstract
      *
      * @var Node\Expr\Variable[]
      */
-    public $references = [];
+    public $nodes = [];
 
     /**
      * @var string
@@ -33,7 +33,7 @@ class VariableReferencesCollector extends NodeVisitorAbstract
     public function enterNode(Node $node)
     {
         if ($node instanceof Node\Expr\Variable && $node->name === $this->name) {
-            $this->references[] = $node;
+            $this->nodes[] = $node;
         } else if ($node instanceof Node\FunctionLike) {
             // If we meet a function node, dont traverse its statements, they are in another scope
             // except it is a closure that has imported the variable through use

@@ -17,7 +17,7 @@ class ReferencesCollector extends NodeVisitorAbstract
      *
      * @var Node[][]
      */
-    public $references = [];
+    public $nodes = [];
 
     public function enterNode(Node $node)
     {
@@ -41,9 +41,9 @@ class ReferencesCollector extends NodeVisitorAbstract
 
     private function addReference(string $fqn, Node $node)
     {
-        if (!isset($this->references[$fqn])) {
-            $this->references[$fqn] = [];
+        if (!isset($this->nodes[$fqn])) {
+            $this->nodes[$fqn] = [];
         }
-        $this->references[$fqn][] = $node;
+        $this->nodes[$fqn][] = $node;
     }
 }

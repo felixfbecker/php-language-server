@@ -62,7 +62,11 @@ class TextDocument
     public function documentSymbol(TextDocumentIdentifier $textDocument): Promise
     {
         return $this->project->getOrLoadDocument($textDocument->uri)->then(function (PhpDocument $document) {
-            return array_values($document->getSymbols());
+            $symbols = [];
+            foreach ($document->getDefinitions() as $fqn => $definition) {
+                $symbols[] = $definition->symbolInformation;
+            }
+            return $symbols;
         });
     }
 
@@ -136,7 +140,7 @@ class TextDocument
             if ($node === null) {
                 return [];
             }
-            $refs = yield $document->getReferencesByNode($node);
+            $refs = yield $document->getReferenceNodesByNode($node);
             $locations = [];
             foreach ($refs as $ref) {
                 $locations[] = Location::fromNode($ref);
@@ -161,7 +165,7 @@ class TextDocument
             if ($node === null) {
                 return [];
             }
-            $def = yield $document->getDefinitionByNode($node);
+            $def = yield $document->getDefinitionNodeByNode($node);
             if ($def === null) {
                 return [];
             }
@@ -187,7 +191,7 @@ class TextDocument
             }
             $range = Range::fromNode($node);
             // Get the definition node for whatever node is under the cursor
-            $def = yield $document->getDefinitionByNode($node);
+            $def = yield $document->getDefinitionNodeByNode($node);
             if ($def === null) {
                 return new Hover([], $range);
             }
