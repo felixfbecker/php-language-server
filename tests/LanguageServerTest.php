@@ -58,9 +58,9 @@ class LanguageServerTest extends TestCase
         $input = new MockProtocolStream;
         $output = new MockProtocolStream;
         $output->on('message', function (Message $msg) use ($promise) {
-            if ($msg->body->method === 'window/logMessage') {
+            if ($msg->body->method === 'window/logMessage' && $promise->state === Promise::PENDING) {
                 if ($msg->body->params->type === MessageType::ERROR) {
-                    $promise->reject();
+                    $promise->reject(new Exception($msg->body->params->message));
                 } else if (strpos($msg->body->params->message, 'All 10 PHP files parsed') !== false) {
                     $promise->fulfill();
                 }
