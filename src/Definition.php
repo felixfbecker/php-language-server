@@ -25,7 +25,7 @@ class Definition
      *  - TestNamespace\TestClass::staticTestMethod()
      *  - TestNamespace\TestClass::testMethod()
      *
-     * @var string
+     * @var string|null
      */
     public $fqn;
 
@@ -42,7 +42,7 @@ class Definition
      * Can also be a compound type.
      * If it is unknown, will be Types\Mixed.
      *
-     * @var \phpDocumentor\Type
+     * @var \phpDocumentor\Type|null
      */
     public $type;
 
