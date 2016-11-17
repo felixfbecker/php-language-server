@@ -14,6 +14,7 @@ use PHP_CodeSniffer\ {
     Ruleset
 };
 use PHP_CodeSniffer\Files\DummyFile;
+use PHP_CodeSniffer\Util\Tokens;
 
 abstract class Formatter
 {
@@ -43,7 +44,7 @@ abstract class Formatter
 
         // Autoload class to sets up a bunch
         // of PHP_CodeSniffer-specific token type constants.
-        spl_autoload_call('PHP_CodeSniffer\Util\Tokens');
+        spl_autoload_call(Tokens::class);
 
         $file = new DummyFile($content, new Ruleset($config), $config);
         $file->process();
