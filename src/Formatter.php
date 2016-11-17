@@ -42,8 +42,7 @@ abstract class Formatter
         $config = new Config(['dummy'], false);
         $config->standards = self::findConfiguration($path);
 
-        // Autoload class to sets up a bunch
-        // of PHP_CodeSniffer-specific token type constants.
+        // Autoload class to set up a bunch of PHP_CodeSniffer-specific token type constants
         spl_autoload_call(Tokens::class);
 
         $file = new DummyFile($content, new Ruleset($config), $config);
