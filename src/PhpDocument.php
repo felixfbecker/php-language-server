@@ -16,7 +16,6 @@ use LanguageServer\NodeVisitor\{
 use PhpParser\{Error, ErrorHandler, Node, NodeTraverser};
 use PhpParser\NodeVisitor\NameResolver;
 use phpDocumentor\Reflection\DocBlockFactory;
-use function LanguageServer\Fqn\{getDefinedFqn, getVariableDefinition, getReferencedFqn};
 use Sabre\Event\Promise;
 use function Sabre\Event\coroutine;
 use Sabre\Uri;
@@ -52,6 +51,13 @@ class PhpDocument
      * @var DocBlockFactory
      */
     private $docBlockFactory;
+
+    /**
+     * The DefinitionResolver instance to resolve reference nodes to definitions
+     *
+     * @var DefinitionResolver
+     */
+    private $definitionResolver;
 
     /**
      * The URI of the document
@@ -103,13 +109,21 @@ class PhpDocument
      * @param Parser          $parser          The PHPParser instance
      * @param DocBlockFactory $docBlockFactory The DocBlockFactory instance to parse docblocks
      */
-    public function __construct(string $uri, string $content, Project $project, LanguageClient $client, Parser $parser, DocBlockFactory $docBlockFactory)
-    {
+    public function __construct(
+        string $uri,
+        string $content,
+        Project $project,
+        LanguageClient $client,
+        Parser $parser,
+        DocBlockFactory $docBlockFactory,
+        DefinitionResolver $definitionResolver
+    ) {
         $this->uri = $uri;
         $this->project = $project;
         $this->client = $client;
         $this->parser = $parser;
         $this->docBlockFactory = $docBlockFactory;
+        $this->definitionResolver = $definitionResolver;
         $this->updateContent($content);
     }
 
@@ -119,7 +133,7 @@ class PhpDocument
      * @param string $fqn The fully qualified name of the symbol
      * @return Node[]
      */
-    public function getReferencesByFqn(string $fqn)
+    public function getReferenceNodesByFqn(string $fqn)
     {
         return isset($this->referenceNodes) && isset($this->referenceNodes[$fqn]) ? $this->referenceNodes[$fqn] : null;
     }
@@ -176,7 +190,7 @@ class PhpDocument
             $traverser->addVisitor($definitionCollector);
 
             // Collect all references
-            $referencesCollector = new ReferencesCollector;
+            $referencesCollector = new ReferencesCollector($this->definitionResolver);
             $traverser->addVisitor($referencesCollector);
 
             $traverser->traverse($stmts);
@@ -326,43 +340,6 @@ class PhpDocument
     }
 
     /**
-     * Returns the definition node for any node
-     * The definition node MAY be in another document, check the ownerDocument attribute
-     *
-     * @param Node $node
-     * @return Promise <Node|null>
-     */
-    public function getDefinitionNodeByNode(Node $node): Promise
-    {
-        return coroutine(function () use ($node) {
-            // Variables always stay in the boundary of the file and need to be searched inside their function scope
-            // by traversing the AST
-            if ($node instanceof Node\Expr\Variable) {
-                return getVariableDefinition($node);
-            }
-            $fqn = getReferencedFqn($node);
-            if (!isset($fqn)) {
-                return null;
-            }
-            $document = yield $this->project->getDefinitionDocument($fqn);
-            if (!isset($document)) {
-                // If the node is a function or constant, it could be namespaced, but PHP falls back to global
-                // http://php.net/manual/en/language.namespaces.fallback.php
-                $parent = $node->getAttribute('parentNode');
-                if ($parent instanceof Node\Expr\ConstFetch || $parent instanceof Node\Expr\FuncCall) {
-                    $parts = explode('\\', $fqn);
-                    $fqn = end($parts);
-                    $document = yield $this->project->getDefinitionDocument($fqn);
-                }
-            }
-            if (!isset($document)) {
-                return null;
-            }
-            return $document->getDefinitionNodeByFqn($fqn);
-        });
-    }
-
-    /**
      * Returns the reference nodes for any node
      * The references node MAY be in other documents, check the ownerDocument attribute
      *
@@ -374,7 +351,11 @@ class PhpDocument
         return coroutine(function () use ($node) {
             // Variables always stay in the boundary of the file and need to be searched inside their function scope
             // by traversing the AST
-            if ($node instanceof Node\Expr\Variable || $node instanceof Node\Param) {
+            if (
+                $node instanceof Node\Expr\Variable
+                || $node instanceof Node\Param
+                || $node instanceof Node\Expr\ClosureUse
+            ) {
                 if ($node->name instanceof Node\Expr) {
                     return null;
                 }
@@ -393,14 +374,14 @@ class PhpDocument
                 return $refCollector->nodes;
             }
             // Definition with a global FQN
-            $fqn = getDefinedFqn($node);
+            $fqn = Definition::getDefinedFqn($node);
             if ($fqn === null) {
                 return [];
             }
             $refDocuments = yield $this->project->getReferenceDocuments($fqn);
             $nodes = [];
             foreach ($refDocuments as $document) {
-                $refs = $document->getReferencesByFqn($fqn);
+                $refs = $document->getReferenceNodesByFqn($fqn);
                 if ($refs !== null) {
                     foreach ($refs as $ref) {
                         $nodes[] = $ref;

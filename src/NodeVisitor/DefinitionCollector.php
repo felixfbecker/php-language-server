@@ -5,7 +5,7 @@ namespace LanguageServer\NodeVisitor;
 
 use PhpParser\{NodeVisitorAbstract, Node};
 use LanguageServer\Definition;
-use function LanguageServer\Fqn\getDefinedFqn;
+use LanguageServer\Protocol\SymbolInformation;
 
 /**
  * Collects definitions of classes, interfaces, traits, methods, properties and constants
@@ -29,11 +29,16 @@ class DefinitionCollector extends NodeVisitorAbstract
 
     public function enterNode(Node $node)
     {
-        $fqn = getDefinedFqn($node);
+        $fqn = Definition::getDefinedFqn($node);
+        // Only index definitions with an FQN (no variables)
         if ($fqn === null) {
             return;
         }
         $this->nodes[$fqn] = $node;
-        $this->definitions[$fqn] = Definition::fromNode($node);
+        $def = new Definition;
+        $def->fqn = $fqn;
+        $def->symbolInformation = SymbolInformation::fromNode($node, $fqn);
+        $def->type = Definition::getTypeFromNode($node);
+        $this->definitions[$fqn] = $def;
     }
 }

@@ -47,6 +47,13 @@ class Project
     private $docBlockFactory;
 
     /**
+     * The DefinitionResolver instance to resolve reference nodes to Definitions
+     *
+     * @var DefinitionResolver
+     */
+    private $definitionResolver;
+
+    /**
      * Reference to the language server client interface
      *
      * @var LanguageClient
@@ -66,6 +73,7 @@ class Project
         $this->clientCapabilities = $clientCapabilities;
         $this->parser = new Parser;
         $this->docBlockFactory = DocBlockFactory::createInstance();
+        $this->definitionResolver = new DefinitionResolver($this);
     }
 
     /**
@@ -122,7 +130,15 @@ class Project
                 $document = $this->documents[$uri];
                 $document->updateContent($content);
             } else {
-                $document = new PhpDocument($uri, $content, $this, $this->client, $this->parser, $this->docBlockFactory);
+                $document = new PhpDocument(
+                    $uri,
+                    $content,
+                    $this,
+                    $this->client,
+                    $this->parser,
+                    $this->docBlockFactory,
+                    $this->definitionResolver
+                );
             }
             return $document;
         });
@@ -141,7 +157,15 @@ class Project
             $document = $this->documents[$uri];
             $document->updateContent($content);
         } else {
-            $document = new PhpDocument($uri, $content, $this, $this->client, $this->parser, $this->docBlockFactory);
+            $document = new PhpDocument(
+                $uri,
+                $content,
+                $this,
+                $this->client,
+                $this->parser,
+                $this->docBlockFactory,
+                $this->definitionResolver
+            );
             $this->documents[$uri] = $document;
         }
         return $document;
@@ -181,6 +205,16 @@ class Project
     }
 
     /**
+     * Returns the Definition object by a specific FQN
+     *
+     * @return Definition|null
+     */
+    public function getDefinition(string $fqn)
+    {
+        return $this->definitions[$fqn] ?? null;
+    }
+
+    /**
      * Registers a definition
      *
      * @param string $fqn The fully qualified name of the symbol
@@ -193,9 +227,9 @@ class Project
     }
 
     /**
-     * Sets the SymbolInformation index
+     * Sets the Definition index
      *
-     * @param Definition[] $symbols
+     * @param Definition[] $definitions Map from FQN to Definition
      * @return void
      */
     public function setDefinitions(array $definitions)

@@ -3,8 +3,8 @@ declare(strict_types = 1);
 
 namespace LanguageServer\NodeVisitor;
 
-use function LanguageServer\Fqn\getReferencedFqn;
 use PhpParser\{NodeVisitorAbstract, Node};
+use LanguageServer\DefinitionResolver;
 
 /**
  * Collects references to classes, interfaces, traits, methods, properties and constants
@@ -19,10 +19,18 @@ class ReferencesCollector extends NodeVisitorAbstract
      */
     public $nodes = [];
 
+    /**
+     * @param DefinitionResolver $definitionResolver The DefinitionResolver to resolve reference nodes to definitions
+     */
+    public function __construct(DefinitionResolver $definitionResolver)
+    {
+        $this->definitionResolver = $definitionResolver;
+    }
+
     public function enterNode(Node $node)
     {
         // Check if the node references any global symbol
-        $fqn = getReferencedFqn($node);
+        $fqn = $this->definitionResolver->resolveReferenceNodeToFqn($node);
         if ($fqn) {
             $this->addReference($fqn, $node);
             // Namespaced constant access and function calls also need to register a reference

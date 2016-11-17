@@ -41,8 +41,7 @@
             "LanguageServer\\": "src/"
         },
         "files" : [
-            "src/utils.php",
-            "src/Fqn.php"
+            "src/utils.php"
         ]
     },
     "autoload-dev": {
