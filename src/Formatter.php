@@ -30,11 +30,11 @@ abstract class Formatter
      */
     public static function format(string $content, string $uri)
     {
-        if (defined('PHP_CODESNIFFER_CBF') === false) {
+        if (!defined('PHP_CODESNIFFER_CBF')) {
             define('PHP_CODESNIFFER_CBF', true);
         }
 
-        if (defined('PHP_CODESNIFFER_VERBOSITY') === false) {
+        if (!defined('PHP_CODESNIFFER_VERBOSITY')) {
             define('PHP_CODESNIFFER_VERBOSITY', false);
         }
 
