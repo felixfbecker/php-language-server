@@ -179,7 +179,7 @@ class DefinitionResolver
     private static function getContainingClassFqn(Node $node)
     {
         $classNode = getClosestNode($node, Node\Stmt\Class_::class);
-        if ($classNode->isAnonymous()) {
+        if ($classNode === null || $classNode->isAnonymous()) {
             return null;
         }
         return (string)$classNode->namespacedName;
