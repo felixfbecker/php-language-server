@@ -45,4 +45,18 @@ class Definition
      * @var \phpDocumentor\Type|null
      */
     public $type;
+
+    /**
+     * The first line of the declaration, for use in textDocument/hover
+     *
+     * @var string
+     */
+    public $declarationLine;
+
+    /**
+     * A documentation string, for use in textDocument/hover
+     *
+     * @var string
+     */
+    public $documentation;
 }

@@ -27,7 +27,7 @@ class DefinitionCollector extends NodeVisitorAbstract
      */
     public $nodes = [];
 
-    public $definitionResolver;
+    private $definitionResolver;
 
     public function __construct(DefinitionResolver $definitionResolver)
     {
@@ -46,6 +46,9 @@ class DefinitionCollector extends NodeVisitorAbstract
         $def->fqn = $fqn;
         $def->symbolInformation = SymbolInformation::fromNode($node, $fqn);
         $def->type = $this->definitionResolver->getTypeFromNode($node);
+        $def->declarationLine = $this->definitionResolver->getDeclarationLineFromNode($node);
+        $def->documentation = $this->definitionResolver->getDocumentationFromNode($node);
+
         $this->definitions[$fqn] = $def;
     }
 }

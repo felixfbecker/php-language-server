@@ -4,6 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer;
 
 use PhpParser\Node;
+use PhpParser\PrettyPrinter\Standard as PrettyPrinter;
 use phpDocumentor\Reflection\{Types, Type, Fqsen, TypeResolver};
 use LanguageServer\Protocol\SymbolInformation;
 use Sabre\Event\Promise;
@@ -18,6 +19,61 @@ class DefinitionResolver
     {
         $this->project = $project;
         $this->typeResolver = new TypeResolver;
+        $this->prettyPrinter = new PrettyPrinter;
+    }
+
+    /**
+     * Builds the declaration line for a given node
+     *
+     * @param Node $node
+     * @return string
+     */
+    public function getDeclarationLineFromNode(Node $node): string
+    {
+        if ($node instanceof Node\Stmt\PropertyProperty || $node instanceof Node\Const_) {
+            // Properties and constants can have multiple declarations
+            // Use the parent node (that includes the modifiers), but only render the requested declaration
+            $child = $node;
+            $node = $node->getAttribute('parentNode');
+            $defLine = clone $node;
+            $defLine->props = [$child];
+        } else {
+            $defLine = clone $node;
+        }
+        // Don't include the docblock in the declaration string
+        $defLine->setAttribute('comments', []);
+        if (isset($defLine->stmts)) {
+            $defLine->stmts = [];
+        }
+        $defText = $this->prettyPrinter->prettyPrint([$defLine]);
+        return strstr($defText, "\n", true) ?: $defText;
+    }
+
+    /**
+     * Gets the documentation string for a node, if it has one
+     *
+     * @param Node $node
+     * @return string|null
+     */
+    public function getDocumentationFromNode(Node $node)
+    {
+        if ($node instanceof Node\Param) {
+            $fn = $node->getAttribute('parentNode');
+            $docBlock = $fn->getAttribute('docBlock');
+            if ($docBlock !== null) {
+                $tags = $docBlock->getTagsByName('param');
+                foreach ($tags as $tag) {
+                    if ($tag->getVariableName() === $node->name) {
+                        return $tag->getDescription()->render();
+                    }
+                }
+            }
+        } else {
+            $docBlock = $node->getAttribute('docBlock');
+            if ($docBlock !== null) {
+                return $docBlock->getSummary();
+            }
+        }
     }
 
     /**
@@ -35,6 +91,10 @@ class DefinitionResolver
             $def = new Definition;
             // Get symbol information from node (range, symbol kind)
             $def->symbolInformation = SymbolInformation::fromNode($defNode);
+            // Declaration line
+            $def->declarationLine = $this->getDeclarationLineFromNode($node);
+            // Documentation
+            $def->documentation = $this->getDocumentationFromNode($node);
             if ($defNode instanceof Node\Param) {
                 // Get parameter type
                 $def->type = $this->getTypeFromNode($defNode);

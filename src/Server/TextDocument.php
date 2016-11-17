@@ -196,66 +196,17 @@ class TextDocument
                 return new Hover([]);
             }
             $range = Range::fromNode($node);
-            if ($node instanceof Node\Expr\Variable) {
-                $defNode = DefinitionResolver::resolveVariableToNode($node);
-            } else {
-                // Get the definition for whatever node is under the cursor
-                $def = $this->definitionResolver->resolveReferenceNodeToDefinition($node);
-                if ($def === null) {
-                    return new Hover([], $range);
-                }
-                // TODO inefficient. Add documentation and declaration line to Definition class
-                // so document doesnt have to be loaded
-                $document = yield $this->project->getOrLoadDocument($def->symbolInformation->location->uri);
-                if ($document === null) {
-                    return new Hover([], $range);
-                }
-                $defNode = $document->getDefinitionNodeByFqn($def->fqn);
+            // Get the definition for whatever node is under the cursor
+            $def = $this->definitionResolver->resolveReferenceNodeToDefinition($node);
+            if ($def === null) {
+                return new Hover([], $range);
             }
-            $contents = [];
-
-            // Build a declaration string
-            if ($defNode instanceof Node\Stmt\PropertyProperty || $defNode instanceof Node\Const_) {
-                // Properties and constants can have multiple declarations
-                // Use the parent node (that includes the modifiers), but only render the requested declaration
-                $child = $defNode;
-                $defNode = $defNode->getAttribute('parentNode');
-                $defLine = clone $defNode;
-                $defLine->props = [$child];
-            } else {
-                $defLine = clone $defNode;
+            if ($def->declarationLine) {
+                $contents[] = new MarkedString('php', "<?php\n" . $def->declarationLine);
             }
-            // Don't include the docblock in the declaration string
-            $defLine->setAttribute('comments', []);
-            if (isset($defLine->stmts)) {
-                $defLine->stmts = [];
+            if ($def->documentation) {
+                $contents[] = $def->documentation;
             }
-            $defText = $this->prettyPrinter->prettyPrint([$defLine]);
-            $lines = explode("\n", $defText);
-            if (isset($lines[0])) {
-                $contents[] = new MarkedString('php', "<?php\n" . $lines[0]);
-            }
-
-            // Get the documentation string
-            if ($defNode instanceof Node\Param) {
-                $fn = $defNode->getAttribute('parentNode');
-                $docBlock = $fn->getAttribute('docBlock');
-                if ($docBlock !== null) {
-                    $tags = $docBlock->getTagsByName('param');
-                    foreach ($tags as $tag) {
-                        if ($tag->getVariableName() === $defNode->name) {
-                            $contents[] = $tag->getDescription()->render();
-                            break;
-                        }
-                    }
-                }
-            } else {
-                $docBlock = $defNode->getAttribute('docBlock');
-                if ($docBlock !== null) {
-                    $contents[] = $docBlock->getSummary();
-                }
-            }
-
             return new Hover($contents, $range);
         });
     }
