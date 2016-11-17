@@ -11,10 +11,9 @@ use LanguageServer\Protocol\ {
 use Exception;
 use PHP_CodeSniffer\ {
     Config,
-    Ruleset,
-    Files\DummyFile,
-    Util\Tokens
+    Ruleset
 };
+use PHP_CodeSniffer\Files\DummyFile;
 
 abstract class Formatter
 {
@@ -42,9 +41,9 @@ abstract class Formatter
         $config = new Config(['dummy'], false);
         $config->standards = self::findConfiguration($path);
 
-        // Create this class so it is autoloaded and sets up a bunch
+        // Autoload class to sets up a bunch
         // of PHP_CodeSniffer-specific token type constants.
-        new Tokens();
+        spl_autoload_call('PHP_CodeSniffer\Util\Tokens');
 
         $file = new DummyFile($content, new Ruleset($config), $config);
         $file->process();
