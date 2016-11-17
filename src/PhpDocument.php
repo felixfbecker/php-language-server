@@ -186,7 +186,7 @@ class PhpDocument
             $traverser = new NodeTraverser;
 
             // Collect all definitions
-            $definitionCollector = new DefinitionCollector;
+            $definitionCollector = new DefinitionCollector($this->definitionResolver);
             $traverser->addVisitor($definitionCollector);
 
             // Collect all references
@@ -374,7 +374,7 @@ class PhpDocument
                 return $refCollector->nodes;
             }
             // Definition with a global FQN
-            $fqn = Definition::getDefinedFqn($node);
+            $fqn = DefinitionResolver::getDefinedFqn($node);
             if ($fqn === null) {
                 return [];
             }

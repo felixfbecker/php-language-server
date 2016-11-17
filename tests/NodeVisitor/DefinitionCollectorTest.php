@@ -6,7 +6,7 @@ namespace LanguageServer\Tests\Server\TextDocument;
 use PHPUnit\Framework\TestCase;
 use PhpParser\{NodeTraverser, Node};
 use PhpParser\NodeVisitor\NameResolver;
-use LanguageServer\{LanguageClient, Project, PhpDocument, Parser};
+use LanguageServer\{LanguageClient, Project, PhpDocument, Parser, DefinitionResolver};
 use LanguageServer\Protocol\ClientCapabilities;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\NodeVisitor\{ReferencesAdder, DefinitionCollector};
@@ -24,7 +24,7 @@ class DefinitionCollectorTest extends TestCase
         $traverser = new NodeTraverser;
         $traverser->addVisitor(new NameResolver);
         $traverser->addVisitor(new ReferencesAdder($document));
-        $definitionCollector = new DefinitionCollector;
+        $definitionCollector = new DefinitionCollector(new DefinitionResolver($project));
         $traverser->addVisitor($definitionCollector);
         $stmts = $parser->parse(file_get_contents($uri));
         $traverser->traverse($stmts);
@@ -63,7 +63,7 @@ class DefinitionCollectorTest extends TestCase
         $traverser = new NodeTraverser;
         $traverser->addVisitor(new NameResolver);
         $traverser->addVisitor(new ReferencesAdder($document));
-        $definitionCollector = new DefinitionCollector;
+        $definitionCollector = new DefinitionCollector(new DefinitionResolver($project));
         $traverser->addVisitor($definitionCollector);
         $stmts = $parser->parse(file_get_contents($uri));
         $traverser->traverse($stmts);

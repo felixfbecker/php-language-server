@@ -4,7 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer\NodeVisitor;
 
 use PhpParser\{NodeVisitorAbstract, Node};
-use LanguageServer\Definition;
+use LanguageServer\{Definition, DefinitionResolver};
 use LanguageServer\Protocol\SymbolInformation;
 
 /**
@@ -27,9 +27,16 @@ class DefinitionCollector extends NodeVisitorAbstract
      */
     public $nodes = [];
 
+    public $definitionResolver;
+
+    public function __construct(DefinitionResolver $definitionResolver)
+    {
+        $this->definitionResolver = $definitionResolver;
+    }
+
     public function enterNode(Node $node)
     {
-        $fqn = Definition::getDefinedFqn($node);
+        $fqn = DefinitionResolver::getDefinedFqn($node);
         // Only index definitions with an FQN (no variables)
         if ($fqn === null) {
             return;
@@ -38,7 +45,7 @@ class DefinitionCollector extends NodeVisitorAbstract
         $def = new Definition;
         $def->fqn = $fqn;
         $def->symbolInformation = SymbolInformation::fromNode($node, $fqn);
-        $def->type = Definition::getTypeFromNode($node);
+        $def->type = $this->definitionResolver->getTypeFromNode($node);
         $this->definitions[$fqn] = $def;
     }
 }
