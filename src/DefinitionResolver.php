@@ -256,7 +256,10 @@ class DefinitionResolver
                 return new Types\Mixed;
             }
             $fqn = (string)($expr->getAttribute('namespacedName') ?? $expr->name);
-            return $this->project->getDefinition($fqn)->type;
+            $def = $this->project->getDefinition($fqn);
+            if ($def !== null) {
+                return $def->type;
+            }
         }
         if ($expr instanceof Node\Expr\ConstFetch) {
             if (strtolower((string)$expr->name) === 'true' || strtolower((string)$expr->name) === 'false') {
@@ -264,7 +267,10 @@ class DefinitionResolver
             }
             // Resolve constant
             $fqn = (string)($expr->getAttribute('namespacedName') ?? $expr->name);
-            return $this->project->getDefinition($fqn)->type;
+            $def = $this->project->getDefinition($fqn);
+            if ($def !== null) {
+                return $def->type;
+            }
         }
         if ($expr instanceof Node\Expr\MethodCall) {
             // Resolve object
@@ -274,7 +280,10 @@ class DefinitionResolver
                 return new Types\Mixed;
             }
             $fqn = (string)$objType->getFqsen() . '::' . $expr->name . '()';
-            return $this->project->getDefinition($fqn)->type;
+            $def = $this->project->getDefinition($fqn);
+            if ($def !== null) {
+                return $def->type;
+            }
         }
         if ($expr instanceof Node\Expr\PropertyFetch) {
             // Resolve object
@@ -284,8 +293,10 @@ class DefinitionResolver
                 return new Types\Mixed;
             }
             $fqn = (string)$objType->getFqsen() . '::' . $expr->name;
-            return $this->project->getDefinition($fqn)->type;
-        }
+            $def = $this->project->getDefinition($fqn);
+            if ($def !== null) {
+                return $def->type;        }
+            }
         if ($expr instanceof Node\Expr\StaticCall) {
             if ($expr->class instanceof Node\Expr || $expr->name instanceof Node\Expr) {
                 // Need the FQN
@@ -306,12 +317,30 @@ class DefinitionResolver
             }
             if ($expr->class instanceof Node\Stmt\Class_) {
                 // Anonymous class
-                return new Types\Object;
-            }
-            if ((string)$expr->class === 'self') {
                 return new Types\Object_;
             }
-            return new Types\Object_(new Fqsen('\\' . (string)$expr->class));
+            $class = (string)$expr->class;
+            if ($class === 'static') {
+                return new Types\Static_;
+            }
+            if ($class === 'self' || $class === 'parent') {
+                $classNode = getClosestNode($expr, Node\Stmt\Class_::class);
+                if ($class === 'parent') {
+                    if ($classNode === null || $classNode->extends === null) {
+                        return new Types\Object_;
+                    }
+                    // parent is resolved to the parent class
+                    $classFqn = (string)$classNode->extends;
+                } else {
+                    if ($classNode === null) {
+                        return new Types\Self_;
+                    }
+                    // self is resolved to the containing class
+                    $classFqn = (string)$classNode->namespacedName;
+                }
+                return new Types\Object_(new Fqsen('\\' . $classFqn));
+            }
+            return new Types\Object_(new Fqsen('\\' . $class));
         }
         if ($expr instanceof Node\Expr\Clone_ || $expr instanceof Node\Expr\Assign) {
             return $this->resolveExpression($expr->expr);
