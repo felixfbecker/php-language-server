@@ -3,13 +3,13 @@ declare(strict_types = 1);
 
 namespace LanguageServer;
 
-use LanguageServer\Protocol\ {
+use LanguageServer\Protocol\{
     TextEdit,
     Range,
     Position
 };
 use Exception;
-use PHP_CodeSniffer\ {
+use PHP_CodeSniffer\{
     Config,
     Ruleset
 };
