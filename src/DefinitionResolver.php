@@ -295,8 +295,9 @@ class DefinitionResolver
             $fqn = (string)$objType->getFqsen() . '::' . $expr->name;
             $def = $this->project->getDefinition($fqn);
             if ($def !== null) {
-                return $def->type;        }
+                return $def->type;
             }
+        }
         if ($expr instanceof Node\Expr\StaticCall) {
             if ($expr->class instanceof Node\Expr || $expr->name instanceof Node\Expr) {
                 // Need the FQN
