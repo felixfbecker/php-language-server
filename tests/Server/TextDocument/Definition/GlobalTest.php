@@ -307,7 +307,7 @@ class GlobalTest extends ServerTestCase
 
     public function testDefinitionForPropertyFetchOnArrayDimFetch()
     {
-        // $obj->testProperty->testMethod();
+        // TestClass::$staticTestProperty[123]->testProperty;
         // Get definition for testProperty
         $reference = $this->getReferenceLocations('TestClass::testProperty')[3];
         $result = $this->textDocument->definition(
