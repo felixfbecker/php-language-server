@@ -37,3 +37,4 @@ if ($abc instanceof TestInterface) {
 
 // Nested expression
 $obj->testProperty->testMethod();
+TestClass::$staticTestProperty[123]->testProperty;

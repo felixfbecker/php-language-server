@@ -304,4 +304,16 @@ class GlobalTest extends ServerTestCase
         )->wait();
         $this->assertEquals($this->getDefinitionLocation('TestClass::testMethod()'), $result);
     }
+
+    public function testDefinitionForPropertyFetchOnArrayDimFetch()
+    {
+        // $obj->testProperty->testMethod();
+        // Get definition for testProperty
+        $reference = $this->getReferenceLocations('TestClass::testProperty')[3];
+        $result = $this->textDocument->definition(
+            new TextDocumentIdentifier($reference->uri),
+            $reference->range->end
+        )->wait();
+        $this->assertEquals($this->getDefinitionLocation('TestClass::testProperty'), $result);
+    }
 }
