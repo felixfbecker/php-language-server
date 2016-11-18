@@ -94,6 +94,14 @@ They do not work yet for:
  - Reassigned variables
  - Nested access/calls on return values or properties
 
+### Protocol Extensions
+
+This language server implements the [files protocol extension](https://github.com/sourcegraph/language-server-protocol/blob/master/extension-files.md).
+If the client expresses support through `ClientCapabilities.xfilesProvider` and `ClientCapabilities.xcontentProvider`,
+the server will request files in the workspace and file contents through requests from the client and never access
+the file system directly. This allows the server to operate in an isolated environment like a container,
+on a remote workspace or any a different protocol than `file://`.
+
 ## Performance
 
 Upon initialization, the server will recursively scan the project directory for PHP files, parse them and add all definitions
