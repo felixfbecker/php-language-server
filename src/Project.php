@@ -118,7 +118,6 @@ class Project
                 }
                 $content = file_get_contents($path);
             }
-            // Don't parse large files
             if (isset($this->documents[$uri])) {
                 $document = $this->documents[$uri];
                 $document->updateContent($content);
