@@ -179,24 +179,22 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
 
             $startTime = microtime(true);
 
-            yield Promise\all(array_map(function ($textDocument, $i) use ($count) {
-                return coroutine(function () use ($textDocument, $i, $count) {
-                    // Give LS to the chance to handle requests while indexing
-                    yield timeout();
+            foreach ($textDocuments as $i => $textDocument) {
+                // Give LS to the chance to handle requests while indexing
+                yield timeout();
+                $this->client->window->logMessage(
+                    MessageType::INFO,
+                    "Parsing file $i/$count: {$textDocument->uri}"
+                );
+                try {
+                    yield $this->project->loadDocument($textDocument->uri);
+                } catch (Exception $e) {
                     $this->client->window->logMessage(
-                        MessageType::INFO,
-                        "Parsing file $i/$count: {$textDocument->uri}"
+                        MessageType::ERROR,
+                        "Error parsing file {$textDocument->uri}: " . (string)$e
                     );
-                    try {
-                        yield $this->project->loadDocument($textDocument->uri);
-                    } catch (Exception $e) {
-                        $this->client->window->logMessage(
-                            MessageType::ERROR,
-                            "Error parsing file {$textDocument->uri}: " . (string)$e
-                        );
-                    }
-                });
-            }, $textDocuments, array_keys($textDocuments)));
+                }
+            }
 
             $duration = (int)(microtime(true) - $startTime);
             $mem = (int)(memory_get_usage(true) / (1024 * 1024));
