@@ -183,11 +183,16 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                 // Give LS to the chance to handle requests while indexing
                 yield timeout();
                 $this->client->window->logMessage(
-                    MessageType::INFO,
+                    MessageType::LOG,
                     "Parsing file $i/$count: {$textDocument->uri}"
                 );
                 try {
                     yield $this->project->loadDocument($textDocument->uri);
+                } catch (ContentTooLargeException $e) {
+                    $this->client->window->logMessage(
+                        MessageType::INFO,
+                        "Ignoring file {$textDocument->uri} because it exceeds size limit of {$e->limit} bytes ({$e->size})"
+                    );
                 } catch (Exception $e) {
                     $this->client->window->logMessage(
                         MessageType::ERROR,
