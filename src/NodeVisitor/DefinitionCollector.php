@@ -4,8 +4,8 @@ declare(strict_types = 1);
 namespace LanguageServer\NodeVisitor;
 
 use PhpParser\{NodeVisitorAbstract, Node};
+use LanguageServer\{Definition, DefinitionResolver};
 use LanguageServer\Protocol\SymbolInformation;
-use function LanguageServer\Fqn\getDefinedFqn;
 
 /**
  * Collects definitions of classes, interfaces, traits, methods, properties and constants
@@ -14,27 +14,41 @@ use function LanguageServer\Fqn\getDefinedFqn;
 class DefinitionCollector extends NodeVisitorAbstract
 {
     /**
-     * Map from fully qualified name (FQN) to Node
+     * Map from fully qualified name (FQN) to Definition
      *
-     * @var Node[]
+     * @var Definition[]
      */
     public $definitions = [];
 
     /**
-     * Map from FQN to SymbolInformation
+     * Map from fully qualified name (FQN) to Node
      *
-     * @var SymbolInformation
+     * @var Node[]
      */
-    public $symbols = [];
+    public $nodes = [];
+
+    private $definitionResolver;
+
+    public function __construct(DefinitionResolver $definitionResolver)
+    {
+        $this->definitionResolver = $definitionResolver;
+    }
 
     public function enterNode(Node $node)
     {
-        $fqn = getDefinedFqn($node);
+        $fqn = DefinitionResolver::getDefinedFqn($node);
+        // Only index definitions with an FQN (no variables)
         if ($fqn === null) {
             return;
         }
-        $this->definitions[$fqn] = $node;
-        $symbol = SymbolInformation::fromNode($node, $fqn);
-        $this->symbols[$fqn] = $symbol;
+        $this->nodes[$fqn] = $node;
+        $def = new Definition;
+        $def->fqn = $fqn;
+        $def->symbolInformation = SymbolInformation::fromNode($node, $fqn);
+        $def->type = $this->definitionResolver->getTypeFromNode($node);
+        $def->declarationLine = $this->definitionResolver->getDeclarationLineFromNode($node);
+        $def->documentation = $this->definitionResolver->getDocumentationFromNode($node);
+
+        $this->definitions[$fqn] = $def;
     }
 }

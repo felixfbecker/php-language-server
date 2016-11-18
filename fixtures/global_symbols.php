@@ -30,7 +30,7 @@ class TestClass implements TestInterface
     /**
      * Lorem excepteur officia sit anim velit veniam enim.
      *
-     * @var TestClass
+     * @var TestClass[]
      */
     public static $staticTestProperty;
 

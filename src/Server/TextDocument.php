@@ -3,7 +3,7 @@ declare(strict_types = 1);
 
 namespace LanguageServer\Server;
 
-use LanguageServer\{LanguageClient, Project, PhpDocument};
+use LanguageServer\{LanguageClient, Project, PhpDocument, DefinitionResolver};
 use PhpParser\PrettyPrinter\Standard as PrettyPrinter;
 use PhpParser\Node;
 use LanguageServer\Protocol\{
@@ -45,11 +45,17 @@ class TextDocument
      */
     private $prettyPrinter;
 
+    /**
+     * @var DefinitionResolver
+     */
+    private $definitionResolver;
+
     public function __construct(Project $project, LanguageClient $client)
     {
         $this->project = $project;
         $this->client = $client;
         $this->prettyPrinter = new PrettyPrinter();
+        $this->definitionResolver = new DefinitionResolver($project);
     }
 
     /**
@@ -62,7 +68,11 @@ class TextDocument
     public function documentSymbol(TextDocumentIdentifier $textDocument): Promise
     {
         return $this->project->getOrLoadDocument($textDocument->uri)->then(function (PhpDocument $document) {
-            return array_values($document->getSymbols());
+            $symbols = [];
+            foreach ($document->getDefinitions() as $fqn => $definition) {
+                $symbols[] = $definition->symbolInformation;
+            }
+            return $symbols;
         });
     }
 
@@ -136,7 +146,7 @@ class TextDocument
             if ($node === null) {
                 return [];
             }
-            $refs = yield $document->getReferencesByNode($node);
+            $refs = yield $document->getReferenceNodesByNode($node);
             $locations = [];
             foreach ($refs as $ref) {
                 $locations[] = Location::fromNode($ref);
@@ -161,11 +171,11 @@ class TextDocument
             if ($node === null) {
                 return [];
             }
-            $def = yield $document->getDefinitionByNode($node);
-            if ($def === null) {
+            $def = $this->definitionResolver->resolveReferenceNodeToDefinition($node);
+            if ($def === null || $def->symbolInformation === null) {
                 return [];
             }
-            return Location::fromNode($def);
+            return $def->symbolInformation->location;
         });
     }
 
@@ -186,55 +196,17 @@ class TextDocument
                 return new Hover([]);
             }
             $range = Range::fromNode($node);
-            // Get the definition node for whatever node is under the cursor
-            $def = yield $document->getDefinitionByNode($node);
+            // Get the definition for whatever node is under the cursor
+            $def = $this->definitionResolver->resolveReferenceNodeToDefinition($node);
             if ($def === null) {
                 return new Hover([], $range);
             }
-            $contents = [];
-
-            // Build a declaration string
-            if ($def instanceof Node\Stmt\PropertyProperty || $def instanceof Node\Const_) {
-                // Properties and constants can have multiple declarations
-                // Use the parent node (that includes the modifiers), but only render the requested declaration
-                $child = $def;
-                $def = $def->getAttribute('parentNode');
-                $defLine = clone $def;
-                $defLine->props = [$child];
-            } else {
-                $defLine = clone $def;
+            if ($def->declarationLine) {
+                $contents[] = new MarkedString('php', "<?php\n" . $def->declarationLine);
             }
-            // Don't include the docblock in the declaration string
-            $defLine->setAttribute('comments', []);
-            if (isset($defLine->stmts)) {
-                $defLine->stmts = [];
+            if ($def->documentation) {
+                $contents[] = $def->documentation;
             }
-            $defText = $this->prettyPrinter->prettyPrint([$defLine]);
-            $lines = explode("\n", $defText);
-            if (isset($lines[0])) {
-                $contents[] = new MarkedString('php', "<?php\n" . $lines[0]);
-            }
-
-            // Get the documentation string
-            if ($def instanceof Node\Param) {
-                $fn = $def->getAttribute('parentNode');
-                $docBlock = $fn->getAttribute('docBlock');
-                if ($docBlock !== null) {
-                    $tags = $docBlock->getTagsByName('param');
-                    foreach ($tags as $tag) {
-                        if ($tag->getVariableName() === $def->name) {
-                            $contents[] = $tag->getDescription()->render();
-                            break;
-                        }
-                    }
-                }
-            } else {
-                $docBlock = $def->getAttribute('docBlock');
-                if ($docBlock !== null) {
-                    $contents[] = $docBlock->getSummary();
-                }
-            }
-
             return new Hover($contents, $range);
         });
     }

@@ -19,11 +19,11 @@ class Project
     private $documents = [];
 
     /**
-     * An associative array that maps fully qualified symbol names to SymbolInformations
+     * An associative array that maps fully qualified symbol names to Definitions
      *
-     * @var SymbolInformation[]
+     * @var Definition[]
      */
-    private $symbols = [];
+    private $definitions = [];
 
     /**
      * An associative array that maps fully qualified symbol names to arrays of document URIs that reference the symbol
@@ -47,6 +47,13 @@ class Project
     private $docBlockFactory;
 
     /**
+     * The DefinitionResolver instance to resolve reference nodes to Definitions
+     *
+     * @var DefinitionResolver
+     */
+    private $definitionResolver;
+
+    /**
      * Reference to the language server client interface
      *
      * @var LanguageClient
@@ -66,6 +73,7 @@ class Project
         $this->clientCapabilities = $clientCapabilities;
         $this->parser = new Parser;
         $this->docBlockFactory = DocBlockFactory::createInstance();
+        $this->definitionResolver = new DefinitionResolver($this);
     }
 
     /**
@@ -122,7 +130,15 @@ class Project
                 $document = $this->documents[$uri];
                 $document->updateContent($content);
             } else {
-                $document = new PhpDocument($uri, $content, $this, $this->client, $this->parser, $this->docBlockFactory);
+                $document = new PhpDocument(
+                    $uri,
+                    $content,
+                    $this,
+                    $this->client,
+                    $this->parser,
+                    $this->docBlockFactory,
+                    $this->definitionResolver
+                );
             }
             return $document;
         });
@@ -141,7 +157,15 @@ class Project
             $document = $this->documents[$uri];
             $document->updateContent($content);
         } else {
-            $document = new PhpDocument($uri, $content, $this, $this->client, $this->parser, $this->docBlockFactory);
+            $document = new PhpDocument(
+                $uri,
+                $content,
+                $this,
+                $this->client,
+                $this->parser,
+                $this->docBlockFactory,
+                $this->definitionResolver
+            );
             $this->documents[$uri] = $document;
         }
         return $document;
@@ -170,49 +194,67 @@ class Project
     }
 
     /**
-     * Returns an associative array [string => string] that maps fully qualified symbol names
-     * to URIs of the document where the symbol is defined
+     * Returns an associative array [string => Definition] that maps fully qualified symbol names
+     * to Definitions
      *
-     * @return SymbolInformation[]
+     * @return Definitions[]
      */
-    public function getSymbols()
+    public function getDefinitions()
     {
-        return $this->symbols;
+        return $this->definitions;
     }
 
     /**
-     * Adds a SymbolInformation for a specific symbol
+     * Returns the Definition object by a specific FQN
+     *
+     * @param string $fqn
+     * @param bool $globalFallback Whether to fallback to global if the namespaced FQN was not found
+     * @return Definition|null
+     */
+    public function getDefinition(string $fqn, $globalFallback = false)
+    {
+        if (isset($this->definitions[$fqn])) {
+            return $this->definitions[$fqn];
+        } else if ($globalFallback) {
+            $parts = explode('\\', $fqn);
+            $fqn = end($parts);
+            return $this->getDefinition($fqn);
+        }
+    }
+
+    /**
+     * Registers a definition
      *
      * @param string $fqn The fully qualified name of the symbol
-     * @param string $uri The URI
+     * @param string $definition The Definition object
      * @return void
      */
-    public function setSymbol(string $fqn, SymbolInformation $symbol)
+    public function setDefinition(string $fqn, Definition $definition)
     {
-        $this->symbols[$fqn] = $symbol;
+        $this->definitions[$fqn] = $definition;
     }
 
     /**
-     * Sets the SymbolInformation index
+     * Sets the Definition index
      *
-     * @param SymbolInformation[] $symbols
+     * @param Definition[] $definitions Map from FQN to Definition
      * @return void
      */
-    public function setSymbols(array $symbols)
+    public function setDefinitions(array $definitions)
     {
-        $this->symbols = $symbols;
+        $this->definitions = $definitions;
     }
 
     /**
-     * Unsets the SymbolInformation for a specific symbol
+     * Unsets the Definition for a specific symbol
      * and removes all references pointing to that symbol
      *
      * @param string $fqn The fully qualified name of the symbol
      * @return void
      */
-    public function removeSymbol(string $fqn)
+    public function removeDefinition(string $fqn)
     {
-        unset($this->symbols[$fqn]);
+        unset($this->definitions[$fqn]);
         unset($this->references[$fqn]);
     }
 
@@ -296,10 +338,10 @@ class Project
      */
     public function getDefinitionDocument(string $fqn): Promise
     {
-        if (!isset($this->symbols[$fqn])) {
+        if (!isset($this->definitions[$fqn])) {
             return Promise\resolve(null);
         }
-        return $this->getOrLoadDocument($this->symbols[$fqn]->location->uri);
+        return $this->getOrLoadDocument($this->definitions[$fqn]->symbolInformation->location->uri);
     }
 
     /**
