@@ -207,11 +207,19 @@ class Project
     /**
      * Returns the Definition object by a specific FQN
      *
+     * @param string $fqn
+     * @param bool $globalFallback Whether to fallback to global if the namespaced FQN was not found
      * @return Definition|null
      */
-    public function getDefinition(string $fqn)
+    public function getDefinition(string $fqn, $globalFallback = false)
     {
-        return $this->definitions[$fqn] ?? null;
+        if (isset($this->definitions[$fqn])) {
+            return $this->definitions[$fqn];
+        } else if ($globalFallback) {
+            $parts = explode('\\', $fqn);
+            $fqn = end($parts);
+            return $this->getDefinition($fqn);
+        }
     }
 
     /**

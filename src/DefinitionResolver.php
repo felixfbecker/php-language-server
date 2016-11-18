@@ -12,7 +12,14 @@ use function Sabre\Event\coroutine;
 
 class DefinitionResolver
 {
+    /**
+     * @var \LanguageServer\Project
+     */
     private $project;
+
+    /**
+     * @var \phpDocumentor\Reflection\TypeResolver
+     */
     private $typeResolver;
 
     public function __construct(Project $project)
@@ -57,6 +64,9 @@ class DefinitionResolver
      */
     public function getDocumentationFromNode(Node $node)
     {
+        if ($node instanceof Node\Stmt\PropertyProperty || $node instanceof Node\Const_) {
+            $node = $node->getAttribute('parentNode');
+        }
         if ($node instanceof Node\Param) {
             $fn = $node->getAttribute('parentNode');
             $docBlock = $fn->getAttribute('docBlock');
@@ -88,13 +98,16 @@ class DefinitionResolver
         if ($node instanceof Node\Expr\Variable) {
             // Resolve the variable to a definition node (assignment, param or closure use)
             $defNode = self::resolveVariableToNode($node);
+            if ($defNode === null) {
+                return null;
+            }
             $def = new Definition;
             // Get symbol information from node (range, symbol kind)
             $def->symbolInformation = SymbolInformation::fromNode($defNode);
             // Declaration line
-            $def->declarationLine = $this->getDeclarationLineFromNode($node);
+            $def->declarationLine = $this->getDeclarationLineFromNode($defNode);
             // Documentation
-            $def->documentation = $this->getDocumentationFromNode($node);
+            $def->documentation = $this->getDocumentationFromNode($defNode);
             if ($defNode instanceof Node\Param) {
                 // Get parameter type
                 $def->type = $this->getTypeFromNode($defNode);
@@ -110,19 +123,12 @@ class DefinitionResolver
         if ($fqn === null) {
             return null;
         }
+        // If the node is a function or constant, it could be namespaced, but PHP falls back to global
+        // http://php.net/manual/en/language.namespaces.fallback.php
+        $parent = $node->getAttribute('parentNode');
+        $globalFallback = $parent instanceof Node\Expr\ConstFetch || $parent instanceof Node\Expr\FuncCall;
         // Return the Definition object from the project index
-        $def = $this->project->getDefinition($fqn);
-        if ($def === null) {
-            // If the node is a function or constant, it could be namespaced, but PHP falls back to global
-            // http://php.net/manual/en/language.namespaces.fallback.php
-            $parent = $node->getAttribute('parentNode');
-            if ($parent instanceof Node\Expr\ConstFetch || $parent instanceof Node\Expr\FuncCall) {
-                $parts = explode('\\', $fqn);
-                $fqn = end($parts);
-                $def =  $this->project->getDefinition($fqn);
-            }
-        }
-        return $def;
+        return $this->project->getDefinition($fqn, $globalFallback);
     }
 
     /**
@@ -291,8 +297,8 @@ class DefinitionResolver
      * Given an expression node, resolves that expression recursively to a type.
      * If the type could not be resolved, returns Types\Mixed.
      *
-     * @param Node\Expr $expr
-     * @return Type
+     * @param \PhpParser\Node\Expr $expr
+     * @return \phpDocumentor\Type
      */
     private function resolveExpression(Node\Expr $expr): Type
     {
@@ -316,7 +322,7 @@ class DefinitionResolver
                 return new Types\Mixed;
             }
             $fqn = (string)($expr->getAttribute('namespacedName') ?? $expr->name);
-            $def = $this->project->getDefinition($fqn);
+            $def = $this->project->getDefinition($fqn, true);
             if ($def !== null) {
                 return $def->type;
             }
@@ -327,81 +333,62 @@ class DefinitionResolver
             }
             // Resolve constant
             $fqn = (string)($expr->getAttribute('namespacedName') ?? $expr->name);
-            $def = $this->project->getDefinition($fqn);
+            $def = $this->project->getDefinition($fqn, true);
             if ($def !== null) {
                 return $def->type;
             }
         }
-        if ($expr instanceof Node\Expr\MethodCall) {
+        if ($expr instanceof Node\Expr\MethodCall || $expr instanceof Node\Expr\PropertyFetch) {
+            if ($expr->name instanceof Node\Expr) {
+                return new Types\Mixed;
+            }
             // Resolve object
             $objType = $this->resolveExpression($expr->var);
-            if (!($objType instanceof Types\Object_) || $objType->getFqsen() === null || $expr->name instanceof Node\Expr) {
-                // Need the class FQN of the object
+            if (!($objType instanceof Types\Compound)) {
+                $objType = new Types\Compound([$objType]);
+            }
+            for ($i = 0; $t = $objType->get($i); $i++) {
+                if ($t instanceof Types\This) {
+                    $classFqn = self::getContainingClassFqn($expr);
+                    if ($classFqn === null) {
+                        return new Types\Mixed;
+                    }
+                } else if (!($t instanceof Types\Object_) || $t->getFqsen() === null) {
+                    return new Types\Mixed;
+                } else {
+                    $classFqn = substr((string)$t->getFqsen(), 1);
+                }
+                $fqn = $classFqn . '::' . $expr->name;
+                if ($expr instanceof Node\Expr\MethodCall) {
+                    $fqn .= '()';
+                }
+                $def = $this->project->getDefinition($fqn);
+                if ($def !== null) {
+                    return $def->type;
+                }
+            }
+        }
+        if (
+            $expr instanceof Node\Expr\StaticCall
+            || $expr instanceof Node\Expr\StaticPropertyFetch
+            || $expr instanceof Node\Expr\ClassConstFetch
+        ) {
+            $classType = self::resolveClassNameToType($expr->class);
+            if (!($classType instanceof Types\Object_) || $classType->getFqsen() === null || $expr->name instanceof Node\Expr) {
                 return new Types\Mixed;
             }
-            $fqn = (string)$objType->getFqsen() . '::' . $expr->name . '()';
+            $fqn = substr((string)$classType->getFqsen(), 1) . '::' . $expr->name;
+            if ($expr instanceof Node\Expr\StaticCall) {
+                $fqn .= '()';
+            }
             $def = $this->project->getDefinition($fqn);
-            if ($def !== null) {
-                return $def->type;
-            }
-        }
-        if ($expr instanceof Node\Expr\PropertyFetch) {
-            // Resolve object
-            $objType = $this->resolveExpression($expr->var);
-            if (!($objType instanceof Types\Object_) || $objType->getFqsen() === null || $expr->name instanceof Node\Expr) {
-                // Need the class FQN of the object
+            if ($def === null) {
                 return new Types\Mixed;
             }
-            $fqn = (string)$objType->getFqsen() . '::' . $expr->name;
-            $def = $this->project->getDefinition($fqn);
-            if ($def !== null) {
-                return $def->type;
-            }
-        }
-        if ($expr instanceof Node\Expr\StaticCall) {
-            if ($expr->class instanceof Node\Expr || $expr->name instanceof Node\Expr) {
-                // Need the FQN
-                return new Types\Mixed;
-            }
-            $fqn = (string)$expr->class . '::' . $expr->name . '()';
-        }
-        if ($expr instanceof Node\Expr\StaticPropertyFetch || $expr instanceof Node\Expr\ClassConstFetch) {
-            if ($expr->class instanceof Node\Expr || $expr->name instanceof Node\Expr) {
-                // Need the FQN
-                return new Types\Mixed;
-            }
-            $fqn = (string)$expr->class . '::' . $expr->name;
+            return $def->type;
         }
         if ($expr instanceof Node\Expr\New_) {
-            if ($expr->class instanceof Node\Expr) {
-                return new Types\Mixed;
-            }
-            if ($expr->class instanceof Node\Stmt\Class_) {
-                // Anonymous class
-                return new Types\Object_;
-            }
-            $class = (string)$expr->class;
-            if ($class === 'static') {
-                return new Types\Static_;
-            }
-            if ($class === 'self' || $class === 'parent') {
-                $classNode = getClosestNode($expr, Node\Stmt\Class_::class);
-                if ($class === 'parent') {
-                    if ($classNode === null || $classNode->extends === null) {
-                        return new Types\Object_;
-                    }
-                    // parent is resolved to the parent class
-                    $classFqn = (string)$classNode->extends;
-                } else {
-                    if ($classNode === null) {
-                        return new Types\Self_;
-                    }
-                    // self is resolved to the containing class
-                    $classFqn = (string)$classNode->namespacedName;
-                }
-                return new Types\Object_(new Fqsen('\\' . $classFqn));
-            }
-            return new Types\Object_(new Fqsen('\\' . $class));
+            return self::resolveClassNameToType($expr->class);
         }
         if ($expr instanceof Node\Expr\Clone_ || $expr instanceof Node\Expr\Assign) {
             return $this->resolveExpression($expr->expr);
@@ -445,7 +432,7 @@ class DefinitionResolver
             || $expr instanceof Node\Expr\BinaryOp\NotEqual
             || $expr instanceof Node\Expr\BinaryOp\NotIdentical
         ) {
-            return new Types\Boolean_;
+            return new Types\Boolean;
         }
         if (
             $expr instanceof Node\Expr\Concat
@@ -509,9 +496,21 @@ class DefinitionResolver
             }
             $valueTypes = array_unique($keyTypes);
             $keyTypes = array_unique($keyTypes);
-            $valueType = count($valueTypes) > 1 ? new Types\Compound($valueTypes) : $valueTypes[0];
-            $keyType = count($keyTypes) > 1 ? new Types\Compound($keyTypes) : $keyTypes[0];
-            return new Types\Array_($valueTypes, $keyTypes);
+            if (empty($valueTypes)) {
+                $valueType = null;
+            } else if (count($valueTypes) === 1) {
+                $valueType = $valueTypes[0];
+            } else {
+                $valueType = new Types\Compound($valueTypes);
+            }
+            if (empty($keyTypes)) {
+                $keyType = null;
+            } else if (count($keyTypes) === 1) {
+                $keyType = $keyTypes[0];
+            } else {
+                $keyType = new Types\Compound($keyTypes);
+            }
+            return new Types\Array_($valueType, $keyType);
         }
         if ($expr instanceof Node\Expr\ArrayDimFetch) {
             $varType = $this->resolveExpression($expr->var);
@@ -527,10 +526,51 @@ class DefinitionResolver
         return new Types\Mixed;
     }
 
-      /**
+    /**
+     * Takes any class name node (from a static method call, or new node) and returns a Type object
+     * Resolves keywords like self, static and parent
+     *
+     * @param Node $class
+     * @return Type
+     */
+    private static function resolveClassNameToType(Node $class): Type
+    {
+        if ($class instanceof Node\Expr) {
+            return new Types\Mixed;
+        }
+        if ($class instanceof Node\Stmt\Class_) {
+            // Anonymous class
+            return new Types\Object_;
+        }
+        $className = (string)$class;
+        if ($className === 'static') {
+            return new Types\Static_;
+        }
+        if ($className === 'self' || $className === 'parent') {
+            $classNode = getClosestNode($class, Node\Stmt\Class_::class);
+            if ($className === 'parent') {
+                if ($classNode === null || $classNode->extends === null) {
+                    return new Types\Object_;
+                }
+                // parent is resolved to the parent class
+                $classFqn = (string)$classNode->extends;
+            } else {
+                if ($classNode === null) {
+                    return new Types\Self_;
+                }
+                // self is resolved to the containing class
+                $classFqn = (string)$classNode->namespacedName;
+            }
+            return new Types\Object_(new Fqsen('\\' . $classFqn));
+        }
+        return new Types\Object_(new Fqsen('\\' . $className));
+    }
+
+    /**
      * Returns the type a reference to this symbol will resolve to.
      * For properties and constants, this is the type of the property/constant.
      * For functions and methods, this is the return type.
+     * For parameters, this is the type of the parameter.
      * For classes and interfaces, this is the class type (object).
      * Variables are not indexed for performance reasons.
      * Can also be a compound type.
@@ -544,7 +584,7 @@ class DefinitionResolver
     {
         if ($node instanceof Node\Param) {
             // Parameters
-            $docBlock = $node->getAttribute('docBlock');
+            $docBlock = $node->getAttribute('parentNode')->getAttribute('docBlock');
             if ($docBlock !== null && count($paramTags = $docBlock->getTagsByName('param')) > 0) {
                 // Use @param tag
                 return $paramTags[0]->getType();
