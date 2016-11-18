@@ -113,7 +113,7 @@ class DefinitionResolver
                 $def->type = $this->getTypeFromNode($defNode);
             } else {
                 // Resolve the type of the assignment/closure use node
-                $def->type = $this->resolveExpression($defNode);
+                $def->type = $this->resolveExpressionNodeToType($defNode);
             }
             return $def;
         }
@@ -177,7 +177,7 @@ class DefinitionResolver
                 return null;
             }
             // Get the type of the left-hand expression
-            $varType = $this->resolveExpression($node->var);
+            $varType = $this->resolveExpressionNodeToType($node->var);
             if ($varType instanceof Types\This) {
                 // $this is resolved to the containing class
                 $classFqn = self::getContainingClassFqn($node);
@@ -300,7 +300,7 @@ class DefinitionResolver
      * @param \PhpParser\Node\Expr $expr
      * @return \phpDocumentor\Type
      */
-    private function resolveExpression(Node\Expr $expr): Type
+    private function resolveExpressionNodeToType(Node\Expr $expr): Type
     {
         if ($expr instanceof Node\Expr\Variable) {
             if ($expr->name === 'this') {
@@ -309,7 +309,7 @@ class DefinitionResolver
             // Find variable definition
             $defNode = $this->resolveVariableToNode($expr);
             if ($defNode instanceof Node\Expr) {
-                return $this->resolveExpression($defNode);
+                return $this->resolveExpressionNodeToType($defNode);
             }
             if ($defNode instanceof Node\Param) {
                 return $this->getTypeFromNode($defNode);
@@ -343,7 +343,7 @@ class DefinitionResolver
                 return new Types\Mixed;
             }
             // Resolve object
-            $objType = $this->resolveExpression($expr->var);
+            $objType = $this->resolveExpressionNodeToType($expr->var);
             if (!($objType instanceof Types\Compound)) {
                 $objType = new Types\Compound([$objType]);
             }
@@ -391,27 +391,27 @@ class DefinitionResolver
             return self::resolveClassNameToType($expr->class);
         }
         if ($expr instanceof Node\Expr\Clone_ || $expr instanceof Node\Expr\Assign) {
-            return $this->resolveExpression($expr->expr);
+            return $this->resolveExpressionNodeToType($expr->expr);
         }
         if ($expr instanceof Node\Expr\Ternary) {
             // ?:
             if ($expr->if === null) {
                 return new Types\Compound([
-                    $this->resolveExpression($expr->cond),
-                    $this->resolveExpression($expr->else)
+                    $this->resolveExpressionNodeToType($expr->cond),
+                    $this->resolveExpressionNodeToType($expr->else)
                 ]);
             }
             // Ternary is a compound of the two possible values
             return new Types\Compound([
-                $this->resolveExpression($expr->if),
-                $this->resolveExpression($expr->else)
+                $this->resolveExpressionNodeToType($expr->if),
+                $this->resolveExpressionNodeToType($expr->else)
             ]);
         }
         if ($expr instanceof Node\Expr\BinaryOp\Coalesce) {
             // ?? operator
             return new Types\Compound([
-                $this->resolveExpression($expr->left),
-                $this->resolveExpression($expr->right)
+                $this->resolveExpressionNodeToType($expr->left),
+                $this->resolveExpressionNodeToType($expr->right)
             ]);
         }
         if (
@@ -491,8 +491,8 @@ class DefinitionResolver
             $valueTypes = [];
             $keyTypes = [];
             foreach ($expr->items as $item) {
-                $valueTypes[] = $this->resolveExpression($item->value);
-                $keyTypes[] = $item->key ? $this->resolveExpression($item->key) : new Types\Integer;
+                $valueTypes[] = $this->resolveExpressionNodeToType($item->value);
+                $keyTypes[] = $item->key ? $this->resolveExpressionNodeToType($item->key) : new Types\Integer;
             }
             $valueTypes = array_unique($keyTypes);
             $keyTypes = array_unique($keyTypes);
@@ -513,7 +513,7 @@ class DefinitionResolver
             return new Types\Array_($valueType, $keyType);
         }
         if ($expr instanceof Node\Expr\ArrayDimFetch) {
-            $varType = $this->resolveExpression($expr->var);
+            $varType = $this->resolveExpressionNodeToType($expr->var);
             if (!($varType instanceof Types\Array_)) {
                 return new Types\Mixed;
             }
@@ -597,7 +597,7 @@ class DefinitionResolver
                 }
                 $type = new Types\Object_(new Fqsen('\\' . (string)$node->type));
                 if ($node->default !== null) {
-                    $defaultType = $this->resolveExpression($node->default);
+                    $defaultType = $this->resolveExpressionNodeToType($node->default);
                     $type = new Types\Compound([$type, $defaultType]);
                 }
             }
