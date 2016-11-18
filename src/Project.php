@@ -108,6 +108,12 @@ class Project
             } else {
                 $content = file_get_contents(uriToPath($uri));
             }
+            // Don't parse large files
+            $size = strlen($content);
+            $limit = 150000;
+            if ($size > $limit) {
+                throw new ContentTooLargeException($uri, $size, $limit);
+            }
             if (isset($this->documents[$uri])) {
                 $document = $this->documents[$uri];
                 $document->updateContent($content);
