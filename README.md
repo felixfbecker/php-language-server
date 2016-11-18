@@ -122,6 +122,42 @@ New features like request implementations will result in a new minor version.
 Everything else will be a patch release.
 All classes are considered internal and are not subject to semver.
 
+## Installation
+
+The recommended installation method is through [Composer](https://getcomposer.org/).
+Simply run
+
+    composer require felixfbecker/language-server
+
+and you will get the latest stable release and all dependencies.  
+Running `composer update` will update the server to the latest non-breaking version.
+
+## Running
+
+Start the language server with
+
+    php vendor/felixfbecker/language-server/bin/php-language-server.php
+
+### Command line arguments
+
+#### `--tcp=host:port` (optional)
+Causes the server to use a tcp connection for communicating with the language client instead of using STDIN/STDOUT.
+The server will try to connect to the specified address.
+Strongly recommended on Windows because of blocking STDIO.
+
+Example:
+
+    php bin/php-language-server.php --tcp=127.0.0.1:12345
+
+#### `--memory-limit=integer` (optional)
+Sets memory limit for language server.
+Equivalent to [memory-limit](http://php.net/manual/en/ini.core.php#ini.memory-limit) php.ini directive.
+By default there is no memory limit.
+
+Example:
+
+    php bin/php-language-server.php --memory-limit=256M
+
 ## Used by
  - [vscode-php-intellisense](https://github.com/felixfbecker/vscode-php-intellisense)
 
@@ -141,23 +177,3 @@ Run the tests with
 Lint with
 
     vendor/bin/phpcs
-
-## Command line arguments
-
-### `--tcp=host:port` (optional)
-Causes the server to use a tcp connection for communicating with the language client instead of using STDIN/STDOUT.
-The server will try to connect to the specified address.
-Strongly recommended on Windows because of blocking STDIO.
-
-Example:
-
-    php bin/php-language-server.php --tcp=127.0.0.1:12345
-
-### `--memory-limit=integer` (optional)
-Sets memory limit for language server.
-Equivalent to [memory-limit](http://php.net/manual/en/ini.core.php#ini.memory-limit) php.ini directive.
-By default there is no memory limit.
-
-Example:
-
-    php bin/php-language-server.php --memory-limit=256M
