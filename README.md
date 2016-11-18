@@ -47,6 +47,7 @@ Non-Standard: An empty query will return _all_ symbols found in the workspace.
 ![Error reporting demo](images/publishDiagnostics.png)
 
 PHP parse errors are reported as errors, parse errors of docblocks are reported as warnings.
+Errors/Warnings from the `vendor` directory are ignored.
 
 ### What is considered a definition?
 
@@ -89,10 +90,8 @@ Definitions/references/hover currently work for
  - function calls
  - constant access
  - `instanceof` checks
-
-They do not work yet for:
  - Reassigned variables
- - Nested access/calls on return values or properties
+ - Nested access/calls on return values, properties, array access
 
 ### Protocol Extensions
 
