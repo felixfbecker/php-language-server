@@ -292,4 +292,16 @@ class GlobalTest extends ServerTestCase
         )->wait();
         $this->assertEquals($this->getDefinitionLocation('TestInterface'), $result);
     }
+
+    public function testDefinitionForNestedMethodCall()
+    {
+        // $obj->testProperty->testMethod();
+        // Get definition for testMethod
+        $reference = $this->getReferenceLocations('TestClass::testMethod()')[1];
+        $result = $this->textDocument->definition(
+            new TextDocumentIdentifier($reference->uri),
+            $reference->range->end
+        )->wait();
+        $this->assertEquals($this->getDefinitionLocation('TestClass::testMethod()'), $result);
+    }
 }

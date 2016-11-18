@@ -34,3 +34,6 @@ use function test_function;
 if ($abc instanceof TestInterface) {
 
 }
+
+// Nested expression
+$obj->testProperty->testMethod();
