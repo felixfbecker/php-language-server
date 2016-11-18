@@ -103,17 +103,22 @@ class Project
     public function loadDocument(string $uri): Promise
     {
         return coroutine(function () use ($uri) {
+            $limit = 150000;
             if ($this->clientCapabilities->xcontentProvider) {
                 $content = (yield $this->client->textDocument->xcontent(new TextDocumentIdentifier($uri)))->text;
+                $size = strlen($content);
+                if ($size > $limit) {
+                    throw new ContentTooLargeException($uri, $size, $limit);
+                }
             } else {
-                $content = file_get_contents(uriToPath($uri));
+                $path = uriToPath($uri);
+                $size = filesize($path);
+                if ($size > $limit) {
+                    throw new ContentTooLargeException($uri, $size, $limit);
+                }
+                $content = file_get_contents($path);
             }
             // Don't parse large files
-            $size = strlen($content);
-            $limit = 150000;
-            if ($size > $limit) {
-                throw new ContentTooLargeException($uri, $size, $limit);
-            }
             if (isset($this->documents[$uri])) {
                 $document = $this->documents[$uri];
                 $document->updateContent($content);
