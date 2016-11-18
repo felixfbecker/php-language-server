@@ -2,7 +2,6 @@
 
 use LanguageServer\{LanguageServer, ProtocolStreamReader, ProtocolStreamWriter};
 use Sabre\Event\Loop;
-use Symfony\Component\Debug\ErrorHandler;
 
 $options = getopt('', ['tcp::', 'memory-limit::']);
 
@@ -15,7 +14,19 @@ foreach ([__DIR__ . '/../../../autoload.php', __DIR__ . '/../autoload.php', __DI
     }
 }
 
-ErrorHandler::register();
+// Convert all errors to ErrorExceptions
+set_error_handler(function (int $severity, string $message, string $file, int $line) {
+    if (!(error_reporting() & $severity)) {
+        // This error code is not included in error_reporting (can also be caused by the @ operator)
+        return;
+    }
+    throw new \ErrorException($message, 0, $severity, $file, $line);
+});
+
+// Only write uncaught exceptions to STDERR, not STDOUT
+set_exception_handler(function (\Throwable $e) {
+    fwrite(STDERR, (string)$e);
+});
 
 @cli_set_process_title('PHP Language Server');
 

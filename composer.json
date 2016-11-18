@@ -29,7 +29,6 @@
         "sabre/event": "^5.0",
         "felixfbecker/advanced-json-rpc": "^2.0",
 		"squizlabs/php_codesniffer" : "3.0.0RC1",
-        "symfony/debug": "^3.1",
         "netresearch/jsonmapper": "^1.0",
         "webmozart/path-util": "^2.3",
         "webmozart/glob": "^4.1",
