@@ -232,6 +232,9 @@ class DefinitionResolver
             if ($className === 'self' || $className === 'static' || $className === 'parent') {
                 // self and static are resolved to the containing class
                 $classNode = getClosestNode($node, Node\Stmt\Class_::class);
+                if ($classNode === null) {
+                    return null;
+                }
                 if ($className === 'parent') {
                     // parent is resolved to the parent class
                     if (!isset($n->extends)) {
