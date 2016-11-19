@@ -17,24 +17,24 @@ class CompletionTest extends TestCase
     private $textDocument;
 
     /**
-     * @var string
+     * @var Project
      */
-    private $completionUri;
+    private $project;
 
     public function setUp()
     {
         $client = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
-        $project = new Project($client, new ClientCapabilities);
-        $this->completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion.php');
-        $project->loadDocument(pathToUri(__DIR__ . '/../../../fixtures/global_symbols.php'));
-        $project->openDocument($this->completionUri, file_get_contents($this->completionUri));
-        $this->textDocument = new Server\TextDocument($project, $client);
+        $this->project = new Project($client, new ClientCapabilities);
+        $this->project->loadDocument(pathToUri(__DIR__ . '/../../../fixtures/global_symbols.php'))->wait();
+        $this->textDocument = new Server\TextDocument($this->project, $client);
     }
 
-    public function testCompletion()
+    public function testForPropertiesAndMethods()
     {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/property.php');
+        $this->project->openDocument($completionUri, file_get_contents($completionUri));
         $items = $this->textDocument->completion(
-            new TextDocumentIdentifier($this->completionUri),
+            new TextDocumentIdentifier($completionUri),
             new Position(3, 7)
         )->wait();
         $this->assertEquals([
