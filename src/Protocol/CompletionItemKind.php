@@ -13,7 +13,7 @@ abstract class CompletionItemKind
     const CONSTRUCTOR = 4;
     const FIELD = 5;
     const VARIABLE = 6;
-    const _CLASS = 7;
+    const CLASS_ = 7;
     const INTERFACE = 8;
     const MODULE = 9;
     const PROPERTY = 10;

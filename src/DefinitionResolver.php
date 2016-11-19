@@ -327,7 +327,7 @@ class DefinitionResolver
      * @param \PhpParser\Node\Expr $expr
      * @return \phpDocumentor\Type
      */
-    private function resolveExpressionNodeToType(Node\Expr $expr): Type
+    public function resolveExpressionNodeToType(Node\Expr $expr): Type
     {
         if ($expr instanceof Node\Expr\Variable) {
             if ($expr->name === 'this') {

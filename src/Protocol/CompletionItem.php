@@ -70,10 +70,67 @@ class CompletionItem
     public $textEdit;
 
     /**
+     * An optional array of additional text edits that are applied when
+     * selecting this completion. Edits must not overlap with the main edit
+     * nor with themselves.
+     *
+     * @var TextEdit[]|null
+     */
+    public $additionalTextEdits;
+
+    /**
+     * An optional command that is executed *after* inserting this completion. *Note* that
+     * additional modifications to the current document should be described with the
+     * additionalTextEdits-property.
+     *
+     * @var Command|null
+     */
+    public $command;
+
+    /**
      * An data entry field that is preserved on a completion item between
      * a completion and a completion resolve request.
      *
      * @var mixed
      */
     public $data;
+
+    /**
+     * @param string          $label
+     * @param int|null        $kind
+     * @param string|null     $detail
+     * @param string|null     $documentation
+     * @param string|null     $sortText
+     * @param string|null     $filterText
+     * @param string|null     $insertQuery
+     * @param TextEdit|null   $textEdit
+     * @param TextEdit[]|null $additionalTextEdits
+     * @param Command|null    $command
+     * @param mixed|null      $data
+     */
+    public function __construct(
+        string $label = null,
+        int $kind = null,
+        string $detail = null,
+        string $documentation = null,
+        string $sortText = null,
+        string $filterText = null,
+        string $insertQuery = null,
+        TextEdit $textEdit = null,
+        array $additionalTextEdits = null,
+        Command $command = null,
+        $data = null
+    ) {
+        $this->label = $label;
+        $this->kind = $kind;
+        $this->detail = $detail;
+        $this->documentation = $documentation;
+        $this->sortText = $sortText;
+        $this->filterText = $filterText;
+        $this->insertQuery = $insertQuery;
+        $this->textEdit = $textEdit;
+        $this->additionalTextEdits = $additionalTextEdits;
+        $this->command = $command;
+        $this->data = $data;
+    }
 }

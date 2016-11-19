@@ -18,8 +18,12 @@ use LanguageServer\Protocol\{
     SymbolInformation,
     ReferenceContext,
     Hover,
-    MarkedString
+    MarkedString,
+    SymbolKind,
+    CompletionItem,
+    CompletionItemKind
 };
+use phpDocumentor\Reflection\Types;
 use Sabre\Event\Promise;
 use function Sabre\Event\coroutine;
 
@@ -208,6 +212,66 @@ class TextDocument
                 $contents[] = $def->documentation;
             }
             return new Hover($contents, $range);
+        });
+    }
+
+    /**
+     * The Completion request is sent from the client to the server to compute completion items at a given cursor
+     * position. Completion items are presented in the IntelliSense user interface. If computing full completion items
+     * is expensive, servers can additionally provide a handler for the completion item resolve request
+     * ('completionItem/resolve'). This request is sent when a completion item is selected in the user interface. A
+     * typically use case is for example: the 'textDocument/completion' request doesn't fill in the documentation
+     * property for returned completion items since it is expensive to compute. When the item is selected in the user
+     * interface then a 'completionItem/resolve' request is sent with the selected completion item as a param. The
+     * returned completion item should have the documentation property filled in.
+     *
+     * @param TextDocumentIdentifier The text document
+     * @param Position $position The position
+     * @return Promise <CompletionItem[]|CompletionList>
+     */
+    public function completion(TextDocumentIdentifier $textDocument, Position $position): Promise
+    {
+        return coroutine(function () use ($textDocument, $position) {
+            $document = yield $this->project->getOrLoadDocument($textDocument->uri);
+            $node = $document->getNodeAtPosition($position);
+            if ($node === null) {
+                return [];
+            }
+            if ($node instanceof Node\Expr\Error) {
+                $node = $node->getAttribute('parentNode');
+            }
+            if ($node instanceof Node\Expr\PropertyFetch) {
+                // Resolve object
+                $objType = $this->definitionResolver->resolveExpressionNodeToType($node->var);
+                if ($objType instanceof Types\Object_ && $objType->getFqsen() !== null) {
+                    $prefix = substr((string)$objType->getFqsen(), 1) . '::';
+                    if (is_string($node->name)) {
+                        $prefix .= $node->name;
+                    }
+                    $prefixLen = strlen($prefix);
+                    $items = [];
+                    foreach ($this->project->getDefinitions() as $fqn => $def) {
+                        if (substr($fqn, 0, $prefixLen) === $prefix) {
+                            $item = new CompletionItem;
+                            $item->label = $def->symbolInformation->name;
+                            if ($def->type) {
+                                $item->detail = (string)$def->type;
+                            }
+                            if ($def->documentation) {
+                                $item->documentation = $def->documentation;
+                            }
+                            if ($def->symbolInformation->kind === SymbolKind::PROPERTY) {
+                                $item->kind = CompletionItemKind::PROPERTY;
+                            } else if ($def->symbolInformation->kind === SymbolKind::METHOD) {
+                                $item->kind = CompletionItemKind::METHOD;
+                            }
+                            $items[] = $item;
+                        }
+                    }
+                    return $items;
+                }
+            }
+            return [];
         });
     }
 }
