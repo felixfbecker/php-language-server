@@ -21,7 +21,7 @@ function pathToUri(string $filepath): string
     // Don't %-encode the colon after a Windows drive letter
     $first = array_shift($parts);
     if (substr($first, -1) !== ':') {
-        $first = urlencode($first);
+        $first = rawurlencode($first);
     }
     $parts = array_map('rawurlencode', $parts);
     array_unshift($parts, $first);
