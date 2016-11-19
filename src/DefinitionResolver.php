@@ -22,6 +22,11 @@ class DefinitionResolver
      */
     private $typeResolver;
 
+    /**
+     * @var \PhpParser\PrettyPrinterAbstract
+     */
+    private $prettyPrinter;
+
     public function __construct(Project $project)
     {
         $this->project = $project;
