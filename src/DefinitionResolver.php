@@ -183,8 +183,27 @@ class DefinitionResolver
             }
             // Get the type of the left-hand expression
             $varType = $this->resolveExpressionNodeToType($node->var);
-            if ($varType instanceof Types\This) {
-                // $this is resolved to the containing class
+            if ($varType instanceof Types\Compound) {
+                // For compound types, use the first FQN we find
+                // (popular use case is ClassName|null)
+                for ($i = 0; $t = $varType->get($i); $i++) {
+                    if (
+                        $t instanceof Types\This
+                        || $t instanceof Types\Object_
+                        || $t instanceof Types\Static_
+                        || $t instanceof Types\Self_
+                    ) {
+                        $varType = $t;
+                        break;
+                    }
+                }
+            }
+            if (
+                $varType instanceof Types\This
+                || $varType instanceof Types\Static_
+                || $varType instanceof Types\Self_
+            ) {
+                // $this/static/self is resolved to the containing class
                 $classFqn = self::getContainingClassFqn($node);
             } else if (!($varType instanceof Types\Object_) || $varType->getFqsen() === null) {
                 // Left-hand expression could not be resolved to a class
