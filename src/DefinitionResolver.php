@@ -585,7 +585,11 @@ class DefinitionResolver
         if ($node instanceof Node\Param) {
             // Parameters
             $docBlock = $node->getAttribute('parentNode')->getAttribute('docBlock');
-            if ($docBlock !== null && count($paramTags = $docBlock->getTagsByName('param')) > 0) {
+            if (
+                $docBlock !== null
+                && !empty($paramTags = $docBlock->getTagsByName('param'))
+                && $paramTags[0]->getType() !== null
+            ) {
                 // Use @param tag
                 return $paramTags[0]->getType();
             }
@@ -607,7 +611,11 @@ class DefinitionResolver
         if ($node instanceof Node\FunctionLike) {
             // Functions/methods
             $docBlock = $node->getAttribute('docBlock');
-            if ($docBlock !== null && count($returnTags = $docBlock->getTagsByName('return')) > 0) {
+            if (
+                $docBlock !== null
+                && !empty($returnTags = $docBlock->getTagsByName('return'))
+                && $returnTags[0]->getType() !== null
+            ) {
                 // Use @return tag
                 return $returnTags[0]->getType();
             }
@@ -625,7 +633,11 @@ class DefinitionResolver
         if ($node instanceof Node\Stmt\PropertyProperty || $node instanceof Node\Const_) {
             // Property or constant
             $docBlock = $node->getAttribute('parentNode')->getAttribute('docBlock');
-            if ($docBlock !== null && count($varTags = $docBlock->getTagsByName('var')) > 0) {
+            if (
+                $docBlock !== null
+                && !empty($varTags = $docBlock->getTagsByName('var'))
+                && $varTags[0]->getType()
+            ) {
                 // Use @var tag
                 return $varTags[0]->getType();
             }
