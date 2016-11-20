@@ -3,7 +3,7 @@ declare(strict_types = 1);
 
 namespace LanguageServer\Server;
 
-use LanguageServer\{LanguageClient, Project, PhpDocument, DefinitionResolver};
+use LanguageServer\{LanguageClient, Project, PhpDocument, DefinitionResolver, CompletionProvider};
 use PhpParser\PrettyPrinter\Standard as PrettyPrinter;
 use PhpParser\Node;
 use LanguageServer\Protocol\{
@@ -23,7 +23,6 @@ use LanguageServer\Protocol\{
     CompletionItem,
     CompletionItemKind
 };
-use phpDocumentor\Reflection\Types;
 use Sabre\Event\Promise;
 use function Sabre\Event\coroutine;
 
@@ -54,12 +53,18 @@ class TextDocument
      */
     private $definitionResolver;
 
+    /**
+     * @var CompletionProvider
+     */
+    private $completionProvider;
+
     public function __construct(Project $project, LanguageClient $client)
     {
         $this->project = $project;
         $this->client = $client;
         $this->prettyPrinter = new PrettyPrinter();
         $this->definitionResolver = new DefinitionResolver($project);
+        $this->completionProvider = new CompletionProvider($this->definitionResolver, $project);
     }
 
     /**
@@ -233,45 +238,7 @@ class TextDocument
     {
         return coroutine(function () use ($textDocument, $position) {
             $document = yield $this->project->getOrLoadDocument($textDocument->uri);
-            $node = $document->getNodeAtPosition($position);
-            if ($node === null) {
-                return [];
-            }
-            if ($node instanceof Node\Expr\Error) {
-                $node = $node->getAttribute('parentNode');
-            }
-            if ($node instanceof Node\Expr\PropertyFetch) {
-                // Resolve object
-                $objType = $this->definitionResolver->resolveExpressionNodeToType($node->var);
-                if ($objType instanceof Types\Object_ && $objType->getFqsen() !== null) {
-                    $prefix = substr((string)$objType->getFqsen(), 1) . '::';
-                    if (is_string($node->name)) {
-                        $prefix .= $node->name;
-                    }
-                    $prefixLen = strlen($prefix);
-                    $items = [];
-                    foreach ($this->project->getDefinitions() as $fqn => $def) {
-                        if (substr($fqn, 0, $prefixLen) === $prefix) {
-                            $item = new CompletionItem;
-                            $item->label = $def->symbolInformation->name;
-                            if ($def->type) {
-                                $item->detail = (string)$def->type;
-                            }
-                            if ($def->documentation) {
-                                $item->documentation = $def->documentation;
-                            }
-                            if ($def->symbolInformation->kind === SymbolKind::PROPERTY) {
-                                $item->kind = CompletionItemKind::PROPERTY;
-                            } else if ($def->symbolInformation->kind === SymbolKind::METHOD) {
-                                $item->kind = CompletionItemKind::METHOD;
-                            }
-                            $items[] = $item;
-                        }
-                    }
-                    return $items;
-                }
-            }
-            return [];
+            return $this->completionProvider->provideCompletion($document, $position);
         });
     }
 }

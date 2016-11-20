@@ -281,25 +281,34 @@ class DefinitionResolver
     /**
      * Returns the assignment or parameter node where a variable was defined
      *
-     * @param Node\Expr\Variable $n The variable access
+     * @param Node\Expr\Variable|Node\Expr\ClosureUse $var The variable access
      * @return Node\Expr\Assign|Node\Param|Node\Expr\ClosureUse|null
      */
-    public static function resolveVariableToNode(Node\Expr\Variable $var)
+    public static function resolveVariableToNode(Node\Expr $var)
     {
         $n = $var;
+        // When a use is passed, start outside the closure to not return immediatly
+        if ($var instanceof Node\Expr\ClosureUse) {
+            $n = $var->getAttribute('parentNode')->getAttribute('parentNode');
+            $name = $var->var;
+        } else if ($var instanceof Node\Expr\Variable || $var instanceof Node\Param) {
+            $name = $var->name;
+        } else {
+            throw new \InvalidArgumentException('$var must be Variable, Param or ClosureUse, not ' . get_class($var));
+        }
         // Traverse the AST up
         do {
             // If a function is met, check the parameters and use statements
             if ($n instanceof Node\FunctionLike) {
                 foreach ($n->getParams() as $param) {
-                    if ($param->name === $var->name) {
+                    if ($param->name === $name) {
                         return $param;
                     }
                 }
                 // If it is a closure, also check use statements
                 if ($n instanceof Node\Expr\Closure) {
                     foreach ($n->uses as $use) {
-                        if ($use->var === $var->name) {
+                        if ($use->var === $name) {
                             return $use;
                         }
                     }
@@ -310,7 +319,7 @@ class DefinitionResolver
             while ($n->getAttribute('previousSibling') && $n = $n->getAttribute('previousSibling')) {
                 if (
                     ($n instanceof Node\Expr\Assign || $n instanceof Node\Expr\AssignOp)
-                    && $n->var instanceof Node\Expr\Variable && $n->var->name === $var->name
+                    && $n->var instanceof Node\Expr\Variable && $n->var->name === $name
                 ) {
                     return $n;
                 }
@@ -329,8 +338,8 @@ class DefinitionResolver
      */
     public function resolveExpressionNodeToType(Node\Expr $expr): Type
     {
-        if ($expr instanceof Node\Expr\Variable) {
-            if ($expr->name === 'this') {
+        if ($expr instanceof Node\Expr\Variable || $expr instanceof Node\Expr\ClosureUse) {
+            if ($expr instanceof Node\Expr\Variable && $expr->name === 'this') {
                 return new Types\This;
             }
             // Find variable definition

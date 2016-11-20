@@ -52,4 +52,18 @@ class CompletionTest extends TestCase
             )
         ], $items);
     }
+
+    public function testForVariables()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/variable.php');
+        $this->project->openDocument($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(8, 5)
+        )->wait();
+        $this->assertEquals([
+            new CompletionItem('$var', CompletionItemKind::VARIABLE, 'int'),
+            new CompletionItem('$param', CompletionItemKind::VARIABLE, 'string|null', 'A parameter')
+        ], $items);
+    }
 }
