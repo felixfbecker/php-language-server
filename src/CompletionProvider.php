@@ -85,16 +85,9 @@ class CompletionProvider
             foreach ($this->suggestVariablesAtNode($node) as $var) {
                 $item = new CompletionItem;
                 $item->kind = CompletionItemKind::VARIABLE;
+                $item->label = '$' . ($var instanceof Node\Expr\ClosureUse ? $var->var : $var->name);
                 $item->documentation = $this->definitionResolver->getDocumentationFromNode($var);
-                if ($var instanceof Node\Param) {
-                    $item->label = '$' . $var->name;
-                    $item->detail = (string)$this->definitionResolver->getTypeFromNode($var); // TODO make it handle variables as well. Makes sense because needs to handle @var tag too!
-                } else if ($var instanceof Node\Expr\Variable || $var instanceof Node\Expr\ClosureUse) {
-                    $item->label = '$' . ($var instanceof Node\Expr\ClosureUse ? $var->var : $var->name);
-                    $item->detail = (string)$this->definitionResolver->resolveExpressionNodeToType($var->getAttribute('parentNode'));
-                } else {
-                    throw new \LogicException;
-                }
+                $item->detail = (string)$this->definitionResolver->getTypeFromNode($var);
                 $items[] = $item;
             }
         }

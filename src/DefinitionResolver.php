@@ -113,13 +113,8 @@ class DefinitionResolver
             $def->declarationLine = $this->getDeclarationLineFromNode($defNode);
             // Documentation
             $def->documentation = $this->getDocumentationFromNode($defNode);
-            if ($defNode instanceof Node\Param) {
-                // Get parameter type
-                $def->type = $this->getTypeFromNode($defNode);
-            } else {
-                // Resolve the type of the assignment/closure use node
-                $def->type = $this->resolveExpressionNodeToType($defNode);
-            }
+            // Get type from docblock
+            $def->type = $this->getTypeFromNode($defNode);
             return $def;
         }
         // Other references are references to a global symbol that have an FQN
@@ -608,7 +603,7 @@ class DefinitionResolver
      * For functions and methods, this is the return type.
      * For parameters, this is the type of the parameter.
      * For classes and interfaces, this is the class type (object).
-     * Variables are not indexed for performance reasons.
+     * For variables / assignments, this is the documented type or type the assignment resolves to.
      * Can also be a compound type.
      * If it is unknown, will be Types\Mixed.
      * Returns null if the node does not have a type.
@@ -666,16 +661,28 @@ class DefinitionResolver
             // Unknown return type
             return new Types\Mixed;
         }
-        if ($node instanceof Node\Stmt\PropertyProperty || $node instanceof Node\Const_) {
-            // Property or constant
-            $docBlock = $node->getAttribute('parentNode')->getAttribute('docBlock');
+        if ($node instanceof Node\Expr\Variable) {
+            $node = $node->getAttribute('parentNode');
+        }
+        if (
+            $node instanceof Node\Stmt\PropertyProperty
+            || $node instanceof Node\Const_
+            || $node instanceof Node\Expr\Assign
+            || $node instanceof Node\Expr\AssignOp
+        ) {
+            // Property, constant or variable
             if (
-                $docBlock !== null
+                ($parent = $node->getAttribute('parentNode'))
+                && ($docBlock = $parent->getAttribute('docBlock'))
                 && !empty($varTags = $docBlock->getTagsByName('var'))
-                && $varTags[0]->getType()
+                && ($type = $varTags[0]->getType())
             ) {
                 // Use @var tag
-                return $varTags[0]->getType();
+                return $type;
+            }
+            if ($node instanceof Node\Expr\Assign || $node instanceof Node\Expr\AssignOp) {
+                // Resolve the expression
+                return $this->resolveExpressionNodeToType($node);
             }
             // TODO: read @property tags of class
             // TODO: Try to infer the type from default value / constant value
