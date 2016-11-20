@@ -671,17 +671,23 @@ class DefinitionResolver
             || $node instanceof Node\Expr\AssignOp
         ) {
             // Property, constant or variable
+            // Use @var tag
             if (
                 ($parent = $node->getAttribute('parentNode'))
                 && ($docBlock = $parent->getAttribute('docBlock'))
                 && !empty($varTags = $docBlock->getTagsByName('var'))
                 && ($type = $varTags[0]->getType())
             ) {
-                // Use @var tag
                 return $type;
             }
-            if ($node instanceof Node\Expr\Assign || $node instanceof Node\Expr\AssignOp) {
-                // Resolve the expression
+            // Resolve the expression
+            if ($node instanceof Node\Stmt\PropertyProperty) {
+                if ($node->default) {
+                    return $this->resolveExpressionNodeToType($node->default);
+                }
+            } else if ($node instanceof Node\Const_) {
+                return $this->resolveExpressionNodeToType($node->value);
+            } else if ($node instanceof Node\Expr\Assign || $node instanceof Node\Expr\AssignOp) {
                 return $this->resolveExpressionNodeToType($node);
             }
             // TODO: read @property tags of class
