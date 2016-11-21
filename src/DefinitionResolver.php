@@ -670,11 +670,16 @@ class DefinitionResolver
             || $node instanceof Node\Expr\Assign
             || $node instanceof Node\Expr\AssignOp
         ) {
+            if ($node instanceof Node\Stmt\PropertyProperty || $node instanceof Node\Const_) {
+                $docBlockHolder = $node->getAttribute('parentNode');
+            } else {
+                $docBlockHolder = $node;
+            }
             // Property, constant or variable
             // Use @var tag
             if (
-                ($parent = $node->getAttribute('parentNode'))
-                && ($docBlock = $parent->getAttribute('docBlock'))
+                isset($docBlockHolder)
+                && ($docBlock = $docBlockHolder->getAttribute('docBlock'))
                 && !empty($varTags = $docBlock->getTagsByName('var'))
                 && ($type = $varTags[0]->getType())
             ) {
