@@ -155,7 +155,7 @@ class CompletionProvider
                     if ($namespace && ($alias = array_search($def, $aliasedDefs, true)) !== false) {
                         // $alias is the name under which this definition is aliased in the current namespace
                         $item->insertText = $alias;
-                    } else if ($namespace) {
+                    } else if ($namespace && !($prefix && $isFullyQualified)) {
                         // Insert the global FQN with trailing backslash
                         $item->insertText = '\\' . $fqn;
                     } else {
