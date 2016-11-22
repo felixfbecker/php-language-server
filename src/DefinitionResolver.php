@@ -92,6 +92,30 @@ class DefinitionResolver
     }
 
     /**
+     * Create a Definition for a definition node
+     *
+     * @param Node $node
+     * @param string $fqn
+     * @return Definition
+     */
+    public function createDefinitionFromNode(Node $node, string $fqn = null): Definition
+    {
+        $def = new Definition;
+        $def->canBeInstantiated = $node instanceof Node\Stmt\Class_;
+        $def->isGlobal = (
+            $node instanceof Node\Stmt\ClassLike
+            || $node instanceof Node\Stmt\Function_
+            || $node->getAttribute('parentNode') instanceof Node\Stmt\Const_
+        );
+        $def->fqn = $fqn;
+        $def->symbolInformation = SymbolInformation::fromNode($node, $fqn);
+        $def->type = $this->getTypeFromNode($node);
+        $def->declarationLine = $this->getDeclarationLineFromNode($node);
+        $def->documentation = $this->getDocumentationFromNode($node);
+        return $def;
+    }
+
+    /**
      * Given any node, returns the Definition object of the symbol that is referenced
      *
      * @param Node $node Any reference node
@@ -106,16 +130,7 @@ class DefinitionResolver
             if ($defNode === null) {
                 return null;
             }
-            $def = new Definition;
-            // Get symbol information from node (range, symbol kind)
-            $def->symbolInformation = SymbolInformation::fromNode($defNode);
-            // Declaration line
-            $def->declarationLine = $this->getDeclarationLineFromNode($defNode);
-            // Documentation
-            $def->documentation = $this->getDocumentationFromNode($defNode);
-            // Get type from docblock
-            $def->type = $this->getTypeFromNode($defNode);
-            return $def;
+            return $this->createDefinitionFromNode($defNode);
         }
         // Other references are references to a global symbol that have an FQN
         // Find out the FQN

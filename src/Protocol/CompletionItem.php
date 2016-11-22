@@ -1,6 +1,9 @@
 <?php
+declare(strict_types = 1);
 
 namespace LanguageServer\Protocol;
+
+use LanguageServer\Definition;
 
 class CompletionItem
 {
@@ -102,7 +105,7 @@ class CompletionItem
      * @param string|null     $documentation
      * @param string|null     $sortText
      * @param string|null     $filterText
-     * @param string|null     $insertQuery
+     * @param string|null     $insertText
      * @param TextEdit|null   $textEdit
      * @param TextEdit[]|null $additionalTextEdits
      * @param Command|null    $command
@@ -115,7 +118,7 @@ class CompletionItem
         string $documentation = null,
         string $sortText = null,
         string $filterText = null,
-        string $insertQuery = null,
+        string $insertText = null,
         TextEdit $textEdit = null,
         array $additionalTextEdits = null,
         Command $command = null,
@@ -127,10 +130,32 @@ class CompletionItem
         $this->documentation = $documentation;
         $this->sortText = $sortText;
         $this->filterText = $filterText;
-        $this->insertQuery = $insertQuery;
+        $this->insertText = $insertText;
         $this->textEdit = $textEdit;
         $this->additionalTextEdits = $additionalTextEdits;
         $this->command = $command;
         $this->data = $data;
+    }
+
+    /**
+     * Creates a CompletionItem for a Definition
+     *
+     * @param Definition $def
+     * @return self
+     */
+    public static function fromDefinition(Definition $def): self
+    {
+        $item = new CompletionItem;
+        $item->label = $def->symbolInformation->name;
+        $item->kind = CompletionItemKind::fromSymbolKind($def->symbolInformation->kind);
+        if ($def->type) {
+            $item->detail = (string)$def->type;
+        } else if ($def->symbolInformation->containerName) {
+            $item->detail = $def->symbolInformation->containerName;
+        }
+        if ($def->documentation) {
+            $item->documentation = $def->documentation;
+        }
+        return $item;
     }
 }

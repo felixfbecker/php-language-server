@@ -30,6 +30,21 @@ class Definition
     public $fqn;
 
     /**
+     * Only true for classes, interfaces, traits, functions and non-class constants
+     * This is so methods and properties are not suggested in the global scope
+     *
+     * @var bool
+     */
+    public $isGlobal;
+
+    /**
+     * True if the Definition is a class
+     *
+     * @var bool
+     */
+    public $canBeInstantiated;
+
+    /**
      * @var Protocol\SymbolInformation
      */
     public $symbolInformation;

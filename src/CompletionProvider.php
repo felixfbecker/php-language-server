@@ -48,41 +48,103 @@ class CompletionProvider
         /** @var CompletionItem[] */
         $items = [];
 
-        if ($node instanceof Node\Expr\Error) {
-            $node = $node->getAttribute('parentNode');
-        }
-
-        // If we get a property fetch node, resolve items of the class
-        if ($node instanceof Node\Expr\PropertyFetch) {
-            $objType = $this->definitionResolver->resolveExpressionNodeToType($node->var);
-            if ($objType instanceof Types\Object_ && $objType->getFqsen() !== null) {
-                $prefix = substr((string)$objType->getFqsen(), 1) . '::';
-                if (is_string($node->name)) {
-                    $prefix .= $node->name;
+        // A non-free node means we do NOT suggest global symbols
+        if (
+            $node instanceof Node\Expr\MethodCall
+            || $node instanceof Node\Expr\PropertyFetch
+            || $node instanceof Node\Expr\StaticCall
+            || $node instanceof Node\Expr\StaticPropertyFetch
+            || $node instanceof Node\Expr\ClassConstFetch
+        ) {
+            /** The FQN to be completed */
+            $prefix = $this->definitionResolver->resolveReferenceNodeToFqn($node) ?? '';
+            $prefixLen = strlen($prefix);
+            foreach ($this->project->getDefinitions() as $fqn => $def) {
+                if (substr($fqn, 0, $prefixLen) === $prefix && !$def->isGlobal) {
+                    $items[] = CompletionItem::fromDefinition($def);
                 }
+            }
+        } else if (
+            // A ConstFetch means any static reference, like a class, interface, etc.
+            ($node instanceof Node\Name && $node->getAttribute('parentNode') instanceof Node\Expr\ConstFetch)
+            || $node instanceof Node\Expr\New_
+        ) {
+            $prefix = null;
+            if ($node instanceof Node\Name) {
+                $isFullyQualified = $node->isFullyQualified();
+                $prefix = (string)$node;
                 $prefixLen = strlen($prefix);
-                foreach ($this->project->getDefinitions() as $fqn => $def) {
-                    if (substr($fqn, 0, $prefixLen) === $prefix) {
-                        $item = new CompletionItem;
-                        $item->label = $def->symbolInformation->name;
-                        if ($def->type) {
-                            $item->detail = (string)$def->type;
+                $namespacedPrefix = (string)$node->getAttribute('namespacedName');
+                $namespacedPrefixLen = strlen($prefix);
+            }
+            // Find closest namespace
+            $namespace = getClosestNode($node, Node\Stmt\Namespace_::class);
+            /** Map from alias to Definition */
+            $aliasedDefs = [];
+            if ($namespace) {
+                foreach ($namespace->stmts as $stmt) {
+                    if ($stmt instanceof Node\Stmt\Use_ || $stmt instanceof Node\Stmt\GroupUse) {
+                        foreach ($stmt->uses as $use) {
+                            // Get the definition for the used namespace, class-like, function or constant
+                            // And save it under the alias
+                            $fqn = (string)Node\Name::concat($stmt->prefix, $use->name);
+                            $aliasedDefs[$use->alias] = $this->project->getDefinition($fqn);
                         }
-                        if ($def->documentation) {
-                            $item->documentation = $def->documentation;
-                        }
-                        if ($def->symbolInformation->kind === SymbolKind::PROPERTY) {
-                            $item->kind = CompletionItemKind::PROPERTY;
-                        } else if ($def->symbolInformation->kind === SymbolKind::METHOD) {
-                            $item->kind = CompletionItemKind::METHOD;
-                        }
-                        $items[] = $item;
+                    } else {
+                        // Use statements are always the first statements in a namespace
+                        break;
                     }
                 }
             }
-        } else {
+            // If there is a prefix that does not start with a slash, suggest `use`d symbols
+            if ($prefix && !$isFullyQualified) {
+                // Suggest symbols that have been `use`d
+                // Search the aliases for the typed-in name
+                foreach ($aliasedDefs as $alias => $def) {
+                    if (substr($alias, 0, $prefixLen) === $prefix) {
+                        $items[] = CompletionItem::fromDefinition($def);
+                    }
+                }
+            }
+            // Additionally, suggest global symbols that either
+            //  - start with the current namespace + prefix, if the Name node is not fully qualified
+            //  - start with just the prefix, if the Name node is fully qualified
+            foreach ($this->project->getDefinitions() as $fqn => $def) {
+                if (
+                    $def->isGlobal // exclude methods, properties etc.
+                    && (
+                        !$prefix
+                        || (
+                            ($isFullyQualified && substr($fqn, 0, $prefixLen) === $prefix)
+                            || (!$isFullyQualified && substr($fqn, 0, $namespacedPrefixLen) === $namespacedPrefix)
+                        )
+                    )
+                    // Only suggest classes for `new`
+                    && (!($node instanceof Node\Expr\New_) || $def->canBeInstantiated)
+                ) {
+                    $item = CompletionItem::fromDefinition($def);
+                    // Find the shortest name to reference the symbol
+                    if ($namespace && ($alias = array_search($def, $aliasedDefs, true)) !== false) {
+                        // $alias is the name under which this definition is aliased in the current namespace
+                        $item->insertText = $alias;
+                    } else if ($namespace) {
+                        // Insert the global FQN with trailing backslash
+                        $item->insertText = '\\' . $fqn;
+                    } else {
+                        // Insert the FQN without trailing backlash
+                        $item->insertText = $fqn;
+                    }
+                    $items[] = $item;
+                }
+            }
+        } else if (
+            $node instanceof Node\Expr\Variable
+            || ($node && $node->getAttribute('parentNode') instanceof Node\Expr\Variable)
+         ) {
             // Find variables, parameters and use statements in the scope
-            foreach ($this->suggestVariablesAtNode($node) as $var) {
+            // If there was only a $ typed, $node will be instanceof Node\Error
+            $namePrefix = $node instanceof Node\Expr\Variable && is_string($node->name) ? $node->name : '';
+            foreach ($this->suggestVariablesAtNode($node, $namePrefix) as $var) {
                 $item = new CompletionItem;
                 $item->kind = CompletionItemKind::VARIABLE;
                 $item->label = '$' . ($var instanceof Node\Expr\ClosureUse ? $var->var : $var->name);
@@ -101,16 +163,17 @@ class CompletionProvider
      * of that variable
      *
      * @param Node $node
+     * @param string $namePrefix Prefix to filter
      * @return array <Node\Expr\Variable|Node\Param|Node\Expr\ClosureUse>
      */
-    private function suggestVariablesAtNode(Node $node): array
+    private function suggestVariablesAtNode(Node $node, string $namePrefix = ''): array
     {
         $vars = [];
 
         // Find variables in the node itself
         // When getting completion in the middle of a function, $node will be the function node
         // so we need to search it
-        foreach ($this->findVariableDefinitionsInNode($node) as $var) {
+        foreach ($this->findVariableDefinitionsInNode($node, $namePrefix) as $var) {
             // Only use the first definition
             if (!isset($vars[$var->name])) {
                 $vars[$var->name] = $var;
@@ -124,7 +187,7 @@ class CompletionProvider
             $sibling = $level;
             while ($sibling = $sibling->getAttribute('previousSibling')) {
                 // Collect all variables inside the sibling node
-                foreach ($this->findVariableDefinitionsInNode($sibling) as $var) {
+                foreach ($this->findVariableDefinitionsInNode($sibling, $namePrefix) as $var) {
                     $vars[$var->name] = $var;
                 }
             }
@@ -135,13 +198,13 @@ class CompletionProvider
         // also add its parameters and closure uses to the result list
         if ($level instanceof Node\FunctionLike) {
             foreach ($level->params as $param) {
-                if (!isset($vars[$param->name])) {
+                if (!isset($vars[$param->name]) && substr($param->name, 0, strlen($namePrefix)) === $namePrefix) {
                     $vars[$param->name] = $param;
                 }
             }
             if ($level instanceof Node\Expr\Closure) {
                 foreach ($level->uses as $use) {
-                    if (!isset($vars[$param->name])) {
+                    if (!isset($vars[$param->name]) && substr($param->name, 0, strlen($namePrefix)) === $namePrefix) {
                         $vars[$use->var] = $use;
                     }
                 }
@@ -155,9 +218,10 @@ class CompletionProvider
      * Searches the subnodes of a node for variable assignments
      *
      * @param Node $node
+     * @param string $namePrefix Prefix to filter
      * @return Node\Expr\Variable[]
      */
-    private function findVariableDefinitionsInNode(Node $node): array
+    private function findVariableDefinitionsInNode(Node $node, string $namePrefix = ''): array
     {
         $vars = [];
         // If the child node is a variable assignment, save it
@@ -166,6 +230,7 @@ class CompletionProvider
             $node instanceof Node\Expr\Variable
             && ($parent instanceof Node\Expr\Assign || $parent instanceof Node\Expr\AssignOp)
             && is_string($node->name) // Variable variables are of no use
+            && substr($node->name, 0, strlen($namePrefix)) === $namePrefix
         ) {
             $vars[] = $node;
         }
@@ -181,7 +246,7 @@ class CompletionProvider
                 if (!($child instanceof Node) || $child instanceof Node\FunctionLike) {
                     continue;
                 }
-                foreach ($this->findVariableDefinitionsInNode($child) as $var) {
+                foreach ($this->findVariableDefinitionsInNode($child, $namePrefix) as $var) {
                     $vars[] = $var;
                 }
             }
