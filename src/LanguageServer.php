@@ -67,6 +67,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
         $this->protocolReader = $reader;
         $this->protocolReader->on('message', function (Message $msg) {
             coroutine(function () use ($msg) {
+
                 // Ignore responses, this is the handler for requests and notifications
                 if (AdvancedJsonRpc\Response::isResponse($msg->body)) {
                     return;
@@ -88,7 +89,8 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                         $e
                     );
                 }
-                // Only send a Response for a Request                // Notifications do not send Responses
+                // Only send a Response for a Request                
+                // Notifications do not send Responses
                 if (AdvancedJsonRpc\Request::isRequest($msg->body)) {
                     if ($error !== null) {
                         $responseBody = new AdvancedJsonRpc\ErrorResponse($msg->body->id, $error);
