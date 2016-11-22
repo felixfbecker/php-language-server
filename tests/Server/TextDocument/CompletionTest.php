@@ -30,13 +30,37 @@ class CompletionTest extends TestCase
         $this->textDocument = new Server\TextDocument($this->project, $client);
     }
 
-    public function testForPropertiesAndMethods()
+    public function testPropertyAndMethodWithPrefix()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/property_with_prefix.php');
+        $this->project->openDocument($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(3, 7)
+        )->wait();
+        $this->assertEquals([
+            new CompletionItem(
+                'testProperty',
+                CompletionItemKind::PROPERTY,
+                '\TestClass', // Type of the property
+                'Reprehenderit magna velit mollit ipsum do.'
+            ),
+            new CompletionItem(
+                'testMethod',
+                CompletionItemKind::METHOD,
+                '\TestClass', // Return type of the method
+                'Non culpa nostrud mollit esse sunt laboris in irure ullamco cupidatat amet.'
+            )
+        ], $items);
+    }
+
+    public function testPropertyAndMethodWithoutPrefix()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/property.php');
         $this->project->openDocument($completionUri, file_get_contents($completionUri));
         $items = $this->textDocument->completion(
             new TextDocumentIdentifier($completionUri),
-            new Position(3, 7)
+            new Position(3, 6)
         )->wait();
         $this->assertEquals([
             new CompletionItem(

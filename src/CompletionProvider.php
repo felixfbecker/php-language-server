@@ -56,12 +56,36 @@ class CompletionProvider
             || $node instanceof Node\Expr\StaticPropertyFetch
             || $node instanceof Node\Expr\ClassConstFetch
         ) {
-            /** The FQN to be completed */
-            $prefix = $this->definitionResolver->resolveReferenceNodeToFqn($node) ?? '';
-            $prefixLen = strlen($prefix);
+            $nodeToResolve = $node;
+            if (!is_string($node->name)) {
+                // If the name is an Error node, just filter by the class
+                if ($node instanceof Node\Expr\MethodCall || $node instanceof Node\Expr\PropertyFetch) {
+                    $nodeToResolve = $node->var;
+                } else {
+                    $nodeToResolve = $node->class;
+                }
+            }
+            $prefixes = DefinitionResolver::getFqnsFromType(
+                $this->definitionResolver->resolveExpressionNodeToType($nodeToResolve)
+            );
+            if (!is_string($node->name)) {
+                // If we are just filtering by the class, add the appropiate operator to the prefix
+                // to filter the type of symbol
+                foreach ($prefixes as &$prefix) {
+                    if ($node instanceof Node\Expr\MethodCall || $node instanceof Node\Expr\PropertyFetch) {
+                        $prefix .= '->';
+                    } else if ($node instanceof Node\Expr\StaticCall || $node instanceof Node\Expr\ClassConstFetch) {
+                        $prefix .= '::';
+                    } else if ($node instanceof Node\Expr\StaticPropertyFetch) {
+                        $prefix .= '::$';
+                    }
+                }
+            }
             foreach ($this->project->getDefinitions() as $fqn => $def) {
-                if (substr($fqn, 0, $prefixLen) === $prefix && !$def->isGlobal) {
-                    $items[] = CompletionItem::fromDefinition($def);
+                foreach ($prefixes as $prefix) {
+                    if (substr($fqn, 0, strlen($prefix)) === $prefix && !$def->isGlobal) {
+                        $items[] = CompletionItem::fromDefinition($def);
+                    }
                 }
             }
         } else if (
