@@ -20,10 +20,10 @@ class Definition
      *  - testFunction()
      *  - TestNamespace\TestClass
      *  - TestNamespace\TestClass::TEST_CONSTANT
-     *  - TestNamespace\TestClass::staticTestProperty
-     *  - TestNamespace\TestClass::testProperty
+     *  - TestNamespace\TestClass::$staticTestProperty
+     *  - TestNamespace\TestClass->testProperty
      *  - TestNamespace\TestClass::staticTestMethod()
-     *  - TestNamespace\TestClass::testMethod()
+     *  - TestNamespace\TestClass->testMethod()
      *
      * @var string|null
      */

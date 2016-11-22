@@ -221,7 +221,7 @@ class DefinitionResolver
             } else {
                 $classFqn = substr((string)$varType->getFqsen(), 1);
             }
-            $name = $classFqn . '::' . (string)$node->name;
+            $name = $classFqn . '->' . (string)$node->name;
         } else if ($parent instanceof Node\Expr\FuncCall) {
             if ($parent->name instanceof Node\Expr) {
                 return null;
@@ -255,7 +255,11 @@ class DefinitionResolver
                     $className = (string)$classNode->namespacedName;
                 }
             }
-            $name = (string)$className . '::' . $node->name;
+            if ($node instanceof Node\Expr\StaticPropertyFetch) {
+                $name = (string)$className . '::$' . $node->name;
+            } else {
+                $name = (string)$className . '::' . $node->name;
+            }
         } else {
             return null;
         }
@@ -404,7 +408,7 @@ class DefinitionResolver
                 } else {
                     $classFqn = substr((string)$t->getFqsen(), 1);
                 }
-                $fqn = $classFqn . '::' . $expr->name;
+                $fqn = $classFqn . '->' . $expr->name;
                 if ($expr instanceof Node\Expr\MethodCall) {
                     $fqn .= '()';
                 }
@@ -423,7 +427,11 @@ class DefinitionResolver
             if (!($classType instanceof Types\Object_) || $classType->getFqsen() === null || $expr->name instanceof Node\Expr) {
                 return new Types\Mixed;
             }
-            $fqn = substr((string)$classType->getFqsen(), 1) . '::' . $expr->name;
+            $fqn = substr((string)$classType->getFqsen(), 1) . '::';
+            if ($expr instanceof Node\Expr\StaticPropertyFetch) {
+                $fqn .= '$';
+            }
+            $fqn .= $expr->name;
             if ($expr instanceof Node\Expr\StaticCall) {
                 $fqn .= '()';
             }
@@ -735,21 +743,31 @@ class DefinitionResolver
             // Function: use functionName() as the name
             return (string)$node->namespacedName . '()';
         } else if ($node instanceof Node\Stmt\ClassMethod) {
-            // Class method: use ClassName::methodName() as name
+            // Class method: use ClassName->methodName() as name
             $class = $node->getAttribute('parentNode');
             if (!isset($class->name)) {
                 // Ignore anonymous classes
                 return null;
             }
-            return (string)$class->namespacedName . '::' . (string)$node->name . '()';
+            if ($node->isStatic()) {
+                return (string)$class->namespacedName . '::' . (string)$node->name . '()';
+            } else {
+                return (string)$class->namespacedName . '->' . (string)$node->name . '()';
+            }
         } else if ($node instanceof Node\Stmt\PropertyProperty) {
-            // Property: use ClassName::propertyName as name
-            $class = $node->getAttribute('parentNode')->getAttribute('parentNode');
+            $property = $node->getAttribute('parentNode');
+            $class = $property->getAttribute('parentNode');
             if (!isset($class->name)) {
                 // Ignore anonymous classes
                 return null;
             }
-            return (string)$class->namespacedName . '::' . (string)$node->name;
+            if ($property->isStatic()) {
+                // Static Property: use ClassName::$propertyName as name
+                return (string)$class->namespacedName . '::$' . (string)$node->name;
+            } else {
+                // Instance Property: use ClassName->propertyName as name
+                return (string)$class->namespacedName . '->' . (string)$node->name;
+            }
         } else if ($node instanceof Node\Const_) {
             $parent = $node->getAttribute('parentNode');
             if ($parent instanceof Node\Stmt\Const_) {
