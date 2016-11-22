@@ -45,6 +45,10 @@ class CompletionProvider
     {
         $node = $document->getNodeAtPosition($position);
 
+        if ($node instanceof Node\Expr\Error) {
+            $node = $node->getAttribute('parentNode');
+        }
+
         /** @var CompletionItem[] */
         $items = [];
 
@@ -64,8 +68,8 @@ class CompletionProvider
                         $this->definitionResolver->resolveExpressionNodeToType($node->var)
                     );
                 } else {
-                    $prefixes = [is_string($node->class) ? $node->class : ''];
-            }
+                    $prefixes = [$node->class instanceof Node\Name ? (string)$node->class : ''];
+                }
                 // If we are just filtering by the class, add the appropiate operator to the prefix
                 // to filter the type of symbol
                 foreach ($prefixes as &$prefix) {
