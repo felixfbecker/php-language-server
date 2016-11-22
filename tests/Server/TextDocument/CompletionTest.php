@@ -131,6 +131,60 @@ class CompletionTest extends TestCase
         ], $items);
     }
 
+    public function testStaticPropertyWithPrefix()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/static_property_with_prefix.php');
+        $this->project->openDocument($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(2, 14)
+        )->wait();
+        $this->assertEquals([
+            new CompletionItem(
+                'staticTestProperty',
+                CompletionItemKind::PROPERTY,
+                '\TestClass[]',
+                'Lorem excepteur officia sit anim velit veniam enim.'
+            )
+        ], $items);
+    }
+
+    public function testStaticMethodWithPrefix()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/static_method_with_prefix.php');
+        $this->project->openDocument($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(2, 13)
+        )->wait();
+        $this->assertEquals([
+            new CompletionItem(
+                'staticTestMethod',
+                CompletionItemKind::METHOD,
+                'mixed', // Method return type
+                'Do magna consequat veniam minim proident eiusmod incididunt aute proident.'
+            )
+        ], $items);
+    }
+
+    public function testClassConstWithPrefix()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/class_const_with_prefix.php');
+        $this->project->openDocument($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(2, 13)
+        )->wait();
+        $this->assertEquals([
+            new CompletionItem(
+                'TEST_CLASS_CONST',
+                CompletionItemKind::VARIABLE,
+                'int',
+                'Anim labore veniam consectetur laboris minim quis aute aute esse nulla ad.'
+            )
+        ], $items);
+    }
+
     public function testFullyQualifiedClass()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/fully_qualified_class.php');

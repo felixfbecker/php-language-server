@@ -290,6 +290,9 @@ class PhpDocument
      */
     public function getNodeAtPosition(Position $position)
     {
+        if ($this->stmts === null) {
+            return null;
+        }
         $traverser = new NodeTraverser;
         $finder = new NodeAtPositionFinder($position);
         $traverser->addVisitor($finder);

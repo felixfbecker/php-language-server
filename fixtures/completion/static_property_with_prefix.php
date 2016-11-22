@@ -1,0 +1,3 @@
+<?php
+
+TestClass::$st
