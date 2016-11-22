@@ -68,7 +68,7 @@ class LanguageServerTest extends TestCase
         });
         $server = new LanguageServer($input, $output);
         $capabilities = new ClientCapabilities;
-        $server->initialize(getmypid(), $capabilities, realpath(__DIR__ . '/../fixtures'));
+        $server->initialize($capabilities, realpath(__DIR__ . '/../fixtures'), getmypid());
         $promise->wait();
     }
 
@@ -116,7 +116,7 @@ class LanguageServerTest extends TestCase
         $capabilities = new ClientCapabilities;
         $capabilities->xfilesProvider = true;
         $capabilities->xcontentProvider = true;
-        $server->initialize(getmypid(), $capabilities, $rootPath);
+        $server->initialize($capabilities, $rootPath, getmypid());
         $promise->wait();
         $this->assertTrue($filesCalled);
         $this->assertTrue($contentCalled);
