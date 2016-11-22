@@ -56,19 +56,16 @@ class CompletionProvider
             || $node instanceof Node\Expr\StaticPropertyFetch
             || $node instanceof Node\Expr\ClassConstFetch
         ) {
-            $nodeToResolve = $node;
             if (!is_string($node->name)) {
                 // If the name is an Error node, just filter by the class
                 if ($node instanceof Node\Expr\MethodCall || $node instanceof Node\Expr\PropertyFetch) {
-                    $nodeToResolve = $node->var;
+                    // For instances, resolve the variable type
+                    $prefixes = DefinitionResolver::getFqnsFromType(
+                        $this->definitionResolver->resolveExpressionNodeToType($node->var)
+                    );
                 } else {
-                    $nodeToResolve = $node->class;
-                }
+                    $prefixes = [is_string($node->class) ? $node->class : ''];
             }
-            $prefixes = DefinitionResolver::getFqnsFromType(
-                $this->definitionResolver->resolveExpressionNodeToType($nodeToResolve)
-            );
-            if (!is_string($node->name)) {
                 // If we are just filtering by the class, add the appropiate operator to the prefix
                 // to filter the type of symbol
                 foreach ($prefixes as &$prefix) {
@@ -80,7 +77,10 @@ class CompletionProvider
                         $prefix .= '::$';
                     }
                 }
+            } else {
+                $prefixes = [$this->definitionResolver->resolveReferenceNodeToFqn($node)];
             }
+
             foreach ($this->project->getDefinitions() as $fqn => $def) {
                 foreach ($prefixes as $prefix) {
                     if (substr($fqn, 0, strlen($prefix)) === $prefix && !$def->isGlobal) {
