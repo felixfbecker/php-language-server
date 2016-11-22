@@ -173,6 +173,36 @@ class CompletionTest extends TestCase
         ], $items);
     }
 
+    public function testStaticWithoutPrefix()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/static.php');
+        $this->project->openDocument($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(2, 11)
+        )->wait();
+        $this->assertEquals([
+            new CompletionItem(
+                'TEST_CLASS_CONST',
+                CompletionItemKind::VARIABLE,
+                'int',
+                'Anim labore veniam consectetur laboris minim quis aute aute esse nulla ad.'
+            ),
+            new CompletionItem(
+                'staticTestProperty',
+                CompletionItemKind::PROPERTY,
+                '\TestClass[]',
+                'Lorem excepteur officia sit anim velit veniam enim.'
+            ),
+            new CompletionItem(
+                'staticTestMethod',
+                CompletionItemKind::METHOD,
+                'mixed', // Method return type
+                'Do magna consequat veniam minim proident eiusmod incididunt aute proident.'
+            )
+        ], $items);
+    }
+
     public function testStaticMethodWithPrefix()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/static_method_with_prefix.php');
@@ -222,7 +252,10 @@ class CompletionTest extends TestCase
                 'TestClass',
                 CompletionItemKind::CLASS_,
                 null,
-                'Pariatur ut laborum tempor voluptate consequat ea deserunt.'
+                'Pariatur ut laborum tempor voluptate consequat ea deserunt.',
+                null,
+                null,
+                'TestClass'
             )
         ], $items);
     }
