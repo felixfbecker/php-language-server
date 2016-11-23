@@ -39,6 +39,16 @@ if (!empty($options['tcp'])) {
         exit(1);
     }
     $inputStream = $outputStream = $socket;
+} else if (!empty($options['tcp-server'])) {
+    $address = $options['tcp-server'];
+    $tcpServer = stream_socket_server('tcp://' . $address, $errno, $errstr);
+    if ($socket === false) {
+        fwrite(STDERR, "Could not listen on $address. Error $errno\n");
+        fwrite(STDERR, "$errstr\n");
+        exit(1);
+    }
+    $socket = stream_socket_accept($tcpServer);
+    $inputStream = $outputStream = $socket;
 } else {
     $inputStream = STDIN;
     $outputStream = STDOUT;
