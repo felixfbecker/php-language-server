@@ -45,7 +45,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     public $codeLens;
 
     /**
-    * ClientCapabilities
+     * ClientCapabilities
      */
     private $clientCapabilities;
 
