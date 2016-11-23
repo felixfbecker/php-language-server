@@ -7,11 +7,6 @@ use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\{Server, Client, LanguageClient, Project, PhpDocument};
 use LanguageServer\Protocol\{
-    TextDocumentItem,
-    TextDocumentIdentifier,
-    SymbolKind,
-    DiagnosticSeverity,
-    FormattingOptions,
     ClientCapabilities
 };
 use AdvancedJsonRpc\{Request as RequestBody, Response as ResponseBody};
