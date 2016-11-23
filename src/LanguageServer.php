@@ -45,7 +45,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     public $codeLens;
 
     /**
-     * ClientCapabilities
+    * ClientCapabilities
      */
     private $clientCapabilities;
 
@@ -67,7 +67,6 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
         $this->protocolReader = $reader;
         $this->protocolReader->on('message', function (Message $msg) {
             coroutine(function () use ($msg) {
-
                 // Ignore responses, this is the handler for requests and notifications
                 if (AdvancedJsonRpc\Response::isResponse($msg->body)) {
                     return;
