@@ -89,7 +89,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                         $e
                     );
                 }
-                // Only send a Response for a Request                
+                // Only send a Response for a Request
                 // Notifications do not send Responses
                 if (AdvancedJsonRpc\Request::isRequest($msg->body)) {
                     if ($error !== null) {
