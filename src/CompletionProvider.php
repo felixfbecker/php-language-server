@@ -110,13 +110,13 @@ class CompletionProvider
     /**
      * Returns suggestions for a specific cursor position in a document
      *
-     * @param PhpDocument $document The opened document
+     * @param PhpDocument $doc The opened document
      * @param Position $pos The cursor position
      * @return CompletionItem[]
      */
-    public function provideCompletion(PhpDocument $document, Position $pos): array
+    public function provideCompletion(PhpDocument $doc, Position $pos): array
     {
-        $node = $document->getNodeAtPosition($pos);
+        $node = $doc->getNodeAtPosition($pos);
 
         if ($node instanceof Node\Expr\Error) {
             $node = $node->getAttribute('parentNode');
@@ -262,13 +262,17 @@ class CompletionProvider
                 $item->label = '$' . ($var instanceof Node\Expr\ClosureUse ? $var->var : $var->name);
                 $item->documentation = $this->definitionResolver->getDocumentationFromNode($var);
                 $item->detail = (string)$this->definitionResolver->getTypeFromNode($var);
+                $item->textEdit = new TextEdit(
+                    new Range($pos, $pos),
+                    stripStringOverlap($doc->getRange(new Range(new Position(0, 0), $pos)), $item->label)
+                );
                 $items[] = $item;
             }
         } else if ($node instanceof Node\Stmt\InlineHTML || $pos == new Position(0, 0)) {
             $item = new CompletionItem('<?php', CompletionItemKind::KEYWORD);
             $item->textEdit = new TextEdit(
                 new Range($pos, $pos),
-                stripStringOverlap($document->getRange(new Range(new Position(0, 0), $pos)), '<?php')
+                stripStringOverlap($doc->getRange(new Range(new Position(0, 0), $pos)), '<?php')
             );
             $items[] = $item;
         }

@@ -59,6 +59,7 @@ class Position
     public function toOffset(string $content): int
     {
         $lines = explode("\n", $content);
-        return array_sum(array_map('strlen', array_slice($lines, 0, $this->line))) + $this->character;
+        $slice = array_slice($lines, 0, $this->line);
+        return array_sum(array_map('strlen', $slice)) + count($slice) + $this->character;
     }
 }

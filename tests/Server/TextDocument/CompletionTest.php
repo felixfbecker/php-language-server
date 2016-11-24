@@ -95,8 +95,26 @@ class CompletionTest extends TestCase
             new Position(8, 5)
         )->wait();
         $this->assertEquals([
-            new CompletionItem('$var', CompletionItemKind::VARIABLE, 'int'),
-            new CompletionItem('$param', CompletionItemKind::VARIABLE, 'string|null', 'A parameter')
+            new CompletionItem(
+                '$var',
+                CompletionItemKind::VARIABLE,
+                'int',
+                null,
+                null,
+                null,
+                null,
+                new TextEdit(new Range(new Position(8, 5), new Position(8, 5)), 'var')
+            ),
+            new CompletionItem(
+                '$param',
+                CompletionItemKind::VARIABLE,
+                'string|null',
+                'A parameter',
+                null,
+                null,
+                null,
+                new TextEdit(new Range(new Position(8, 5), new Position(8, 5)), 'param')
+            )
         ], $items);
     }
 
@@ -106,10 +124,19 @@ class CompletionTest extends TestCase
         $this->project->openDocument($completionUri, file_get_contents($completionUri));
         $items = $this->textDocument->completion(
             new TextDocumentIdentifier($completionUri),
-            new Position(8, 5)
+            new Position(8, 6)
         )->wait();
         $this->assertEquals([
-            new CompletionItem('$param', CompletionItemKind::VARIABLE, 'string|null', 'A parameter')
+            new CompletionItem(
+                '$param',
+                CompletionItemKind::VARIABLE,
+                'string|null',
+                'A parameter',
+                null,
+                null,
+                null,
+                new TextEdit(new Range(new Position(8, 6), new Position(8, 6)), 'aram')
+            )
         ], $items);
     }
 
