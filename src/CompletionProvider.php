@@ -6,6 +6,8 @@ namespace LanguageServer;
 use PhpParser\Node;
 use phpDocumentor\Reflection\Types;
 use LanguageServer\Protocol\{
+    TextEdit,
+    Range,
     Position,
     SymbolKind,
     CompletionItem,
@@ -14,6 +16,77 @@ use LanguageServer\Protocol\{
 
 class CompletionProvider
 {
+    const KEYWORDS = [
+        '?>',
+        '__halt_compiler',
+        'abstract',
+        'and',
+        'array',
+        'as',
+        'break',
+        'callable',
+        'case',
+        'catch',
+        'class',
+        'clone',
+        'const',
+        'continue',
+        'declare',
+        'default',
+        'die',
+        'do',
+        'echo',
+        'else',
+        'elseif',
+        'empty',
+        'enddeclare',
+        'endfor',
+        'endforeach',
+        'endif',
+        'endswitch',
+        'endwhile',
+        'eval',
+        'exit',
+        'extends',
+        'final',
+        'finally',
+        'for',
+        'foreach',
+        'function',
+        'global',
+        'goto',
+        'if',
+        'implements',
+        'include',
+        'include_once',
+        'instanceof',
+        'insteadof',
+        'interface',
+        'isset',
+        'list',
+        'namespace',
+        'new',
+        'or',
+        'print',
+        'private',
+        'protected',
+        'public',
+        'require',
+        'require_once',
+        'return',
+        'static',
+        'switch',
+        'throw',
+        'trait',
+        'try',
+        'unset',
+        'use',
+        'var',
+        'while',
+        'xor',
+        'yield'
+    ];
+
     /**
      * @var DefinitionResolver
      */
@@ -38,12 +111,12 @@ class CompletionProvider
      * Returns suggestions for a specific cursor position in a document
      *
      * @param PhpDocument $document The opened document
-     * @param Position $position The cursor position
+     * @param Position $pos The cursor position
      * @return CompletionItem[]
      */
-    public function provideCompletion(PhpDocument $document, Position $position): array
+    public function provideCompletion(PhpDocument $document, Position $pos): array
     {
-        $node = $document->getNodeAtPosition($position);
+        $node = $document->getNodeAtPosition($pos);
 
         if ($node instanceof Node\Expr\Error) {
             $node = $node->getAttribute('parentNode');
@@ -93,11 +166,12 @@ class CompletionProvider
                 }
             }
         } else if (
-            // A ConstFetch means any static reference, like a class, interface, etc.
+            // A ConstFetch means any static reference, like a class, interface, etc. or keyword
             ($node instanceof Node\Name && $node->getAttribute('parentNode') instanceof Node\Expr\ConstFetch)
             || $node instanceof Node\Expr\New_
         ) {
-            $prefix = null;
+            $prefix = '';
+            $prefixLen = 0;
             if ($node instanceof Node\Name) {
                 $isFullyQualified = $node->isFullyQualified();
                 $prefix = (string)$node;
@@ -115,7 +189,7 @@ class CompletionProvider
                         foreach ($stmt->uses as $use) {
                             // Get the definition for the used namespace, class-like, function or constant
                             // And save it under the alias
-                            $fqn = (string)Node\Name::concat($stmt->prefix, $use->name);
+                            $fqn = (string)Node\Name::concat($stmt->prefix ?? null, $use->name);
                             $aliasedDefs[$use->alias] = $this->project->getDefinition($fqn);
                         }
                     } else {
@@ -165,6 +239,16 @@ class CompletionProvider
                     $items[] = $item;
                 }
             }
+            // Suggest keywords
+            if ($node instanceof Node\Name && $node->getAttribute('parentNode') instanceof Node\Expr\ConstFetch) {
+                foreach (self::KEYWORDS as $keyword) {
+                    if (substr($keyword, 0, $prefixLen) === $prefix) {
+                        $item = new CompletionItem($keyword, CompletionItemKind::KEYWORD);
+                        $item->insertText = $keyword . ' ';
+                        $items[] = $item;
+                    }
+                }
+            }
         } else if (
             $node instanceof Node\Expr\Variable
             || ($node && $node->getAttribute('parentNode') instanceof Node\Expr\Variable)
@@ -180,6 +264,13 @@ class CompletionProvider
                 $item->detail = (string)$this->definitionResolver->getTypeFromNode($var);
                 $items[] = $item;
             }
+        } else if ($node instanceof Node\Stmt\InlineHTML || $pos == new Position(0, 0)) {
+            $item = new CompletionItem('<?php', CompletionItemKind::KEYWORD);
+            $item->textEdit = new TextEdit(
+                new Range($pos, $pos),
+                stripStringOverlap($document->getRange(new Range(new Position(0, 0), $pos)), '<?php')
+            );
+            $items[] = $item;
         }
 
         return $items;

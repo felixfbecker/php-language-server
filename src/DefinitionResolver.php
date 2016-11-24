@@ -107,6 +107,10 @@ class DefinitionResolver
             || $node instanceof Node\Stmt\Function_
             || $node->getAttribute('parentNode') instanceof Node\Stmt\Const_
         );
+        $def->isStatic = (
+            ($node instanceof Node\Stmt\ClassMethod && $node->isStatic())
+            || ($node instanceof Node\Stmt\PropertyProperty && $node->getAttribute('parentNode')->isStatic())
+        );
         $def->fqn = $fqn;
         $def->symbolInformation = SymbolInformation::fromNode($node, $fqn);
         $def->type = $this->getTypeFromNode($node);
@@ -664,28 +668,35 @@ class DefinitionResolver
         if ($node instanceof Node\Param) {
             // Parameters
             $docBlock = $node->getAttribute('parentNode')->getAttribute('docBlock');
-            if (
-                $docBlock !== null
-                && !empty($paramTags = $docBlock->getTagsByName('param'))
-                && $paramTags[0]->getType() !== null
-            ) {
+            if ($docBlock !== null) {
                 // Use @param tag
-                return $paramTags[0]->getType();
+                foreach ($docBlock->getTagsByName('param') as $paramTag) {
+                    if ($paramTag->getVariableName() === $node->name) {
+                        if ($paramTag->getType() === null) {
+                            break;
+                        }
+                        return $paramTag->getType();
+                    }
+                }
             }
             if ($node->type !== null) {
                 // Use PHP7 return type hint
                 if (is_string($node->type)) {
                     // Resolve a string like "bool" to a type object
                     $type = $this->typeResolver->resolve($node->type);
-                }
-                $type = new Types\Object_(new Fqsen('\\' . (string)$node->type));
-                if ($node->default !== null) {
-                    $defaultType = $this->resolveExpressionNodeToType($node->default);
-                    $type = new Types\Compound([$type, $defaultType]);
+                } else {
+                    $type = new Types\Object_(new Fqsen('\\' . (string)$node->type));
                 }
             }
-            // Unknown parameter type
-            return new Types\Mixed;
+            if ($node->default !== null) {
+                $defaultType = $this->resolveExpressionNodeToType($node->default);
+                if (isset($type) && !is_a($type, get_class($defaultType))) {
+                    $type = new Types\Compound([$type, $defaultType]);
+                } else {
+                    $type = $defaultType;
+                }
+            }
+            return $type ?? new Types\Mixed;
         }
         if ($node instanceof Node\FunctionLike) {
             // Functions/methods

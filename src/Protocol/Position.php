@@ -49,4 +49,16 @@ class Position
 
         return $this->character - $position->character;
     }
+
+    /**
+     * Returns the offset of the position in a string
+     *
+     * @param string $content
+     * @return int
+     */
+    public function toOffset(string $content): int
+    {
+        $lines = explode("\n", $content);
+        return array_sum(array_map('strlen', array_slice($lines, 0, $this->line))) + $this->character;
+    }
 }

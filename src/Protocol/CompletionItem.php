@@ -156,6 +156,9 @@ class CompletionItem
         if ($def->documentation) {
             $item->documentation = $def->documentation;
         }
+        if ($def->isStatic && $def->symbolInformation->kind === SymbolKind::PROPERTY) {
+            $item->insertText = '$' . $def->symbolInformation->name;
+        }
         return $item;
     }
 }

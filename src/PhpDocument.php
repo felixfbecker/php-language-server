@@ -301,6 +301,22 @@ class PhpDocument
     }
 
     /**
+     * Returns a range of the content
+     *
+     * @param Range $range
+     * @return string|null
+     */
+    public function getRange(Range $range)
+    {
+        if ($this->content === null) {
+            return null;
+        }
+        $start = $range->start->toOffset($this->content);
+        $length = $range->end->toOffset($this->content) - $start;
+        return substr($this->content, $start, $length);
+    }
+
+    /**
      * Returns the definition node for a fully qualified name
      *
      * @param string $fqn

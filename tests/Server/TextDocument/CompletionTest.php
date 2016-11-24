@@ -5,8 +5,16 @@ namespace LanguageServer\Tests\Server\TextDocument;
 
 use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
-use LanguageServer\{Server, LanguageClient, Project};
-use LanguageServer\Protocol\{TextDocumentIdentifier, Position, ClientCapabilities, CompletionItem, CompletionItemKind};
+use LanguageServer\{Server, LanguageClient, Project, CompletionProvider};
+use LanguageServer\Protocol\{
+    TextDocumentIdentifier,
+    TextEdit,
+    Range,
+    Position,
+    ClientCapabilities,
+    CompletionItem,
+    CompletionItemKind
+};
 use function LanguageServer\pathToUri;
 
 class CompletionTest extends TestCase
@@ -168,7 +176,10 @@ class CompletionTest extends TestCase
                 'staticTestProperty',
                 CompletionItemKind::PROPERTY,
                 '\TestClass[]',
-                'Lorem excepteur officia sit anim velit veniam enim.'
+                'Lorem excepteur officia sit anim velit veniam enim.',
+                null,
+                null,
+                '$staticTestProperty'
             )
         ], $items);
     }
@@ -192,7 +203,10 @@ class CompletionTest extends TestCase
                 'staticTestProperty',
                 CompletionItemKind::PROPERTY,
                 '\TestClass[]',
-                'Lorem excepteur officia sit anim velit veniam enim.'
+                'Lorem excepteur officia sit anim velit veniam enim.',
+                null,
+                null,
+                '$staticTestProperty'
             ),
             new CompletionItem(
                 'staticTestMethod',
@@ -256,6 +270,64 @@ class CompletionTest extends TestCase
                 null,
                 null,
                 'TestClass'
+            )
+        ], $items);
+    }
+
+    public function testKeywords()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/keywords.php');
+        $this->project->openDocument($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(2, 1)
+        )->wait();
+        $this->assertEquals([
+            new CompletionItem('class', CompletionItemKind::KEYWORD, null, null, null, null, 'class '),
+            new CompletionItem('clone', CompletionItemKind::KEYWORD, null, null, null, null, 'clone ')
+        ], $items);
+    }
+
+    public function testHtmlWithoutPrefix()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/html.php');
+        $this->project->openDocument($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(0, 0)
+        )->wait();
+        $this->assertEquals([
+            new CompletionItem(
+                '<?php',
+                CompletionItemKind::KEYWORD,
+                null,
+                null,
+                null,
+                null,
+                null,
+                new TextEdit(new Range(new Position(0, 0), new Position(0, 0)), '<?php')
+            )
+        ], $items);
+    }
+
+    public function testHtmlWithPrefix()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/html_with_prefix.php');
+        $this->project->openDocument($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(0, 1)
+        )->wait();
+        $this->assertEquals([
+            new CompletionItem(
+                '<?php',
+                CompletionItemKind::KEYWORD,
+                null,
+                null,
+                null,
+                null,
+                null,
+                new TextEdit(new Range(new Position(0, 1), new Position(0, 1)), '?php')
             )
         ], $items);
     }

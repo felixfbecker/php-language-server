@@ -38,6 +38,13 @@ class Definition
     public $isGlobal;
 
     /**
+     * False for instance methods and properties
+     *
+     * @var bool
+     */
+    public $isStatic;
+
+    /**
      * True if the Definition is a class
      *
      * @var bool
