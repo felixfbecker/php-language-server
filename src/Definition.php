@@ -18,6 +18,7 @@ class Definition
      *
      * Examples of FQNs:
      *  - testFunction()
+     *  - TestNamespace
      *  - TestNamespace\TestClass
      *  - TestNamespace\TestClass::TEST_CONSTANT
      *  - TestNamespace\TestClass::$staticTestProperty

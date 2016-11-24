@@ -217,8 +217,12 @@ class CompletionProvider
                     && (
                         !$prefix
                         || (
-                            ($isFullyQualified && substr($fqn, 0, $prefixLen) === $prefix)
-                            || (!$isFullyQualified && substr($fqn, 0, $namespacedPrefixLen) === $namespacedPrefix)
+                            ((!$namespace || $isFullyQualified) && substr($fqn, 0, $prefixLen) === $prefix)
+                            || (
+                                $namespace
+                                && !$isFullyQualified
+                                && substr($fqn, 0, $namespacedPrefixLen) === $namespacedPrefix
+                            )
                         )
                     )
                     // Only suggest classes for `new`

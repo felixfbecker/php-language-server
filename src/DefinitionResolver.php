@@ -104,6 +104,7 @@ class DefinitionResolver
         $def->canBeInstantiated = $node instanceof Node\Stmt\Class_;
         $def->isGlobal = (
             $node instanceof Node\Stmt\ClassLike
+            || $node instanceof Node\Stmt\Namespace_
             || $node instanceof Node\Stmt\Function_
             || $node->getAttribute('parentNode') instanceof Node\Stmt\Const_
         );
@@ -189,6 +190,7 @@ class DefinitionResolver
         if (
             $node instanceof Node\Name && (
                 $parent instanceof Node\Stmt\ClassLike
+                || $parent instanceof Node\Namespace_
                 || $parent instanceof Node\Param
                 || $parent instanceof Node\FunctionLike
                 || $parent instanceof Node\Expr\StaticCall
@@ -775,6 +777,8 @@ class DefinitionResolver
         if ($node instanceof Node\Stmt\ClassLike && isset($node->name)) {
             // Class, interface or trait declaration
             return (string)$node->namespacedName;
+        } else if ($node instanceof Node\Stmt\Namespace_) {
+            return (string)$node->name;
         } else if ($node instanceof Node\Stmt\Function_) {
             // Function: use functionName() as the name
             return (string)$node->namespacedName . '()';

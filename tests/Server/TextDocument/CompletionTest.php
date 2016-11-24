@@ -358,4 +358,25 @@ class CompletionTest extends TestCase
             )
         ], $items);
     }
+
+    public function testNamespace()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/namespace.php');
+        $this->project->openDocument($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(4, 6)
+        )->wait();
+        $this->assertEquals([
+            new CompletionItem(
+                'SomeNamespace',
+                CompletionItemKind::MODULE,
+                null,
+                null,
+                null,
+                null,
+                'SomeNamespace'
+            )
+        ], $items);
+    }
 }
