@@ -3,8 +3,25 @@ declare(strict_types = 1);
 
 namespace LanguageServer;
 
-use LanguageServer\Protocol\{SymbolInformation, TextDocumentIdentifier, ClientCapabilities};
+use LanguageServer\NodeVisitor\ColumnCalculator;
+use LanguageServer\NodeVisitor\DefinitionCollector;
+use LanguageServer\NodeVisitor\DocBlockParser;
+use LanguageServer\NodeVisitor\ReferencesAdder;
+use LanguageServer\NodeVisitor\ReferencesCollector;
+use LanguageServer\NodeVisitor\VariableReferencesCollector;
+use LanguageServer\Protocol\ClientCapabilities;
+use LanguageServer\Protocol\Diagnostic;
+use LanguageServer\Protocol\DiagnosticSeverity;
 use phpDocumentor\Reflection\DocBlockFactory;
+use PhpParser\ErrorHandler\Collecting;
+use PhpParser\Node;
+use PhpParser\Node\Expr;
+use PhpParser\Node\Expr\ClosureUse;
+use PhpParser\Node\Expr\Variable;
+use PhpParser\Node\FunctionLike;
+use PhpParser\Node\Param;
+use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitor\NameResolver;
 use Sabre\Event\Promise;
 use function Sabre\Event\coroutine;
 
@@ -113,7 +130,7 @@ class Project
         return coroutine(function () use ($uri) {
             $limit = 150000;
             if ($this->clientCapabilities->xcontentProvider) {
-                $content = (yield $this->client->textDocument->xcontent(new TextDocumentIdentifier($uri)))->text;
+                $content = (yield $this->client->textDocument->xcontent(new Protocol\TextDocumentIdentifier($uri)))->text;
                 $size = strlen($content);
                 if ($size > $limit) {
                     throw new ContentTooLargeException($uri, $size, $limit);
@@ -128,18 +145,10 @@ class Project
             }
             if (isset($this->documents[$uri])) {
                 $document = $this->documents[$uri];
-                $document->updateContent($content);
             } else {
-                $document = new PhpDocument(
-                    $uri,
-                    $content,
-                    $this,
-                    $this->client,
-                    $this->parser,
-                    $this->docBlockFactory,
-                    $this->definitionResolver
-                );
+                $document = new PhpDocument($uri, $content);
             }
+            $this->updateContent($document, $content);
             return $document;
         });
     }
@@ -155,19 +164,12 @@ class Project
     {
         if (isset($this->documents[$uri])) {
             $document = $this->documents[$uri];
-            $document->updateContent($content);
         } else {
-            $document = new PhpDocument(
-                $uri,
-                $content,
-                $this,
-                $this->client,
-                $this->parser,
-                $this->docBlockFactory,
-                $this->definitionResolver
-            );
+            $document = new PhpDocument($uri, $content);
             $this->documents[$uri] = $document;
         }
+        $this->updateContent($document, $content);
+        
         return $document;
     }
 
@@ -353,5 +355,145 @@ class Project
     public function isDefined(string $fqn): bool
     {
         return isset($this->definitions[$fqn]);
+    }
+    
+    /**
+     * Returns the reference nodes for any node
+     * The references node MAY be in other documents, check the ownerDocument attribute
+     *
+     * @param Node $node
+     * @return Promise <Node[]>
+     */
+    public function getReferenceNodesByNode(Node $node): Promise
+    {
+        return coroutine(function () use ($node) {
+            // Variables always stay in the boundary of the file and need to be searched inside their function scope
+            // by traversing the AST
+            if (
+                $node instanceof Variable
+                || $node instanceof Param
+                || $node instanceof ClosureUse
+            ) {
+                if ($node->name instanceof Expr) {
+                    return null;
+                }
+                // Find function/method/closure scope
+                $n = $node;
+                while (isset($n) && !($n instanceof FunctionLike)) {
+                    $n = $n->getAttribute('parentNode');
+                }
+                if (!isset($n)) {
+                    $n = $node->getAttribute('ownerDocument');
+                }
+                $traverser = new NodeTraverser;
+                $refCollector = new VariableReferencesCollector($node->name);
+                $traverser->addVisitor($refCollector);
+                $traverser->traverse($n->getStmts());
+                return $refCollector->nodes;
+            }
+            // Definition with a global FQN
+            $fqn = DefinitionResolver::getDefinedFqn($node);
+            if ($fqn === null) {
+                return [];
+            }
+            $refDocuments = yield $this->getReferenceDocuments($fqn);
+            $nodes = [];
+            foreach ($refDocuments as $document) {
+                $refs = $document->getReferenceNodesByFqn($fqn);
+                if ($refs !== null) {
+                    foreach ($refs as $ref) {
+                        $nodes[] = $ref;
+                    }
+                }
+            }
+            return $nodes;
+        });
+    }
+    
+    /**
+     * Updates the content on this document.
+     * Re-parses a source file, updates symbols and reports parsing errors
+     * that may have occured as diagnostics.
+     *
+     * @param PhpDocument $document
+     * @param string $content
+     * @return void
+     */
+    public function updateContent(PhpDocument $document, string $content)
+    {
+        $errorHandler = new Collecting;
+        $stmts = $this->parser->parse($content, $errorHandler);
+
+        $diagnostics = [];
+        foreach ($errorHandler->getErrors() as $error) {
+            $diagnostics[] = Diagnostic::fromError($error, $content, DiagnosticSeverity::ERROR, 'php');
+        }
+
+        // $stmts can be null in case of a fatal parsing error
+        if ($stmts) {
+            $traverser = new NodeTraverser;
+
+            // Resolve aliased names to FQNs
+            $traverser->addVisitor(new NameResolver($errorHandler));
+
+            // Add parentNode, previousSibling, nextSibling attributes
+            $traverser->addVisitor(new ReferencesAdder($document));
+
+            // Add column attributes to nodes
+            $traverser->addVisitor(new ColumnCalculator($content));
+
+            // Parse docblocks and add docBlock attributes to nodes
+            $docBlockParser = new DocBlockParser($this->docBlockFactory);
+            $traverser->addVisitor($docBlockParser);
+
+            $traverser->traverse($stmts);
+
+            // Report errors from parsing docblocks
+            foreach ($docBlockParser->errors as $error) {
+                $diagnostics[] = Diagnostic::fromError($error, $document->content, DiagnosticSeverity::WARNING, 'php');
+            }
+
+            $traverser = new NodeTraverser;
+
+            // Collect all definitions
+            $definitionCollector = new DefinitionCollector($this->definitionResolver);
+            $traverser->addVisitor($definitionCollector);
+
+            // Collect all references
+            $referencesCollector = new ReferencesCollector($this->definitionResolver);
+            $traverser->addVisitor($referencesCollector);
+
+            $traverser->traverse($stmts);
+
+            // Unregister old definitions
+            foreach ($document->getDefinitions() as $fqn => $definition) {
+                $this->removeDefinition($fqn);
+            }
+            
+            // Register this document on the project for all the symbols defined in it
+            $document->setDefinitions($definitionCollector->definitions);
+            $document->setDefinitionNodes($definitionCollector->nodes);
+            foreach ($definitionCollector->definitions as $fqn => $definition) {
+                $this->setDefinition($fqn, $definition);
+            }
+
+            // Unregister old references
+            foreach ($document->getReferenceNodes() as $fqn => $node) {
+                $this->removeReferenceUri($fqn, $document->uri);
+            }
+            
+            // Register this document on the project for references
+            $document->setReferenceNodes($referencesCollector->nodes);
+            foreach ($referencesCollector->nodes as $fqn => $nodes) {
+                $this->addReferenceUri($fqn, $document->getUri());
+            }
+
+        }
+        
+        $document->updateContent($content, $stmts);
+
+        if (!$document->isVendored()) {
+            $this->client->textDocument->publishDiagnostics($document->getUri(), $diagnostics);
+        }
     }
 }
