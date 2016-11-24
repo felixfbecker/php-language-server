@@ -98,7 +98,10 @@ class TextDocument
      */
     public function didChange(VersionedTextDocumentIdentifier $textDocument, array $contentChanges)
     {
-        $this->project->getDocument($textDocument->uri)->updateContent($contentChanges[0]->text);
+        $this->project->updateContent(
+            $this->project->getDocument($textDocument->uri),
+            $contentChanges[0]->text
+        );
     }
 
     /**
@@ -146,7 +149,7 @@ class TextDocument
             if ($node === null) {
                 return [];
             }
-            $refs = yield $document->getReferenceNodesByNode($node);
+            $refs = yield $this->project->getReferenceNodesByNode($node);
             $locations = [];
             foreach ($refs as $ref) {
                 $locations[] = Location::fromNode($ref);
