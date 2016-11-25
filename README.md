@@ -151,8 +151,8 @@ Example:
 #### `--tcp-server=host:port` (optional)
 Causes the server to use a tcp connection for communicating with the language client instead of using STDIN/STDOUT.
 The server will listen on the given address for a connection.
-It will only accept one connection and the connection cannot be reestablished once closed, spawn a new process instead.
-Strongly recommended on Windows because of blocking STDIO.
+If PCNTL is available, will fork a child process for every connection.
+If not, will only accept one connection and the connection cannot be reestablished once closed, spawn a new process instead.
 
 Example:
 

@@ -31,31 +31,65 @@ set_exception_handler(function (\Throwable $e) {
 @cli_set_process_title('PHP Language Server');
 
 if (!empty($options['tcp'])) {
+    // Connect to a TCP server
     $address = $options['tcp'];
     $socket = stream_socket_client('tcp://' . $address, $errno, $errstr);
     if ($socket === false) {
-        fwrite(STDERR, "Could not connect to language client. Error $errno\n");
-        fwrite(STDERR, "$errstr\n");
+        fwrite(STDERR, "Could not connect to language client. Error $errno\n$errstr");
         exit(1);
     }
-    $inputStream = $outputStream = $socket;
+    stream_set_blocking($socket, false);
+    $ls = new LanguageServer(
+        new ProtocolStreamReader($socket),
+        new ProtocolStreamWriter($socket)
+    );
+    Loop\run();
 } else if (!empty($options['tcp-server'])) {
+    // Run a TCP Server
     $address = $options['tcp-server'];
     $tcpServer = stream_socket_server('tcp://' . $address, $errno, $errstr);
     if ($socket === false) {
-        fwrite(STDERR, "Could not listen on $address. Error $errno\n");
-        fwrite(STDERR, "$errstr\n");
+        fwrite(STDERR, "Could not listen on $address. Error $errno\n$errstr");
         exit(1);
     }
-    $socket = stream_socket_accept($tcpServer);
-    $inputStream = $outputStream = $socket;
+    if (!extension_loaded('pcntl')) {
+        fwrite(STDERR, 'PCNTL is not available. Only a single connection will be accepted');
+    }
+    while ($socket = stream_socket_accept($tcpServer)) {
+        stream_set_blocking($socket, false);
+        if (extension_loaded('pcntl')) {
+            // If PCNTL is available, fork a child process for the connection
+            // An exit notification will only terminate the child process
+            $pid = pcntl_fork();
+            if ($pid === -1) {
+                fwrite(STDERR, 'Could not fork');
+                exit(1);
+            } else if ($pid === 0) {
+                // Child process
+                $ls = new LanguageServer(
+                    new ProtocolStreamReader($socket),
+                    new ProtocolStreamWriter($socket)
+                );
+                Loop\run();
+                // Just for safety
+                exit(0);
+            }
+        } else {
+            // If PCNTL is not available, we only accept one connection.
+            // An exit notification will terminate the server
+            $ls = new LanguageServer(
+                new ProtocolStreamReader($socket),
+                new ProtocolStreamWriter($socket)
+            );
+            Loop\run();
+        }
+    }
 } else {
-    $inputStream = STDIN;
-    $outputStream = STDOUT;
+    // Use STDIO
+    stream_set_blocking(STDIN, false);
+    $ls = new LanguageServer(
+        new ProtocolStreamReader(STDIN),
+        new ProtocolStreamWriter(STDOUT)
+    );
+    Loop\run();
 }
-
-stream_set_blocking($inputStream, false);
-
-$server = new LanguageServer(new ProtocolStreamReader($inputStream), new ProtocolStreamWriter($outputStream));
-
-Loop\run();
