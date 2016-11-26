@@ -3,7 +3,7 @@
 use LanguageServer\{LanguageServer, ProtocolStreamReader, ProtocolStreamWriter};
 use Sabre\Event\Loop;
 
-$options = getopt('', ['tcp::', 'memory-limit::']);
+$options = getopt('', ['tcp::', 'tcp-server::', 'memory-limit::']);
 
 ini_set('memory_limit', $options['memory-limit'] ?? -1);
 
