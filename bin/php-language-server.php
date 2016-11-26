@@ -48,7 +48,7 @@ if (!empty($options['tcp'])) {
     // Run a TCP Server
     $address = $options['tcp-server'];
     $tcpServer = stream_socket_server('tcp://' . $address, $errno, $errstr);
-    if ($socket === false) {
+    if ($tcpServer === false) {
         fwrite(STDERR, "Could not listen on $address. Error $errno\n$errstr");
         exit(1);
     }
