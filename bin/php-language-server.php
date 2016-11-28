@@ -55,7 +55,7 @@ if (!empty($options['tcp'])) {
     if (!extension_loaded('pcntl')) {
         fwrite(STDERR, 'PCNTL is not available. Only a single connection will be accepted');
     }
-    while ($socket = stream_socket_accept($tcpServer)) {
+    while ($socket = stream_socket_accept($tcpServer, -1)) {
         stream_set_blocking($socket, false);
         if (extension_loaded('pcntl')) {
             // If PCNTL is available, fork a child process for the connection
