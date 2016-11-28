@@ -52,17 +52,19 @@ if (!empty($options['tcp'])) {
         fwrite(STDERR, "Could not listen on $address. Error $errno\n$errstr");
         exit(1);
     }
+    fwrite(STDOUT, "Server listening on $address\n");
     if (!extension_loaded('pcntl')) {
-        fwrite(STDERR, 'PCNTL is not available. Only a single connection will be accepted');
+        fwrite(STDERR, "PCNTL is not available. Only a single connection will be accepted\n");
     }
     while ($socket = stream_socket_accept($tcpServer, -1)) {
+        fwrite(STDOUT, "Connection accepted\n");
         stream_set_blocking($socket, false);
         if (extension_loaded('pcntl')) {
             // If PCNTL is available, fork a child process for the connection
             // An exit notification will only terminate the child process
             $pid = pcntl_fork();
             if ($pid === -1) {
-                fwrite(STDERR, 'Could not fork');
+                fwrite(STDERR, "Could not fork\n");
                 exit(1);
             } else if ($pid === 0) {
                 // Child process
