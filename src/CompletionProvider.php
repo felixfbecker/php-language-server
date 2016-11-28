@@ -10,6 +10,7 @@ use LanguageServer\Protocol\{
     Range,
     Position,
     SymbolKind,
+    CompletionList,
     CompletionItem,
     CompletionItemKind
 };
@@ -112,9 +113,9 @@ class CompletionProvider
      *
      * @param PhpDocument $doc The opened document
      * @param Position $pos The cursor position
-     * @return CompletionItem[]
+     * @return CompletionList
      */
-    public function provideCompletion(PhpDocument $doc, Position $pos): array
+    public function provideCompletion(PhpDocument $doc, Position $pos): CompletionList
     {
         $node = $doc->getNodeAtPosition($pos);
 
@@ -122,8 +123,7 @@ class CompletionProvider
             $node = $node->getAttribute('parentNode');
         }
 
-        /** @var CompletionItem[] */
-        $items = [];
+        $list = new CompletionList;
 
         // A non-free node means we do NOT suggest global symbols
         if (
@@ -161,7 +161,7 @@ class CompletionProvider
             foreach ($this->project->getDefinitions() as $fqn => $def) {
                 foreach ($prefixes as $prefix) {
                     if (substr($fqn, 0, strlen($prefix)) === $prefix && !$def->isGlobal) {
-                        $items[] = CompletionItem::fromDefinition($def);
+                        $list->items[] = CompletionItem::fromDefinition($def);
                     }
                 }
             }
@@ -204,7 +204,7 @@ class CompletionProvider
                 // Search the aliases for the typed-in name
                 foreach ($aliasedDefs as $alias => $def) {
                     if (substr($alias, 0, $prefixLen) === $prefix) {
-                        $items[] = CompletionItem::fromDefinition($def);
+                        $list->items[] = CompletionItem::fromDefinition($def);
                     }
                 }
             }
@@ -240,7 +240,7 @@ class CompletionProvider
                         // Insert the FQN without trailing backlash
                         $item->insertText = $fqn;
                     }
-                    $items[] = $item;
+                    $list->items[] = $item;
                 }
             }
             // Suggest keywords
@@ -249,7 +249,7 @@ class CompletionProvider
                     if (substr($keyword, 0, $prefixLen) === $prefix) {
                         $item = new CompletionItem($keyword, CompletionItemKind::KEYWORD);
                         $item->insertText = $keyword . ' ';
-                        $items[] = $item;
+                        $list->items[] = $item;
                     }
                 }
             }
@@ -270,7 +270,7 @@ class CompletionProvider
                     new Range($pos, $pos),
                     stripStringOverlap($doc->getRange(new Range(new Position(0, 0), $pos)), $item->label)
                 );
-                $items[] = $item;
+                $list->items[] = $item;
             }
         } else if ($node instanceof Node\Stmt\InlineHTML || $pos == new Position(0, 0)) {
             $item = new CompletionItem('<?php', CompletionItemKind::KEYWORD);
@@ -278,10 +278,10 @@ class CompletionProvider
                 new Range($pos, $pos),
                 stripStringOverlap($doc->getRange(new Range(new Position(0, 0), $pos)), '<?php')
             );
-            $items[] = $item;
+            $list->items[] = $item;
         }
 
-        return $items;
+        return $list;
     }
 
     /**

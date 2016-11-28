@@ -12,6 +12,7 @@ use LanguageServer\Protocol\{
     Range,
     Position,
     ClientCapabilities,
+    CompletionList,
     CompletionItem,
     CompletionItemKind
 };
@@ -46,7 +47,7 @@ class CompletionTest extends TestCase
             new TextDocumentIdentifier($completionUri),
             new Position(3, 7)
         )->wait();
-        $this->assertEquals([
+        $this->assertEquals(new CompletionList([
             new CompletionItem(
                 'testProperty',
                 CompletionItemKind::PROPERTY,
@@ -59,7 +60,7 @@ class CompletionTest extends TestCase
                 '\TestClass', // Return type of the method
                 'Non culpa nostrud mollit esse sunt laboris in irure ullamco cupidatat amet.'
             )
-        ], $items);
+        ]), $items);
     }
 
     public function testPropertyAndMethodWithoutPrefix()
@@ -70,7 +71,7 @@ class CompletionTest extends TestCase
             new TextDocumentIdentifier($completionUri),
             new Position(3, 6)
         )->wait();
-        $this->assertEquals([
+        $this->assertEquals(new CompletionList([
             new CompletionItem(
                 'testProperty',
                 CompletionItemKind::PROPERTY,
@@ -83,7 +84,7 @@ class CompletionTest extends TestCase
                 '\TestClass', // Return type of the method
                 'Non culpa nostrud mollit esse sunt laboris in irure ullamco cupidatat amet.'
             )
-        ], $items);
+        ]), $items);
     }
 
     public function testVariable()
@@ -94,7 +95,7 @@ class CompletionTest extends TestCase
             new TextDocumentIdentifier($completionUri),
             new Position(8, 5)
         )->wait();
-        $this->assertEquals([
+        $this->assertEquals(new CompletionList([
             new CompletionItem(
                 '$var',
                 CompletionItemKind::VARIABLE,
@@ -115,7 +116,7 @@ class CompletionTest extends TestCase
                 null,
                 new TextEdit(new Range(new Position(8, 5), new Position(8, 5)), 'param')
             )
-        ], $items);
+        ]), $items);
     }
 
     public function testVariableWithPrefix()
@@ -126,7 +127,7 @@ class CompletionTest extends TestCase
             new TextDocumentIdentifier($completionUri),
             new Position(8, 6)
         )->wait();
-        $this->assertEquals([
+        $this->assertEquals(new CompletionList([
             new CompletionItem(
                 '$param',
                 CompletionItemKind::VARIABLE,
@@ -137,7 +138,7 @@ class CompletionTest extends TestCase
                 null,
                 new TextEdit(new Range(new Position(8, 6), new Position(8, 6)), 'aram')
             )
-        ], $items);
+        ]), $items);
     }
 
     public function testNewInNamespace()
@@ -148,7 +149,7 @@ class CompletionTest extends TestCase
             new TextDocumentIdentifier($completionUri),
             new Position(6, 10)
         )->wait();
-        $this->assertEquals([
+        $this->assertEquals(new CompletionList([
             // Global TestClass definition (inserted as \TestClass)
             new CompletionItem(
                 'TestClass',
@@ -169,7 +170,7 @@ class CompletionTest extends TestCase
                 null,
                 'TestClass'
             ),
-        ], $items);
+        ]), $items);
     }
 
     public function testUsedClass()
@@ -180,14 +181,14 @@ class CompletionTest extends TestCase
             new TextDocumentIdentifier($completionUri),
             new Position(6, 5)
         )->wait();
-        $this->assertEquals([
+        $this->assertEquals(new CompletionList([
             new CompletionItem(
                 'TestClass',
                 CompletionItemKind::CLASS_,
                 'TestNamespace',
                 'Pariatur ut laborum tempor voluptate consequat ea deserunt.'
             )
-        ], $items);
+        ]), $items);
     }
 
     public function testStaticPropertyWithPrefix()
@@ -198,7 +199,7 @@ class CompletionTest extends TestCase
             new TextDocumentIdentifier($completionUri),
             new Position(2, 14)
         )->wait();
-        $this->assertEquals([
+        $this->assertEquals(new CompletionList([
             new CompletionItem(
                 'staticTestProperty',
                 CompletionItemKind::PROPERTY,
@@ -208,7 +209,7 @@ class CompletionTest extends TestCase
                 null,
                 '$staticTestProperty'
             )
-        ], $items);
+        ]), $items);
     }
 
     public function testStaticWithoutPrefix()
@@ -219,7 +220,7 @@ class CompletionTest extends TestCase
             new TextDocumentIdentifier($completionUri),
             new Position(2, 11)
         )->wait();
-        $this->assertEquals([
+        $this->assertEquals(new CompletionList([
             new CompletionItem(
                 'TEST_CLASS_CONST',
                 CompletionItemKind::VARIABLE,
@@ -241,7 +242,7 @@ class CompletionTest extends TestCase
                 'mixed', // Method return type
                 'Do magna consequat veniam minim proident eiusmod incididunt aute proident.'
             )
-        ], $items);
+        ]), $items);
     }
 
     public function testStaticMethodWithPrefix()
@@ -252,14 +253,14 @@ class CompletionTest extends TestCase
             new TextDocumentIdentifier($completionUri),
             new Position(2, 13)
         )->wait();
-        $this->assertEquals([
+        $this->assertEquals(new CompletionList([
             new CompletionItem(
                 'staticTestMethod',
                 CompletionItemKind::METHOD,
                 'mixed', // Method return type
                 'Do magna consequat veniam minim proident eiusmod incididunt aute proident.'
             )
-        ], $items);
+        ]), $items);
     }
 
     public function testClassConstWithPrefix()
@@ -270,14 +271,14 @@ class CompletionTest extends TestCase
             new TextDocumentIdentifier($completionUri),
             new Position(2, 13)
         )->wait();
-        $this->assertEquals([
+        $this->assertEquals(new CompletionList([
             new CompletionItem(
                 'TEST_CLASS_CONST',
                 CompletionItemKind::VARIABLE,
                 'int',
                 'Anim labore veniam consectetur laboris minim quis aute aute esse nulla ad.'
             )
-        ], $items);
+        ]), $items);
     }
 
     public function testFullyQualifiedClass()
@@ -288,7 +289,7 @@ class CompletionTest extends TestCase
             new TextDocumentIdentifier($completionUri),
             new Position(6, 6)
         )->wait();
-        $this->assertEquals([
+        $this->assertEquals(new CompletionList([
             new CompletionItem(
                 'TestClass',
                 CompletionItemKind::CLASS_,
@@ -298,7 +299,7 @@ class CompletionTest extends TestCase
                 null,
                 'TestClass'
             )
-        ], $items);
+        ]), $items);
     }
 
     public function testKeywords()
@@ -309,10 +310,10 @@ class CompletionTest extends TestCase
             new TextDocumentIdentifier($completionUri),
             new Position(2, 1)
         )->wait();
-        $this->assertEquals([
+        $this->assertEquals(new CompletionList([
             new CompletionItem('class', CompletionItemKind::KEYWORD, null, null, null, null, 'class '),
             new CompletionItem('clone', CompletionItemKind::KEYWORD, null, null, null, null, 'clone ')
-        ], $items);
+        ]), $items);
     }
 
     public function testHtmlWithoutPrefix()
@@ -323,7 +324,7 @@ class CompletionTest extends TestCase
             new TextDocumentIdentifier($completionUri),
             new Position(0, 0)
         )->wait();
-        $this->assertEquals([
+        $this->assertEquals(new CompletionList([
             new CompletionItem(
                 '<?php',
                 CompletionItemKind::KEYWORD,
@@ -334,7 +335,7 @@ class CompletionTest extends TestCase
                 null,
                 new TextEdit(new Range(new Position(0, 0), new Position(0, 0)), '<?php')
             )
-        ], $items);
+        ]), $items);
     }
 
     public function testHtmlWithPrefix()
@@ -345,7 +346,7 @@ class CompletionTest extends TestCase
             new TextDocumentIdentifier($completionUri),
             new Position(0, 1)
         )->wait();
-        $this->assertEquals([
+        $this->assertEquals(new CompletionList([
             new CompletionItem(
                 '<?php',
                 CompletionItemKind::KEYWORD,
@@ -356,7 +357,7 @@ class CompletionTest extends TestCase
                 null,
                 new TextEdit(new Range(new Position(0, 1), new Position(0, 1)), '?php')
             )
-        ], $items);
+        ]), $items);
     }
 
     public function testNamespace()
@@ -367,7 +368,7 @@ class CompletionTest extends TestCase
             new TextDocumentIdentifier($completionUri),
             new Position(4, 6)
         )->wait();
-        $this->assertEquals([
+        $this->assertEquals(new CompletionList([
             new CompletionItem(
                 'SomeNamespace',
                 CompletionItemKind::MODULE,
@@ -377,6 +378,6 @@ class CompletionTest extends TestCase
                 null,
                 'SomeNamespace'
             )
-        ], $items);
+        ]), $items);
     }
 }
