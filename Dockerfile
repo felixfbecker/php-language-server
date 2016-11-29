@@ -5,6 +5,7 @@
 # Please note that before building the image, you have to install dependencies with `composer install`
 
 FROM php:7-cli
+MAINTAINER Felix Becker <felix.b@outlook.com>
 
 RUN apt-get update \
     # Needed for CodeSniffer
