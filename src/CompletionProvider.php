@@ -275,10 +275,7 @@ class CompletionProvider
             }
         } else if ($node instanceof Node\Stmt\InlineHTML || $pos == new Position(0, 0)) {
             $item = new CompletionItem('<?php', CompletionItemKind::KEYWORD);
-            $item->textEdit = new TextEdit(
-                new Range($pos, $pos),
-                stripStringOverlap($doc->getRange(new Range(new Position(0, 0), $pos)), '<?php')
-            );
+            $item->textEdit = $this->createTextEdit($doc, $pos, '<?php');
             $list->items[] = $item;
         }
 
@@ -380,25 +377,5 @@ class CompletionProvider
             }
         }
         return $vars;
-    }
-
-    private static function createTextEdit(PhpDocument $doc, Position $pos, string $insert): string
-    {
-        $content = $doc->getContent();
-        $offset = $pos->toOffset($content);
-        $contentLen = strlen($content);
-        for ($i = $offset; $i <= $contentLen; $i++) {
-            if (substr($content, $offset, $offset + $i) === substr($content, $offset - $i)) {
-                $insert = substr($offset, $i);
-                break;
-            }
-        }
-        for ($i = $offset; $i <= $contentLen; $i++) {
-            if (substr($content, $offset, $i) === substr($content, $headLen - $i)) {
-                $insert = substr($insert, $i);
-                break;
-            }
-        }
-        return new TextEdit(new Range($pos, $pos), $insert);
     }
 }
