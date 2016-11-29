@@ -124,6 +124,7 @@ class CompletionProvider
         }
 
         $list = new CompletionList;
+        $list->isIncomplete = true;
 
         // A non-free node means we do NOT suggest global symbols
         if (
@@ -379,5 +380,25 @@ class CompletionProvider
             }
         }
         return $vars;
+    }
+
+    private static function createTextEdit(PhpDocument $doc, Position $pos, string $insert): string
+    {
+        $content = $doc->getContent();
+        $offset = $pos->toOffset($content);
+        $contentLen = strlen($content);
+        for ($i = $offset; $i <= $contentLen; $i++) {
+            if (substr($content, $offset, $offset + $i) === substr($content, $offset - $i)) {
+                $insert = substr($offset, $i);
+                break;
+            }
+        }
+        for ($i = $offset; $i <= $contentLen; $i++) {
+            if (substr($content, $offset, $i) === substr($content, $headLen - $i)) {
+                $insert = substr($insert, $i);
+                break;
+            }
+        }
+        return new TextEdit(new Range($pos, $pos), $insert);
     }
 }

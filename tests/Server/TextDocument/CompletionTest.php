@@ -60,7 +60,7 @@ class CompletionTest extends TestCase
                 '\TestClass', // Return type of the method
                 'Non culpa nostrud mollit esse sunt laboris in irure ullamco cupidatat amet.'
             )
-        ]), $items);
+        ], true), $items);
     }
 
     public function testPropertyAndMethodWithoutPrefix()
@@ -84,7 +84,7 @@ class CompletionTest extends TestCase
                 '\TestClass', // Return type of the method
                 'Non culpa nostrud mollit esse sunt laboris in irure ullamco cupidatat amet.'
             )
-        ]), $items);
+        ], true), $items);
     }
 
     public function testVariable()
@@ -116,7 +116,7 @@ class CompletionTest extends TestCase
                 null,
                 new TextEdit(new Range(new Position(8, 5), new Position(8, 5)), 'param')
             )
-        ]), $items);
+        ], true), $items);
     }
 
     public function testVariableWithPrefix()
@@ -138,7 +138,7 @@ class CompletionTest extends TestCase
                 null,
                 new TextEdit(new Range(new Position(8, 6), new Position(8, 6)), 'aram')
             )
-        ]), $items);
+        ], true), $items);
     }
 
     public function testNewInNamespace()
@@ -170,7 +170,7 @@ class CompletionTest extends TestCase
                 null,
                 'TestClass'
             ),
-        ]), $items);
+        ], true), $items);
     }
 
     public function testUsedClass()
@@ -188,7 +188,7 @@ class CompletionTest extends TestCase
                 'TestNamespace',
                 'Pariatur ut laborum tempor voluptate consequat ea deserunt.'
             )
-        ]), $items);
+        ], true), $items);
     }
 
     public function testStaticPropertyWithPrefix()
@@ -209,7 +209,7 @@ class CompletionTest extends TestCase
                 null,
                 '$staticTestProperty'
             )
-        ]), $items);
+        ], true), $items);
     }
 
     public function testStaticWithoutPrefix()
@@ -242,7 +242,7 @@ class CompletionTest extends TestCase
                 'mixed', // Method return type
                 'Do magna consequat veniam minim proident eiusmod incididunt aute proident.'
             )
-        ]), $items);
+        ], true), $items);
     }
 
     public function testStaticMethodWithPrefix()
@@ -260,7 +260,7 @@ class CompletionTest extends TestCase
                 'mixed', // Method return type
                 'Do magna consequat veniam minim proident eiusmod incididunt aute proident.'
             )
-        ]), $items);
+        ], true), $items);
     }
 
     public function testClassConstWithPrefix()
@@ -278,7 +278,7 @@ class CompletionTest extends TestCase
                 'int',
                 'Anim labore veniam consectetur laboris minim quis aute aute esse nulla ad.'
             )
-        ]), $items);
+        ], true), $items);
     }
 
     public function testFullyQualifiedClass()
@@ -299,7 +299,7 @@ class CompletionTest extends TestCase
                 null,
                 'TestClass'
             )
-        ]), $items);
+        ], true), $items);
     }
 
     public function testKeywords()
@@ -313,7 +313,7 @@ class CompletionTest extends TestCase
         $this->assertEquals(new CompletionList([
             new CompletionItem('class', CompletionItemKind::KEYWORD, null, null, null, null, 'class '),
             new CompletionItem('clone', CompletionItemKind::KEYWORD, null, null, null, null, 'clone ')
-        ]), $items);
+        ], true), $items);
     }
 
     public function testHtmlWithoutPrefix()
@@ -335,7 +335,7 @@ class CompletionTest extends TestCase
                 null,
                 new TextEdit(new Range(new Position(0, 0), new Position(0, 0)), '<?php')
             )
-        ]), $items);
+        ], true), $items);
     }
 
     public function testHtmlWithPrefix()
@@ -357,7 +357,7 @@ class CompletionTest extends TestCase
                 null,
                 new TextEdit(new Range(new Position(0, 1), new Position(0, 1)), '?php')
             )
-        ]), $items);
+        ], true), $items);
     }
 
     public function testNamespace()
@@ -378,6 +378,6 @@ class CompletionTest extends TestCase
                 null,
                 'SomeNamespace'
             )
-        ]), $items);
+        ], true), $items);
     }
 }
