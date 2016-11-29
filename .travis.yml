@@ -3,6 +3,9 @@ language: php
 php:
  - '7.0'
 
+services:
+ - docker
+
 cache:
   directories:
    - vendor
@@ -16,3 +19,9 @@ script:
 
 after_success:
  - bash <(curl -s https://codecov.io/bash)
+ - |
+   if [[ $TRAVIS_TAG == v* ]]; then
+     docker build -t felixfbecker/php-language-server:${TRAVIS_TAG:1} .
+     docker login -e="$DOCKER_EMAIL" -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+     docker push felixfbecker/php-language-server:${TRAVIS_TAG:1}
+   fi
