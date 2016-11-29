@@ -275,7 +275,10 @@ class CompletionProvider
             }
         } else if ($node instanceof Node\Stmt\InlineHTML || $pos == new Position(0, 0)) {
             $item = new CompletionItem('<?php', CompletionItemKind::KEYWORD);
-            $item->textEdit = $this->createTextEdit($doc, $pos, '<?php');
+            $item->textEdit = new TextEdit(
+                new Range($pos, $pos),
+                stripStringOverlap($doc->getRange(new Range(new Position(0, 0), $pos)), '<?php')
+            );
             $list->items[] = $item;
         }
 
