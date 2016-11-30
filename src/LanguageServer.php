@@ -65,6 +65,10 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     {
         parent::__construct($this, '/');
         $this->protocolReader = $reader;
+        $this->protocolReader->on('close', function () {
+            $this->shutdown();
+            $this->exit();
+        });
         $this->protocolReader->on('message', function (Message $msg) {
             coroutine(function () use ($msg) {
                 // Ignore responses, this is the handler for requests and notifications
