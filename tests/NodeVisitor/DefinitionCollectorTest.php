@@ -30,13 +30,14 @@ class DefinitionCollectorTest extends TestCase
         $traverser->traverse($stmts);
         $defNodes = $definitionCollector->nodes;
         $this->assertEquals([
+            'TestNamespace',
             'TestNamespace\\TEST_CONST',
             'TestNamespace\\TestClass',
             'TestNamespace\\TestClass::TEST_CLASS_CONST',
-            'TestNamespace\\TestClass::staticTestProperty',
-            'TestNamespace\\TestClass::testProperty',
+            'TestNamespace\\TestClass::$staticTestProperty',
+            'TestNamespace\\TestClass->testProperty',
             'TestNamespace\\TestClass::staticTestMethod()',
-            'TestNamespace\\TestClass::testMethod()',
+            'TestNamespace\\TestClass->testMethod()',
             'TestNamespace\\TestTrait',
             'TestNamespace\\TestInterface',
             'TestNamespace\\test_function()'
@@ -44,10 +45,10 @@ class DefinitionCollectorTest extends TestCase
         $this->assertInstanceOf(Node\Const_::class, $defNodes['TestNamespace\\TEST_CONST']);
         $this->assertInstanceOf(Node\Stmt\Class_::class, $defNodes['TestNamespace\\TestClass']);
         $this->assertInstanceOf(Node\Const_::class, $defNodes['TestNamespace\\TestClass::TEST_CLASS_CONST']);
-        $this->assertInstanceOf(Node\Stmt\PropertyProperty::class, $defNodes['TestNamespace\\TestClass::staticTestProperty']);
-        $this->assertInstanceOf(Node\Stmt\PropertyProperty::class, $defNodes['TestNamespace\\TestClass::testProperty']);
+        $this->assertInstanceOf(Node\Stmt\PropertyProperty::class, $defNodes['TestNamespace\\TestClass::$staticTestProperty']);
+        $this->assertInstanceOf(Node\Stmt\PropertyProperty::class, $defNodes['TestNamespace\\TestClass->testProperty']);
         $this->assertInstanceOf(Node\Stmt\ClassMethod::class, $defNodes['TestNamespace\\TestClass::staticTestMethod()']);
-        $this->assertInstanceOf(Node\Stmt\ClassMethod::class, $defNodes['TestNamespace\\TestClass::testMethod()']);
+        $this->assertInstanceOf(Node\Stmt\ClassMethod::class, $defNodes['TestNamespace\\TestClass->testMethod()']);
         $this->assertInstanceOf(Node\Stmt\Trait_::class, $defNodes['TestNamespace\\TestTrait']);
         $this->assertInstanceOf(Node\Stmt\Interface_::class, $defNodes['TestNamespace\\TestInterface']);
         $this->assertInstanceOf(Node\Stmt\Function_::class, $defNodes['TestNamespace\\test_function()']);
@@ -68,7 +69,8 @@ class DefinitionCollectorTest extends TestCase
         $stmts = $parser->parse(file_get_contents($uri));
         $traverser->traverse($stmts);
         $defNodes = $definitionCollector->nodes;
-        $this->assertEquals(['TestNamespace\\whatever()'], array_keys($defNodes));
+        $this->assertEquals(['TestNamespace', 'TestNamespace\\whatever()'], array_keys($defNodes));
+        $this->assertInstanceOf(Node\Stmt\Namespace_::class, $defNodes['TestNamespace']);
         $this->assertInstanceOf(Node\Stmt\Function_::class, $defNodes['TestNamespace\\whatever()']);
     }
 }

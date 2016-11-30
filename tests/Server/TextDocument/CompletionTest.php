@@ -1,0 +1,383 @@
+<?php
+declare(strict_types = 1);
+
+namespace LanguageServer\Tests\Server\TextDocument;
+
+use PHPUnit\Framework\TestCase;
+use LanguageServer\Tests\MockProtocolStream;
+use LanguageServer\{Server, LanguageClient, Project, CompletionProvider};
+use LanguageServer\Protocol\{
+    TextDocumentIdentifier,
+    TextEdit,
+    Range,
+    Position,
+    ClientCapabilities,
+    CompletionList,
+    CompletionItem,
+    CompletionItemKind
+};
+use function LanguageServer\pathToUri;
+
+class CompletionTest extends TestCase
+{
+    /**
+     * @var Server\TextDocument
+     */
+    private $textDocument;
+
+    /**
+     * @var Project
+     */
+    private $project;
+
+    public function setUp()
+    {
+        $client = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
+        $this->project = new Project($client, new ClientCapabilities);
+        $this->project->loadDocument(pathToUri(__DIR__ . '/../../../fixtures/global_symbols.php'))->wait();
+        $this->project->loadDocument(pathToUri(__DIR__ . '/../../../fixtures/symbols.php'))->wait();
+        $this->textDocument = new Server\TextDocument($this->project, $client);
+    }
+
+    public function testPropertyAndMethodWithPrefix()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/property_with_prefix.php');
+        $this->project->openDocument($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(3, 7)
+        )->wait();
+        $this->assertEquals(new CompletionList([
+            new CompletionItem(
+                'testProperty',
+                CompletionItemKind::PROPERTY,
+                '\TestClass', // Type of the property
+                'Reprehenderit magna velit mollit ipsum do.'
+            ),
+            new CompletionItem(
+                'testMethod',
+                CompletionItemKind::METHOD,
+                '\TestClass', // Return type of the method
+                'Non culpa nostrud mollit esse sunt laboris in irure ullamco cupidatat amet.'
+            )
+        ], true), $items);
+    }
+
+    public function testPropertyAndMethodWithoutPrefix()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/property.php');
+        $this->project->openDocument($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(3, 6)
+        )->wait();
+        $this->assertEquals(new CompletionList([
+            new CompletionItem(
+                'testProperty',
+                CompletionItemKind::PROPERTY,
+                '\TestClass', // Type of the property
+                'Reprehenderit magna velit mollit ipsum do.'
+            ),
+            new CompletionItem(
+                'testMethod',
+                CompletionItemKind::METHOD,
+                '\TestClass', // Return type of the method
+                'Non culpa nostrud mollit esse sunt laboris in irure ullamco cupidatat amet.'
+            )
+        ], true), $items);
+    }
+
+    public function testVariable()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/variable.php');
+        $this->project->openDocument($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(8, 5)
+        )->wait();
+        $this->assertEquals(new CompletionList([
+            new CompletionItem(
+                '$var',
+                CompletionItemKind::VARIABLE,
+                'int',
+                null,
+                null,
+                null,
+                null,
+                new TextEdit(new Range(new Position(8, 5), new Position(8, 5)), 'var')
+            ),
+            new CompletionItem(
+                '$param',
+                CompletionItemKind::VARIABLE,
+                'string|null',
+                'A parameter',
+                null,
+                null,
+                null,
+                new TextEdit(new Range(new Position(8, 5), new Position(8, 5)), 'param')
+            )
+        ], true), $items);
+    }
+
+    public function testVariableWithPrefix()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/variable_with_prefix.php');
+        $this->project->openDocument($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(8, 6)
+        )->wait();
+        $this->assertEquals(new CompletionList([
+            new CompletionItem(
+                '$param',
+                CompletionItemKind::VARIABLE,
+                'string|null',
+                'A parameter',
+                null,
+                null,
+                null,
+                new TextEdit(new Range(new Position(8, 6), new Position(8, 6)), 'aram')
+            )
+        ], true), $items);
+    }
+
+    public function testNewInNamespace()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/used_new.php');
+        $this->project->openDocument($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(6, 10)
+        )->wait();
+        $this->assertEquals(new CompletionList([
+            // Global TestClass definition (inserted as \TestClass)
+            new CompletionItem(
+                'TestClass',
+                CompletionItemKind::CLASS_,
+                null,
+                'Pariatur ut laborum tempor voluptate consequat ea deserunt.',
+                null,
+                null,
+                '\TestClass'
+            ),
+            // Namespaced, `use`d TestClass definition (inserted as TestClass)
+            new CompletionItem(
+                'TestClass',
+                CompletionItemKind::CLASS_,
+                'TestNamespace',
+                'Pariatur ut laborum tempor voluptate consequat ea deserunt.',
+                null,
+                null,
+                'TestClass'
+            ),
+        ], true), $items);
+    }
+
+    public function testUsedClass()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/used_class.php');
+        $this->project->openDocument($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(6, 5)
+        )->wait();
+        $this->assertEquals(new CompletionList([
+            new CompletionItem(
+                'TestClass',
+                CompletionItemKind::CLASS_,
+                'TestNamespace',
+                'Pariatur ut laborum tempor voluptate consequat ea deserunt.'
+            )
+        ], true), $items);
+    }
+
+    public function testStaticPropertyWithPrefix()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/static_property_with_prefix.php');
+        $this->project->openDocument($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(2, 14)
+        )->wait();
+        $this->assertEquals(new CompletionList([
+            new CompletionItem(
+                'staticTestProperty',
+                CompletionItemKind::PROPERTY,
+                '\TestClass[]',
+                'Lorem excepteur officia sit anim velit veniam enim.',
+                null,
+                null,
+                '$staticTestProperty'
+            )
+        ], true), $items);
+    }
+
+    public function testStaticWithoutPrefix()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/static.php');
+        $this->project->openDocument($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(2, 11)
+        )->wait();
+        $this->assertEquals(new CompletionList([
+            new CompletionItem(
+                'TEST_CLASS_CONST',
+                CompletionItemKind::VARIABLE,
+                'int',
+                'Anim labore veniam consectetur laboris minim quis aute aute esse nulla ad.'
+            ),
+            new CompletionItem(
+                'staticTestProperty',
+                CompletionItemKind::PROPERTY,
+                '\TestClass[]',
+                'Lorem excepteur officia sit anim velit veniam enim.',
+                null,
+                null,
+                '$staticTestProperty'
+            ),
+            new CompletionItem(
+                'staticTestMethod',
+                CompletionItemKind::METHOD,
+                'mixed', // Method return type
+                'Do magna consequat veniam minim proident eiusmod incididunt aute proident.'
+            )
+        ], true), $items);
+    }
+
+    public function testStaticMethodWithPrefix()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/static_method_with_prefix.php');
+        $this->project->openDocument($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(2, 13)
+        )->wait();
+        $this->assertEquals(new CompletionList([
+            new CompletionItem(
+                'staticTestMethod',
+                CompletionItemKind::METHOD,
+                'mixed', // Method return type
+                'Do magna consequat veniam minim proident eiusmod incididunt aute proident.'
+            )
+        ], true), $items);
+    }
+
+    public function testClassConstWithPrefix()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/class_const_with_prefix.php');
+        $this->project->openDocument($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(2, 13)
+        )->wait();
+        $this->assertEquals(new CompletionList([
+            new CompletionItem(
+                'TEST_CLASS_CONST',
+                CompletionItemKind::VARIABLE,
+                'int',
+                'Anim labore veniam consectetur laboris minim quis aute aute esse nulla ad.'
+            )
+        ], true), $items);
+    }
+
+    public function testFullyQualifiedClass()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/fully_qualified_class.php');
+        $this->project->openDocument($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(6, 6)
+        )->wait();
+        $this->assertEquals(new CompletionList([
+            new CompletionItem(
+                'TestClass',
+                CompletionItemKind::CLASS_,
+                null,
+                'Pariatur ut laborum tempor voluptate consequat ea deserunt.',
+                null,
+                null,
+                'TestClass'
+            )
+        ], true), $items);
+    }
+
+    public function testKeywords()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/keywords.php');
+        $this->project->openDocument($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(2, 1)
+        )->wait();
+        $this->assertEquals(new CompletionList([
+            new CompletionItem('class', CompletionItemKind::KEYWORD, null, null, null, null, 'class '),
+            new CompletionItem('clone', CompletionItemKind::KEYWORD, null, null, null, null, 'clone ')
+        ], true), $items);
+    }
+
+    public function testHtmlWithoutPrefix()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/html.php');
+        $this->project->openDocument($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(0, 0)
+        )->wait();
+        $this->assertEquals(new CompletionList([
+            new CompletionItem(
+                '<?php',
+                CompletionItemKind::KEYWORD,
+                null,
+                null,
+                null,
+                null,
+                null,
+                new TextEdit(new Range(new Position(0, 0), new Position(0, 0)), '<?php')
+            )
+        ], true), $items);
+    }
+
+    public function testHtmlWithPrefix()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/html_with_prefix.php');
+        $this->project->openDocument($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(0, 1)
+        )->wait();
+        $this->assertEquals(new CompletionList([
+            new CompletionItem(
+                '<?php',
+                CompletionItemKind::KEYWORD,
+                null,
+                null,
+                null,
+                null,
+                null,
+                new TextEdit(new Range(new Position(0, 1), new Position(0, 1)), '?php')
+            )
+        ], true), $items);
+    }
+
+    public function testNamespace()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/namespace.php');
+        $this->project->openDocument($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(4, 6)
+        )->wait();
+        $this->assertEquals(new CompletionList([
+            new CompletionItem(
+                'SomeNamespace',
+                CompletionItemKind::MODULE,
+                null,
+                null,
+                null,
+                null,
+                'SomeNamespace'
+            )
+        ], true), $items);
+    }
+}

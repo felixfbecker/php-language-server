@@ -18,16 +18,39 @@ class Definition
      *
      * Examples of FQNs:
      *  - testFunction()
+     *  - TestNamespace
      *  - TestNamespace\TestClass
      *  - TestNamespace\TestClass::TEST_CONSTANT
-     *  - TestNamespace\TestClass::staticTestProperty
-     *  - TestNamespace\TestClass::testProperty
+     *  - TestNamespace\TestClass::$staticTestProperty
+     *  - TestNamespace\TestClass->testProperty
      *  - TestNamespace\TestClass::staticTestMethod()
-     *  - TestNamespace\TestClass::testMethod()
+     *  - TestNamespace\TestClass->testMethod()
      *
      * @var string|null
      */
     public $fqn;
+
+    /**
+     * Only true for classes, interfaces, traits, functions and non-class constants
+     * This is so methods and properties are not suggested in the global scope
+     *
+     * @var bool
+     */
+    public $isGlobal;
+
+    /**
+     * False for instance methods and properties
+     *
+     * @var bool
+     */
+    public $isStatic;
+
+    /**
+     * True if the Definition is a class
+     *
+     * @var bool
+     */
+    public $canBeInstantiated;
 
     /**
      * @var Protocol\SymbolInformation

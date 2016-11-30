@@ -54,13 +54,11 @@ abstract class ServerTestCase extends TestCase
         $referencesUri       = pathToUri(realpath(__DIR__ . '/../../fixtures/references.php'));
         $useUri              = pathToUri(realpath(__DIR__ . '/../../fixtures/use.php'));
 
-        Promise\all([
-            $this->project->loadDocument($symbolsUri),
-            $this->project->loadDocument($referencesUri),
-            $this->project->loadDocument($globalSymbolsUri),
-            $this->project->loadDocument($globalReferencesUri),
-            $this->project->loadDocument($useUri)
-        ])->wait();
+        $this->project->loadDocument($symbolsUri)->wait();
+        $this->project->loadDocument($referencesUri)->wait();
+        $this->project->loadDocument($globalSymbolsUri)->wait();
+        $this->project->loadDocument($globalReferencesUri)->wait();
+        $this->project->loadDocument($useUri)->wait();
 
         // @codingStandardsIgnoreStart
         $this->definitionLocations = [
@@ -79,6 +77,8 @@ abstract class ServerTestCase extends TestCase
             'whatever()'                             => new Location($globalReferencesUri, new Range(new Position(21,  0), new Position(23,  1))),
 
             // Namespaced
+            'TestNamespace'                                => new Location($symbolsUri,    new Range(new Position( 2,  0), new Position( 2, 24))),
+            'SecondTestNamespace'                          => new Location($useUri,        new Range(new Position( 2,  0), new Position( 2, 30))),
             'TestNamespace\\TEST_CONST'                    => new Location($symbolsUri,    new Range(new Position( 9,  6), new Position( 9, 22))),
             'TestNamespace\\TestClass'                     => new Location($symbolsUri,    new Range(new Position(20,  0), new Position(61,  1))),
             'TestNamespace\\TestTrait'                     => new Location($symbolsUri,    new Range(new Position(63,  0), new Position(66,  1))),

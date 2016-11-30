@@ -11,7 +11,8 @@ use LanguageServer\Protocol\{
     MessageType,
     InitializeResult,
     SymbolInformation,
-    TextDocumentIdentifier
+    TextDocumentIdentifier,
+    CompletionOptions
 };
 use AdvancedJsonRpc;
 use Sabre\Event\{Loop, Promise};
@@ -144,6 +145,10 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
         $serverCapabilities->referencesProvider = true;
         // Support "Hover"
         $serverCapabilities->hoverProvider = true;
+        // Support "Completion"
+        $serverCapabilities->completionProvider = new CompletionOptions;
+        $serverCapabilities->completionProvider->resolveProvider = false;
+        $serverCapabilities->completionProvider->triggerCharacters = ['$', '>'];
 
         return new InitializeResult($serverCapabilities);
     }

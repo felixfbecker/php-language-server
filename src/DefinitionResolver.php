@@ -92,6 +92,35 @@ class DefinitionResolver
     }
 
     /**
+     * Create a Definition for a definition node
+     *
+     * @param Node $node
+     * @param string $fqn
+     * @return Definition
+     */
+    public function createDefinitionFromNode(Node $node, string $fqn = null): Definition
+    {
+        $def = new Definition;
+        $def->canBeInstantiated = $node instanceof Node\Stmt\Class_;
+        $def->isGlobal = (
+            $node instanceof Node\Stmt\ClassLike
+            || $node instanceof Node\Stmt\Namespace_
+            || $node instanceof Node\Stmt\Function_
+            || $node->getAttribute('parentNode') instanceof Node\Stmt\Const_
+        );
+        $def->isStatic = (
+            ($node instanceof Node\Stmt\ClassMethod && $node->isStatic())
+            || ($node instanceof Node\Stmt\PropertyProperty && $node->getAttribute('parentNode')->isStatic())
+        );
+        $def->fqn = $fqn;
+        $def->symbolInformation = SymbolInformation::fromNode($node, $fqn);
+        $def->type = $this->getTypeFromNode($node);
+        $def->declarationLine = $this->getDeclarationLineFromNode($node);
+        $def->documentation = $this->getDocumentationFromNode($node);
+        return $def;
+    }
+
+    /**
      * Given any node, returns the Definition object of the symbol that is referenced
      *
      * @param Node $node Any reference node
@@ -106,21 +135,7 @@ class DefinitionResolver
             if ($defNode === null) {
                 return null;
             }
-            $def = new Definition;
-            // Get symbol information from node (range, symbol kind)
-            $def->symbolInformation = SymbolInformation::fromNode($defNode);
-            // Declaration line
-            $def->declarationLine = $this->getDeclarationLineFromNode($defNode);
-            // Documentation
-            $def->documentation = $this->getDocumentationFromNode($defNode);
-            if ($defNode instanceof Node\Param) {
-                // Get parameter type
-                $def->type = $this->getTypeFromNode($defNode);
-            } else {
-                // Resolve the type of the assignment/closure use node
-                $def->type = $this->resolveExpressionNodeToType($defNode);
-            }
-            return $def;
+            return $this->createDefinitionFromNode($defNode);
         }
         // Other references are references to a global symbol that have an FQN
         // Find out the FQN
@@ -137,6 +152,31 @@ class DefinitionResolver
     }
 
     /**
+     * Returns all possible FQNs in a type
+     *
+     * @param Type $type
+     * @return string[]
+     */
+    public static function getFqnsFromType(Type $type): array
+    {
+        $fqns = [];
+        if ($type instanceof Types\Object_) {
+            $fqsen = $type->getFqsen();
+            if ($fqsen !== null) {
+                $fqns[] = substr((string)$fqsen, 1);
+            }
+        }
+        if ($type instanceof Types\Compound) {
+            for ($i = 0; $t = $type->get($i); $i++) {
+                foreach (self::getFqnsFromType($type) as $fqn) {
+                    $fqns[] = $fqn;
+                }
+            }
+        }
+        return $fqns;
+    }
+
+    /**
      * Given any node, returns the FQN of the symbol that is referenced
      * Returns null if the FQN could not be resolved or the reference node references a variable
      *
@@ -150,6 +190,7 @@ class DefinitionResolver
         if (
             $node instanceof Node\Name && (
                 $parent instanceof Node\Stmt\ClassLike
+                || $parent instanceof Node\Namespace_
                 || $parent instanceof Node\Param
                 || $parent instanceof Node\FunctionLike
                 || $parent instanceof Node\Expr\StaticCall
@@ -211,7 +252,7 @@ class DefinitionResolver
             } else {
                 $classFqn = substr((string)$varType->getFqsen(), 1);
             }
-            $name = $classFqn . '::' . (string)$node->name;
+            $name = $classFqn . '->' . (string)$node->name;
         } else if ($parent instanceof Node\Expr\FuncCall) {
             if ($parent->name instanceof Node\Expr) {
                 return null;
@@ -245,7 +286,11 @@ class DefinitionResolver
                     $className = (string)$classNode->namespacedName;
                 }
             }
-            $name = (string)$className . '::' . $node->name;
+            if ($node instanceof Node\Expr\StaticPropertyFetch) {
+                $name = (string)$className . '::$' . $node->name;
+            } else {
+                $name = (string)$className . '::' . $node->name;
+            }
         } else {
             return null;
         }
@@ -281,25 +326,34 @@ class DefinitionResolver
     /**
      * Returns the assignment or parameter node where a variable was defined
      *
-     * @param Node\Expr\Variable $n The variable access
+     * @param Node\Expr\Variable|Node\Expr\ClosureUse $var The variable access
      * @return Node\Expr\Assign|Node\Param|Node\Expr\ClosureUse|null
      */
-    public static function resolveVariableToNode(Node\Expr\Variable $var)
+    public static function resolveVariableToNode(Node\Expr $var)
     {
         $n = $var;
+        // When a use is passed, start outside the closure to not return immediatly
+        if ($var instanceof Node\Expr\ClosureUse) {
+            $n = $var->getAttribute('parentNode')->getAttribute('parentNode');
+            $name = $var->var;
+        } else if ($var instanceof Node\Expr\Variable || $var instanceof Node\Param) {
+            $name = $var->name;
+        } else {
+            throw new \InvalidArgumentException('$var must be Variable, Param or ClosureUse, not ' . get_class($var));
+        }
         // Traverse the AST up
         do {
             // If a function is met, check the parameters and use statements
             if ($n instanceof Node\FunctionLike) {
                 foreach ($n->getParams() as $param) {
-                    if ($param->name === $var->name) {
+                    if ($param->name === $name) {
                         return $param;
                     }
                 }
                 // If it is a closure, also check use statements
                 if ($n instanceof Node\Expr\Closure) {
                     foreach ($n->uses as $use) {
-                        if ($use->var === $var->name) {
+                        if ($use->var === $name) {
                             return $use;
                         }
                     }
@@ -310,7 +364,7 @@ class DefinitionResolver
             while ($n->getAttribute('previousSibling') && $n = $n->getAttribute('previousSibling')) {
                 if (
                     ($n instanceof Node\Expr\Assign || $n instanceof Node\Expr\AssignOp)
-                    && $n->var instanceof Node\Expr\Variable && $n->var->name === $var->name
+                    && $n->var instanceof Node\Expr\Variable && $n->var->name === $name
                 ) {
                     return $n;
                 }
@@ -327,10 +381,10 @@ class DefinitionResolver
      * @param \PhpParser\Node\Expr $expr
      * @return \phpDocumentor\Type
      */
-    private function resolveExpressionNodeToType(Node\Expr $expr): Type
+    public function resolveExpressionNodeToType(Node\Expr $expr): Type
     {
-        if ($expr instanceof Node\Expr\Variable) {
-            if ($expr->name === 'this') {
+        if ($expr instanceof Node\Expr\Variable || $expr instanceof Node\Expr\ClosureUse) {
+            if ($expr instanceof Node\Expr\Variable && $expr->name === 'this') {
                 return new Types\This;
             }
             // Find variable definition
@@ -385,7 +439,7 @@ class DefinitionResolver
                 } else {
                     $classFqn = substr((string)$t->getFqsen(), 1);
                 }
-                $fqn = $classFqn . '::' . $expr->name;
+                $fqn = $classFqn . '->' . $expr->name;
                 if ($expr instanceof Node\Expr\MethodCall) {
                     $fqn .= '()';
                 }
@@ -404,7 +458,11 @@ class DefinitionResolver
             if (!($classType instanceof Types\Object_) || $classType->getFqsen() === null || $expr->name instanceof Node\Expr) {
                 return new Types\Mixed;
             }
-            $fqn = substr((string)$classType->getFqsen(), 1) . '::' . $expr->name;
+            $fqn = substr((string)$classType->getFqsen(), 1) . '::';
+            if ($expr instanceof Node\Expr\StaticPropertyFetch) {
+                $fqn .= '$';
+            }
+            $fqn .= $expr->name;
             if ($expr instanceof Node\Expr\StaticCall) {
                 $fqn .= '()';
             }
@@ -599,7 +657,7 @@ class DefinitionResolver
      * For functions and methods, this is the return type.
      * For parameters, this is the type of the parameter.
      * For classes and interfaces, this is the class type (object).
-     * Variables are not indexed for performance reasons.
+     * For variables / assignments, this is the documented type or type the assignment resolves to.
      * Can also be a compound type.
      * If it is unknown, will be Types\Mixed.
      * Returns null if the node does not have a type.
@@ -612,28 +670,35 @@ class DefinitionResolver
         if ($node instanceof Node\Param) {
             // Parameters
             $docBlock = $node->getAttribute('parentNode')->getAttribute('docBlock');
-            if (
-                $docBlock !== null
-                && !empty($paramTags = $docBlock->getTagsByName('param'))
-                && $paramTags[0]->getType() !== null
-            ) {
+            if ($docBlock !== null) {
                 // Use @param tag
-                return $paramTags[0]->getType();
+                foreach ($docBlock->getTagsByName('param') as $paramTag) {
+                    if ($paramTag->getVariableName() === $node->name) {
+                        if ($paramTag->getType() === null) {
+                            break;
+                        }
+                        return $paramTag->getType();
+                    }
+                }
             }
             if ($node->type !== null) {
                 // Use PHP7 return type hint
                 if (is_string($node->type)) {
                     // Resolve a string like "bool" to a type object
                     $type = $this->typeResolver->resolve($node->type);
-                }
-                $type = new Types\Object_(new Fqsen('\\' . (string)$node->type));
-                if ($node->default !== null) {
-                    $defaultType = $this->resolveExpressionNodeToType($node->default);
-                    $type = new Types\Compound([$type, $defaultType]);
+                } else {
+                    $type = new Types\Object_(new Fqsen('\\' . (string)$node->type));
                 }
             }
-            // Unknown parameter type
-            return new Types\Mixed;
+            if ($node->default !== null) {
+                $defaultType = $this->resolveExpressionNodeToType($node->default);
+                if (isset($type) && !is_a($type, get_class($defaultType))) {
+                    $type = new Types\Compound([$type, $defaultType]);
+                } else {
+                    $type = $defaultType;
+                }
+            }
+            return $type ?? new Types\Mixed;
         }
         if ($node instanceof Node\FunctionLike) {
             // Functions/methods
@@ -657,16 +722,39 @@ class DefinitionResolver
             // Unknown return type
             return new Types\Mixed;
         }
-        if ($node instanceof Node\Stmt\PropertyProperty || $node instanceof Node\Const_) {
-            // Property or constant
-            $docBlock = $node->getAttribute('parentNode')->getAttribute('docBlock');
+        if ($node instanceof Node\Expr\Variable) {
+            $node = $node->getAttribute('parentNode');
+        }
+        if (
+            $node instanceof Node\Stmt\PropertyProperty
+            || $node instanceof Node\Const_
+            || $node instanceof Node\Expr\Assign
+            || $node instanceof Node\Expr\AssignOp
+        ) {
+            if ($node instanceof Node\Stmt\PropertyProperty || $node instanceof Node\Const_) {
+                $docBlockHolder = $node->getAttribute('parentNode');
+            } else {
+                $docBlockHolder = $node;
+            }
+            // Property, constant or variable
+            // Use @var tag
             if (
-                $docBlock !== null
+                isset($docBlockHolder)
+                && ($docBlock = $docBlockHolder->getAttribute('docBlock'))
                 && !empty($varTags = $docBlock->getTagsByName('var'))
-                && $varTags[0]->getType()
+                && ($type = $varTags[0]->getType())
             ) {
-                // Use @var tag
-                return $varTags[0]->getType();
+                return $type;
+            }
+            // Resolve the expression
+            if ($node instanceof Node\Stmt\PropertyProperty) {
+                if ($node->default) {
+                    return $this->resolveExpressionNodeToType($node->default);
+                }
+            } else if ($node instanceof Node\Const_) {
+                return $this->resolveExpressionNodeToType($node->value);
+            } else if ($node instanceof Node\Expr\Assign || $node instanceof Node\Expr\AssignOp) {
+                return $this->resolveExpressionNodeToType($node);
             }
             // TODO: read @property tags of class
             // TODO: Try to infer the type from default value / constant value
@@ -689,25 +777,37 @@ class DefinitionResolver
         if ($node instanceof Node\Stmt\ClassLike && isset($node->name)) {
             // Class, interface or trait declaration
             return (string)$node->namespacedName;
+        } else if ($node instanceof Node\Stmt\Namespace_) {
+            return (string)$node->name;
         } else if ($node instanceof Node\Stmt\Function_) {
             // Function: use functionName() as the name
             return (string)$node->namespacedName . '()';
         } else if ($node instanceof Node\Stmt\ClassMethod) {
-            // Class method: use ClassName::methodName() as name
+            // Class method: use ClassName->methodName() as name
             $class = $node->getAttribute('parentNode');
             if (!isset($class->name)) {
                 // Ignore anonymous classes
                 return null;
             }
-            return (string)$class->namespacedName . '::' . (string)$node->name . '()';
+            if ($node->isStatic()) {
+                return (string)$class->namespacedName . '::' . (string)$node->name . '()';
+            } else {
+                return (string)$class->namespacedName . '->' . (string)$node->name . '()';
+            }
         } else if ($node instanceof Node\Stmt\PropertyProperty) {
-            // Property: use ClassName::propertyName as name
-            $class = $node->getAttribute('parentNode')->getAttribute('parentNode');
+            $property = $node->getAttribute('parentNode');
+            $class = $property->getAttribute('parentNode');
             if (!isset($class->name)) {
                 // Ignore anonymous classes
                 return null;
             }
-            return (string)$class->namespacedName . '::' . (string)$node->name;
+            if ($property->isStatic()) {
+                // Static Property: use ClassName::$propertyName as name
+                return (string)$class->namespacedName . '::$' . (string)$node->name;
+            } else {
+                // Instance Property: use ClassName->propertyName as name
+                return (string)$class->namespacedName . '->' . (string)$node->name;
+            }
         } else if ($node instanceof Node\Const_) {
             $parent = $node->getAttribute('parentNode');
             if ($parent instanceof Node\Stmt\Const_) {

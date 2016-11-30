@@ -6,7 +6,17 @@ namespace LanguageServer\Tests\Server\Workspace;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\Tests\Server\ServerTestCase;
 use LanguageServer\{Server, Client, LanguageClient, Project, PhpDocument};
-use LanguageServer\Protocol\{TextDocumentItem, TextDocumentIdentifier, SymbolInformation, SymbolKind, DiagnosticSeverity, FormattingOptions};
+use LanguageServer\Protocol\{
+    TextDocumentItem,
+    TextDocumentIdentifier,
+    SymbolInformation,
+    SymbolKind,
+    DiagnosticSeverity,
+    FormattingOptions,
+    Location,
+    Range,
+    Position
+};
 use AdvancedJsonRpc\{Request as RequestBody, Response as ResponseBody};
 use function LanguageServer\pathToUri;
 
@@ -16,8 +26,10 @@ class SymbolTest extends ServerTestCase
     {
         // Request symbols
         $result = $this->workspace->symbol('');
+        $referencesUri = pathToUri(realpath(__DIR__ . '/../../../fixtures/references.php'));
         // @codingStandardsIgnoreStart
         $this->assertEquals([
+            new SymbolInformation('TestNamespace',      SymbolKind::NAMESPACE, new Location($referencesUri, new Range(new Position(2, 0), new Position(2, 24))), ''),
             // Namespaced
             new SymbolInformation('TEST_CONST',         SymbolKind::CONSTANT,  $this->getDefinitionLocation('TestNamespace\\TEST_CONST'),                    'TestNamespace'),
             new SymbolInformation('TestClass',          SymbolKind::CLASS_,    $this->getDefinitionLocation('TestNamespace\\TestClass'),                     'TestNamespace'),
@@ -41,7 +53,9 @@ class SymbolTest extends ServerTestCase
             new SymbolInformation('TestTrait',          SymbolKind::CLASS_,    $this->getDefinitionLocation('TestTrait'),                                    ''),
             new SymbolInformation('TestInterface',      SymbolKind::INTERFACE, $this->getDefinitionLocation('TestInterface'),                                ''),
             new SymbolInformation('test_function',      SymbolKind::FUNCTION,  $this->getDefinitionLocation('test_function()'),                              ''),
-            new SymbolInformation('whatever',           SymbolKind::FUNCTION,  $this->getDefinitionLocation('whatever()'),                                   '')
+            new SymbolInformation('whatever',           SymbolKind::FUNCTION,  $this->getDefinitionLocation('whatever()'),                                   ''),
+
+            new SymbolInformation('SecondTestNamespace', SymbolKind::NAMESPACE, $this->getDefinitionLocation('SecondTestNamespace'), '')
         ], $result);
         // @codingStandardsIgnoreEnd
     }

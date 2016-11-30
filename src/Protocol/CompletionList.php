@@ -22,4 +22,14 @@ class CompletionList
      * @var CompletionItem[]
      */
     public $items;
+
+    /**
+     * @param CompletionItem[] $items        The completion items.
+     * @param bool             $isIncomplete This list it not complete. Further typing should result in recomputing this list.
+     */
+    public function __construct(array $items = [], bool $isIncomplete = false)
+    {
+        $this->items = $items;
+        $this->isIncomplete = $isIncomplete;
+    }
 }

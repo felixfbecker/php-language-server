@@ -88,7 +88,7 @@ class SymbolInformation
         }
         $symbol->location = Location::fromNode($node);
         if ($fqn !== null) {
-            $parts = preg_split('/(::|\\\\)/', $fqn);
+            $parts = preg_split('/(::|->|\\\\)/', $fqn);
             array_pop($parts);
             $symbol->containerName = implode('\\', $parts);
         }
