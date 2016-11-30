@@ -156,7 +156,8 @@ class CompletionProvider
                     }
                 }
             } else {
-                $prefixes = [$this->definitionResolver->resolveReferenceNodeToFqn($node)];
+                $fqn = $this->definitionResolver->resolveReferenceNodeToFqn($node);
+                $prefixes = $fqn !== null ? [$fqn] : [];
             }
 
             foreach ($this->project->getDefinitions() as $fqn => $def) {
