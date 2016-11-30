@@ -68,10 +68,12 @@ if (!empty($options['tcp'])) {
                 exit(1);
             } else if ($pid === 0) {
                 // Child process
-                $ls = new LanguageServer(
-                    new ProtocolStreamReader($socket),
-                    new ProtocolStreamWriter($socket)
-                );
+                $reader = new ProtocolStreamReader($socket);
+                $writer = new ProtocolStreamWriter($socket);
+                $reader->on('close', function () {
+                    fwrite(STDOUT, "Connection closed\n");
+                });
+                $ls = new LanguageServer($reader, $writer);
                 Loop\run();
                 // Just for safety
                 exit(0);
