@@ -344,7 +344,7 @@ class PhpDocument
      */
     public function getDefinitions()
     {
-        return $this->definitions;
+        return $this->definitions ?? [];
     }
 
     /**
