@@ -10,11 +10,10 @@ use LanguageServer\Protocol\{
     Message,
     MessageType,
     InitializeResult,
-    SymbolInformation,
     TextDocumentIdentifier
 };
 use AdvancedJsonRpc;
-use Sabre\Event\{Loop, Promise};
+use Sabre\Event\Promise;
 use function Sabre\Event\coroutine;
 use Exception;
 use Throwable;
@@ -22,6 +21,7 @@ use Webmozart\Glob\Iterator\GlobIterator;
 use Webmozart\Glob\Glob;
 use Webmozart\PathUtil\Path;
 use Sabre\Uri;
+use function Sabre\Event\Loop\setTimeout;
 
 class LanguageServer extends AdvancedJsonRpc\Dispatcher
 {
@@ -123,6 +123,12 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
         // start building project index
         if ($rootPath !== null) {
             $this->indexProject()->otherwise('\\LanguageServer\\crash');
+        }
+
+        if (extension_loaded('xdebug')) {
+            setTimeout(function () {
+                $this->client->window->showMessage(MessageType::WARNING, 'You are running PHP Language Server with xdebug enabled. This has a major impact on server performance.');
+            }, 1);
         }
 
         $serverCapabilities = new ServerCapabilities();
