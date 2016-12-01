@@ -3,14 +3,20 @@ declare(strict_types = 1);
 
 namespace LanguageServer;
 
-use LanguageServer\Protocol\{SymbolInformation, TextDocumentIdentifier, ClientCapabilities};
-use phpDocumentor\Reflection\DocBlockFactory;
+use LanguageServer\NodeVisitor\VariableReferencesCollector;
+use LanguageServer\Protocol\ClientCapabilities;
+use PhpParser\Node;
+use PhpParser\Node\Expr\ClosureUse;
+use PhpParser\Node\Expr\Variable;
+use PhpParser\Node\FunctionLike;
+use PhpParser\Node\Param;
+use PhpParser\NodeTraverser;
 use Sabre\Event\Promise;
 use function Sabre\Event\coroutine;
 
 class Project
 {
-    /**
+     /**
      * An associative array [string => PhpDocument]
      * that maps URIs to loaded PhpDocuments
      *
@@ -33,49 +39,15 @@ class Project
     private $references = [];
 
     /**
-     * Instance of the PHP parser
-     *
-     * @var Parser
+     * @var PhpDocumentFactory
      */
-    private $parser;
-
-    /**
-     * The DocBlockFactory instance to parse docblocks
-     *
-     * @var DocBlockFactory
-     */
-    private $docBlockFactory;
-
-    /**
-     * The DefinitionResolver instance to resolve reference nodes to Definitions
-     *
-     * @var DefinitionResolver
-     */
-    private $definitionResolver;
-
-    /**
-     * Reference to the language server client interface
-     *
-     * @var LanguageClient
-     */
-    private $client;
-
-    /**
-     * The client's capabilities
-     *
-     * @var ClientCapabilities
-     */
-    private $clientCapabilities;
-
+    private $documentFactory;
+    
     public function __construct(LanguageClient $client, ClientCapabilities $clientCapabilities)
     {
-        $this->client = $client;
-        $this->clientCapabilities = $clientCapabilities;
-        $this->parser = new Parser;
-        $this->docBlockFactory = DocBlockFactory::createInstance();
-        $this->definitionResolver = new DefinitionResolver($this);
+        $this->documentFactory = new PhpDocumentFactory($client, $this, $clientCapabilities);
     }
-
+    
     /**
      * Returns the document indicated by uri.
      * Returns null if the document if not loaded.
@@ -89,86 +61,14 @@ class Project
     }
 
     /**
-     * Returns the document indicated by uri.
-     * If the document is not open, loads it.
+     * Ensures a document is added to the list of open documents.
      *
-     * @param string $uri
-     * @return Promise <PhpDocument>
-     */
-    public function getOrLoadDocument(string $uri)
-    {
-        return isset($this->documents[$uri]) ? Promise\resolve($this->documents[$uri]) : $this->loadDocument($uri);
-    }
-
-    /**
-     * Loads the document by doing a textDocument/xcontent request to the client.
-     * If the client does not support textDocument/xcontent, tries to read the file from the file system.
-     * The document is NOT added to the list of open documents, but definitions are registered.
-     *
-     * @param string $uri
-     * @return Promise <PhpDocument>
-     */
-    public function loadDocument(string $uri): Promise
-    {
-        return coroutine(function () use ($uri) {
-            $limit = 150000;
-            if ($this->clientCapabilities->xcontentProvider) {
-                $content = (yield $this->client->textDocument->xcontent(new TextDocumentIdentifier($uri)))->text;
-                $size = strlen($content);
-                if ($size > $limit) {
-                    throw new ContentTooLargeException($uri, $size, $limit);
-                }
-            } else {
-                $path = uriToPath($uri);
-                $size = filesize($path);
-                if ($size > $limit) {
-                    throw new ContentTooLargeException($uri, $size, $limit);
-                }
-                $content = file_get_contents($path);
-            }
-            if (isset($this->documents[$uri])) {
-                $document = $this->documents[$uri];
-                $document->updateContent($content);
-            } else {
-                $document = new PhpDocument(
-                    $uri,
-                    $content,
-                    $this,
-                    $this->client,
-                    $this->parser,
-                    $this->docBlockFactory,
-                    $this->definitionResolver
-                );
-            }
-            return $document;
-        });
-    }
-
-    /**
-     * Ensures a document is loaded and added to the list of open documents.
-     *
-     * @param string $uri
-     * @param string $content
+     * @param PhpDocument $document
      * @return void
      */
-    public function openDocument(string $uri, string $content)
+    public function addDocument(PhpDocument $document)
     {
-        if (isset($this->documents[$uri])) {
-            $document = $this->documents[$uri];
-            $document->updateContent($content);
-        } else {
-            $document = new PhpDocument(
-                $uri,
-                $content,
-                $this,
-                $this->client,
-                $this->parser,
-                $this->docBlockFactory,
-                $this->definitionResolver
-            );
-            $this->documents[$uri] = $document;
-        }
-        return $document;
+        $this->documents[$document->getUri()] = $document;
     }
 
     /**
@@ -353,5 +253,97 @@ class Project
     public function isDefined(string $fqn): bool
     {
         return isset($this->definitions[$fqn]);
+    }
+
+    /**
+     * Returns the document indicated by uri.
+     * If the document is not open, loads it.
+     *
+     * @param string $uri
+     * @return Promise <PhpDocument>
+     */
+    public function getOrLoadDocument(string $uri)
+    {
+        $document = $this->getDocument($uri);
+        return isset($document) ? Promise\resolve($document) : $this->loadDocument($uri);
+    }
+
+    /**
+     * Loads the document by doing a textDocument/xcontent request to the client.
+     * If the client does not support textDocument/xcontent, tries to read the file from the file system.
+     * The document is NOT added to the list of open documents, but definitions are registered.
+     *
+     * @param string $uri
+     * @return Promise <PhpDocument>
+     */
+    public function loadDocument(string $uri): Promise
+    {
+        return $this->documentFactory->loadDocument($uri);
+        
+    }
+
+    /**
+     * Ensures a document is loaded and added to the list of open documents.
+     *
+     * @param string $uri
+     * @param string $content
+     * @return void
+     */
+    public function openDocument(string $uri, string $content)
+    {
+        return $this->documentFactory->createDocument($uri, $content);
+    }
+
+      /**
+     * Returns the reference nodes for any node
+     * The references node MAY be in other documents, check the ownerDocument attribute
+     *
+     * @param Node2 $node
+     * @return Promise <Node[]>
+     */
+    public function getReferenceNodesByNode(Node $node): Promise
+    {
+        return coroutine(function () use ($node) {
+            // Variables always stay in the boundary of the file and need to be searched inside their function scope
+            // by traversing the AST
+            if (
+                $node instanceof Variable
+                || $node instanceof Param
+                || $node instanceof ClosureUse
+            ) {
+                if ($node->name instanceof \PhpParserNode\Expr) {
+                    return null;
+                }
+                // Find function/method/closure scope
+                $n = $node;
+                while (isset($n) && !($n instanceof FunctionLike)) {
+                    $n = $n->getAttribute('parentNode');
+                }
+                if (!isset($n)) {
+                    $n = $node->getAttribute('ownerDocument');
+                }
+                $traverser = new NodeTraverser();
+                $refCollector = new VariableReferencesCollector($node->name);
+                $traverser->addVisitor($refCollector);
+                $traverser->traverse($n->getStmts());
+                return $refCollector->nodes;
+            }
+            // Definition with a global FQN
+            $fqn = DefinitionResolver::getDefinedFqn($node);
+            if ($fqn === null) {
+                return [];
+            }
+            $refDocuments = yield $this->getReferenceDocuments($fqn);
+            $nodes = [];
+            foreach ($refDocuments as $document) {
+                $refs = $document->getReferenceNodesByFqn($fqn);
+                if ($refs !== null) {
+                    foreach ($refs as $ref) {
+                        $nodes[] = $ref;
+                    }
+                }
+            }
+            return $nodes;
+        });
     }
 }

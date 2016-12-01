@@ -7,8 +7,6 @@ use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\{Server, Client, LanguageClient, Project};
 use LanguageServer\Protocol\{
-    TextDocumentIdentifier,
-    TextDocumentItem,
     VersionedTextDocumentIdentifier,
     TextDocumentContentChangeEvent,
     Range,
