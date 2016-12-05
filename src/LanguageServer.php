@@ -238,42 +238,43 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
 
             $startTime = microtime(true);
 
-            // Parse PHP files
-            foreach ($uris as $i => $uri) {
-                if ($this->documentLoader->isOpen($uri)) {
-                    continue;
-                }
-
-                // Give LS to the chance to handle requests while indexing
-                yield timeout();
-                $this->client->window->logMessage(
-                    MessageType::LOG,
-                    "Parsing file $i/$count: {$uri}"
-                );
-                try {
-                    $document = yield $this->documentLoader->load($uri);
-                    if (!$document->isVendored()) {
-                        $this->client->textDocument->publishDiagnostics($uri, $document->getDiagnostics());
+            foreach (['Collecting definitions and static references', 'Collecting dynamic references'] as $run) {
+                $this->client->window->logMessage(MessageType::INFO, $run);
+                foreach ($uris as $i => $uri) {
+                    if ($this->documentLoader->isOpen($uri)) {
+                        continue;
                     }
-                } catch (ContentTooLargeException $e) {
-                    $this->client->window->logMessage(
-                        MessageType::INFO,
-                        "Ignoring file {$uri} because it exceeds size limit of {$e->limit} bytes ({$e->size})"
-                    );
-                } catch (Exception $e) {
-                    $this->client->window->logMessage(
-                        MessageType::ERROR,
-                        "Error parsing file {$uri}: " . (string)$e
-                    );
-                }
-            }
 
-            $duration = (int)(microtime(true) - $startTime);
-            $mem = (int)(memory_get_usage(true) / (1024 * 1024));
-            $this->client->window->logMessage(
-                MessageType::INFO,
-                "All $count PHP files parsed in $duration seconds. $mem MiB allocated."
-            );
+                    // Give LS to the chance to handle requests while indexing
+                    yield timeout();
+                    $this->client->window->logMessage(
+                        MessageType::LOG,
+                        "Parsing file $i/$count: {$uri}"
+                    );
+                    try {
+                        $document = yield $this->documentLoader->load($uri);
+                        if (!$document->isVendored()) {
+                            $this->client->textDocument->publishDiagnostics($uri, $document->getDiagnostics());
+                        }
+                    } catch (ContentTooLargeException $e) {
+                        $this->client->window->logMessage(
+                            MessageType::INFO,
+                            "Ignoring file {$uri} because it exceeds size limit of {$e->limit} bytes ({$e->size})"
+                        );
+                    } catch (Exception $e) {
+                        $this->client->window->logMessage(
+                            MessageType::ERROR,
+                            "Error parsing file {$uri}: " . (string)$e
+                        );
+                    }
+                }
+                $duration = (int)(microtime(true) - $startTime);
+                $mem = (int)(memory_get_usage(true) / (1024 * 1024));
+                $this->client->window->logMessage(
+                    MessageType::INFO,
+                    "All $count PHP files parsed in $duration seconds. $mem MiB allocated."
+                );
+            }
         });
     }
 }
