@@ -183,29 +183,33 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     private function indexProject(): Promise
     {
         return coroutine(function () {
-            $textDocuments = yield $this->findPhpFiles();
-            $count = count($textDocuments);
+            $pattern = Path::makeAbsolute('**/{*.php,composer.lock}', $this->rootPath);
+            $phpPattern = Path::makeAbsolute('**/*.php', $this->rootPath);
+            $composerLockPattern = Path::makeAbsolute('**/composer.lock', $this->rootPath);
+            $uris = yield $this->findFiles($pattern);
+            $count = count($uris);
 
             $startTime = microtime(true);
 
-            foreach ($textDocuments as $i => $textDocument) {
+            foreach ($uris as $i => $uri) {
                 // Give LS to the chance to handle requests while indexing
                 yield timeout();
+                if (Glob::match())
                 $this->client->window->logMessage(
                     MessageType::LOG,
-                    "Parsing file $i/$count: {$textDocument->uri}"
+                    "Parsing file $i/$count: {$uri}"
                 );
                 try {
-                    yield $this->project->loadDocument($textDocument->uri);
+                    yield $this->project->loadDocument($uri);
                 } catch (ContentTooLargeException $e) {
                     $this->client->window->logMessage(
                         MessageType::INFO,
-                        "Ignoring file {$textDocument->uri} because it exceeds size limit of {$e->limit} bytes ({$e->size})"
+                        "Ignoring file {$uri} because it exceeds size limit of {$e->limit} bytes ({$e->size})"
                     );
                 } catch (Exception $e) {
                     $this->client->window->logMessage(
                         MessageType::ERROR,
-                        "Error parsing file {$textDocument->uri}: " . (string)$e
+                        "Error parsing file {$uri}: " . (string)$e
                     );
                 }
             }
@@ -223,29 +227,29 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
      * Returns all PHP files in the workspace.
      * If the client does not support workspace/files, it falls back to searching the file system directly.
      *
-     * @return Promise <TextDocumentIdentifier[]>
+     * @param string $pattern
+     * @return Promise <string[]>
      */
-    private function findPhpFiles(): Promise
+    private function findFiles(string $pattern): Promise
     {
         return coroutine(function () {
-            $textDocuments = [];
-            $pattern = Path::makeAbsolute('**/*.php', $this->rootPath);
+            $uris = [];
             if ($this->clientCapabilities->xfilesProvider) {
                 // Use xfiles request
                 foreach (yield $this->client->workspace->xfiles() as $textDocument) {
                     $path = Uri\parse($textDocument->uri)['path'];
                     if (Glob::match($path, $pattern)) {
-                        $textDocuments[] = $textDocument;
+                        $uris[] = $textDocument->uri;
                     }
                 }
             } else {
                 // Use the file system
                 foreach (new GlobIterator($pattern) as $path) {
-                    $textDocuments[] = new TextDocumentIdentifier(pathToUri($path));
+                    $uris[] = pathToUri($path);
                     yield timeout();
                 }
             }
-            return $textDocuments;
+            return $uris;
         });
     }
 }

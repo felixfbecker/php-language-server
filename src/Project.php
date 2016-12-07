@@ -19,6 +19,14 @@ class Project
     private $documents = [];
 
     /**
+     * Associative array from package identifier to index
+     * The empty string represents the project itself
+     *
+     * @var Index[]
+     */
+    private $indexes = [];
+
+    /**
      * An associative array that maps fully qualified symbol names to Definitions
      *
      * @var Definition[]
