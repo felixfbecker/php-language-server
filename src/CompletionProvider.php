@@ -132,34 +132,25 @@ class CompletionProvider
             || $node instanceof Node\Expr\StaticPropertyFetch
             || $node instanceof Node\Expr\ClassConstFetch
         ) {
-            if (!is_string($node->name)) {
-                // If the name is an Error node, just filter by the class
-                if ($node instanceof Node\Expr\MethodCall || $node instanceof Node\Expr\PropertyFetch) {
-                    // For instances, resolve the variable type
-                    $prefixes = DefinitionResolver::getFqnsFromType(
-                        $this->definitionResolver->resolveExpressionNodeToType($node->var)
-                    );
-                } else {
-                    $prefixes = [$node->class instanceof Node\Name ? (string)$node->class : ''];
-                }
-                // If we are just filtering by the class, add the appropiate operator to the prefix
-                // to filter the type of symbol
-                foreach ($prefixes as &$prefix) {
-                    if ($node instanceof Node\Expr\MethodCall || $node instanceof Node\Expr\PropertyFetch) {
-                        $prefix .= '->';
-                    } else if ($node instanceof Node\Expr\StaticCall || $node instanceof Node\Expr\ClassConstFetch) {
-                        $prefix .= '::';
-                    } else if ($node instanceof Node\Expr\StaticPropertyFetch) {
-                        $prefix .= '::$';
-                    }
-                }
+            // If the name is an Error node, just filter by the class
+            if ($node instanceof Node\Expr\MethodCall || $node instanceof Node\Expr\PropertyFetch) {
+                // For instances, resolve the variable type
+                $prefixes = DefinitionResolver::getFqnsFromType(
+                    $this->definitionResolver->resolveExpressionNodeToType($node->var)
+                );
             } else {
-                $prefix = $this->definitionResolver->resolveReferenceNodeToFqn($node);
-                $index = ($index = strpos($prefix, '->')) ? $index : strpos($prefix, '::');
-                if ($index) {
-                    $prefix = substr($prefix, 0, $index + 2);
+                $prefixes = [$node->class instanceof \PhpParser\Node\Name ? (string)$node->class : ''];
+            }
+            // If we are just filtering by the class, add the appropiate operator to the prefix
+            // to filter the type of symbol
+            foreach ($prefixes as &$prefix) {
+                if ($node instanceof Node\Expr\MethodCall || $node instanceof Node\Expr\PropertyFetch) {
+                    $prefix .= '->';
+                } else if ($node instanceof Node\Expr\StaticCall || $node instanceof Node\Expr\ClassConstFetch) {
+                    $prefix .= '::';
+                } else if ($node instanceof Node\Expr\StaticPropertyFetch) {
+                    $prefix .= '::$';
                 }
-                $prefixes = $prefix !== null ? [$prefix] : [];
             }
 
             foreach ($this->project->getDefinitions() as $fqn => $def) {

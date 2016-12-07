@@ -201,12 +201,6 @@ class CompletionTest extends TestCase
         )->wait();
         $this->assertEquals(new CompletionList([
             new CompletionItem(
-                'TEST_CLASS_CONST',
-                CompletionItemKind::VARIABLE,
-                'int',
-                'Anim labore veniam consectetur laboris minim quis aute aute esse nulla ad.'
-            ),
-            new CompletionItem(
                 'staticTestProperty',
                 CompletionItemKind::PROPERTY,
                 '\TestClass[]',
@@ -214,12 +208,6 @@ class CompletionTest extends TestCase
                 null,
                 null,
                 '$staticTestProperty'
-            ),
-            new CompletionItem(
-                'staticTestMethod',
-                CompletionItemKind::METHOD,
-                'mixed',
-                'Do magna consequat veniam minim proident eiusmod incididunt aute proident.'
             )
         ], true), $items);
     }
