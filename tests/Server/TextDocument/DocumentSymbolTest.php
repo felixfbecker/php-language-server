@@ -18,6 +18,7 @@ class DocumentSymbolTest extends ServerTestCase
         $result = $this->textDocument->documentSymbol(new TextDocumentIdentifier($uri))->wait();
         // @codingStandardsIgnoreStart
         $this->assertEquals([
+            new SymbolInformation('TestNamespace',      SymbolKind::NAMESPACE, $this->getDefinitionLocation('TestNamespace'),                                ''),
             new SymbolInformation('TEST_CONST',         SymbolKind::CONSTANT,  $this->getDefinitionLocation('TestNamespace\\TEST_CONST'),                    'TestNamespace'),
             new SymbolInformation('TestClass',          SymbolKind::CLASS_,    $this->getDefinitionLocation('TestNamespace\\TestClass'),                     'TestNamespace'),
             new SymbolInformation('TEST_CLASS_CONST',   SymbolKind::CONSTANT,  $this->getDefinitionLocation('TestNamespace\\TestClass::TEST_CLASS_CONST'),   'TestNamespace\\TestClass'),

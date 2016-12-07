@@ -3,7 +3,7 @@ declare(strict_types = 1);
 
 namespace LanguageServer\Server;
 
-use LanguageServer\{LanguageClient, Project, PhpDocument, DefinitionResolver};
+use LanguageServer\{LanguageClient, Project, PhpDocument, DefinitionResolver, CompletionProvider};
 use PhpParser\PrettyPrinter\Standard as PrettyPrinter;
 use PhpParser\Node;
 use LanguageServer\Protocol\{
@@ -18,7 +18,10 @@ use LanguageServer\Protocol\{
     SymbolInformation,
     ReferenceContext,
     Hover,
-    MarkedString
+    MarkedString,
+    SymbolKind,
+    CompletionItem,
+    CompletionItemKind
 };
 use Sabre\Event\Promise;
 use function Sabre\Event\coroutine;
@@ -50,12 +53,18 @@ class TextDocument
      */
     private $definitionResolver;
 
+    /**
+     * @var CompletionProvider
+     */
+    private $completionProvider;
+
     public function __construct(Project $project, LanguageClient $client)
     {
         $this->project = $project;
         $this->client = $client;
         $this->prettyPrinter = new PrettyPrinter();
         $this->definitionResolver = new DefinitionResolver($project);
+        $this->completionProvider = new CompletionProvider($this->definitionResolver, $project);
     }
 
     /**
@@ -208,6 +217,28 @@ class TextDocument
                 $contents[] = $def->documentation;
             }
             return new Hover($contents, $range);
+        });
+    }
+
+    /**
+     * The Completion request is sent from the client to the server to compute completion items at a given cursor
+     * position. Completion items are presented in the IntelliSense user interface. If computing full completion items
+     * is expensive, servers can additionally provide a handler for the completion item resolve request
+     * ('completionItem/resolve'). This request is sent when a completion item is selected in the user interface. A
+     * typically use case is for example: the 'textDocument/completion' request doesn't fill in the documentation
+     * property for returned completion items since it is expensive to compute. When the item is selected in the user
+     * interface then a 'completionItem/resolve' request is sent with the selected completion item as a param. The
+     * returned completion item should have the documentation property filled in.
+     *
+     * @param TextDocumentIdentifier The text document
+     * @param Position $position The position
+     * @return Promise <CompletionItem[]|CompletionList>
+     */
+    public function completion(TextDocumentIdentifier $textDocument, Position $position): Promise
+    {
+        return coroutine(function () use ($textDocument, $position) {
+            $document = yield $this->project->getOrLoadDocument($textDocument->uri);
+            return $this->completionProvider->provideCompletion($document, $position);
         });
     }
 }

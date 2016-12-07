@@ -11,14 +11,14 @@ class CompletionOptions
      * The server provides support to resolve additional information for a completion
      * item.
      *
-     * @var bool
+     * @var bool|null
      */
     public $resolveProvider;
 
     /**
      * The characters that trigger completion automatically.
      *
-     * @var string|null
+     * @var string[]|null
      */
     public $triggerCharacters;
 }

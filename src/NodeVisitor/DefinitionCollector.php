@@ -42,13 +42,6 @@ class DefinitionCollector extends NodeVisitorAbstract
             return;
         }
         $this->nodes[$fqn] = $node;
-        $def = new Definition;
-        $def->fqn = $fqn;
-        $def->symbolInformation = SymbolInformation::fromNode($node, $fqn);
-        $def->type = $this->definitionResolver->getTypeFromNode($node);
-        $def->declarationLine = $this->definitionResolver->getDeclarationLineFromNode($node);
-        $def->documentation = $this->definitionResolver->getDocumentationFromNode($node);
-
-        $this->definitions[$fqn] = $def;
+        $this->definitions[$fqn] = $this->definitionResolver->createDefinitionFromNode($node, $fqn);
     }
 }

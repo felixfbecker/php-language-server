@@ -290,11 +290,30 @@ class PhpDocument
      */
     public function getNodeAtPosition(Position $position)
     {
+        if ($this->stmts === null) {
+            return null;
+        }
         $traverser = new NodeTraverser;
         $finder = new NodeAtPositionFinder($position);
         $traverser->addVisitor($finder);
         $traverser->traverse($this->stmts);
         return $finder->node;
+    }
+
+    /**
+     * Returns a range of the content
+     *
+     * @param Range $range
+     * @return string|null
+     */
+    public function getRange(Range $range)
+    {
+        if ($this->content === null) {
+            return null;
+        }
+        $start = $range->start->toOffset($this->content);
+        $length = $range->end->toOffset($this->content) - $start;
+        return substr($this->content, $start, $length);
     }
 
     /**
