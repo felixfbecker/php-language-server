@@ -4,12 +4,10 @@ declare(strict_types = 1);
 namespace LanguageServer;
 
 use PhpParser\Node;
-use phpDocumentor\Reflection\Types;
 use LanguageServer\Protocol\{
     TextEdit,
     Range,
     Position,
-    SymbolKind,
     CompletionList,
     CompletionItem,
     CompletionItemKind
@@ -156,8 +154,12 @@ class CompletionProvider
                     }
                 }
             } else {
-                $fqn = $this->definitionResolver->resolveReferenceNodeToFqn($node);
-                $prefixes = $fqn !== null ? [$fqn] : [];
+                $prefix = $this->definitionResolver->resolveReferenceNodeToFqn($node);
+                $index = ($index = strpos($prefix, '->')) ? $index : strpos($prefix, '::');
+                if ($index) {
+                    $prefix = substr($prefix, 0, $index + 2);
+                }
+                $prefixes = $prefix !== null ? [$prefix] : [];
             }
 
             foreach ($this->project->getDefinitions() as $fqn => $def) {
