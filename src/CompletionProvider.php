@@ -139,7 +139,7 @@ class CompletionProvider
                     $this->definitionResolver->resolveExpressionNodeToType($node->var)
                 );
             } else {
-                $prefixes = [$node->class instanceof \PhpParser\Node\Name ? (string)$node->class : ''];
+                $prefixes = [$node->class instanceof Node\Name ? (string)$node->class : ''];
             }
             // If we are just filtering by the class, add the appropiate operator to the prefix
             // to filter the type of symbol
