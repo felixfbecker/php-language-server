@@ -22,6 +22,7 @@ use function Sabre\Event\coroutine;
 use Exception;
 use Throwable;
 use Webmozart\PathUtil\Path;
+use Webmozart\Glob\Glob;
 use Sabre\Uri;
 
 class LanguageServer extends AdvancedJsonRpc\Dispatcher
@@ -92,7 +93,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                 } catch (Throwable $e) {
                     // If an unexpected error occured, send back an INTERNAL_ERROR error response
                     $error = new AdvancedJsonRpc\Error(
-                        $e->getMessage(),
+                        (string)$e,
                         AdvancedJsonRpc\ErrorCode::INTERNAL_ERROR,
                         null,
                         $e
@@ -120,9 +121,9 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
      * @param ClientCapabilities $capabilities The capabilities provided by the client (editor)
      * @param string|null $rootPath The rootPath of the workspace. Is null if no folder is open.
      * @param int|null $processId The process Id of the parent process that started the server. Is null if the process has not been started by another process. If the parent process is not alive then the server should exit (see exit notification) its process.
-     * @return InitializeResult
+     * @return Promise <InitializeResult>
      */
-    public function initialize(ClientCapabilities $capabilities, string $rootPath = null, int $processId = null): InitializeResult
+    public function initialize(ClientCapabilities $capabilities, string $rootPath = null, int $processId = null): Promise
     {
         return coroutine(function () use ($capabilities, $rootPath, $processId) {
 
@@ -140,11 +141,10 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                 $this->contentRetriever = new FileSystemContentRetriever;
             }
 
-            // start building project index
             if ($rootPath !== null) {
                 $pattern = Path::makeAbsolute('**/{*.php,composer.lock}', $this->rootPath);
                 $composerLockPattern = Path::makeAbsolute('**/composer.lock}', $this->rootPath);
-                $uris = yield $this->findFiles($pattern);
+                $uris = yield $this->filesFinder->find($pattern);
 
                 // Find composer.lock files
                 $composerLockFiles = [];

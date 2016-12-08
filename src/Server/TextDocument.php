@@ -58,12 +58,14 @@ class TextDocument
      */
     private $completionProvider;
 
+    private $openDocuments = [];
+
     public function __construct(Project $project, LanguageClient $client)
     {
         $this->project = $project;
         $this->client = $client;
         $this->prettyPrinter = new PrettyPrinter();
-        $this->definitionResolver = new DefinitionResolver($project);
+        $this->definitionResolver = new DefinitionResolver();
         $this->completionProvider = new CompletionProvider($this->definitionResolver, $project);
     }
 
@@ -95,7 +97,10 @@ class TextDocument
      */
     public function didOpen(TextDocumentItem $textDocument)
     {
-        $this->project->openDocument($textDocument->uri, $textDocument->text);
+        $document = $this->project->openDocument($textDocument->uri, $textDocument->text);
+        if (!$document->isVendored()) {
+            $this->client->textDocument->publishDiagnostics($uri, $document->getDiagnostics());
+        }
     }
 
     /**
@@ -107,7 +112,9 @@ class TextDocument
      */
     public function didChange(VersionedTextDocumentIdentifier $textDocument, array $contentChanges)
     {
-        $this->project->getDocument($textDocument->uri)->updateContent($contentChanges[0]->text);
+        $document = $this->project->getDocument($textDocument->uri);
+        $document->updateContent($contentChanges[0]->text);
+        $this->client->publishDiagnostics($document->getDiagnostics());
     }
 
     /**

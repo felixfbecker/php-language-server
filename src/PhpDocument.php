@@ -23,22 +23,6 @@ use Sabre\Uri;
 class PhpDocument
 {
     /**
-     * The LanguageClient instance (to report errors etc)
-     *
-     * @var LanguageClient
-     */
-    private $client;
-
-    /**
-     * The Project this document belongs to (to register definitions etc)
-     *
-     * @var Project
-     */
-    public $project;
-    // for whatever reason I get "cannot access private property" error if $project is not public
-    // https://github.com/felixfbecker/php-language-server/pull/49#issuecomment-252427359
-
-    /**
      * The PHPParser instance
      *
      * @var Parser
@@ -102,27 +86,28 @@ class PhpDocument
     private $referenceNodes;
 
     /**
+     * Diagnostics for this document that were collected while parsing
+     *
+     * @var Diagnostic[]
+     */
+    private $diagnostics;
+
+    /**
      * @param string          $uri             The URI of the document
      * @param string          $content         The content of the document
-     * @param Project         $project         The Project this document belongs to (to load other documents)
      * @param Index           $index           The Index to register definitions etc
-     * @param LanguageClient  $client          The LanguageClient instance (to report errors etc)
      * @param Parser          $parser          The PHPParser instance
      * @param DocBlockFactory $docBlockFactory The DocBlockFactory instance to parse docblocks
      */
     public function __construct(
         string $uri,
         string $content,
-        Project $project,
         Index $index,
-        LanguageClient $client,
         Parser $parser,
         DocBlockFactory $docBlockFactory,
         DefinitionResolver $definitionResolver
     ) {
         $this->uri = $uri;
-        $this->project = $project;
-        $this->client = $client;
         $this->parser = $parser;
         $this->docBlockFactory = $docBlockFactory;
         $this->definitionResolver = $definitionResolver;
@@ -156,9 +141,9 @@ class PhpDocument
         $errorHandler = new ErrorHandler\Collecting;
         $stmts = $this->parser->parse($content, $errorHandler);
 
-        $diagnostics = [];
+        $this->diagnostics = [];
         foreach ($errorHandler->getErrors() as $error) {
-            $diagnostics[] = Diagnostic::fromError($error, $this->content, DiagnosticSeverity::ERROR, 'php');
+            $this->diagnostics[] = Diagnostic::fromError($error, $this->content, DiagnosticSeverity::ERROR, 'php');
         }
 
         // $stmts can be null in case of a fatal parsing error
@@ -182,7 +167,7 @@ class PhpDocument
 
             // Report errors from parsing docblocks
             foreach ($docBlockParser->errors as $error) {
-                $diagnostics[] = Diagnostic::fromError($error, $this->content, DiagnosticSeverity::WARNING, 'php');
+                $this->diagnostics[] = Diagnostic::fromError($error, $this->content, DiagnosticSeverity::WARNING, 'php');
             }
 
             $traverser = new NodeTraverser;
@@ -224,10 +209,6 @@ class PhpDocument
 
             $this->stmts = $stmts;
         }
-
-        if (!$this->isVendored()) {
-            $this->client->textDocument->publishDiagnostics($this->uri, $diagnostics);
-        }
     }
 
     /**
@@ -262,6 +243,16 @@ class PhpDocument
     public function getContent()
     {
         return $this->content;
+    }
+
+    /**
+     * Returns this document's diagnostics
+     *
+     * @return Diagnostic[]
+     */
+    public function getContent()
+    {
+        return $this->diagnostics;
     }
 
     /**
@@ -358,58 +349,5 @@ class PhpDocument
     public function isDefined(string $fqn): bool
     {
         return isset($this->definitions[$fqn]);
-    }
-
-    /**
-     * Returns the reference nodes for any node
-     * The references node MAY be in other documents, check the ownerDocument attribute
-     *
-     * @param Node $node
-     * @return Promise <Node[]>
-     */
-    public function getReferenceNodesByNode(Node $node): Promise
-    {
-        return coroutine(function () use ($node) {
-            // Variables always stay in the boundary of the file and need to be searched inside their function scope
-            // by traversing the AST
-            if (
-                $node instanceof Node\Expr\Variable
-                || $node instanceof Node\Param
-                || $node instanceof Node\Expr\ClosureUse
-            ) {
-                if ($node->name instanceof Node\Expr) {
-                    return null;
-                }
-                // Find function/method/closure scope
-                $n = $node;
-                while (isset($n) && !($n instanceof Node\FunctionLike)) {
-                    $n = $n->getAttribute('parentNode');
-                }
-                if (!isset($n)) {
-                    $n = $node->getAttribute('ownerDocument');
-                }
-                $traverser = new NodeTraverser;
-                $refCollector = new VariableReferencesCollector($node->name);
-                $traverser->addVisitor($refCollector);
-                $traverser->traverse($n->getStmts());
-                return $refCollector->nodes;
-            }
-            // Definition with a global FQN
-            $fqn = DefinitionResolver::getDefinedFqn($node);
-            if ($fqn === null) {
-                return [];
-            }
-            $refDocuments = yield $this->project->getReferenceDocuments($fqn);
-            $nodes = [];
-            foreach ($refDocuments as $document) {
-                $refs = $document->getReferenceNodesByFqn($fqn);
-                if ($refs !== null) {
-                    foreach ($refs as $ref) {
-                        $nodes[] = $ref;
-                    }
-                }
-            }
-            return $nodes;
-        });
     }
 }

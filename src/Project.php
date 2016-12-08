@@ -21,11 +21,24 @@ class Project
 
     /**
      * Associative array from package identifier to index
-     * The empty string represents the project itself
      *
      * @var Index[]
      */
-    private $indexes = [];
+    private $dependencyIndexes = [];
+
+    /**
+     * The Index for the project itself
+     *
+     * @var Index
+     */
+    private $sourceIndex;
+
+    /**
+     * The Index for PHP built-ins
+     *
+     * @var Index
+     */
+    private $stubIndex;
 
     /**
      * An associative array that maps fully qualified symbol names to Definitions
@@ -84,23 +97,24 @@ class Project
      * @param LanguageClient     $client             Used for logging and reporting diagnostics
      * @param ClientCapabilities $clientCapabilities Used for determining the right content/find strategies
      * @param string|null        $rootPath           Used for finding files in the project
-     * @param string[]           $composerLockFiles  An array of URIs of composer.lock files in the project
+     * @param string             $composerLockFiles  An array of URI => parsed composer.lock JSON
      */
     public function __construct(
         LanguageClient $client,
         ClientCapabilities $clientCapabilities,
         array $composerLockFiles,
+        DefinitionResolver $definitionResolver,
         string $rootPath = null
     ) {
         $this->client = $client;
         $this->rootPath = $rootPath;
         $this->parser = new Parser;
         $this->docBlockFactory = DocBlockFactory::createInstance();
-        $this->definitionResolver = new DefinitionResolver($this);
+        $this->definitionResolver = $definitionResolver;
         $this->contentRetriever = $contentRetriever;
         $this->composerLockFiles = $composerLockFiles;
         // The index for the project itself
-        $this->indexes[''] = new Index;
+        $this->projectIndex = new Index;
     }
 
     /**
@@ -128,80 +142,6 @@ class Project
     }
 
     /**
-     * Loads the document by doing a textDocument/xcontent request to the client.
-     * If the client does not support textDocument/xcontent, tries to read the file from the file system.
-     * The document is NOT added to the list of open documents, but definitions are registered.
-     *
-     * @param string $uri
-     * @return Promise <PhpDocument>
-     */
-    public function loadDocument(string $uri): Promise
-    {
-        return coroutine(function () use ($uri) {
-
-            $limit = 150000;
-            $content = yield $this->contentRetriever->retrieve($uri);
-            $size = strlen($content);
-            if ($size > $limit) {
-                throw new ContentTooLargeException($uri, $size, $limit);
-            }
-
-            /** The key for the index */
-            $key = '';
-
-            // If the document is part of a dependency
-            if (preg_match($u['path'], '/vendor\/(\w+\/\w+)/', $matches)) {
-                if ($this->composerLockFiles === null) {
-                    throw new \Exception('composer.lock files were not read yet');
-                }
-                // Try to find closest composer.lock
-                $u = Uri\parse($uri);
-                $packageName = $matches[1];
-                do {
-                    $u['path'] = dirname($u['path']);
-                    foreach ($this->composerLockFiles as $lockFileUri => $lockFileContent) {
-                        $lockFileUri = Uri\parse($composerLockFile);
-                        $lockFileUri['path'] = dirname($lockFileUri['path']);
-                        if ($u == $lockFileUri) {
-                            // Found it, find out package version
-                            foreach ($lockFileContent->packages as $package) {
-                                if ($package->name === $packageName) {
-                                    $key = $packageName . ':' . $package->version;
-                                    break;
-                                }
-                            }
-                            break;
-                        }
-                    }
-                } while (!empty(trim($u, '/')));
-            }
-
-            // If there is no index for the key yet, create one
-            if (!isset($this->indexes[$key])) {
-                $this->indexes[$key] = new Index;
-            }
-            $index = $this->indexes[$key];
-
-            if (isset($this->documents[$uri])) {
-                $document = $this->documents[$uri];
-                $document->updateContent($content);
-            } else {
-                $document = new PhpDocument(
-                    $uri,
-                    $content,
-                    $this,
-                    $index,
-                    $this->client,
-                    $this->parser,
-                    $this->docBlockFactory,
-                    $this->definitionResolver
-                );
-            }
-            return $document;
-        });
-    }
-
-    /**
      * Ensures a document is loaded and added to the list of open documents.
      *
      * @param string $uri
@@ -217,8 +157,6 @@ class Project
             $document = new PhpDocument(
                 $uri,
                 $content,
-                $this,
-                $this->client,
                 $this->parser,
                 $this->docBlockFactory,
                 $this->definitionResolver
@@ -258,7 +196,19 @@ class Project
      */
     public function getDefinitions()
     {
-        return $this->definitions;
+        $defs = [];
+        foreach ($this->sourceIndex->getDefinitions() as $def) {
+            $defs[] = $def;
+        }
+        foreach ($this->dependenciesIndexes as $dependencyIndex) {
+            foreach ($dependencyIndex->getDefinitions() as $def) {
+                $defs[] = $def;
+            }
+        }
+        foreach ($this->stubIndex->getDefinitions() as $def) {
+            $defs[] = $def;
+        }
+        return $defs;
     }
 
     /**
@@ -270,9 +220,12 @@ class Project
      */
     public function getDefinition(string $fqn, $globalFallback = false)
     {
-        if (isset($this->definitions[$fqn])) {
-            return $this->definitions[$fqn];
-        } else if ($globalFallback) {
+        foreach (array_merge([$this->sourceIndex, $this->stubsIndex], ...$this->dependencyIndexes) as $index) {
+            if ($index->isDefined($fqn)) {
+                return $index->getDefinition($fqn);
+            }
+        }
+        if ($globalFallback) {
             $parts = explode('\\', $fqn);
             $fqn = end($parts);
             return $this->getDefinition($fqn);
@@ -410,5 +363,57 @@ class Project
     public function isDefined(string $fqn): bool
     {
         return isset($this->definitions[$fqn]);
+    }
+
+    /**
+     * Returns the reference nodes for any node
+     *
+     * @param Node $node
+     * @return Promise <Node[]>
+     */
+    public function getReferenceNodesByNode(Node $node): Promise
+    {
+        return coroutine(function () use ($node) {
+            // Variables always stay in the boundary of the file and need to be searched inside their function scope
+            // by traversing the AST
+            if (
+                $node instanceof Node\Expr\Variable
+                || $node instanceof Node\Param
+                || $node instanceof Node\Expr\ClosureUse
+            ) {
+                if ($node->name instanceof Node\Expr) {
+                    return null;
+                }
+                // Find function/method/closure scope
+                $n = $node;
+                while (isset($n) && !($n instanceof Node\FunctionLike)) {
+                    $n = $n->getAttribute('parentNode');
+                }
+                if (!isset($n)) {
+                    $n = $node->getAttribute('ownerDocument');
+                }
+                $traverser = new NodeTraverser;
+                $refCollector = new VariableReferencesCollector($node->name);
+                $traverser->addVisitor($refCollector);
+                $traverser->traverse($n->getStmts());
+                return $refCollector->nodes;
+            }
+            // Definition with a global FQN
+            $fqn = DefinitionResolver::getDefinedFqn($node);
+            if ($fqn === null) {
+                return [];
+            }
+            $refDocuments = yield $this->getReferenceDocuments($fqn);
+            $nodes = [];
+            foreach ($refDocuments as $document) {
+                $refs = $document->getReferenceNodesByFqn($fqn);
+                if ($refs !== null) {
+                    foreach ($refs as $ref) {
+                        $nodes[] = $ref;
+                    }
+                }
+            }
+            return $nodes;
+        });
     }
 }

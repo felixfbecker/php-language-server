@@ -150,15 +150,4 @@ class Index
     {
         $this->references = $references;
     }
-
-    /**
-     * Returns true if the given FQN is defined in the project
-     *
-     * @param string $fqn The fully qualified name of the symbol
-     * @return bool
-     */
-    public function isDefined(string $fqn): bool
-    {
-        return isset($this->definitions[$fqn]);
-    }
 }
