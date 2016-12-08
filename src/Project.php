@@ -5,6 +5,7 @@ namespace LanguageServer;
 
 use LanguageServer\Protocol\{SymbolInformation, TextDocumentIdentifier, ClientCapabilities};
 use phpDocumentor\Reflection\DocBlockFactory;
+use LanguageServer\ContentRetriever\{ContentRetriever, ClientContentRetriever, FileSystemContentRetriever};
 use Sabre\Event\Promise;
 use function Sabre\Event\coroutine;
 
@@ -67,6 +68,13 @@ class Project
      */
     private $clientCapabilities;
 
+    /**
+     * The content retriever
+     *
+     * @var ContentRetriever
+     */
+    private $contentRetriever;
+
     public function __construct(LanguageClient $client, ClientCapabilities $clientCapabilities)
     {
         $this->client = $client;
@@ -74,6 +82,11 @@ class Project
         $this->parser = new Parser;
         $this->docBlockFactory = DocBlockFactory::createInstance();
         $this->definitionResolver = new DefinitionResolver($this);
+        if ($clientCapabilities->xcontentProvider) {
+            $this->contentRetriever = new ClientContentRetriever($client);
+        } else {
+            $this->contentRetriever = new FileSystemContentRetriever;
+        }
     }
 
     /**
@@ -112,19 +125,10 @@ class Project
     {
         return coroutine(function () use ($uri) {
             $limit = 150000;
-            if ($this->clientCapabilities->xcontentProvider) {
-                $content = (yield $this->client->textDocument->xcontent(new TextDocumentIdentifier($uri)))->text;
-                $size = strlen($content);
-                if ($size > $limit) {
-                    throw new ContentTooLargeException($uri, $size, $limit);
-                }
-            } else {
-                $path = uriToPath($uri);
-                $size = filesize($path);
-                if ($size > $limit) {
-                    throw new ContentTooLargeException($uri, $size, $limit);
-                }
-                $content = file_get_contents($path);
+            $content = yield $this->contentRetriever->retrieve($uri);
+            $size = strlen($content);
+            if ($size > $limit) {
+                throw new ContentTooLargeException($uri, $size, $limit);
             }
             if (isset($this->documents[$uri])) {
                 $document = $this->documents[$uri];
