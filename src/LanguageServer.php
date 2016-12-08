@@ -14,13 +14,13 @@ use LanguageServer\Protocol\{
     TextDocumentIdentifier,
     CompletionOptions
 };
+use LanguageServer\FilesFinder\{FilesFinder, ClientFilesFinder, FileSystemFilesFinder};
+use LanguageServer\ContentRetriever\{ContentRetriever, ClientContentRetriever, FileSystemContentRetriever};
 use AdvancedJsonRpc;
 use Sabre\Event\{Loop, Promise};
 use function Sabre\Event\coroutine;
 use Exception;
 use Throwable;
-use Webmozart\Glob\Iterator\GlobIterator;
-use Webmozart\Glob\Glob;
 use Webmozart\PathUtil\Path;
 use Sabre\Uri;
 
@@ -45,11 +45,6 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     public $completionItem;
     public $codeLens;
 
-    /**
-     * ClientCapabilities
-     */
-    private $clientCapabilities;
-
     private $protocolReader;
     private $protocolWriter;
     private $client;
@@ -61,6 +56,16 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
      */
     private $rootPath;
     private $project;
+
+    /**
+     * @var FilesFinder
+     */
+    private $filesFinder;
+
+    /**
+     * @var ContentRetriever
+     */
+    private $contentRetrieverFinder;
 
     public function __construct(ProtocolReader $reader, ProtocolWriter $writer)
     {
@@ -120,8 +125,20 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     public function initialize(ClientCapabilities $capabilities, string $rootPath = null, int $processId = null): InitializeResult
     {
         $this->rootPath = $rootPath;
-        $this->clientCapabilities = $capabilities;
-        $this->project = new Project($this->client, $capabilities);
+
+        if ($capabilities->xfilesProvider) {
+            $this->filesFinder = new ClientFilesFinder($this->client);
+        } else {
+            $this->filesFinder = new FileSystemFilesFinder;
+        }
+
+        if ($capabilities->xcontentProvider) {
+            $this->contentRetriever = new ClientContentRetriever($this->client);
+        } else {
+            $this->contentRetriever = new FileSystemContentRetriever;
+        }
+
+        $this->project = new Project($this->client, $this->contentRetriever);
         $this->textDocument = new Server\TextDocument($this->project, $this->client);
         $this->workspace = new Server\Workspace($this->project, $this->client);
 
@@ -183,29 +200,30 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     private function indexProject(): Promise
     {
         return coroutine(function () {
-            $textDocuments = yield $this->findPhpFiles();
-            $count = count($textDocuments);
+            $pattern = Path::makeAbsolute('**/*.php', $this->rootPath);
+            $uris = yield $this->filesFinder->find($pattern);
+            $count = count($uris);
 
             $startTime = microtime(true);
 
-            foreach ($textDocuments as $i => $textDocument) {
+            foreach ($uris as $i => $uri) {
                 // Give LS to the chance to handle requests while indexing
                 yield timeout();
                 $this->client->window->logMessage(
                     MessageType::LOG,
-                    "Parsing file $i/$count: {$textDocument->uri}"
+                    "Parsing file $i/$count: {$uri}"
                 );
                 try {
-                    yield $this->project->loadDocument($textDocument->uri);
+                    yield $this->project->loadDocument($uri);
                 } catch (ContentTooLargeException $e) {
                     $this->client->window->logMessage(
                         MessageType::INFO,
-                        "Ignoring file {$textDocument->uri} because it exceeds size limit of {$e->limit} bytes ({$e->size})"
+                        "Ignoring file {$uri} because it exceeds size limit of {$e->limit} bytes ({$e->size})"
                     );
                 } catch (Exception $e) {
                     $this->client->window->logMessage(
                         MessageType::ERROR,
-                        "Error parsing file {$textDocument->uri}: " . (string)$e
+                        "Error parsing file {$uri}: " . (string)$e
                     );
                 }
             }
@@ -216,36 +234,6 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                 MessageType::INFO,
                 "All $count PHP files parsed in $duration seconds. $mem MiB allocated."
             );
-        });
-    }
-
-    /**
-     * Returns all PHP files in the workspace.
-     * If the client does not support workspace/files, it falls back to searching the file system directly.
-     *
-     * @return Promise <TextDocumentIdentifier[]>
-     */
-    private function findPhpFiles(): Promise
-    {
-        return coroutine(function () {
-            $textDocuments = [];
-            $pattern = Path::makeAbsolute('**/*.php', $this->rootPath);
-            if ($this->clientCapabilities->xfilesProvider) {
-                // Use xfiles request
-                foreach (yield $this->client->workspace->xfiles() as $textDocument) {
-                    $path = Uri\parse($textDocument->uri)['path'];
-                    if (Glob::match($path, $pattern)) {
-                        $textDocuments[] = $textDocument;
-                    }
-                }
-            } else {
-                // Use the file system
-                foreach (new GlobIterator($pattern) as $path) {
-                    $textDocuments[] = new TextDocumentIdentifier(pathToUri($path));
-                    yield timeout();
-                }
-            }
-            return $textDocuments;
         });
     }
 }

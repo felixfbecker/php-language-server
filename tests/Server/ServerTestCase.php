@@ -6,6 +6,7 @@ namespace LanguageServer\Tests\Server;
 use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\{Server, LanguageClient, Project};
+use LanguageServer\ContentRetriever\FileSystemContentRetriever;
 use LanguageServer\Protocol\{Position, Location, Range, ClientCapabilities};
 use function LanguageServer\pathToUri;
 use Sabre\Event\Promise;
@@ -44,7 +45,7 @@ abstract class ServerTestCase extends TestCase
     public function setUp()
     {
         $client             = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
-        $this->project      = new Project($client, new ClientCapabilities);
+        $this->project      = new Project($client, new FileSystemContentRetriever);
         $this->textDocument = new Server\TextDocument($this->project, $client);
         $this->workspace    = new Server\Workspace($this->project, $client);
 

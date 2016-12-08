@@ -5,7 +5,7 @@ namespace LanguageServer;
 
 use LanguageServer\Protocol\{SymbolInformation, TextDocumentIdentifier, ClientCapabilities};
 use phpDocumentor\Reflection\DocBlockFactory;
-use LanguageServer\ContentRetriever\{ContentRetriever, ClientContentRetriever, FileSystemContentRetriever};
+use LanguageServer\ContentRetriever\ContentRetriever;
 use Sabre\Event\Promise;
 use function Sabre\Event\coroutine;
 
@@ -62,31 +62,19 @@ class Project
     private $client;
 
     /**
-     * The client's capabilities
-     *
-     * @var ClientCapabilities
-     */
-    private $clientCapabilities;
-
-    /**
      * The content retriever
      *
      * @var ContentRetriever
      */
     private $contentRetriever;
 
-    public function __construct(LanguageClient $client, ClientCapabilities $clientCapabilities)
+    public function __construct(LanguageClient $client, ContentRetriever $contentRetriever)
     {
         $this->client = $client;
-        $this->clientCapabilities = $clientCapabilities;
         $this->parser = new Parser;
         $this->docBlockFactory = DocBlockFactory::createInstance();
         $this->definitionResolver = new DefinitionResolver($this);
-        if ($clientCapabilities->xcontentProvider) {
-            $this->contentRetriever = new ClientContentRetriever($client);
-        } else {
-            $this->contentRetriever = new FileSystemContentRetriever;
-        }
+        $this->contentRetriever = $contentRetriever;
     }
 
     /**
