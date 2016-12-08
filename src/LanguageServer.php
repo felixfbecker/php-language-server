@@ -14,13 +14,13 @@ use LanguageServer\Protocol\{
     TextDocumentIdentifier,
     CompletionOptions
 };
+use LanguageServer\FilesFinder\{FilesFinder, ClientFilesFinder, FileSystemFilesFinder};
+use LanguageServer\ContentRetriever\{ContentRetriever, ClientContentRetriever, FileSystemContentRetriever};
 use AdvancedJsonRpc;
 use Sabre\Event\{Loop, Promise};
 use function Sabre\Event\coroutine;
 use Exception;
 use Throwable;
-use Webmozart\Glob\Iterator\GlobIterator;
-use Webmozart\Glob\Glob;
 use Webmozart\PathUtil\Path;
 use Sabre\Uri;
 
@@ -45,11 +45,6 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     public $completionItem;
     public $codeLens;
 
-    /**
-     * ClientCapabilities
-     */
-    private $clientCapabilities;
-
     private $protocolReader;
     private $protocolWriter;
     private $client;
@@ -61,6 +56,16 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
      */
     private $rootPath;
     private $project;
+
+    /**
+     * @var FilesFinder
+     */
+    private $filesFinder;
+
+    /**
+     * @var ContentRetriever
+     */
+    private $contentRetrieverFinder;
 
     public function __construct(ProtocolReader $reader, ProtocolWriter $writer)
     {
@@ -120,12 +125,25 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     public function initialize(ClientCapabilities $capabilities, string $rootPath = null, int $processId = null): InitializeResult
     {
         return coroutine(function () use ($capabilities, $rootPath, $processId) {
+
             $this->rootPath = $rootPath;
-            $this->clientCapabilities = $capabilities;
+
+            if ($capabilities->xfilesProvider) {
+                $this->filesFinder = new ClientFilesFinder($this->client);
+            } else {
+                $this->filesFinder = new FileSystemFilesFinder;
+            }
+
+            if ($capabilities->xcontentProvider) {
+                $this->contentRetriever = new ClientContentRetriever($this->client);
+            } else {
+                $this->contentRetriever = new FileSystemContentRetriever;
+            }
 
             // start building project index
             if ($rootPath !== null) {
                 $pattern = Path::makeAbsolute('**/{*.php,composer.lock}', $this->rootPath);
+                $composerLockPattern = Path::makeAbsolute('**/composer.lock}', $this->rootPath);
                 $uris = yield $this->findFiles($pattern);
 
                 // Find composer.lock files
@@ -133,7 +151,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                 $phpFiles = [];
                 foreach ($uris as $uri) {
                     if (Glob::match(Uri\parse($uri)['path'], $composerLockPattern)) {
-                        $composerLockFiles[$uri] = json_decode(yield $this->getFileContent($uri));
+                        $composerLockFiles[$uri] = json_decode(yield $this->contentRetriever->retrieve($uri));
                     } else {
                         $phpFiles[] = $uri;
                     }
@@ -207,6 +225,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
 
             // Parse PHP files
             foreach ($phpFiles as $i => $uri) {
+
                 // Give LS to the chance to handle requests while indexing
                 yield timeout();
                 $path = Uri\parse($uri);
@@ -235,36 +254,6 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                 MessageType::INFO,
                 "All $count PHP files parsed in $duration seconds. $mem MiB allocated."
             );
-        });
-    }
-
-    /**
-     * Returns all PHP files in the workspace.
-     * If the client does not support workspace/files, it falls back to searching the file system directly.
-     *
-     * @param string $pattern
-     * @return Promise <string[]>
-     */
-    private function findFiles(string $pattern): Promise
-    {
-        return coroutine(function () {
-            $uris = [];
-            if ($this->clientCapabilities->xfilesProvider) {
-                // Use xfiles request
-                foreach (yield $this->client->workspace->xfiles() as $textDocument) {
-                    $path = Uri\parse($textDocument->uri)['path'];
-                    if (Glob::match($path, $pattern)) {
-                        $uris[] = $textDocument->uri;
-                    }
-                }
-            } else {
-                // Use the file system
-                foreach (new GlobIterator($pattern) as $path) {
-                    $uris[] = pathToUri($path);
-                    yield timeout();
-                }
-            }
-            return $uris;
         });
     }
 }

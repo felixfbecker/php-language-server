@@ -6,6 +6,7 @@ namespace LanguageServer\Tests\Server\TextDocument;
 use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\{Server, LanguageClient, Project, CompletionProvider};
+use LanguageServer\ContentRetriever\FileSystemContentRetriever;
 use LanguageServer\Protocol\{
     TextDocumentIdentifier,
     TextEdit,
@@ -33,7 +34,7 @@ class CompletionTest extends TestCase
     public function setUp()
     {
         $client = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
-        $this->project = new Project($client, new ClientCapabilities);
+        $this->project = new Project($client, new FileSystemContentRetriever);
         $this->project->loadDocument(pathToUri(__DIR__ . '/../../../fixtures/global_symbols.php'))->wait();
         $this->project->loadDocument(pathToUri(__DIR__ . '/../../../fixtures/symbols.php'))->wait();
         $this->textDocument = new Server\TextDocument($this->project, $client);
@@ -255,9 +256,24 @@ class CompletionTest extends TestCase
         )->wait();
         $this->assertEquals(new CompletionList([
             new CompletionItem(
+                'TEST_CLASS_CONST',
+                CompletionItemKind::VARIABLE,
+                'int',
+                'Anim labore veniam consectetur laboris minim quis aute aute esse nulla ad.'
+            ),
+            new CompletionItem(
+                'staticTestProperty',
+                CompletionItemKind::PROPERTY,
+                '\TestClass[]',
+                'Lorem excepteur officia sit anim velit veniam enim.',
+                null,
+                null,
+                '$staticTestProperty'
+            ),
+            new CompletionItem(
                 'staticTestMethod',
                 CompletionItemKind::METHOD,
-                'mixed', // Method return type
+                'mixed',
                 'Do magna consequat veniam minim proident eiusmod incididunt aute proident.'
             )
         ], true), $items);
@@ -277,6 +293,21 @@ class CompletionTest extends TestCase
                 CompletionItemKind::VARIABLE,
                 'int',
                 'Anim labore veniam consectetur laboris minim quis aute aute esse nulla ad.'
+            ),
+            new CompletionItem(
+                'staticTestProperty',
+                CompletionItemKind::PROPERTY,
+                '\TestClass[]',
+                'Lorem excepteur officia sit anim velit veniam enim.',
+                null,
+                null,
+                '$staticTestProperty'
+            ),
+            new CompletionItem(
+                'staticTestMethod',
+                CompletionItemKind::METHOD,
+                'mixed',
+                'Do magna consequat veniam minim proident eiusmod incididunt aute proident.'
             )
         ], true), $items);
     }

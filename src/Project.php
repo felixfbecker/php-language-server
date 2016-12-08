@@ -5,6 +5,7 @@ namespace LanguageServer;
 
 use LanguageServer\Protocol\{SymbolInformation, TextDocumentIdentifier, ClientCapabilities};
 use phpDocumentor\Reflection\DocBlockFactory;
+use LanguageServer\ContentRetriever\ContentRetriever;
 use Sabre\Event\Promise;
 use function Sabre\Event\coroutine;
 
@@ -69,11 +70,11 @@ class Project
     private $client;
 
     /**
-     * The client's capabilities
+     * The content retriever
      *
-     * @var ClientCapabilities
+     * @var ContentRetriever
      */
-    private $clientCapabilities;
+    private $contentRetriever;
 
     private $rootPath;
 
@@ -92,11 +93,11 @@ class Project
         string $rootPath = null
     ) {
         $this->client = $client;
-        $this->clientCapabilities = $clientCapabilities;
         $this->rootPath = $rootPath;
         $this->parser = new Parser;
         $this->docBlockFactory = DocBlockFactory::createInstance();
         $this->definitionResolver = new DefinitionResolver($this);
+        $this->contentRetriever = $contentRetriever;
         $this->composerLockFiles = $composerLockFiles;
         // The index for the project itself
         $this->indexes[''] = new Index;
@@ -137,8 +138,9 @@ class Project
     public function loadDocument(string $uri): Promise
     {
         return coroutine(function () use ($uri) {
+
             $limit = 150000;
-            $content = yield $this->getFileContent($uri);
+            $content = yield $this->contentRetriever->retrieve($uri);
             $size = strlen($content);
             if ($size > $limit) {
                 throw new ContentTooLargeException($uri, $size, $limit);
@@ -197,25 +199,6 @@ class Project
             }
             return $document;
         });
-    }
-
-    /**
-     * Gets the content of a document depending on the client's capabilities
-     *
-     * @param string $uri
-     * @return Promise
-     */
-    public function getFileContent(string $uri): Promise
-    {
-        if ($this->clientCapabilities->xcontentProvider) {
-            return $this->client->textDocument->xcontent(new TextDocumentIdentifier($uri))
-                ->then(function (TextDocumentItem $textDocumentItem) {
-                    return $textDocumentItem->text;
-                });
-        } else {
-            $path = uriToPath($uri);
-            return Promise\resolve(file_get_contents($path));
-        }
     }
 
     /**
@@ -427,97 +410,5 @@ class Project
     public function isDefined(string $fqn): bool
     {
         return isset($this->definitions[$fqn]);
-    }
-
-    /**
-     * Will read and parse all source files in the project and add them to the appropiate indexes
-     *
-     * @return Promise <void>
-     */
-    private function index(): Promise
-    {
-        return coroutine(function () {
-
-            $pattern = Path::makeAbsolute('**/{*.php,composer.lock}', $this->rootPath);
-            $phpPattern = Path::makeAbsolute('**/*.php', $this->rootPath);
-            $composerLockPattern = Path::makeAbsolute('**/composer.lock', $this->rootPath);
-
-            $uris = yield $this->findFiles($pattern);
-            $count = count($uris);
-
-            $startTime = microtime(true);
-
-            // Find composer.lock files
-            $this->composerLockFiles = [];
-            foreach ($uris as $uri) {
-                if (Glob::match($path, $composerLockPattern)) {
-                    $this->composerLockFiles[$uri] = json_decode(yield $this->getFileContent($uri));
-                }
-            }
-
-            // Parse PHP files
-            foreach ($uris as $i => $uri) {
-                // Give LS to the chance to handle requests while indexing
-                yield timeout();
-                $path = Uri\parse($uri);
-                if (!Glob::match($path, $phpPattern)) {
-                    continue;
-                }
-                $this->client->window->logMessage(
-                    MessageType::LOG,
-                    "Parsing file $i/$count: {$uri}"
-                );
-                try {
-                    yield $this->project->loadDocument($uri);
-                } catch (ContentTooLargeException $e) {
-                    $this->client->window->logMessage(
-                        MessageType::INFO,
-                        "Ignoring file {$uri} because it exceeds size limit of {$e->limit} bytes ({$e->size})"
-                    );
-                } catch (Exception $e) {
-                    $this->client->window->logMessage(
-                        MessageType::ERROR,
-                        "Error parsing file {$uri}: " . (string)$e
-                    );
-                }
-            }
-
-            $duration = (int)(microtime(true) - $startTime);
-            $mem = (int)(memory_get_usage(true) / (1024 * 1024));
-            $this->client->window->logMessage(
-                MessageType::INFO,
-                "All $count PHP files parsed in $duration seconds. $mem MiB allocated."
-            );
-        });
-    }
-
-    /**
-     * Returns all PHP files in the workspace.
-     * If the client does not support workspace/files, it falls back to searching the file system directly.
-     *
-     * @param string $pattern
-     * @return Promise <string[]>
-     */
-    private function findFiles(string $pattern): Promise
-    {
-        return coroutine(function () {
-            $uris = [];
-            if ($this->clientCapabilities->xfilesProvider) {
-                // Use xfiles request
-                foreach (yield $this->client->workspace->xfiles() as $textDocument) {
-                    $path = Uri\parse($textDocument->uri)['path'];
-                    if (Glob::match($path, $pattern)) {
-                        $uris[] = $textDocument->uri;
-                    }
-                }
-            } else {
-                // Use the file system
-                foreach (new GlobIterator($pattern) as $path) {
-                    $uris[] = pathToUri($path);
-                    yield timeout();
-                }
-            }
-            return $uris;
-        });
     }
 }

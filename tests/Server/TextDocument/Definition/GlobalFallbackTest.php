@@ -6,6 +6,7 @@ namespace LanguageServer\Tests\Server\TextDocument\Definition;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\Tests\Server\ServerTestCase;
 use LanguageServer\{Server, LanguageClient, Project};
+use LanguageServer\ContentRetriever\FileSystemContentRetriever;
 use LanguageServer\Protocol\{TextDocumentIdentifier, Position, Range, Location, ClientCapabilities};
 use Sabre\Event\Promise;
 
@@ -14,7 +15,7 @@ class GlobalFallbackTest extends ServerTestCase
     public function setUp()
     {
         $client = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
-        $project = new Project($client, new ClientCapabilities);
+        $project = new Project($client, new FileSystemContentRetriever);
         $this->textDocument = new Server\TextDocument($project, $client);
         $project->openDocument('global_fallback', file_get_contents(__DIR__ . '/../../../../fixtures/global_fallback.php'));
         $project->openDocument('global_symbols', file_get_contents(__DIR__ . '/../../../../fixtures/global_symbols.php'));
