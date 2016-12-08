@@ -6,6 +6,7 @@ namespace LanguageServer\Tests\Server\TextDocument;
 use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\{Server, Client, LanguageClient, Project, ClientHandler};
+use LanguageServer\ContentRetriever\FileSystemContentRetriever;
 use LanguageServer\Protocol\{TextDocumentIdentifier, TextDocumentItem, DiagnosticSeverity, ClientCapabilities};
 use Sabre\Event\Promise;
 use JsonMapper;
@@ -35,7 +36,7 @@ class ParseErrorsTest extends TestCase
                 return Promise\resolve(null);
             }
         };
-        $project = new Project($client, new ClientCapabilities);
+        $project = new Project($client, new FileSystemContentRetriever);
         $this->textDocument = new Server\TextDocument($project, $client);
     }
 

@@ -6,6 +6,7 @@ namespace LanguageServer\Tests\Server\TextDocument;
 use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\{Server, Client, LanguageClient, Project};
+use LanguageServer\ContentRetriever\FileSystemContentRetriever;
 use LanguageServer\Protocol\{
     TextDocumentIdentifier,
     TextDocumentItem,
@@ -21,7 +22,7 @@ class DidChangeTest extends TestCase
     public function test()
     {
         $client = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
-        $project = new Project($client, new ClientCapabilities);
+        $project = new Project($client, new FileSystemContentRetriever);
         $textDocument = new Server\TextDocument($project, $client);
         $phpDocument = $project->openDocument('whatever', "<?php\necho 'Hello, World'\n");
 

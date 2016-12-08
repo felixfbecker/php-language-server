@@ -1,18 +1,18 @@
 <?php
 declare(strict_types = 1);
 
-namespace LanguageServer\ContentRetriever;
+namespace LanguageServer\FilesFinder;
 
 use Sabre\Event\Promise;
 
 /**
- * Interface for retrieving the content of a text document
+ * Interface for finding files in the workspace
  */
 interface FilesFinder
 {
     /**
      * Returns all files in the workspace that match a glob.
-     * If the client does not support workspace/files, it falls back to searching the file system directly.
+     * If the client does not support workspace/xfiles, it falls back to searching the file system directly.
      *
      * @param string $glob
      * @return Promise <string[]>

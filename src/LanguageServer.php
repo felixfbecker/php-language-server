@@ -15,6 +15,7 @@ use LanguageServer\Protocol\{
     CompletionOptions
 };
 use LanguageServer\FilesFinder\{FilesFinder, ClientFilesFinder, FileSystemFilesFinder};
+use LanguageServer\ContentRetriever\{ContentRetriever, ClientContentRetriever, FileSystemContentRetriever};
 use AdvancedJsonRpc;
 use Sabre\Event\{Loop, Promise};
 use function Sabre\Event\coroutine;
@@ -44,11 +45,6 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     public $completionItem;
     public $codeLens;
 
-    /**
-     * ClientCapabilities
-     */
-    private $clientCapabilities;
-
     private $protocolReader;
     private $protocolWriter;
     private $client;
@@ -65,6 +61,11 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
      * @var FilesFinder
      */
     private $filesFinder;
+
+    /**
+     * @var ContentRetriever
+     */
+    private $contentRetrieverFinder;
 
     public function __construct(ProtocolReader $reader, ProtocolWriter $writer)
     {
@@ -111,11 +112,6 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
         });
         $this->protocolWriter = $writer;
         $this->client = new LanguageClient($reader, $writer);
-        if ($this->clientCapabilities->xfilesProvider) {
-            $this->filesFinder = new ClientFilesFinder($this->client);
-        } else {
-            $this->filesFinder = new FileSystemFilesFinder;
-        }
     }
 
     /**
@@ -129,8 +125,20 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     public function initialize(ClientCapabilities $capabilities, string $rootPath = null, int $processId = null): InitializeResult
     {
         $this->rootPath = $rootPath;
-        $this->clientCapabilities = $capabilities;
-        $this->project = new Project($this->client, $capabilities);
+
+        if ($capabilities->xfilesProvider) {
+            $this->filesFinder = new ClientFilesFinder($this->client);
+        } else {
+            $this->filesFinder = new FileSystemFilesFinder;
+        }
+
+        if ($capabilities->xcontentProvider) {
+            $this->contentRetriever = new ClientContentRetriever($this->client);
+        } else {
+            $this->contentRetriever = new FileSystemContentRetriever;
+        }
+
+        $this->project = new Project($this->client, $this->contentRetriever);
         $this->textDocument = new Server\TextDocument($this->project, $this->client);
         $this->workspace = new Server\Workspace($this->project, $this->client);
 
@@ -193,29 +201,29 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     {
         return coroutine(function () {
             $pattern = Path::makeAbsolute('**/*.php', $this->rootPath);
-            $textDocuments = yield $this->filesFinder->find($pattern);
-            $count = count($textDocuments);
+            $uris = yield $this->filesFinder->find($pattern);
+            $count = count($uris);
 
             $startTime = microtime(true);
 
-            foreach ($textDocuments as $i => $textDocument) {
+            foreach ($uris as $i => $uri) {
                 // Give LS to the chance to handle requests while indexing
                 yield timeout();
                 $this->client->window->logMessage(
                     MessageType::LOG,
-                    "Parsing file $i/$count: {$textDocument->uri}"
+                    "Parsing file $i/$count: {$uri}"
                 );
                 try {
-                    yield $this->project->loadDocument($textDocument->uri);
+                    yield $this->project->loadDocument($uri);
                 } catch (ContentTooLargeException $e) {
                     $this->client->window->logMessage(
                         MessageType::INFO,
-                        "Ignoring file {$textDocument->uri} because it exceeds size limit of {$e->limit} bytes ({$e->size})"
+                        "Ignoring file {$uri} because it exceeds size limit of {$e->limit} bytes ({$e->size})"
                     );
                 } catch (Exception $e) {
                     $this->client->window->logMessage(
                         MessageType::ERROR,
-                        "Error parsing file {$textDocument->uri}: " . (string)$e
+                        "Error parsing file {$uri}: " . (string)$e
                     );
                 }
             }
@@ -228,5 +236,4 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
             );
         });
     }
-
 }

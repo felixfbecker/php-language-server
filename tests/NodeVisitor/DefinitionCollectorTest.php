@@ -7,6 +7,7 @@ use PHPUnit\Framework\TestCase;
 use PhpParser\{NodeTraverser, Node};
 use PhpParser\NodeVisitor\NameResolver;
 use LanguageServer\{LanguageClient, Project, PhpDocument, Parser, DefinitionResolver};
+use LanguageServer\ContentRetriever\FileSystemContentRetriever;
 use LanguageServer\Protocol\ClientCapabilities;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\NodeVisitor\{ReferencesAdder, DefinitionCollector};
@@ -17,7 +18,7 @@ class DefinitionCollectorTest extends TestCase
     public function testCollectsSymbols()
     {
         $client = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
-        $project = new Project($client, new ClientCapabilities);
+        $project = new Project($client, new FileSystemContentRetriever);
         $parser = new Parser;
         $uri = pathToUri(realpath(__DIR__ . '/../../fixtures/symbols.php'));
         $document = $project->loadDocument($uri)->wait();
@@ -57,7 +58,7 @@ class DefinitionCollectorTest extends TestCase
     public function testDoesNotCollectReferences()
     {
         $client = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
-        $project = new Project($client, new ClientCapabilities);
+        $project = new Project($client, new FileSystemContentRetriever);
         $parser = new Parser;
         $uri = pathToUri(realpath(__DIR__ . '/../../fixtures/references.php'));
         $document = $project->loadDocument($uri)->wait();

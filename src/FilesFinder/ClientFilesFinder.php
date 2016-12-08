@@ -1,10 +1,12 @@
 <?php
 declare(strict_types = 1);
 
-namespace LanguageServer\ContentRetriever;
+namespace LanguageServer\FilesFinder;
 
 use LanguageServer\LanguageClient;
 use Sabre\Event\Promise;
+use Sabre\Uri;
+use Webmozart\Glob\Glob;
 
 /**
  * Retrieves file content from the client through a textDocument/xcontent request
@@ -31,13 +33,13 @@ class ClientFilesFinder implements FilesFinder
      * @param string $glob
      * @return Promise <string[]> The URIs
      */
-    private function find(string $glob): Promise
+    public function find(string $glob): Promise
     {
-        return $this->client->workspace->xfiles()->then(function (array $textDocuments) {
+        return $this->client->workspace->xfiles()->then(function (array $textDocuments) use ($glob) {
             $uris = [];
             foreach ($textDocuments as $textDocument) {
                 $path = Uri\parse($textDocument->uri)['path'];
-                if (Glob::match($path, $pattern)) {
+                if (Glob::match($path, $glob)) {
                     $uris[] = $textDocument->uri;
                 }
             }

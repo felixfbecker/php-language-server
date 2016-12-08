@@ -6,6 +6,7 @@ namespace LanguageServer\Tests\Server\TextDocument;
 use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\{Server, LanguageClient, Project, CompletionProvider};
+use LanguageServer\ContentRetriever\FileSystemContentRetriever;
 use LanguageServer\Protocol\{
     TextDocumentIdentifier,
     TextEdit,
@@ -33,7 +34,7 @@ class CompletionTest extends TestCase
     public function setUp()
     {
         $client = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
-        $this->project = new Project($client, new ClientCapabilities);
+        $this->project = new Project($client, new FileSystemContentRetriever);
         $this->project->loadDocument(pathToUri(__DIR__ . '/../../../fixtures/global_symbols.php'))->wait();
         $this->project->loadDocument(pathToUri(__DIR__ . '/../../../fixtures/symbols.php'))->wait();
         $this->textDocument = new Server\TextDocument($this->project, $client);

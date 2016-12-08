@@ -3,15 +3,16 @@ declare(strict_types = 1);
 
 namespace LanguageServer\FilesFinder;
 
-use Sabre\Event\Promise;
-use function LanguageServer\{uriToPath, timeout};
 use Webmozart\Glob\Iterator\GlobIterator;
+use Sabre\Event\Promise;
+use function Sabre\Event\coroutine;
+use function LanguageServer\{pathToUri, timeout};
 
-class FileSystemFindFinder implements FilesFinder
+class FileSystemFilesFinder implements FilesFinder
 {
     /**
      * Returns all files in the workspace that match a glob.
-     * If the client does not support workspace/files, it falls back to searching the file system directly.
+     * If the client does not support workspace/xfiles, it falls back to searching the file system directly.
      *
      * @param string $glob
      * @return Promise <string[]>
@@ -20,7 +21,7 @@ class FileSystemFindFinder implements FilesFinder
     {
         return coroutine(function () use ($glob) {
             $uris = [];
-            foreach (new GlobIterator($pattern) as $path) {
+            foreach (new GlobIterator($glob) as $path) {
                 $uris[] = pathToUri($path);
                 yield timeout();
             }
