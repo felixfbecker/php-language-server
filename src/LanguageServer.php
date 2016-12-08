@@ -119,38 +119,55 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
      */
     public function initialize(ClientCapabilities $capabilities, string $rootPath = null, int $processId = null): InitializeResult
     {
-        $this->rootPath = $rootPath;
-        $this->clientCapabilities = $capabilities;
-        $this->project = new Project($this->client, $capabilities);
-        $this->textDocument = new Server\TextDocument($this->project, $this->client);
-        $this->workspace = new Server\Workspace($this->project, $this->client);
+        return coroutine(function () use ($capabilities, $rootPath, $processId) {
+            $this->rootPath = $rootPath;
+            $this->clientCapabilities = $capabilities;
 
-        // start building project index
-        if ($rootPath !== null) {
-            $this->indexProject()->otherwise('\\LanguageServer\\crash');
-        }
+            // start building project index
+            if ($rootPath !== null) {
+                $pattern = Path::makeAbsolute('**/{*.php,composer.lock}', $this->rootPath);
+                $uris = yield $this->findFiles($pattern);
 
-        $serverCapabilities = new ServerCapabilities();
-        // Ask the client to return always full documents (because we need to rebuild the AST from scratch)
-        $serverCapabilities->textDocumentSync = TextDocumentSyncKind::FULL;
-        // Support "Find all symbols"
-        $serverCapabilities->documentSymbolProvider = true;
-        // Support "Find all symbols in workspace"
-        $serverCapabilities->workspaceSymbolProvider = true;
-        // Support "Format Code"
-        $serverCapabilities->documentFormattingProvider = true;
-        // Support "Go to definition"
-        $serverCapabilities->definitionProvider = true;
-        // Support "Find all references"
-        $serverCapabilities->referencesProvider = true;
-        // Support "Hover"
-        $serverCapabilities->hoverProvider = true;
-        // Support "Completion"
-        $serverCapabilities->completionProvider = new CompletionOptions;
-        $serverCapabilities->completionProvider->resolveProvider = false;
-        $serverCapabilities->completionProvider->triggerCharacters = ['$', '>'];
+                // Find composer.lock files
+                $composerLockFiles = [];
+                $phpFiles = [];
+                foreach ($uris as $uri) {
+                    if (Glob::match(Uri\parse($uri)['path'], $composerLockPattern)) {
+                        $composerLockFiles[$uri] = json_decode(yield $this->getFileContent($uri));
+                    } else {
+                        $phpFiles[] = $uri;
+                    }
+                }
 
-        return new InitializeResult($serverCapabilities);
+                $this->index($phpFiles)->otherwise('\\LanguageServer\\crash');
+            }
+
+            $this->project = new Project($this->client, $capabilities, $rootPath);
+            $this->textDocument = new Server\TextDocument($this->project, $this->client);
+            $this->workspace = new Server\Workspace($this->project, $this->client);
+
+            $serverCapabilities = new ServerCapabilities();
+            // Ask the client to return always full documents (because we need to rebuild the AST from scratch)
+            $serverCapabilities->textDocumentSync = TextDocumentSyncKind::FULL;
+            // Support "Find all symbols"
+            $serverCapabilities->documentSymbolProvider = true;
+            // Support "Find all symbols in workspace"
+            $serverCapabilities->workspaceSymbolProvider = true;
+            // Support "Format Code"
+            $serverCapabilities->documentFormattingProvider = true;
+            // Support "Go to definition"
+            $serverCapabilities->definitionProvider = true;
+            // Support "Find all references"
+            $serverCapabilities->referencesProvider = true;
+            // Support "Hover"
+            $serverCapabilities->hoverProvider = true;
+            // Support "Completion"
+            $serverCapabilities->completionProvider = new CompletionOptions;
+            $serverCapabilities->completionProvider->resolveProvider = false;
+            $serverCapabilities->completionProvider->triggerCharacters = ['$', '>'];
+
+            return new InitializeResult($serverCapabilities);
+        });
     }
 
     /**
@@ -176,25 +193,23 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     }
 
     /**
-     * Parses workspace files, one at a time.
+     * Will read and parse the passed source files in the project and add them to the appropiate indexes
      *
      * @return Promise <void>
      */
-    private function indexProject(): Promise
+    private function index(array $phpFiles): Promise
     {
         return coroutine(function () {
-            $pattern = Path::makeAbsolute('**/{*.php,composer.lock}', $this->rootPath);
-            $phpPattern = Path::makeAbsolute('**/*.php', $this->rootPath);
-            $composerLockPattern = Path::makeAbsolute('**/composer.lock', $this->rootPath);
-            $uris = yield $this->findFiles($pattern);
-            $count = count($uris);
+
+            $count = count($phpFiles);
 
             $startTime = microtime(true);
 
-            foreach ($uris as $i => $uri) {
+            // Parse PHP files
+            foreach ($phpFiles as $i => $uri) {
                 // Give LS to the chance to handle requests while indexing
                 yield timeout();
-                if (Glob::match())
+                $path = Uri\parse($uri);
                 $this->client->window->logMessage(
                     MessageType::LOG,
                     "Parsing file $i/$count: {$uri}"

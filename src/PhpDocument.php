@@ -104,7 +104,8 @@ class PhpDocument
     /**
      * @param string          $uri             The URI of the document
      * @param string          $content         The content of the document
-     * @param Project         $project         The Project this document belongs to (to register definitions etc)
+     * @param Project         $project         The Project this document belongs to (to load other documents)
+     * @param Index           $index           The Index to register definitions etc
      * @param LanguageClient  $client          The LanguageClient instance (to report errors etc)
      * @param Parser          $parser          The PHPParser instance
      * @param DocBlockFactory $docBlockFactory The DocBlockFactory instance to parse docblocks
@@ -113,6 +114,7 @@ class PhpDocument
         string $uri,
         string $content,
         Project $project,
+        Index $index,
         LanguageClient $client,
         Parser $parser,
         DocBlockFactory $docBlockFactory,
@@ -198,26 +200,26 @@ class PhpDocument
             // Unregister old definitions
             if (isset($this->definitions)) {
                 foreach ($this->definitions as $fqn => $definition) {
-                    $this->project->removeDefinition($fqn);
+                    $this->index->removeDefinition($fqn);
                 }
             }
             // Register this document on the project for all the symbols defined in it
             $this->definitions = $definitionCollector->definitions;
             $this->definitionNodes = $definitionCollector->nodes;
             foreach ($definitionCollector->definitions as $fqn => $definition) {
-                $this->project->setDefinition($fqn, $definition);
+                $this->index->setDefinition($fqn, $definition);
             }
 
             // Unregister old references
             if (isset($this->referenceNodes)) {
                 foreach ($this->referenceNodes as $fqn => $node) {
-                    $this->project->removeReferenceUri($fqn, $this->uri);
+                    $this->index->removeReferenceUri($fqn, $this->uri);
                 }
             }
             // Register this document on the project for references
             $this->referenceNodes = $referencesCollector->nodes;
             foreach ($referencesCollector->nodes as $fqn => $nodes) {
-                $this->project->addReferenceUri($fqn, $this->uri);
+                $this->index->addReferenceUri($fqn, $this->uri);
             }
 
             $this->stmts = $stmts;

@@ -75,13 +75,31 @@ class Project
      */
     private $clientCapabilities;
 
-    public function __construct(LanguageClient $client, ClientCapabilities $clientCapabilities)
-    {
+    private $rootPath;
+
+    private $composerLockFiles;
+
+    /**
+     * @param LanguageClient     $client             Used for logging and reporting diagnostics
+     * @param ClientCapabilities $clientCapabilities Used for determining the right content/find strategies
+     * @param string|null        $rootPath           Used for finding files in the project
+     * @param string[]           $composerLockFiles  An array of URIs of composer.lock files in the project
+     */
+    public function __construct(
+        LanguageClient $client,
+        ClientCapabilities $clientCapabilities,
+        array $composerLockFiles,
+        string $rootPath = null
+    ) {
         $this->client = $client;
         $this->clientCapabilities = $clientCapabilities;
+        $this->rootPath = $rootPath;
         $this->parser = new Parser;
         $this->docBlockFactory = DocBlockFactory::createInstance();
         $this->definitionResolver = new DefinitionResolver($this);
+        $this->composerLockFiles = $composerLockFiles;
+        // The index for the project itself
+        $this->indexes[''] = new Index;
     }
 
     /**
@@ -120,20 +138,48 @@ class Project
     {
         return coroutine(function () use ($uri) {
             $limit = 150000;
-            if ($this->clientCapabilities->xcontentProvider) {
-                $content = (yield $this->client->textDocument->xcontent(new TextDocumentIdentifier($uri)))->text;
-                $size = strlen($content);
-                if ($size > $limit) {
-                    throw new ContentTooLargeException($uri, $size, $limit);
-                }
-            } else {
-                $path = uriToPath($uri);
-                $size = filesize($path);
-                if ($size > $limit) {
-                    throw new ContentTooLargeException($uri, $size, $limit);
-                }
-                $content = file_get_contents($path);
+            $content = yield $this->getFileContent($uri);
+            $size = strlen($content);
+            if ($size > $limit) {
+                throw new ContentTooLargeException($uri, $size, $limit);
             }
+
+            /** The key for the index */
+            $key = '';
+
+            // If the document is part of a dependency
+            if (preg_match($u['path'], '/vendor\/(\w+\/\w+)/', $matches)) {
+                if ($this->composerLockFiles === null) {
+                    throw new \Exception('composer.lock files were not read yet');
+                }
+                // Try to find closest composer.lock
+                $u = Uri\parse($uri);
+                $packageName = $matches[1];
+                do {
+                    $u['path'] = dirname($u['path']);
+                    foreach ($this->composerLockFiles as $lockFileUri => $lockFileContent) {
+                        $lockFileUri = Uri\parse($composerLockFile);
+                        $lockFileUri['path'] = dirname($lockFileUri['path']);
+                        if ($u == $lockFileUri) {
+                            // Found it, find out package version
+                            foreach ($lockFileContent->packages as $package) {
+                                if ($package->name === $packageName) {
+                                    $key = $packageName . ':' . $package->version;
+                                    break;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                } while (!empty(trim($u, '/')));
+            }
+
+            // If there is no index for the key yet, create one
+            if (!isset($this->indexes[$key])) {
+                $this->indexes[$key] = new Index;
+            }
+            $index = $this->indexes[$key];
+
             if (isset($this->documents[$uri])) {
                 $document = $this->documents[$uri];
                 $document->updateContent($content);
@@ -142,6 +188,7 @@ class Project
                     $uri,
                     $content,
                     $this,
+                    $index,
                     $this->client,
                     $this->parser,
                     $this->docBlockFactory,
@@ -150,6 +197,25 @@ class Project
             }
             return $document;
         });
+    }
+
+    /**
+     * Gets the content of a document depending on the client's capabilities
+     *
+     * @param string $uri
+     * @return Promise
+     */
+    public function getFileContent(string $uri): Promise
+    {
+        if ($this->clientCapabilities->xcontentProvider) {
+            return $this->client->textDocument->xcontent(new TextDocumentIdentifier($uri))
+                ->then(function (TextDocumentItem $textDocumentItem) {
+                    return $textDocumentItem->text;
+                });
+        } else {
+            $path = uriToPath($uri);
+            return Promise\resolve(file_get_contents($path));
+        }
     }
 
     /**
@@ -361,5 +427,97 @@ class Project
     public function isDefined(string $fqn): bool
     {
         return isset($this->definitions[$fqn]);
+    }
+
+    /**
+     * Will read and parse all source files in the project and add them to the appropiate indexes
+     *
+     * @return Promise <void>
+     */
+    private function index(): Promise
+    {
+        return coroutine(function () {
+
+            $pattern = Path::makeAbsolute('**/{*.php,composer.lock}', $this->rootPath);
+            $phpPattern = Path::makeAbsolute('**/*.php', $this->rootPath);
+            $composerLockPattern = Path::makeAbsolute('**/composer.lock', $this->rootPath);
+
+            $uris = yield $this->findFiles($pattern);
+            $count = count($uris);
+
+            $startTime = microtime(true);
+
+            // Find composer.lock files
+            $this->composerLockFiles = [];
+            foreach ($uris as $uri) {
+                if (Glob::match($path, $composerLockPattern)) {
+                    $this->composerLockFiles[$uri] = json_decode(yield $this->getFileContent($uri));
+                }
+            }
+
+            // Parse PHP files
+            foreach ($uris as $i => $uri) {
+                // Give LS to the chance to handle requests while indexing
+                yield timeout();
+                $path = Uri\parse($uri);
+                if (!Glob::match($path, $phpPattern)) {
+                    continue;
+                }
+                $this->client->window->logMessage(
+                    MessageType::LOG,
+                    "Parsing file $i/$count: {$uri}"
+                );
+                try {
+                    yield $this->project->loadDocument($uri);
+                } catch (ContentTooLargeException $e) {
+                    $this->client->window->logMessage(
+                        MessageType::INFO,
+                        "Ignoring file {$uri} because it exceeds size limit of {$e->limit} bytes ({$e->size})"
+                    );
+                } catch (Exception $e) {
+                    $this->client->window->logMessage(
+                        MessageType::ERROR,
+                        "Error parsing file {$uri}: " . (string)$e
+                    );
+                }
+            }
+
+            $duration = (int)(microtime(true) - $startTime);
+            $mem = (int)(memory_get_usage(true) / (1024 * 1024));
+            $this->client->window->logMessage(
+                MessageType::INFO,
+                "All $count PHP files parsed in $duration seconds. $mem MiB allocated."
+            );
+        });
+    }
+
+    /**
+     * Returns all PHP files in the workspace.
+     * If the client does not support workspace/files, it falls back to searching the file system directly.
+     *
+     * @param string $pattern
+     * @return Promise <string[]>
+     */
+    private function findFiles(string $pattern): Promise
+    {
+        return coroutine(function () {
+            $uris = [];
+            if ($this->clientCapabilities->xfilesProvider) {
+                // Use xfiles request
+                foreach (yield $this->client->workspace->xfiles() as $textDocument) {
+                    $path = Uri\parse($textDocument->uri)['path'];
+                    if (Glob::match($path, $pattern)) {
+                        $uris[] = $textDocument->uri;
+                    }
+                }
+            } else {
+                // Use the file system
+                foreach (new GlobIterator($pattern) as $path) {
+                    $uris[] = pathToUri($path);
+                    yield timeout();
+                }
+            }
+            return $uris;
+        });
     }
 }
