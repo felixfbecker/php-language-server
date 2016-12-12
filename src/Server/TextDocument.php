@@ -27,7 +27,6 @@ use LanguageServer\Protocol\{
 use LanguageServer\Index\ReadableIndex;
 use Sabre\Event\Promise;
 use function Sabre\Event\coroutine;
-use function LanguageServer\getReferenceNodesByNode;
 
 /**
  * Provides method handlers for all textDocument/* methods
@@ -61,9 +60,17 @@ class TextDocument
      */
     private $completionProvider;
 
-    private $openDocuments = [];
+    /**
+     * @var ReadableIndex
+     */
     private $index;
 
+    /**
+     * @param PhpDocumentLoader  $documentLoader
+     * @param DefinitionResolver $definitionResolver
+     * @param LanguageClient     $client
+     * @param ReadableIndex      $index
+     */
     public function __construct(
         PhpDocumentLoader $documentLoader,
         DefinitionResolver $definitionResolver,

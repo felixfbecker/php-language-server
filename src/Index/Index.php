@@ -3,11 +3,7 @@ declare(strict_types = 1);
 
 namespace LanguageServer\Index;
 
-use LanguageServer\Protocol\{SymbolInformation, TextDocumentIdentifier, ClientCapabilities};
 use LanguageServer\Definition;
-use phpDocumentor\Reflection\DocBlockFactory;
-use Sabre\Event\Promise;
-use function Sabre\Event\coroutine;
 
 /**
  * Represents the index of a project or dependency

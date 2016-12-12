@@ -3,12 +3,6 @@ declare(strict_types = 1);
 
 namespace LanguageServer\Index;
 
-use LanguageServer\Protocol\{SymbolInformation, TextDocumentIdentifier, ClientCapabilities};
-use phpDocumentor\Reflection\DocBlockFactory;
-use LanguageServer\ContentRetriever\ContentRetriever;
-use Sabre\Event\Promise;
-use function Sabre\Event\coroutine;
-
 /**
  * A project index manages the source and dependency indexes
  */

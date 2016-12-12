@@ -49,6 +49,10 @@ Non-Standard: An empty query will return _all_ symbols found in the workspace.
 PHP parse errors are reported as errors, parse errors of docblocks are reported as warnings.
 Errors/Warnings from the `vendor` directory are ignored.
 
+### Stubs for PHP built-ins
+
+Completion, type resolval etc. will use the standard PHP library and common extensions.
+
 ### What is considered a definition?
 
 Globally searchable definitions are:
@@ -108,7 +112,7 @@ and references to an in-memory index.
 The time this takes depends on the project size.
 At the time of writing, this project contains 78 files + 1560 files in dependencies which take 97s to parse
 and consume 76 MB on a Surface Pro 3.
-The language server is fully operational while indexing and can respond to requests with the definitions already indexed.
+The language server is fully operational whilLe indexing and can respond to requests with the definitions already indexed.
 Follow-up requests will be almost instant because the index is kept in memory.
 
 Having XDebug enabled heavily impacts performance and can even crash the server if the `max_nesting_level` setting is too low.
@@ -130,6 +134,11 @@ Simply run
 
 and you will get the latest stable release and all dependencies.  
 Running `composer update` will update the server to the latest non-breaking version.
+
+After installing the language server and its dependencies,
+you must parse the stubs for standard PHP symbols and save the index for fast initialization.
+
+     composer run-script --working-dir=vendor/felixfbecker/language-server parse-stubs
 
 ## Running
 
@@ -178,6 +187,9 @@ Clone the repository and run
     composer install
 
 to install dependencies.
+Then parse the stubs with
+
+    composer run-script parse-stubs
 
 Run the tests with 
 

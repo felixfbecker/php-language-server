@@ -3,6 +3,8 @@ declare(strict_types = 1);
 
 namespace LanguageServer\Index;
 
+use LanguageServer\Definition;
+
 abstract class AbstractAggregateIndex implements ReadableIndex
 {
     /**

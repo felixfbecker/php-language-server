@@ -42,19 +42,29 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
      */
     public $workspace;
 
-    public $telemetry;
+    /**
+     * @var Server\Window
+     */
     public $window;
+
+    public $telemetry;
     public $completionItem;
     public $codeLens;
 
+    /**
+     * @var ProtocolReader
+     */
     private $protocolReader;
-    private $protocolWriter;
-    private $client;
 
     /**
-     * @var AggregateIndex
+     * @var ProtocolWriter
      */
-    private $index;
+    private $protocolWriter;
+
+    /**
+     * @var LanguageClient
+     */
+    private $client;
 
     /**
      * @var FilesFinder
@@ -64,8 +74,12 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     /**
      * @var ContentRetriever
      */
-    private $contentRetrieverFinder;
+    private $contentRetriever;
 
+    /**
+     * @param PotocolReader  $reader
+     * @param ProtocolWriter $writer
+     */
     public function __construct(ProtocolReader $reader, ProtocolWriter $writer)
     {
         parent::__construct($this, '/');
@@ -232,7 +246,6 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
 
                 // Give LS to the chance to handle requests while indexing
                 yield timeout();
-                $path = Uri\parse($uri);
                 $this->client->window->logMessage(
                     MessageType::LOG,
                     "Parsing file $i/$count: {$uri}"

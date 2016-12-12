@@ -3,6 +3,8 @@ declare(strict_types = 1);
 
 namespace LanguageServer\Index;
 
+use LanguageServer\Definition;
+
 /**
  * The ReadableIndex interface provides methods to lookup definitions and references
  */

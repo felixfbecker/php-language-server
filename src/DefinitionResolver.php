@@ -8,8 +8,6 @@ use PhpParser\PrettyPrinter\Standard as PrettyPrinter;
 use phpDocumentor\Reflection\{Types, Type, Fqsen, TypeResolver};
 use LanguageServer\Protocol\SymbolInformation;
 use LanguageServer\Index\ReadableIndex;
-use Sabre\Event\Promise;
-use function Sabre\Event\coroutine;
 
 class DefinitionResolver
 {
