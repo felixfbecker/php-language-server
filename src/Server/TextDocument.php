@@ -244,7 +244,11 @@ class TextDocument
                 return [];
             }
             $def = $this->definitionResolver->resolveReferenceNodeToDefinition($node);
-            if ($def === null || $def->symbolInformation === null) {
+            if (
+                $def === null
+                || $def->symbolInformation === null
+                || Uri\parse($def->symbolInformation->location->uri)['scheme'] === 'phpstubs'
+            ) {
                 return [];
             }
             return $def->symbolInformation->location;
