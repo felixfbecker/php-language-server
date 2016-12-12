@@ -1,9 +1,10 @@
 <?php
 declare(strict_types = 1);
 
-namespace LanguageServer;
+namespace LanguageServer\Index;
 
 use LanguageServer\Protocol\{SymbolInformation, TextDocumentIdentifier, ClientCapabilities};
+use LanguageServer\Definition;
 use phpDocumentor\Reflection\DocBlockFactory;
 use Sabre\Event\Promise;
 use function Sabre\Event\coroutine;
@@ -12,7 +13,7 @@ use function Sabre\Event\coroutine;
  * Represents the index of a project or dependency
  * Serializable for caching
  */
-class Index
+class Index implements ReadableIndex
 {
     /**
      * An associative array that maps fully qualified symbol names to Definitions
@@ -32,9 +33,9 @@ class Index
      * Returns an associative array [string => Definition] that maps fully qualified symbol names
      * to Definitions
      *
-     * @return Definitions[]
+     * @return Definition[]
      */
-    public function getDefinitions()
+    public function getDefinitions(): array
     {
         return $this->definitions;
     }
@@ -46,7 +47,7 @@ class Index
      * @param bool $globalFallback Whether to fallback to global if the namespaced FQN was not found
      * @return Definition|null
      */
-    public function getDefinition(string $fqn, $globalFallback = false)
+    public function getDefinition(string $fqn, bool $globalFallback = false)
     {
         if (isset($this->definitions[$fqn])) {
             return $this->definitions[$fqn];
@@ -70,17 +71,6 @@ class Index
     }
 
     /**
-     * Sets the Definition index
-     *
-     * @param Definition[] $definitions Map from FQN to Definition
-     * @return void
-     */
-    public function setDefinitions(array $definitions)
-    {
-        $this->definitions = $definitions;
-    }
-
-    /**
      * Unsets the Definition for a specific symbol
      * and removes all references pointing to that symbol
      *
@@ -91,6 +81,17 @@ class Index
     {
         unset($this->definitions[$fqn]);
         unset($this->references[$fqn]);
+    }
+
+    /**
+     * Returns all URIs in this index that reference a symbol
+     *
+     * @param string $fqn The fully qualified name of the symbol
+     * @return string[]
+     */
+    public function getReferenceUris(string $fqn): array
+    {
+        return $this->references[$fqn] ?? [];
     }
 
     /**
@@ -127,27 +128,5 @@ class Index
             return;
         }
         array_splice($this->references[$fqn], $index, 1);
-    }
-
-    /**
-     * Returns an associative array [string => string[]] that maps fully qualified symbol names
-     * to URIs of the document where the symbol is referenced
-     *
-     * @return string[][]
-     */
-    public function getReferenceUris()
-    {
-        return $this->references;
-    }
-
-    /**
-     * Sets the reference index
-     *
-     * @param string[][] $references an associative array [string => string[]] from FQN to URIs
-     * @return void
-     */
-    public function setReferenceUris(array $references)
-    {
-        $this->references = $references;
     }
 }

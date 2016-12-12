@@ -5,7 +5,8 @@ namespace LanguageServer\Tests\Server\TextDocument;
 
 use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
-use LanguageServer\{Server, Client, LanguageClient, Project, ClientHandler};
+use LanguageServer\{Server, Client, LanguageClient, ClientHandler, PhpDocumentLoader, DefinitionResolver};
+use LanguageServer\Index\{Index, ProjectIndex, DependenciesIndex};
 use LanguageServer\ContentRetriever\FileSystemContentRetriever;
 use LanguageServer\Protocol\{TextDocumentIdentifier, TextDocumentItem, DiagnosticSeverity, ClientCapabilities};
 use Sabre\Event\Promise;
@@ -36,8 +37,10 @@ class ParseErrorsTest extends TestCase
                 return Promise\resolve(null);
             }
         };
-        $project = new Project($client, new FileSystemContentRetriever);
-        $this->textDocument = new Server\TextDocument($project, $client);
+        $projectIndex = new ProjectIndex(new Index, new DependenciesIndex);
+        $definitionResolver = new DefinitionResolver($projectIndex);
+        $loader = new PhpDocumentLoader(new FileSystemContentRetriever, $projectIndex, $definitionResolver);
+        $this->textDocument = new Server\TextDocument($loader, $definitionResolver, $client, $projectIndex);
     }
 
     private function openFile($file)

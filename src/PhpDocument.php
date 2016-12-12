@@ -13,12 +13,13 @@ use LanguageServer\NodeVisitor\{
     ReferencesCollector,
     VariableReferencesCollector
 };
+use LanguageServer\Index\Index;
 use PhpParser\{Error, ErrorHandler, Node, NodeTraverser};
 use PhpParser\NodeVisitor\NameResolver;
 use phpDocumentor\Reflection\DocBlockFactory;
 use Sabre\Event\Promise;
-use function Sabre\Event\coroutine;
 use Sabre\Uri;
+use function Sabre\Event\coroutine;
 
 class PhpDocument
 {
@@ -42,6 +43,11 @@ class PhpDocument
      * @var DefinitionResolver
      */
     private $definitionResolver;
+
+    /**
+     * @var Index
+     */
+    private $index;
 
     /**
      * The URI of the document
@@ -95,7 +101,7 @@ class PhpDocument
     /**
      * @param string          $uri             The URI of the document
      * @param string          $content         The content of the document
-     * @param Index           $index           The Index to register definitions etc
+     * @param Index           $index           The Index to register definitions and references to
      * @param Parser          $parser          The PHPParser instance
      * @param DocBlockFactory $docBlockFactory The DocBlockFactory instance to parse docblocks
      */
@@ -108,6 +114,7 @@ class PhpDocument
         DefinitionResolver $definitionResolver
     ) {
         $this->uri = $uri;
+        $this->index = $index;
         $this->parser = $parser;
         $this->docBlockFactory = $docBlockFactory;
         $this->definitionResolver = $definitionResolver;
@@ -250,7 +257,7 @@ class PhpDocument
      *
      * @return Diagnostic[]
      */
-    public function getContent()
+    public function getDiagnostics()
     {
         return $this->diagnostics;
     }

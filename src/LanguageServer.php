@@ -16,6 +16,7 @@ use LanguageServer\Protocol\{
 };
 use LanguageServer\FilesFinder\{FilesFinder, ClientFilesFinder, FileSystemFilesFinder};
 use LanguageServer\ContentRetriever\{ContentRetriever, ClientContentRetriever, FileSystemContentRetriever};
+use LanguageServer\Index\{DependenciesIndex, GlobalIndex, Index, ProjectIndex, StubsIndex};
 use AdvancedJsonRpc;
 use Sabre\Event\{Loop, Promise};
 use function Sabre\Event\coroutine;
@@ -51,12 +52,9 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     private $client;
 
     /**
-     * The root project path that was passed to initialize()
-     *
-     * @var string
+     * @var AggregateIndex
      */
-    private $rootPath;
-    private $project;
+    private $index;
 
     /**
      * @var FilesFinder
@@ -127,8 +125,6 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     {
         return coroutine(function () use ($capabilities, $rootPath, $processId) {
 
-            $this->rootPath = $rootPath;
-
             if ($capabilities->xfilesProvider) {
                 $this->filesFinder = new ClientFilesFinder($this->client);
             } else {
@@ -141,28 +137,33 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                 $this->contentRetriever = new FileSystemContentRetriever;
             }
 
+            $projectIndex = new ProjectIndex(new Index, new DependenciesIndex);
+            $stubsIndex = StubsIndex::read();
+            $globalIndex = new GlobalIndex($stubsIndex, $projectIndex);
+
+            // The DefinitionResolver should look in stubs, the project source and dependencies
+            $definitionResolver = new DefinitionResolver($globalIndex);
+
+            $this->documentLoader = new PhpDocumentLoader(
+                $this->contentRetriever,
+                $projectIndex,
+                $definitionResolver
+            );
+
             if ($rootPath !== null) {
-                $pattern = Path::makeAbsolute('**/{*.php,composer.lock}', $this->rootPath);
-                $composerLockPattern = Path::makeAbsolute('**/composer.lock}', $this->rootPath);
+                $pattern = Path::makeAbsolute('**/*.php', $rootPath);
                 $uris = yield $this->filesFinder->find($pattern);
-
-                // Find composer.lock files
-                $composerLockFiles = [];
-                $phpFiles = [];
-                foreach ($uris as $uri) {
-                    if (Glob::match(Uri\parse($uri)['path'], $composerLockPattern)) {
-                        $composerLockFiles[$uri] = json_decode(yield $this->contentRetriever->retrieve($uri));
-                    } else {
-                        $phpFiles[] = $uri;
-                    }
-                }
-
-                $this->index($phpFiles)->otherwise('\\LanguageServer\\crash');
+                $this->index($uris)->otherwise('\\LanguageServer\\crash');
             }
 
-            $this->project = new Project($this->client, $capabilities, $rootPath);
-            $this->textDocument = new Server\TextDocument($this->project, $this->client);
-            $this->workspace = new Server\Workspace($this->project, $this->client);
+            $this->textDocument = new Server\TextDocument(
+                $this->documentLoader,
+                $definitionResolver,
+                $this->client,
+                $globalIndex
+            );
+            // workspace/symbol should only look inside the project source and dependencies
+            $this->workspace = new Server\Workspace($projectIndex, $this->client);
 
             $serverCapabilities = new ServerCapabilities();
             // Ask the client to return always full documents (because we need to rebuild the AST from scratch)
@@ -217,7 +218,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
      */
     private function index(array $phpFiles): Promise
     {
-        return coroutine(function () {
+        return coroutine(function () use ($phpFiles) {
 
             $count = count($phpFiles);
 
@@ -225,6 +226,10 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
 
             // Parse PHP files
             foreach ($phpFiles as $i => $uri) {
+
+                if ($this->documentLoader->isOpen($uri)) {
+                    continue;
+                }
 
                 // Give LS to the chance to handle requests while indexing
                 yield timeout();
@@ -234,7 +239,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                     "Parsing file $i/$count: {$uri}"
                 );
                 try {
-                    yield $this->project->loadDocument($uri);
+                    yield $this->documentLoader->load($uri);
                 } catch (ContentTooLargeException $e) {
                     $this->client->window->logMessage(
                         MessageType::INFO,

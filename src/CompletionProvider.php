@@ -4,6 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer;
 
 use PhpParser\Node;
+use LanguageServer\Index\ReadableIndex;
 use LanguageServer\Protocol\{
     TextEdit,
     Range,
@@ -97,13 +98,18 @@ class CompletionProvider
     private $project;
 
     /**
-     * @param DefinitionResolver $definitionResolver
-     * @param Project $project
+     * @var ReadableIndex
      */
-    public function __construct(DefinitionResolver $definitionResolver, Project $project)
+    private $index;
+
+    /**
+     * @param DefinitionResolver $definitionResolver
+     * @param ReadableIndex      $index
+     */
+    public function __construct(DefinitionResolver $definitionResolver, ReadableIndex $index)
     {
         $this->definitionResolver = $definitionResolver;
-        $this->project = $project;
+        $this->index = $index;
     }
 
     /**
@@ -153,7 +159,7 @@ class CompletionProvider
                 }
             }
 
-            foreach ($this->project->getDefinitions() as $fqn => $def) {
+            foreach ($this->index->getDefinitions() as $fqn => $def) {
                 foreach ($prefixes as $prefix) {
                     if (substr($fqn, 0, strlen($prefix)) === $prefix && !$def->isGlobal) {
                         $list->items[] = CompletionItem::fromDefinition($def);
@@ -185,7 +191,9 @@ class CompletionProvider
                             // Get the definition for the used namespace, class-like, function or constant
                             // And save it under the alias
                             $fqn = (string)Node\Name::concat($stmt->prefix ?? null, $use->name);
-                            $aliasedDefs[$use->alias] = $this->project->getDefinition($fqn);
+                            if ($def = $this->index->getDefinition($fqn)) {
+                                $aliasedDefs[$use->alias] = $def;
+                            }
                         }
                     } else {
                         // Use statements are always the first statements in a namespace
@@ -206,7 +214,7 @@ class CompletionProvider
             // Additionally, suggest global symbols that either
             //  - start with the current namespace + prefix, if the Name node is not fully qualified
             //  - start with just the prefix, if the Name node is fully qualified
-            foreach ($this->project->getDefinitions() as $fqn => $def) {
+            foreach ($this->index->getDefinitions() as $fqn => $def) {
                 if (
                     $def->isGlobal // exclude methods, properties etc.
                     && (
@@ -326,7 +334,7 @@ class CompletionProvider
             }
             if ($level instanceof Node\Expr\Closure) {
                 foreach ($level->uses as $use) {
-                    if (!isset($vars[$param->name]) && substr($param->name, 0, strlen($namePrefix)) === $namePrefix) {
+                    if (!isset($vars[$use->var]) && substr($use->var, 0, strlen($namePrefix)) === $namePrefix) {
                         $vars[$use->var] = $use;
                     }
                 }

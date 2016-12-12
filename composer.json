@@ -22,6 +22,11 @@
         "refactor"
     ],
     "bin": ["bin/php-language-server.php"],
+    "scripts": {
+        "parse-stubs": "LanguageServer\\ComposerScripts::parseStubs",
+        "post-install-cmd": "@parse-stubs",
+        "post-root-package-install": "@parse-stubs"
+    },
     "require": {
         "php": ">=7.0",
         "nikic/php-parser": "dev-master#e52ffc4447e034514339a03b450aab9cd625e37c",
