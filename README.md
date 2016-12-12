@@ -112,7 +112,7 @@ and references to an in-memory index.
 The time this takes depends on the project size.
 At the time of writing, this project contains 78 files + 1560 files in dependencies which take 97s to parse
 and consume 76 MB on a Surface Pro 3.
-The language server is fully operational whilLe indexing and can respond to requests with the definitions already indexed.
+The language server is fully operational while indexing and can respond to requests with the definitions already indexed.
 Follow-up requests will be almost instant because the index is kept in memory.
 
 Having XDebug enabled heavily impacts performance and can even crash the server if the `max_nesting_level` setting is too low.
