@@ -251,7 +251,10 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                     "Parsing file $i/$count: {$uri}"
                 );
                 try {
-                    yield $this->documentLoader->load($uri);
+                    $document = yield $this->documentLoader->load($uri);
+                    if (!$document->isVendored()) {
+                        $this->client->textDocument->publishDiagnostics($uri, $document->getDiagnostics());
+                    }
                 } catch (ContentTooLargeException $e) {
                     $this->client->window->logMessage(
                         MessageType::INFO,
