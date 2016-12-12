@@ -10,7 +10,7 @@ abstract class AbstractAggregateIndex implements ReadableIndex
      *
      * @return ReadableIndex[]
      */
-    protected abstract function getIndexes(): array;
+    abstract protected function getIndexes(): array;
 
     /**
      * Returns an associative array [string => Definition] that maps fully qualified symbol names

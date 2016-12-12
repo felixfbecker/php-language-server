@@ -41,7 +41,6 @@ class ComposerScripts
             $index->save();
 
             echo "Finished\n";
-
         })->wait();
     }
 }

@@ -216,17 +216,16 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
      *
      * @return Promise <void>
      */
-    private function index(array $phpFiles): Promise
+    private function index(array $uris): Promise
     {
-        return coroutine(function () use ($phpFiles) {
+        return coroutine(function () use ($uris) {
 
-            $count = count($phpFiles);
+            $count = count($uris);
 
             $startTime = microtime(true);
 
             // Parse PHP files
-            foreach ($phpFiles as $i => $uri) {
-
+            foreach ($uris as $i => $uri) {
                 if ($this->documentLoader->isOpen($uri)) {
                     continue;
                 }
