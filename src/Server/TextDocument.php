@@ -26,6 +26,7 @@ use LanguageServer\Protocol\{
 };
 use LanguageServer\Index\ReadableIndex;
 use Sabre\Event\Promise;
+use Sabre\Uri;
 use function Sabre\Event\coroutine;
 
 /**
