@@ -2,7 +2,7 @@
 
 namespace TestNamespace;
 
-$obj = new TestClass();
+$obj = new TestClass($a, $b, $c);
 $obj->testMethod();
 echo $obj->testProperty;
 TestClass::staticTestMethod();

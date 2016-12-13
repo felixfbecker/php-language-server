@@ -195,6 +195,7 @@ class DefinitionResolver
                 || $parent instanceof Node\Namespace_
                 || $parent instanceof Node\Param
                 || $parent instanceof Node\FunctionLike
+                || $parent instanceof Node\Expr\New_
                 || $parent instanceof Node\Expr\StaticCall
                 || $parent instanceof Node\Expr\ClassConstFetch
                 || $parent instanceof Node\Expr\StaticPropertyFetch
@@ -212,13 +213,6 @@ class DefinitionResolver
             } else if ($grandParent instanceof Node\Stmt\Use_ && $grandParent->type === Node\Stmt\Use_::TYPE_FUNCTION) {
                 $name .= '()';
             }
-        // Only the name node should be considered a reference, not the New_ node itself
-        } else if ($parent instanceof Node\Expr\New_) {
-            if (!($parent->class instanceof Node\Name)) {
-                // Cannot get definition of dynamic calls
-                return null;
-            }
-            $name = (string)$parent->class;
         } else if ($node instanceof Node\Expr\MethodCall || $node instanceof Node\Expr\PropertyFetch) {
             if ($node->name instanceof Node\Expr) {
                 // Cannot get definition if right-hand side is expression
