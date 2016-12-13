@@ -73,7 +73,8 @@ class LanguageServerTest extends TestCase
         $rootPath = realpath(__DIR__ . '/../fixtures');
         $input = new MockProtocolStream;
         $output = new MockProtocolStream;
-        $output->on('message', function (Message $msg) use ($promise, $input, $rootPath, &$filesCalled, &$contentCalled) {
+        $run = 1;
+        $output->on('message', function (Message $msg) use ($promise, $input, $rootPath, &$filesCalled, &$contentCalled, &$run) {
             if ($msg->body->method === 'textDocument/xcontent') {
                 // Document content requested
                 $contentCalled = true;
@@ -100,8 +101,11 @@ class LanguageServerTest extends TestCase
                         $promise->reject(new Exception($msg->body->params->message));
                     }
                 } else if (strpos($msg->body->params->message, 'All 25 PHP files parsed') !== false) {
-                    // Indexing finished
-                    $promise->fulfill();
+                    if ($run === 1) {
+                        $run++;
+                    } else {
+                        $promise->fulfill();
+                    }
                 }
             }
         });
