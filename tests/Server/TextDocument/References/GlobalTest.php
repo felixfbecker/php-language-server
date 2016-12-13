@@ -146,4 +146,17 @@ class GlobalTest extends ServerTestCase
             new Location($referencesUri, new Range(new Position(31, 13), new Position(31, 40)))
         ], $result);
     }
+
+    public function testReferencesForReference()
+    {
+        // $obj = new TestClass();
+        // Get references for TestClass
+        $reference = $this->getReferenceLocations('TestClass')[0];
+        $result = $this->textDocument->references(
+            new ReferenceContext,
+            new TextDocumentIdentifier($reference->uri),
+            $reference->range->start
+        )->wait();
+        $this->assertEquals($this->getReferenceLocations('TestClass'), $result);
+    }
 }

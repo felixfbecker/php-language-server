@@ -209,7 +209,10 @@ class TextDocument
                 // Definition with a global FQN
                 $fqn = DefinitionResolver::getDefinedFqn($node);
                 if ($fqn === null) {
-                    return [];
+                    $fqn = $this->definitionResolver->resolveReferenceNodeToFqn($node);
+                    if ($fqn === null) {
+                        return [];
+                    }
                 }
                 $refDocuments = yield Promise\all(array_map(
                     [$this->documentLoader, 'getOrLoad'],
