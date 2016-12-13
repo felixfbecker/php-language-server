@@ -47,7 +47,8 @@ class Index implements ReadableIndex
     {
         if (isset($this->definitions[$fqn])) {
             return $this->definitions[$fqn];
-        } else if ($globalFallback) {
+        }
+        if ($globalFallback) {
             $parts = explode('\\', $fqn);
             $fqn = end($parts);
             return $this->getDefinition($fqn);
