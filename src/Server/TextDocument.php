@@ -276,8 +276,13 @@ class TextDocument
                 return new Hover([]);
             }
             $range = Range::fromNode($node);
-            // Get the definition for whatever node is under the cursor
-            $def = $this->definitionResolver->resolveReferenceNodeToDefinition($node);
+            if ($definedFqn = DefinitionResolver::getDefinedFqn($node)) {
+                // Support hover for definitions
+                $def = $this->index->getDefinition($definedFqn);
+            } else {
+                // Get the definition for whatever node is under the cursor
+                $def = $this->definitionResolver->resolveReferenceNodeToDefinition($node);
+            }
             if ($def === null) {
                 return new Hover([], $range);
             }
