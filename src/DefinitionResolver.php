@@ -7,15 +7,14 @@ use PhpParser\Node;
 use PhpParser\PrettyPrinter\Standard as PrettyPrinter;
 use phpDocumentor\Reflection\{Types, Type, Fqsen, TypeResolver};
 use LanguageServer\Protocol\SymbolInformation;
-use Sabre\Event\Promise;
-use function Sabre\Event\coroutine;
+use LanguageServer\Index\ReadableIndex;
 
 class DefinitionResolver
 {
     /**
-     * @var \LanguageServer\Project
+     * @var \LanguageServer\Index
      */
-    private $project;
+    private $index;
 
     /**
      * @var \phpDocumentor\Reflection\TypeResolver
@@ -27,9 +26,12 @@ class DefinitionResolver
      */
     private $prettyPrinter;
 
-    public function __construct(Project $project)
+    /**
+     * @param ReadableIndex $index
+     */
+    public function __construct(ReadableIndex $index)
     {
-        $this->project = $project;
+        $this->index = $index;
         $this->typeResolver = new TypeResolver;
         $this->prettyPrinter = new PrettyPrinter;
     }
@@ -147,8 +149,8 @@ class DefinitionResolver
         // http://php.net/manual/en/language.namespaces.fallback.php
         $parent = $node->getAttribute('parentNode');
         $globalFallback = $parent instanceof Node\Expr\ConstFetch || $parent instanceof Node\Expr\FuncCall;
-        // Return the Definition object from the project index
-        return $this->project->getDefinition($fqn, $globalFallback);
+        // Return the Definition object from the index index
+        return $this->index->getDefinition($fqn, $globalFallback);
     }
 
     /**
@@ -403,7 +405,7 @@ class DefinitionResolver
                 return new Types\Mixed;
             }
             $fqn = (string)($expr->getAttribute('namespacedName') ?? $expr->name);
-            $def = $this->project->getDefinition($fqn, true);
+            $def = $this->index->getDefinition($fqn, true);
             if ($def !== null) {
                 return $def->type;
             }
@@ -414,7 +416,7 @@ class DefinitionResolver
             }
             // Resolve constant
             $fqn = (string)($expr->getAttribute('namespacedName') ?? $expr->name);
-            $def = $this->project->getDefinition($fqn, true);
+            $def = $this->index->getDefinition($fqn, true);
             if ($def !== null) {
                 return $def->type;
             }
@@ -443,7 +445,7 @@ class DefinitionResolver
                 if ($expr instanceof Node\Expr\MethodCall) {
                     $fqn .= '()';
                 }
-                $def = $this->project->getDefinition($fqn);
+                $def = $this->index->getDefinition($fqn);
                 if ($def !== null) {
                     return $def->type;
                 }
@@ -466,7 +468,7 @@ class DefinitionResolver
             if ($expr instanceof Node\Expr\StaticCall) {
                 $fqn .= '()';
             }
-            $def = $this->project->getDefinition($fqn);
+            $def = $this->index->getDefinition($fqn);
             if ($def === null) {
                 return new Types\Mixed;
             }

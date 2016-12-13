@@ -6,7 +6,16 @@ namespace LanguageServer\Tests;
 use PHPUnit\Framework\TestCase;
 use LanguageServer\LanguageServer;
 use LanguageServer\Protocol\{
-    Message, ClientCapabilities, TextDocumentSyncKind, MessageType, TextDocumentItem, TextDocumentIdentifier};
+    Message,
+    ClientCapabilities,
+    TextDocumentSyncKind,
+    MessageType,
+    TextDocumentItem,
+    TextDocumentIdentifier,
+    InitializeResult,
+    ServerCapabilities,
+    CompletionOptions
+};
 use AdvancedJsonRpc;
 use Webmozart\Glob\Glob;
 use Webmozart\PathUtil\Path;
@@ -18,41 +27,22 @@ class LanguageServerTest extends TestCase
 {
     public function testInitialize()
     {
-        $reader = new MockProtocolStream();
-        $writer = new MockProtocolStream();
-        $server = new LanguageServer($reader, $writer);
-        $promise = new Promise;
-        $writer->once('message', [$promise, 'fulfill']);
-        $reader->write(new Message(new AdvancedJsonRpc\Request(1, 'initialize', [
-            'rootPath' => __DIR__,
-            'processId' => getmypid(),
-            'capabilities' => new ClientCapabilities()
-        ])));
-        $msg = $promise->wait();
-        $this->assertNotNull($msg, 'message event should be emitted');
-        $this->assertInstanceOf(AdvancedJsonRpc\SuccessResponse::class, $msg->body);
-        $this->assertEquals((object)[
-            'capabilities' => (object)[
-                'textDocumentSync' => TextDocumentSyncKind::FULL,
-                'documentSymbolProvider' => true,
-                'hoverProvider' => true,
-                'completionProvider' => (object)[
-                    'resolveProvider' => false,
-                    'triggerCharacters' => ['$', '>']
-                ],
-                'signatureHelpProvider' => null,
-                'definitionProvider' => true,
-                'referencesProvider' => true,
-                'documentHighlightProvider' => null,
-                'workspaceSymbolProvider' => true,
-                'codeActionProvider' => null,
-                'codeLensProvider' => null,
-                'documentFormattingProvider' => true,
-                'documentRangeFormattingProvider' => null,
-                'documentOnTypeFormattingProvider' => null,
-                'renameProvider' => null
-            ]
-        ], $msg->body->result);
+        $server = new LanguageServer(new MockProtocolStream, new MockProtocolStream);
+        $result = $server->initialize(new ClientCapabilities, __DIR__, getmypid())->wait();
+
+        $serverCapabilities = new ServerCapabilities();
+        $serverCapabilities->textDocumentSync = TextDocumentSyncKind::FULL;
+        $serverCapabilities->documentSymbolProvider = true;
+        $serverCapabilities->workspaceSymbolProvider = true;
+        $serverCapabilities->documentFormattingProvider = true;
+        $serverCapabilities->definitionProvider = true;
+        $serverCapabilities->referencesProvider = true;
+        $serverCapabilities->hoverProvider = true;
+        $serverCapabilities->completionProvider = new CompletionOptions;
+        $serverCapabilities->completionProvider->resolveProvider = false;
+        $serverCapabilities->completionProvider->triggerCharacters = ['$', '>'];
+
+        $this->assertEquals(new InitializeResult($serverCapabilities), $result);
     }
 
     public function testIndexingWithDirectFileAccess()

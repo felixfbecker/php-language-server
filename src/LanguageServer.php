@@ -16,12 +16,14 @@ use LanguageServer\Protocol\{
 };
 use LanguageServer\FilesFinder\{FilesFinder, ClientFilesFinder, FileSystemFilesFinder};
 use LanguageServer\ContentRetriever\{ContentRetriever, ClientContentRetriever, FileSystemContentRetriever};
+use LanguageServer\Index\{DependenciesIndex, GlobalIndex, Index, ProjectIndex, StubsIndex};
 use AdvancedJsonRpc;
 use Sabre\Event\{Loop, Promise};
 use function Sabre\Event\coroutine;
 use Exception;
 use Throwable;
 use Webmozart\PathUtil\Path;
+use Webmozart\Glob\Glob;
 use Sabre\Uri;
 
 class LanguageServer extends AdvancedJsonRpc\Dispatcher
@@ -40,22 +42,29 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
      */
     public $workspace;
 
-    public $telemetry;
+    /**
+     * @var Server\Window
+     */
     public $window;
+
+    public $telemetry;
     public $completionItem;
     public $codeLens;
 
+    /**
+     * @var ProtocolReader
+     */
     private $protocolReader;
-    private $protocolWriter;
-    private $client;
 
     /**
-     * The root project path that was passed to initialize()
-     *
-     * @var string
+     * @var ProtocolWriter
      */
-    private $rootPath;
-    private $project;
+    private $protocolWriter;
+
+    /**
+     * @var LanguageClient
+     */
+    private $client;
 
     /**
      * @var FilesFinder
@@ -65,8 +74,12 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     /**
      * @var ContentRetriever
      */
-    private $contentRetrieverFinder;
+    private $contentRetriever;
 
+    /**
+     * @param PotocolReader  $reader
+     * @param ProtocolWriter $writer
+     */
     public function __construct(ProtocolReader $reader, ProtocolWriter $writer)
     {
         parent::__construct($this, '/');
@@ -92,7 +105,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                 } catch (Throwable $e) {
                     // If an unexpected error occured, send back an INTERNAL_ERROR error response
                     $error = new AdvancedJsonRpc\Error(
-                        $e->getMessage(),
+                        (string)$e,
                         AdvancedJsonRpc\ErrorCode::INTERNAL_ERROR,
                         null,
                         $e
@@ -120,54 +133,74 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
      * @param ClientCapabilities $capabilities The capabilities provided by the client (editor)
      * @param string|null $rootPath The rootPath of the workspace. Is null if no folder is open.
      * @param int|null $processId The process Id of the parent process that started the server. Is null if the process has not been started by another process. If the parent process is not alive then the server should exit (see exit notification) its process.
-     * @return InitializeResult
+     * @return Promise <InitializeResult>
      */
-    public function initialize(ClientCapabilities $capabilities, string $rootPath = null, int $processId = null): InitializeResult
+    public function initialize(ClientCapabilities $capabilities, string $rootPath = null, int $processId = null): Promise
     {
-        $this->rootPath = $rootPath;
+        return coroutine(function () use ($capabilities, $rootPath, $processId) {
 
-        if ($capabilities->xfilesProvider) {
-            $this->filesFinder = new ClientFilesFinder($this->client);
-        } else {
-            $this->filesFinder = new FileSystemFilesFinder;
-        }
+            if ($capabilities->xfilesProvider) {
+                $this->filesFinder = new ClientFilesFinder($this->client);
+            } else {
+                $this->filesFinder = new FileSystemFilesFinder;
+            }
 
-        if ($capabilities->xcontentProvider) {
-            $this->contentRetriever = new ClientContentRetriever($this->client);
-        } else {
-            $this->contentRetriever = new FileSystemContentRetriever;
-        }
+            if ($capabilities->xcontentProvider) {
+                $this->contentRetriever = new ClientContentRetriever($this->client);
+            } else {
+                $this->contentRetriever = new FileSystemContentRetriever;
+            }
 
-        $this->project = new Project($this->client, $this->contentRetriever);
-        $this->textDocument = new Server\TextDocument($this->project, $this->client);
-        $this->workspace = new Server\Workspace($this->project, $this->client);
+            $projectIndex = new ProjectIndex(new Index, new DependenciesIndex);
+            $stubsIndex = StubsIndex::read();
+            $globalIndex = new GlobalIndex($stubsIndex, $projectIndex);
 
-        // start building project index
-        if ($rootPath !== null) {
-            $this->indexProject()->otherwise('\\LanguageServer\\crash');
-        }
+            // The DefinitionResolver should look in stubs, the project source and dependencies
+            $definitionResolver = new DefinitionResolver($globalIndex);
 
-        $serverCapabilities = new ServerCapabilities();
-        // Ask the client to return always full documents (because we need to rebuild the AST from scratch)
-        $serverCapabilities->textDocumentSync = TextDocumentSyncKind::FULL;
-        // Support "Find all symbols"
-        $serverCapabilities->documentSymbolProvider = true;
-        // Support "Find all symbols in workspace"
-        $serverCapabilities->workspaceSymbolProvider = true;
-        // Support "Format Code"
-        $serverCapabilities->documentFormattingProvider = true;
-        // Support "Go to definition"
-        $serverCapabilities->definitionProvider = true;
-        // Support "Find all references"
-        $serverCapabilities->referencesProvider = true;
-        // Support "Hover"
-        $serverCapabilities->hoverProvider = true;
-        // Support "Completion"
-        $serverCapabilities->completionProvider = new CompletionOptions;
-        $serverCapabilities->completionProvider->resolveProvider = false;
-        $serverCapabilities->completionProvider->triggerCharacters = ['$', '>'];
+            $this->documentLoader = new PhpDocumentLoader(
+                $this->contentRetriever,
+                $projectIndex,
+                $definitionResolver
+            );
 
-        return new InitializeResult($serverCapabilities);
+            if ($rootPath !== null) {
+                $pattern = Path::makeAbsolute('**/*.php', $rootPath);
+                $uris = yield $this->filesFinder->find($pattern);
+                $this->index($uris)->otherwise('\\LanguageServer\\crash');
+            }
+
+            $this->textDocument = new Server\TextDocument(
+                $this->documentLoader,
+                $definitionResolver,
+                $this->client,
+                $globalIndex
+            );
+            // workspace/symbol should only look inside the project source and dependencies
+            $this->workspace = new Server\Workspace($projectIndex, $this->client);
+
+            $serverCapabilities = new ServerCapabilities();
+            // Ask the client to return always full documents (because we need to rebuild the AST from scratch)
+            $serverCapabilities->textDocumentSync = TextDocumentSyncKind::FULL;
+            // Support "Find all symbols"
+            $serverCapabilities->documentSymbolProvider = true;
+            // Support "Find all symbols in workspace"
+            $serverCapabilities->workspaceSymbolProvider = true;
+            // Support "Format Code"
+            $serverCapabilities->documentFormattingProvider = true;
+            // Support "Go to definition"
+            $serverCapabilities->definitionProvider = true;
+            // Support "Find all references"
+            $serverCapabilities->referencesProvider = true;
+            // Support "Hover"
+            $serverCapabilities->hoverProvider = true;
+            // Support "Completion"
+            $serverCapabilities->completionProvider = new CompletionOptions;
+            $serverCapabilities->completionProvider->resolveProvider = false;
+            $serverCapabilities->completionProvider->triggerCharacters = ['$', '>'];
+
+            return new InitializeResult($serverCapabilities);
+        });
     }
 
     /**
@@ -193,20 +226,24 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     }
 
     /**
-     * Parses workspace files, one at a time.
+     * Will read and parse the passed source files in the project and add them to the appropiate indexes
      *
      * @return Promise <void>
      */
-    private function indexProject(): Promise
+    private function index(array $uris): Promise
     {
-        return coroutine(function () {
-            $pattern = Path::makeAbsolute('**/*.php', $this->rootPath);
-            $uris = yield $this->filesFinder->find($pattern);
+        return coroutine(function () use ($uris) {
+
             $count = count($uris);
 
             $startTime = microtime(true);
 
+            // Parse PHP files
             foreach ($uris as $i => $uri) {
+                if ($this->documentLoader->isOpen($uri)) {
+                    continue;
+                }
+
                 // Give LS to the chance to handle requests while indexing
                 yield timeout();
                 $this->client->window->logMessage(
@@ -214,7 +251,10 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                     "Parsing file $i/$count: {$uri}"
                 );
                 try {
-                    yield $this->project->loadDocument($uri);
+                    $document = yield $this->documentLoader->load($uri);
+                    if (!$document->isVendored()) {
+                        $this->client->textDocument->publishDiagnostics($uri, $document->getDiagnostics());
+                    }
                 } catch (ContentTooLargeException $e) {
                     $this->client->window->logMessage(
                         MessageType::INFO,
