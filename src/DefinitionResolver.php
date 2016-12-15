@@ -192,7 +192,7 @@ class DefinitionResolver
         if (
             $node instanceof Node\Name && (
                 $parent instanceof Node\Stmt\ClassLike
-                || $parent instanceof Node\Namespace_
+                || $parent instanceof Node\Stmt\Namespace_
                 || $parent instanceof Node\Param
                 || $parent instanceof Node\FunctionLike
                 || $parent instanceof Node\Expr\New_
