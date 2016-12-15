@@ -5,7 +5,9 @@ namespace LanguageServer\Tests\Server\TextDocument;
 
 use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
-use LanguageServer\{Server, LanguageClient, Project, CompletionProvider};
+use LanguageServer\{Server, LanguageClient, PhpDocumentLoader, CompletionProvider, DefinitionResolver};
+use LanguageServer\Index\{Index, ProjectIndex, DependenciesIndex, GlobalIndex, StubsIndex};
+use LanguageServer\ContentRetriever\FileSystemContentRetriever;
 use LanguageServer\Protocol\{
     TextDocumentIdentifier,
     TextEdit,
@@ -26,23 +28,26 @@ class CompletionTest extends TestCase
     private $textDocument;
 
     /**
-     * @var Project
+     * @var PhpDocumentLoader
      */
-    private $project;
+    private $loader;
 
     public function setUp()
     {
         $client = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
-        $this->project = new Project($client, new ClientCapabilities);
-        $this->project->loadDocument(pathToUri(__DIR__ . '/../../../fixtures/global_symbols.php'))->wait();
-        $this->project->loadDocument(pathToUri(__DIR__ . '/../../../fixtures/symbols.php'))->wait();
-        $this->textDocument = new Server\TextDocument($this->project, $client);
+        $projectIndex = new ProjectIndex(new Index, new DependenciesIndex);
+        $definitionResolver = new DefinitionResolver($projectIndex);
+        $contentRetriever = new FileSystemContentRetriever;
+        $this->loader = new PhpDocumentLoader($contentRetriever, $projectIndex, $definitionResolver);
+        $this->loader->load(pathToUri(__DIR__ . '/../../../fixtures/global_symbols.php'))->wait();
+        $this->loader->load(pathToUri(__DIR__ . '/../../../fixtures/symbols.php'))->wait();
+        $this->textDocument = new Server\TextDocument($this->loader, $definitionResolver, $client, $projectIndex);
     }
 
     public function testPropertyAndMethodWithPrefix()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/property_with_prefix.php');
-        $this->project->openDocument($completionUri, file_get_contents($completionUri));
+        $this->loader->open($completionUri, file_get_contents($completionUri));
         $items = $this->textDocument->completion(
             new TextDocumentIdentifier($completionUri),
             new Position(3, 7)
@@ -66,7 +71,7 @@ class CompletionTest extends TestCase
     public function testPropertyAndMethodWithoutPrefix()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/property.php');
-        $this->project->openDocument($completionUri, file_get_contents($completionUri));
+        $this->loader->open($completionUri, file_get_contents($completionUri));
         $items = $this->textDocument->completion(
             new TextDocumentIdentifier($completionUri),
             new Position(3, 6)
@@ -90,7 +95,7 @@ class CompletionTest extends TestCase
     public function testVariable()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/variable.php');
-        $this->project->openDocument($completionUri, file_get_contents($completionUri));
+        $this->loader->open($completionUri, file_get_contents($completionUri));
         $items = $this->textDocument->completion(
             new TextDocumentIdentifier($completionUri),
             new Position(8, 5)
@@ -122,7 +127,7 @@ class CompletionTest extends TestCase
     public function testVariableWithPrefix()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/variable_with_prefix.php');
-        $this->project->openDocument($completionUri, file_get_contents($completionUri));
+        $this->loader->open($completionUri, file_get_contents($completionUri));
         $items = $this->textDocument->completion(
             new TextDocumentIdentifier($completionUri),
             new Position(8, 6)
@@ -144,7 +149,7 @@ class CompletionTest extends TestCase
     public function testNewInNamespace()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/used_new.php');
-        $this->project->openDocument($completionUri, file_get_contents($completionUri));
+        $this->loader->open($completionUri, file_get_contents($completionUri));
         $items = $this->textDocument->completion(
             new TextDocumentIdentifier($completionUri),
             new Position(6, 10)
@@ -176,7 +181,7 @@ class CompletionTest extends TestCase
     public function testUsedClass()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/used_class.php');
-        $this->project->openDocument($completionUri, file_get_contents($completionUri));
+        $this->loader->open($completionUri, file_get_contents($completionUri));
         $items = $this->textDocument->completion(
             new TextDocumentIdentifier($completionUri),
             new Position(6, 5)
@@ -194,7 +199,7 @@ class CompletionTest extends TestCase
     public function testStaticPropertyWithPrefix()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/static_property_with_prefix.php');
-        $this->project->openDocument($completionUri, file_get_contents($completionUri));
+        $this->loader->open($completionUri, file_get_contents($completionUri));
         $items = $this->textDocument->completion(
             new TextDocumentIdentifier($completionUri),
             new Position(2, 14)
@@ -215,7 +220,7 @@ class CompletionTest extends TestCase
     public function testStaticWithoutPrefix()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/static.php');
-        $this->project->openDocument($completionUri, file_get_contents($completionUri));
+        $this->loader->open($completionUri, file_get_contents($completionUri));
         $items = $this->textDocument->completion(
             new TextDocumentIdentifier($completionUri),
             new Position(2, 11)
@@ -248,25 +253,7 @@ class CompletionTest extends TestCase
     public function testStaticMethodWithPrefix()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/static_method_with_prefix.php');
-        $this->project->openDocument($completionUri, file_get_contents($completionUri));
-        $items = $this->textDocument->completion(
-            new TextDocumentIdentifier($completionUri),
-            new Position(2, 13)
-        )->wait();
-        $this->assertEquals(new CompletionList([
-            new CompletionItem(
-                'staticTestMethod',
-                CompletionItemKind::METHOD,
-                'mixed', // Method return type
-                'Do magna consequat veniam minim proident eiusmod incididunt aute proident.'
-            )
-        ], true), $items);
-    }
-
-    public function testClassConstWithPrefix()
-    {
-        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/class_const_with_prefix.php');
-        $this->project->openDocument($completionUri, file_get_contents($completionUri));
+        $this->loader->open($completionUri, file_get_contents($completionUri));
         $items = $this->textDocument->completion(
             new TextDocumentIdentifier($completionUri),
             new Position(2, 13)
@@ -277,6 +264,54 @@ class CompletionTest extends TestCase
                 CompletionItemKind::VARIABLE,
                 'int',
                 'Anim labore veniam consectetur laboris minim quis aute aute esse nulla ad.'
+            ),
+            new CompletionItem(
+                'staticTestProperty',
+                CompletionItemKind::PROPERTY,
+                '\TestClass[]',
+                'Lorem excepteur officia sit anim velit veniam enim.',
+                null,
+                null,
+                '$staticTestProperty'
+            ),
+            new CompletionItem(
+                'staticTestMethod',
+                CompletionItemKind::METHOD,
+                'mixed',
+                'Do magna consequat veniam minim proident eiusmod incididunt aute proident.'
+            )
+        ], true), $items);
+    }
+
+    public function testClassConstWithPrefix()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/class_const_with_prefix.php');
+        $this->loader->open($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(2, 13)
+        )->wait();
+        $this->assertEquals(new CompletionList([
+            new CompletionItem(
+                'TEST_CLASS_CONST',
+                CompletionItemKind::VARIABLE,
+                'int',
+                'Anim labore veniam consectetur laboris minim quis aute aute esse nulla ad.'
+            ),
+            new CompletionItem(
+                'staticTestProperty',
+                CompletionItemKind::PROPERTY,
+                '\TestClass[]',
+                'Lorem excepteur officia sit anim velit veniam enim.',
+                null,
+                null,
+                '$staticTestProperty'
+            ),
+            new CompletionItem(
+                'staticTestMethod',
+                CompletionItemKind::METHOD,
+                'mixed',
+                'Do magna consequat veniam minim proident eiusmod incididunt aute proident.'
             )
         ], true), $items);
     }
@@ -284,7 +319,7 @@ class CompletionTest extends TestCase
     public function testFullyQualifiedClass()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/fully_qualified_class.php');
-        $this->project->openDocument($completionUri, file_get_contents($completionUri));
+        $this->loader->open($completionUri, file_get_contents($completionUri));
         $items = $this->textDocument->completion(
             new TextDocumentIdentifier($completionUri),
             new Position(6, 6)
@@ -305,7 +340,7 @@ class CompletionTest extends TestCase
     public function testKeywords()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/keywords.php');
-        $this->project->openDocument($completionUri, file_get_contents($completionUri));
+        $this->loader->open($completionUri, file_get_contents($completionUri));
         $items = $this->textDocument->completion(
             new TextDocumentIdentifier($completionUri),
             new Position(2, 1)
@@ -319,7 +354,7 @@ class CompletionTest extends TestCase
     public function testHtmlWithoutPrefix()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/html.php');
-        $this->project->openDocument($completionUri, file_get_contents($completionUri));
+        $this->loader->open($completionUri, file_get_contents($completionUri));
         $items = $this->textDocument->completion(
             new TextDocumentIdentifier($completionUri),
             new Position(0, 0)
@@ -341,7 +376,7 @@ class CompletionTest extends TestCase
     public function testHtmlWithPrefix()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/html_with_prefix.php');
-        $this->project->openDocument($completionUri, file_get_contents($completionUri));
+        $this->loader->open($completionUri, file_get_contents($completionUri));
         $items = $this->textDocument->completion(
             new TextDocumentIdentifier($completionUri),
             new Position(0, 1)
@@ -363,7 +398,7 @@ class CompletionTest extends TestCase
     public function testNamespace()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/namespace.php');
-        $this->project->openDocument($completionUri, file_get_contents($completionUri));
+        $this->loader->open($completionUri, file_get_contents($completionUri));
         $items = $this->textDocument->completion(
             new TextDocumentIdentifier($completionUri),
             new Position(4, 6)

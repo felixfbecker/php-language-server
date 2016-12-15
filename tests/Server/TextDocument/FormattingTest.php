@@ -5,7 +5,9 @@ namespace LanguageServer\Tests\Server\TextDocument;
 
 use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
-use LanguageServer\{Server, Client, LanguageClient, Project};
+use LanguageServer\{Server, Client, LanguageClient, PhpDocumentLoader, DefinitionResolver};
+use LanguageServer\Index\{Index, ProjectIndex, DependenciesIndex};
+use LanguageServer\ContentRetriever\FileSystemContentRetriever;
 use LanguageServer\Protocol\{
     TextDocumentIdentifier,
     TextDocumentItem,
@@ -19,23 +21,14 @@ use function LanguageServer\{pathToUri, uriToPath};
 
 class FormattingTest extends TestCase
 {
-    /**
-     * @var Server\TextDocument
-     */
-    private $textDocument;
-
-    public function setUp()
-    {
-        $client = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
-        $project = new Project($client, new ClientCapabilities);
-        $this->textDocument = new Server\TextDocument($project, $client);
-    }
-
     public function testFormatting()
     {
+        $projectIndex = new ProjectIndex(new Index, new DependenciesIndex);
         $client = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
-        $project = new Project($client, new ClientCapabilities);
-        $textDocument = new Server\TextDocument($project, $client);
+        $definitionResolver = new DefinitionResolver($projectIndex);
+        $loader = new PhpDocumentLoader(new FileSystemContentRetriever, $projectIndex, $definitionResolver);
+        $textDocument = new Server\TextDocument($loader, $definitionResolver, $client, $projectIndex);
+
         $path = realpath(__DIR__ . '/../../../fixtures/format.php');
         $uri = pathToUri($path);
 

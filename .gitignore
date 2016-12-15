@@ -4,3 +4,4 @@
 vendor/
 .phpls/
 composer.lock
+stubs

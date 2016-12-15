@@ -10,16 +10,16 @@ use LanguageServer\Protocol\{
     Message,
     MessageType,
     InitializeResult,
-    TextDocumentIdentifier,
     CompletionOptions
 };
+use LanguageServer\FilesFinder\{FilesFinder, ClientFilesFinder, FileSystemFilesFinder};
+use LanguageServer\ContentRetriever\{ContentRetriever, ClientContentRetriever, FileSystemContentRetriever};
+use LanguageServer\Index\{DependenciesIndex, GlobalIndex, Index, ProjectIndex, StubsIndex};
 use AdvancedJsonRpc;
 use Sabre\Event\Promise;
 use function Sabre\Event\coroutine;
 use Exception;
 use Throwable;
-use Webmozart\Glob\Iterator\GlobIterator;
-use Webmozart\Glob\Glob;
 use Webmozart\PathUtil\Path;
 use Sabre\Uri;
 use function Sabre\Event\Loop\setTimeout;
@@ -40,28 +40,44 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
      */
     public $workspace;
 
-    public $telemetry;
+    /**
+     * @var Server\Window
+     */
     public $window;
+
+    public $telemetry;
     public $completionItem;
     public $codeLens;
 
     /**
-     * ClientCapabilities
+     * @var ProtocolReader
      */
-    private $clientCapabilities;
-
     private $protocolReader;
+
+    /**
+     * @var ProtocolWriter
+     */
     private $protocolWriter;
+
+    /**
+     * @var LanguageClient
+     */
     private $client;
 
     /**
-     * The root project path that was passed to initialize()
-     *
-     * @var string
+     * @var FilesFinder
      */
-    private $rootPath;
-    private $project;
+    private $filesFinder;
 
+    /**
+     * @var ContentRetriever
+     */
+    private $contentRetriever;
+
+    /**
+     * @param PotocolReader  $reader
+     * @param ProtocolWriter $writer
+     */
     public function __construct(ProtocolReader $reader, ProtocolWriter $writer)
     {
         parent::__construct($this, '/');
@@ -70,43 +86,43 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
             $this->shutdown();
             $this->exit();
         });
-        $this->protocolReader->on('message', function (Message $msg) {
-            coroutine(function () use ($msg) {
-                // Ignore responses, this is the handler for requests and notifications
-                if (AdvancedJsonRpc\Response::isResponse($msg->body)) {
-                    return;
-                }
-                $result = null;
-                $error = null;
-                try {
-                    // Invoke the method handler to get a result
-                    $result = yield $this->dispatch($msg->body);
-                } catch (AdvancedJsonRpc\Error $e) {
-                    // If a ResponseError is thrown, send it back in the Response
-                    $error = $e;
-                } catch (Throwable $e) {
-                    // If an unexpected error occured, send back an INTERNAL_ERROR error response
-                    $error = new AdvancedJsonRpc\Error(
-                        $e->getMessage(),
-                        AdvancedJsonRpc\ErrorCode::INTERNAL_ERROR,
-                        null,
-                        $e
-                    );
-                }
-                // Only send a Response for a Request
-                // Notifications do not send Responses
-                if (AdvancedJsonRpc\Request::isRequest($msg->body)) {
-                    if ($error !== null) {
-                        $responseBody = new AdvancedJsonRpc\ErrorResponse($msg->body->id, $error);
-                    } else {
-                        $responseBody = new AdvancedJsonRpc\SuccessResponse($msg->body->id, $result);
+            $this->protocolReader->on('message', function (Message $msg) {
+                coroutine(function () use ($msg) {
+                    // Ignore responses, this is the handler for requests and notifications
+                    if (AdvancedJsonRpc\Response::isResponse($msg->body)) {
+                        return;
                     }
-                    $this->protocolWriter->write(new Message($responseBody));
-                }
-            })->otherwise('\\LanguageServer\\crash');
-        });
-        $this->protocolWriter = $writer;
-        $this->client = new LanguageClient($reader, $writer);
+                    $result = null;
+                    $error = null;
+                    try {
+                        // Invoke the method handler to get a result
+                        $result = yield $this->dispatch($msg->body);
+                    } catch (AdvancedJsonRpc\Error $e) {
+                        // If a ResponseError is thrown, send it back in the Response
+                        $error = $e;
+                    } catch (Throwable $e) {
+                        // If an unexpected error occured, send back an INTERNAL_ERROR error response
+                        $error = new AdvancedJsonRpc\Error(
+                            (string)$e,
+                            AdvancedJsonRpc\ErrorCode::INTERNAL_ERROR,
+                            null,
+                            $e
+                            );
+                    }
+                    // Only send a Response for a Request
+                    // Notifications do not send Responses
+                    if (AdvancedJsonRpc\Request::isRequest($msg->body)) {
+                        if ($error !== null) {
+                            $responseBody = new AdvancedJsonRpc\ErrorResponse($msg->body->id, $error);
+                        } else {
+                            $responseBody = new AdvancedJsonRpc\SuccessResponse($msg->body->id, $result);
+                        }
+                        $this->protocolWriter->write(new Message($responseBody));
+                    }
+                })->otherwise('\\LanguageServer\\crash');
+            });
+                $this->protocolWriter = $writer;
+                $this->client = new LanguageClient($reader, $writer);
     }
 
     /**
@@ -115,48 +131,80 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
      * @param ClientCapabilities $capabilities The capabilities provided by the client (editor)
      * @param string|null $rootPath The rootPath of the workspace. Is null if no folder is open.
      * @param int|null $processId The process Id of the parent process that started the server. Is null if the process has not been started by another process. If the parent process is not alive then the server should exit (see exit notification) its process.
-     * @return InitializeResult
+     * @return Promise <InitializeResult>
      */
-    public function initialize(ClientCapabilities $capabilities, string $rootPath = null, int $processId = null): InitializeResult
+    public function initialize(ClientCapabilities $capabilities, string $rootPath = null, int $processId = null): Promise
     {
-        $this->rootPath = $rootPath;
-        $this->clientCapabilities = $capabilities;
-        $this->project = new Project($this->client, $capabilities);
-        $this->textDocument = new Server\TextDocument($this->project, $this->client);
-        $this->workspace = new Server\Workspace($this->project, $this->client);
+        return coroutine(function () use ($capabilities, $rootPath, $processId) {
 
-        // start building project index
-        if ($rootPath !== null) {
-            $this->indexProject()->otherwise('\\LanguageServer\\crash');
-        }
+            if ($capabilities->xfilesProvider) {
+                $this->filesFinder = new ClientFilesFinder($this->client);
+            } else {
+                $this->filesFinder = new FileSystemFilesFinder;
+            }
 
-        if (extension_loaded('xdebug')) {
-            setTimeout(function () {
-                $this->client->window->showMessage(MessageType::WARNING, 'You are running PHP Language Server with xdebug enabled. This has a major impact on server performance.');
-            }, 1);
-        }
+            if ($capabilities->xcontentProvider) {
+                $this->contentRetriever = new ClientContentRetriever($this->client);
+            } else {
+                $this->contentRetriever = new FileSystemContentRetriever;
+            }
 
-        $serverCapabilities = new ServerCapabilities();
-        // Ask the client to return always full documents (because we need to rebuild the AST from scratch)
-        $serverCapabilities->textDocumentSync = TextDocumentSyncKind::FULL;
-        // Support "Find all symbols"
-        $serverCapabilities->documentSymbolProvider = true;
-        // Support "Find all symbols in workspace"
-        $serverCapabilities->workspaceSymbolProvider = true;
-        // Support "Format Code"
-        $serverCapabilities->documentFormattingProvider = true;
-        // Support "Go to definition"
-        $serverCapabilities->definitionProvider = true;
-        // Support "Find all references"
-        $serverCapabilities->referencesProvider = true;
-        // Support "Hover"
-        $serverCapabilities->hoverProvider = true;
-        // Support "Completion"
-        $serverCapabilities->completionProvider = new CompletionOptions;
-        $serverCapabilities->completionProvider->resolveProvider = false;
-        $serverCapabilities->completionProvider->triggerCharacters = ['$', '>'];
+            $projectIndex = new ProjectIndex(new Index, new DependenciesIndex);
+            $stubsIndex = StubsIndex::read();
+            $globalIndex = new GlobalIndex($stubsIndex, $projectIndex);
 
-        return new InitializeResult($serverCapabilities);
+            // The DefinitionResolver should look in stubs, the project source and dependencies
+            $definitionResolver = new DefinitionResolver($globalIndex);
+
+            $this->documentLoader = new PhpDocumentLoader(
+                $this->contentRetriever,
+                $projectIndex,
+                $definitionResolver
+                );
+
+            if ($rootPath !== null) {
+                $pattern = Path::makeAbsolute('**/*.php', $rootPath);
+                $uris = yield $this->filesFinder->find($pattern);
+                $this->index($uris)->otherwise('\\LanguageServer\\crash');
+            }
+
+            $this->textDocument = new Server\TextDocument(
+                $this->documentLoader,
+                $definitionResolver,
+                $this->client,
+                $globalIndex
+                );
+            // workspace/symbol should only look inside the project source and dependencies
+            $this->workspace = new Server\Workspace($projectIndex, $this->client);
+
+            if (extension_loaded('xdebug')) {
+                setTimeout(function () {
+                    $this->client->window->showMessage(MessageType::WARNING, 'You are running PHP Language Server with xdebug enabled. This has a major impact on server performance.');
+                }, 1);
+            }
+            
+            $serverCapabilities = new ServerCapabilities();
+            // Ask the client to return always full documents (because we need to rebuild the AST from scratch)
+            $serverCapabilities->textDocumentSync = TextDocumentSyncKind::FULL;
+            // Support "Find all symbols"
+            $serverCapabilities->documentSymbolProvider = true;
+            // Support "Find all symbols in workspace"
+            $serverCapabilities->workspaceSymbolProvider = true;
+            // Support "Format Code"
+            $serverCapabilities->documentFormattingProvider = true;
+            // Support "Go to definition"
+            $serverCapabilities->definitionProvider = true;
+            // Support "Find all references"
+            $serverCapabilities->referencesProvider = true;
+            // Support "Hover"
+            $serverCapabilities->hoverProvider = true;
+            // Support "Completion"
+            $serverCapabilities->completionProvider = new CompletionOptions;
+            $serverCapabilities->completionProvider->resolveProvider = false;
+            $serverCapabilities->completionProvider->triggerCharacters = ['$', '>'];
+
+            return new InitializeResult($serverCapabilities);
+        });
     }
 
     /**
@@ -182,76 +230,55 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     }
 
     /**
-     * Parses workspace files, one at a time.
+     * Will read and parse the passed source files in the project and add them to the appropiate indexes
      *
      * @return Promise <void>
      */
-    private function indexProject(): Promise
+    private function index(array $uris): Promise
     {
-        return coroutine(function () {
-            $textDocuments = yield $this->findPhpFiles();
-            $count = count($textDocuments);
+        return coroutine(function () use ($uris) {
+
+            $count = count($uris);
 
             $startTime = microtime(true);
 
-            foreach ($textDocuments as $i => $textDocument) {
-                // Give LS to the chance to handle requests while indexing
-                yield timeout();
-                $this->client->window->logMessage(
-                    MessageType::LOG,
-                    "Parsing file $i/$count: {$textDocument->uri}"
-                );
-                try {
-                    yield $this->project->loadDocument($textDocument->uri);
-                } catch (ContentTooLargeException $e) {
-                    $this->client->window->logMessage(
-                        MessageType::INFO,
-                        "Ignoring file {$textDocument->uri} because it exceeds size limit of {$e->limit} bytes ({$e->size})"
-                    );
-                } catch (Exception $e) {
-                    $this->client->window->logMessage(
-                        MessageType::ERROR,
-                        "Error parsing file {$textDocument->uri}: " . (string)$e
-                    );
-                }
-            }
+            foreach (['Collecting definitions and static references', 'Collecting dynamic references'] as $run) {
+                $this->client->window->logMessage(MessageType::INFO, $run);
+                foreach ($uris as $i => $uri) {
+                    if ($this->documentLoader->isOpen($uri)) {
+                        continue;
+                    }
 
-            $duration = (int)(microtime(true) - $startTime);
-            $mem = (int)(memory_get_usage(true) / (1024 * 1024));
-            $this->client->window->logMessage(
-                MessageType::INFO,
-                "All $count PHP files parsed in $duration seconds. $mem MiB allocated."
-            );
-        });
-    }
-
-    /**
-     * Returns all PHP files in the workspace.
-     * If the client does not support workspace/files, it falls back to searching the file system directly.
-     *
-     * @return Promise <TextDocumentIdentifier[]>
-     */
-    private function findPhpFiles(): Promise
-    {
-        return coroutine(function () {
-            $textDocuments = [];
-            $pattern = Path::makeAbsolute('**/*.php', $this->rootPath);
-            if ($this->clientCapabilities->xfilesProvider) {
-                // Use xfiles request
-                foreach (yield $this->client->workspace->xfiles() as $textDocument) {
-                    $path = Uri\parse($textDocument->uri)['path'];
-                    if (Glob::match($path, $pattern)) {
-                        $textDocuments[] = $textDocument;
+                    // Give LS to the chance to handle requests while indexing
+                    yield timeout();
+                    $this->client->window->logMessage(
+                        MessageType::LOG,
+                        "Parsing file $i/$count: {$uri}"
+                        );
+                    try {
+                        $document = yield $this->documentLoader->load($uri);
+                        if (!$document->isVendored()) {
+                            $this->client->textDocument->publishDiagnostics($uri, $document->getDiagnostics());
+                        }
+                    } catch (ContentTooLargeException $e) {
+                        $this->client->window->logMessage(
+                            MessageType::INFO,
+                            "Ignoring file {$uri} because it exceeds size limit of {$e->limit} bytes ({$e->size})"
+                            );
+                    } catch (Exception $e) {
+                        $this->client->window->logMessage(
+                            MessageType::ERROR,
+                            "Error parsing file {$uri}: " . (string)$e
+                            );
                     }
                 }
-            } else {
-                // Use the file system
-                foreach (new GlobIterator($pattern) as $path) {
-                    $textDocuments[] = new TextDocumentIdentifier(pathToUri($path));
-                    yield timeout();
-                }
+                $duration = (int)(microtime(true) - $startTime);
+                $mem = (int)(memory_get_usage(true) / (1024 * 1024));
+                $this->client->window->logMessage(
+                    MessageType::INFO,
+                    "All $count PHP files parsed in $duration seconds. $mem MiB allocated."
+                    );
             }
-            return $textDocuments;
         });
     }
 }

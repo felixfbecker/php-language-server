@@ -6,8 +6,11 @@ namespace LanguageServer\Tests\Server\TextDocument;
 use PHPUnit\Framework\TestCase;
 use PhpParser\{NodeTraverser, Node};
 use PhpParser\NodeVisitor\NameResolver;
-use LanguageServer\{LanguageClient, Project, PhpDocument, Parser, DefinitionResolver};
+use phpDocumentor\Reflection\DocBlockFactory;
+use LanguageServer\{LanguageClient, PhpDocument, PhpDocumentLoader, Parser, DefinitionResolver};
+use LanguageServer\ContentRetriever\FileSystemContentRetriever;
 use LanguageServer\Protocol\ClientCapabilities;
+use LanguageServer\Index\{ProjectIndex, Index, DependenciesIndex};
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\NodeVisitor\{ReferencesAdder, DefinitionCollector};
 use function LanguageServer\pathToUri;
@@ -16,19 +19,25 @@ class DefinitionCollectorTest extends TestCase
 {
     public function testCollectsSymbols()
     {
-        $client = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
-        $project = new Project($client, new ClientCapabilities);
+        $path = realpath(__DIR__ . '/../../fixtures/symbols.php');
+        $uri = pathToUri($path);
         $parser = new Parser;
-        $uri = pathToUri(realpath(__DIR__ . '/../../fixtures/symbols.php'));
-        $document = $project->loadDocument($uri)->wait();
+        $docBlockFactory = DocBlockFactory::createInstance();
+        $index = new Index;
+        $definitionResolver = new DefinitionResolver($index);
+        $content = file_get_contents($path);
+        $document = new PhpDocument($uri, $content, $index, $parser, $docBlockFactory, $definitionResolver);
+        $stmts = $parser->parse($content);
+
         $traverser = new NodeTraverser;
         $traverser->addVisitor(new NameResolver);
         $traverser->addVisitor(new ReferencesAdder($document));
-        $definitionCollector = new DefinitionCollector(new DefinitionResolver($project));
+        $definitionCollector = new DefinitionCollector($definitionResolver);
         $traverser->addVisitor($definitionCollector);
-        $stmts = $parser->parse(file_get_contents($uri));
         $traverser->traverse($stmts);
+
         $defNodes = $definitionCollector->nodes;
+
         $this->assertEquals([
             'TestNamespace',
             'TestNamespace\\TEST_CONST',
@@ -56,19 +65,25 @@ class DefinitionCollectorTest extends TestCase
 
     public function testDoesNotCollectReferences()
     {
-        $client = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
-        $project = new Project($client, new ClientCapabilities);
+        $path = realpath(__DIR__ . '/../../fixtures/references.php');
+        $uri = pathToUri($path);
         $parser = new Parser;
-        $uri = pathToUri(realpath(__DIR__ . '/../../fixtures/references.php'));
-        $document = $project->loadDocument($uri)->wait();
+        $docBlockFactory = DocBlockFactory::createInstance();
+        $index = new Index;
+        $definitionResolver = new DefinitionResolver($index);
+        $content = file_get_contents($path);
+        $document = new PhpDocument($uri, $content, $index, $parser, $docBlockFactory, $definitionResolver);
+        $stmts = $parser->parse($content);
+
         $traverser = new NodeTraverser;
         $traverser->addVisitor(new NameResolver);
         $traverser->addVisitor(new ReferencesAdder($document));
-        $definitionCollector = new DefinitionCollector(new DefinitionResolver($project));
+        $definitionCollector = new DefinitionCollector($definitionResolver);
         $traverser->addVisitor($definitionCollector);
-        $stmts = $parser->parse(file_get_contents($uri));
         $traverser->traverse($stmts);
+
         $defNodes = $definitionCollector->nodes;
+
         $this->assertEquals(['TestNamespace', 'TestNamespace\\whatever()'], array_keys($defNodes));
         $this->assertInstanceOf(Node\Stmt\Namespace_::class, $defNodes['TestNamespace']);
         $this->assertInstanceOf(Node\Stmt\Function_::class, $defNodes['TestNamespace\\whatever()']);

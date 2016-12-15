@@ -26,6 +26,21 @@ class HoverTest extends ServerTestCase
         ], $reference->range), $result);
     }
 
+    public function testHoverForClassLikeDefinition()
+    {
+        // class TestClass implements TestInterface
+        // Get hover for TestClass
+        $definition = $this->getDefinitionLocation('TestClass');
+        $result = $this->textDocument->hover(
+            new TextDocumentIdentifier($definition->uri),
+            $definition->range->start
+        )->wait();
+        $this->assertEquals(new Hover([
+            new MarkedString('php', "<?php\nclass TestClass implements \\TestInterface"),
+            'Pariatur ut laborum tempor voluptate consequat ea deserunt.'
+        ], $definition->range), $result);
+    }
+
     public function testHoverForMethod()
     {
         // $obj->testMethod();

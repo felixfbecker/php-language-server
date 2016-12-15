@@ -20,6 +20,11 @@ class ReferencesCollector extends NodeVisitorAbstract
     public $nodes = [];
 
     /**
+     * @var DefinitionResolver
+     */
+    private $definitionResolver;
+
+    /**
      * @param DefinitionResolver $definitionResolver The DefinitionResolver to resolve reference nodes to definitions
      */
     public function __construct(DefinitionResolver $definitionResolver)

@@ -5,7 +5,9 @@ namespace LanguageServer\Tests\Server;
 
 use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
-use LanguageServer\{Server, LanguageClient, Project};
+use LanguageServer\{Server, LanguageClient, PhpDocumentLoader, DefinitionResolver};
+use LanguageServer\Index\{ProjectIndex, StubsIndex, GlobalIndex, DependenciesIndex, Index};
+use LanguageServer\ContentRetriever\FileSystemContentRetriever;
 use LanguageServer\Protocol\{Position, Location, Range, ClientCapabilities};
 use function LanguageServer\pathToUri;
 use Sabre\Event\Promise;
@@ -23,9 +25,9 @@ abstract class ServerTestCase extends TestCase
     protected $workspace;
 
     /**
-     * @var Project
+     * @var PhpDocumentLoader
      */
-    protected $project;
+    protected $documentLoader;
 
     /**
      * Map from FQN to Location of definition
@@ -43,10 +45,13 @@ abstract class ServerTestCase extends TestCase
 
     public function setUp()
     {
-        $client             = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
-        $this->project      = new Project($client, new ClientCapabilities);
-        $this->textDocument = new Server\TextDocument($this->project, $client);
-        $this->workspace    = new Server\Workspace($this->project, $client);
+        $projectIndex = new ProjectIndex(new Index, new DependenciesIndex);
+
+        $definitionResolver   = new DefinitionResolver($projectIndex);
+        $client               = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
+        $this->documentLoader = new PhpDocumentLoader(new FileSystemContentRetriever, $projectIndex, $definitionResolver);
+        $this->textDocument   = new Server\TextDocument($this->documentLoader, $definitionResolver, $client, $projectIndex);
+        $this->workspace      = new Server\Workspace($projectIndex, $client);
 
         $globalSymbolsUri    = pathToUri(realpath(__DIR__ . '/../../fixtures/global_symbols.php'));
         $globalReferencesUri = pathToUri(realpath(__DIR__ . '/../../fixtures/global_references.php'));
@@ -54,11 +59,11 @@ abstract class ServerTestCase extends TestCase
         $referencesUri       = pathToUri(realpath(__DIR__ . '/../../fixtures/references.php'));
         $useUri              = pathToUri(realpath(__DIR__ . '/../../fixtures/use.php'));
 
-        $this->project->loadDocument($symbolsUri)->wait();
-        $this->project->loadDocument($referencesUri)->wait();
-        $this->project->loadDocument($globalSymbolsUri)->wait();
-        $this->project->loadDocument($globalReferencesUri)->wait();
-        $this->project->loadDocument($useUri)->wait();
+        $this->documentLoader->load($symbolsUri)->wait();
+        $this->documentLoader->load($referencesUri)->wait();
+        $this->documentLoader->load($globalSymbolsUri)->wait();
+        $this->documentLoader->load($globalReferencesUri)->wait();
+        $this->documentLoader->load($useUri)->wait();
 
         // @codingStandardsIgnoreStart
         $this->definitionLocations = [

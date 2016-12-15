@@ -22,9 +22,12 @@
         "refactor"
     ],
     "bin": ["bin/php-language-server.php"],
+    "scripts": {
+        "parse-stubs": "LanguageServer\\ComposerScripts::parseStubs"
+    },
     "require": {
         "php": ">=7.0",
-        "nikic/php-parser": "dev-master#e52ffc4447e034514339a03b450aab9cd625e37c",
+        "nikic/php-parser": "^3.0",
         "phpdocumentor/reflection-docblock": "^3.0",
         "sabre/event": "^5.0",
         "felixfbecker/advanced-json-rpc": "^2.0",
@@ -32,8 +35,27 @@
         "netresearch/jsonmapper": "^1.0",
         "webmozart/path-util": "^2.3",
         "webmozart/glob": "^4.1",
-        "sabre/uri": "^2.0"
+        "sabre/uri": "^2.0",
+        "JetBrains/phpstorm-stubs": "dev-master"
     },
+    "repositories": [
+        {
+            "type": "package",
+            "package": {
+                "name": "JetBrains/phpstorm-stubs",
+                "version": "dev-master",
+                "dist": {
+                    "url": "https://github.com/JetBrains/phpstorm-stubs/archive/master.zip",
+                    "type": "zip"
+                },
+                "source": {
+                    "url": "https://github.com/JetBrains/phpstorm-stubs",
+                    "type": "git",
+                    "reference": "master"
+                }
+            }
+        }
+    ],
     "minimum-stability": "dev",
     "prefer-stable": true,
     "autoload": {

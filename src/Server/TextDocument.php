@@ -3,9 +3,10 @@ declare(strict_types = 1);
 
 namespace LanguageServer\Server;
 
-use LanguageServer\{LanguageClient, Project, PhpDocument, DefinitionResolver, CompletionProvider};
 use PhpParser\PrettyPrinter\Standard as PrettyPrinter;
-use PhpParser\Node;
+use PhpParser\{Node, NodeTraverser};
+use LanguageServer\{LanguageClient, PhpDocumentLoader, PhpDocument, DefinitionResolver, CompletionProvider};
+use LanguageServer\NodeVisitor\VariableReferencesCollector;
 use LanguageServer\Protocol\{
     TextDocumentItem,
     TextDocumentIdentifier,
@@ -23,7 +24,9 @@ use LanguageServer\Protocol\{
     CompletionItem,
     CompletionItemKind
 };
+use LanguageServer\Index\ReadableIndex;
 use Sabre\Event\Promise;
+use Sabre\Uri;
 use function Sabre\Event\coroutine;
 
 /**
@@ -58,13 +61,29 @@ class TextDocument
      */
     private $completionProvider;
 
-    public function __construct(Project $project, LanguageClient $client)
-    {
-        $this->project = $project;
+    /**
+     * @var ReadableIndex
+     */
+    private $index;
+
+    /**
+     * @param PhpDocumentLoader  $documentLoader
+     * @param DefinitionResolver $definitionResolver
+     * @param LanguageClient     $client
+     * @param ReadableIndex      $index
+     */
+    public function __construct(
+        PhpDocumentLoader $documentLoader,
+        DefinitionResolver $definitionResolver,
+        LanguageClient $client,
+        ReadableIndex $index
+    ) {
+        $this->documentLoader = $documentLoader;
         $this->client = $client;
         $this->prettyPrinter = new PrettyPrinter();
-        $this->definitionResolver = new DefinitionResolver($project);
-        $this->completionProvider = new CompletionProvider($this->definitionResolver, $project);
+        $this->definitionResolver = $definitionResolver;
+        $this->completionProvider = new CompletionProvider($this->definitionResolver, $index);
+        $this->index = $index;
     }
 
     /**
@@ -76,7 +95,7 @@ class TextDocument
      */
     public function documentSymbol(TextDocumentIdentifier $textDocument): Promise
     {
-        return $this->project->getOrLoadDocument($textDocument->uri)->then(function (PhpDocument $document) {
+        return $this->documentLoader->getOrLoad($textDocument->uri)->then(function (PhpDocument $document) {
             $symbols = [];
             foreach ($document->getDefinitions() as $fqn => $definition) {
                 $symbols[] = $definition->symbolInformation;
@@ -95,7 +114,10 @@ class TextDocument
      */
     public function didOpen(TextDocumentItem $textDocument)
     {
-        $this->project->openDocument($textDocument->uri, $textDocument->text);
+        $document = $this->documentLoader->open($textDocument->uri, $textDocument->text);
+        if (!$document->isVendored()) {
+            $this->client->textDocument->publishDiagnostics($textDocument->uri, $document->getDiagnostics());
+        }
     }
 
     /**
@@ -107,7 +129,9 @@ class TextDocument
      */
     public function didChange(VersionedTextDocumentIdentifier $textDocument, array $contentChanges)
     {
-        $this->project->getDocument($textDocument->uri)->updateContent($contentChanges[0]->text);
+        $document = $this->documentLoader->get($textDocument->uri);
+        $document->updateContent($contentChanges[0]->text);
+        $this->client->textDocument->publishDiagnostics($textDocument->uri, $document->getDiagnostics());
     }
 
     /**
@@ -120,7 +144,7 @@ class TextDocument
      */
     public function didClose(TextDocumentIdentifier $textDocument)
     {
-        $this->project->closeDocument($textDocument->uri);
+        $this->documentLoader->close($textDocument->uri);
     }
 
     /**
@@ -132,7 +156,7 @@ class TextDocument
      */
     public function formatting(TextDocumentIdentifier $textDocument, FormattingOptions $options)
     {
-        return $this->project->getOrLoadDocument($textDocument->uri)->then(function (PhpDocument $document) {
+        return $this->documentLoader->getOrLoad($textDocument->uri)->then(function (PhpDocument $document) {
             return $document->getFormattedText();
         });
     }
@@ -150,15 +174,58 @@ class TextDocument
         Position $position
     ): Promise {
         return coroutine(function () use ($textDocument, $position) {
-            $document = yield $this->project->getOrLoadDocument($textDocument->uri);
+            $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
             $node = $document->getNodeAtPosition($position);
             if ($node === null) {
                 return [];
             }
-            $refs = yield $document->getReferenceNodesByNode($node);
             $locations = [];
-            foreach ($refs as $ref) {
-                $locations[] = Location::fromNode($ref);
+            // Variables always stay in the boundary of the file and need to be searched inside their function scope
+            // by traversing the AST
+            if (
+                $node instanceof Node\Expr\Variable
+                || $node instanceof Node\Param
+                || $node instanceof Node\Expr\ClosureUse
+            ) {
+                if ($node->name instanceof Node\Expr) {
+                    return null;
+                }
+                // Find function/method/closure scope
+                $n = $node;
+                while (isset($n) && !($n instanceof Node\FunctionLike)) {
+                    $n = $n->getAttribute('parentNode');
+                }
+                if (!isset($n)) {
+                    $n = $node->getAttribute('ownerDocument');
+                }
+                $traverser = new NodeTraverser;
+                $refCollector = new VariableReferencesCollector($node->name);
+                $traverser->addVisitor($refCollector);
+                $traverser->traverse($n->getStmts());
+                foreach ($refCollector->nodes as $ref) {
+                    $locations[] = Location::fromNode($ref);
+                }
+            } else {
+                // Definition with a global FQN
+                $fqn = DefinitionResolver::getDefinedFqn($node);
+                if ($fqn === null) {
+                    $fqn = $this->definitionResolver->resolveReferenceNodeToFqn($node);
+                    if ($fqn === null) {
+                        return [];
+                    }
+                }
+                $refDocuments = yield Promise\all(array_map(
+                    [$this->documentLoader, 'getOrLoad'],
+                    $this->index->getReferenceUris($fqn)
+                ));
+                foreach ($refDocuments as $document) {
+                    $refs = $document->getReferenceNodesByFqn($fqn);
+                    if ($refs !== null) {
+                        foreach ($refs as $ref) {
+                            $locations[] = Location::fromNode($ref);
+                        }
+                    }
+                }
             }
             return $locations;
         });
@@ -175,13 +242,17 @@ class TextDocument
     public function definition(TextDocumentIdentifier $textDocument, Position $position): Promise
     {
         return coroutine(function () use ($textDocument, $position) {
-            $document = yield $this->project->getOrLoadDocument($textDocument->uri);
+            $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
             $node = $document->getNodeAtPosition($position);
             if ($node === null) {
                 return [];
             }
             $def = $this->definitionResolver->resolveReferenceNodeToDefinition($node);
-            if ($def === null || $def->symbolInformation === null) {
+            if (
+                $def === null
+                || $def->symbolInformation === null
+                || Uri\parse($def->symbolInformation->location->uri)['scheme'] === 'phpstubs'
+            ) {
                 return [];
             }
             return $def->symbolInformation->location;
@@ -198,15 +269,20 @@ class TextDocument
     public function hover(TextDocumentIdentifier $textDocument, Position $position): Promise
     {
         return coroutine(function () use ($textDocument, $position) {
-            $document = yield $this->project->getOrLoadDocument($textDocument->uri);
+            $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
             // Find the node under the cursor
             $node = $document->getNodeAtPosition($position);
             if ($node === null) {
                 return new Hover([]);
             }
             $range = Range::fromNode($node);
-            // Get the definition for whatever node is under the cursor
-            $def = $this->definitionResolver->resolveReferenceNodeToDefinition($node);
+            if ($definedFqn = DefinitionResolver::getDefinedFqn($node)) {
+                // Support hover for definitions
+                $def = $this->index->getDefinition($definedFqn);
+            } else {
+                // Get the definition for whatever node is under the cursor
+                $def = $this->definitionResolver->resolveReferenceNodeToDefinition($node);
+            }
             if ($def === null) {
                 return new Hover([], $range);
             }
@@ -237,7 +313,7 @@ class TextDocument
     public function completion(TextDocumentIdentifier $textDocument, Position $position): Promise
     {
         return coroutine(function () use ($textDocument, $position) {
-            $document = yield $this->project->getOrLoadDocument($textDocument->uri);
+            $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
             return $this->completionProvider->provideCompletion($document, $position);
         });
     }

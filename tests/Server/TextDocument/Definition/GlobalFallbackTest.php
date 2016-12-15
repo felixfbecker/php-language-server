@@ -5,7 +5,9 @@ namespace LanguageServer\Tests\Server\TextDocument\Definition;
 
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\Tests\Server\ServerTestCase;
-use LanguageServer\{Server, LanguageClient, Project};
+use LanguageServer\{Server, LanguageClient, PhpDocumentLoader, DefinitionResolver};
+use LanguageServer\Index\{Index, ProjectIndex, DependenciesIndex};
+use LanguageServer\ContentRetriever\FileSystemContentRetriever;
 use LanguageServer\Protocol\{TextDocumentIdentifier, Position, Range, Location, ClientCapabilities};
 use Sabre\Event\Promise;
 
@@ -13,11 +15,14 @@ class GlobalFallbackTest extends ServerTestCase
 {
     public function setUp()
     {
+        $projectIndex = new ProjectIndex(new Index, new DependenciesIndex);
         $client = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
-        $project = new Project($client, new ClientCapabilities);
-        $this->textDocument = new Server\TextDocument($project, $client);
-        $project->openDocument('global_fallback', file_get_contents(__DIR__ . '/../../../../fixtures/global_fallback.php'));
-        $project->openDocument('global_symbols', file_get_contents(__DIR__ . '/../../../../fixtures/global_symbols.php'));
+        $definitionResolver = new DefinitionResolver($projectIndex);
+        $contentRetriever = new FileSystemContentRetriever;
+        $loader = new PhpDocumentLoader($contentRetriever, $projectIndex, $definitionResolver);
+        $this->textDocument = new Server\TextDocument($loader, $definitionResolver, $client, $projectIndex);
+        $loader->open('global_fallback', file_get_contents(__DIR__ . '/../../../../fixtures/global_fallback.php'));
+        $loader->open('global_symbols', file_get_contents(__DIR__ . '/../../../../fixtures/global_symbols.php'));
     }
 
     public function testClassDoesNotFallback()
