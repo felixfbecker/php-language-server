@@ -31,6 +31,13 @@ class Definition
     public $fqn;
 
     /**
+     * For class or interfaces, the FQNs of extended classes and implemented interfaces
+     *
+     * @var string[]
+     */
+    public $extends;
+
+    /**
      * Only true for classes, interfaces, traits, functions and non-class constants
      * This is so methods and properties are not suggested in the global scope
      *

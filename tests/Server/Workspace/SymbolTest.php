@@ -41,6 +41,7 @@ class SymbolTest extends ServerTestCase
             new SymbolInformation('TestTrait',          SymbolKind::CLASS_,    $this->getDefinitionLocation('TestNamespace\\TestTrait'),                     'TestNamespace'),
             new SymbolInformation('TestInterface',      SymbolKind::INTERFACE, $this->getDefinitionLocation('TestNamespace\\TestInterface'),                 'TestNamespace'),
             new SymbolInformation('test_function',      SymbolKind::FUNCTION,  $this->getDefinitionLocation('TestNamespace\\test_function()'),               'TestNamespace'),
+            new SymbolInformation('ChildClass',         SymbolKind::CLASS_,    $this->getDefinitionLocation('TestNamespace\\ChildClass'),                    'TestNamespace'),
             new SymbolInformation('whatever',           SymbolKind::FUNCTION,  $this->getDefinitionLocation('TestNamespace\\whatever()'),                    'TestNamespace'),
             // Global
             new SymbolInformation('TEST_CONST',         SymbolKind::CONSTANT,  $this->getDefinitionLocation('TEST_CONST'),                                   ''),
@@ -53,6 +54,7 @@ class SymbolTest extends ServerTestCase
             new SymbolInformation('TestTrait',          SymbolKind::CLASS_,    $this->getDefinitionLocation('TestTrait'),                                    ''),
             new SymbolInformation('TestInterface',      SymbolKind::INTERFACE, $this->getDefinitionLocation('TestInterface'),                                ''),
             new SymbolInformation('test_function',      SymbolKind::FUNCTION,  $this->getDefinitionLocation('test_function()'),                              ''),
+            new SymbolInformation('ChildClass',         SymbolKind::CLASS_,    $this->getDefinitionLocation('ChildClass'),                                   ''),
             new SymbolInformation('whatever',           SymbolKind::FUNCTION,  $this->getDefinitionLocation('whatever()'),                                   ''),
 
             new SymbolInformation('SecondTestNamespace', SymbolKind::NAMESPACE, $this->getDefinitionLocation('SecondTestNamespace'), '')

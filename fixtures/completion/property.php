@@ -1,4 +1,4 @@
 <?php
 
-$obj = new TestClass;
+$obj = new ChildClass;
 $obj->

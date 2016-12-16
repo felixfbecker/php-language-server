@@ -96,3 +96,5 @@ new class {
         $testVariable = 123;
     }
 };
+
+class ChildClass extends TestClass {}

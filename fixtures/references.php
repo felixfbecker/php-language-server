@@ -38,3 +38,6 @@ if ($abc instanceof TestInterface) {
 // Nested expressions
 $obj->testProperty->testMethod();
 TestClass::$staticTestProperty[123]->testProperty;
+
+$child = new ChildClass;
+echo $child->testMethod();

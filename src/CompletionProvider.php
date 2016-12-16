@@ -145,8 +145,10 @@ class CompletionProvider
                     $this->definitionResolver->resolveExpressionNodeToType($node->var)
                 );
             } else {
+                // Static member reference
                 $prefixes = [$node->class instanceof Node\Name ? (string)$node->class : ''];
             }
+            $prefixes = $this->expandParentFqns($prefixes);
             // If we are just filtering by the class, add the appropiate operator to the prefix
             // to filter the type of symbol
             foreach ($prefixes as &$prefix) {
@@ -158,6 +160,7 @@ class CompletionProvider
                     $prefix .= '::$';
                 }
             }
+            unset($prefix);
 
             foreach ($this->index->getDefinitions() as $fqn => $def) {
                 foreach ($prefixes as $prefix) {
@@ -285,6 +288,26 @@ class CompletionProvider
         }
 
         return $list;
+    }
+
+    /**
+     * Adds the FQNs of all parent classes to an array of FQNs of classes
+     *
+     * @param string[] $fqns
+     * @return string[]
+     */
+    private function expandParentFqns(array $fqns): array
+    {
+        $expanded = $fqns;
+        foreach ($fqns as $fqn) {
+            $def = $this->index->getDefinition($fqn);
+            if ($def) {
+                foreach ($this->expandParentFqns($def->extends) as $parent) {
+                    $expanded[] = $parent;
+                }
+            }
+        }
+        return $expanded;
     }
 
     /**

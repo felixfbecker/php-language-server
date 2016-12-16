@@ -29,6 +29,7 @@ class DocumentSymbolTest extends ServerTestCase
             new SymbolInformation('TestTrait',          SymbolKind::CLASS_,    $this->getDefinitionLocation('TestNamespace\\TestTrait'),                     'TestNamespace'),
             new SymbolInformation('TestInterface',      SymbolKind::INTERFACE, $this->getDefinitionLocation('TestNamespace\\TestInterface'),                 'TestNamespace'),
             new SymbolInformation('test_function',      SymbolKind::FUNCTION,  $this->getDefinitionLocation('TestNamespace\\test_function()'),               'TestNamespace'),
+            new SymbolInformation('ChildClass',         SymbolKind::CLASS_,    $this->getDefinitionLocation('TestNamespace\\ChildClass'),                    'TestNamespace'),
         ], $result);
         // @codingStandardsIgnoreEnd
     }
