@@ -141,7 +141,24 @@ class PhpDocument
     public function updateContent(string $content)
     {
         $this->content = $content;
-        $stmts = null;
+
+        // Unregister old definitions
+        if (isset($this->definitions)) {
+            foreach ($this->definitions as $fqn => $definition) {
+                $this->index->removeDefinition($fqn);
+            }
+        }
+
+        // Unregister old references
+        if (isset($this->referenceNodes)) {
+            foreach ($this->referenceNodes as $fqn => $node) {
+                $this->index->removeReferenceUri($fqn, $this->uri);
+            }
+        }
+
+        $this->referenceNodes = null;
+        $this->definitions = null;
+        $this->definitionNodes = null;
 
         $errorHandler = new ErrorHandler\Collecting;
         $stmts = $this->parser->parse($content, $errorHandler);
@@ -187,24 +204,11 @@ class PhpDocument
 
             $traverser->traverse($stmts);
 
-            // Unregister old definitions
-            if (isset($this->definitions)) {
-                foreach ($this->definitions as $fqn => $definition) {
-                    $this->index->removeDefinition($fqn);
-                }
-            }
             // Register this document on the project for all the symbols defined in it
             $this->definitions = $definitionCollector->definitions;
             $this->definitionNodes = $definitionCollector->nodes;
             foreach ($definitionCollector->definitions as $fqn => $definition) {
                 $this->index->setDefinition($fqn, $definition);
-            }
-
-            // Unregister old references
-            if (isset($this->referenceNodes)) {
-                foreach ($this->referenceNodes as $fqn => $node) {
-                    $this->index->removeReferenceUri($fqn, $this->uri);
-                }
             }
             // Register this document on the project for references
             $this->referenceNodes = $referencesCollector->nodes;
