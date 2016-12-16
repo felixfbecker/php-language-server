@@ -284,12 +284,12 @@ class DefinitionResolver
                 }
             }
             return $classFqn . $memberSuffix;
-        } else if ($parent instanceof Node\Expr\FuncCall) {
+        } else if ($parent instanceof Node\Expr\FuncCall && $node instanceof Node\Name) {
             if ($parent->name instanceof Node\Expr) {
                 return null;
             }
             $name = (string)($node->getAttribute('namespacedName') ?? $parent->name);
-        } else if ($parent instanceof Node\Expr\ConstFetch) {
+        } else if ($parent instanceof Node\Expr\ConstFetch && $node instanceof Node\Name) {
             $name = (string)($node->getAttribute('namespacedName') ?? $parent->name);
         } else if (
             $node instanceof Node\Expr\ClassConstFetch
