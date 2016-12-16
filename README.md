@@ -177,7 +177,8 @@ Example:
     php bin/php-language-server.php --memory-limit=256M
 
 ## Used by
- - [vscode-php-intellisense](https://github.com/felixfbecker/vscode-php-intellisense)
+ - [VS Code PHP IntelliSense](https://github.com/felixfbecker/vscode-php-intellisense)
+ - [Eclipse Che](https://eclipse.org/che/)
 
 ## Contributing
 
