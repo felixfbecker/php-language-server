@@ -165,6 +165,15 @@ class CompletionTest extends TestCase
                 null,
                 '\TestClass'
             ),
+            new CompletionItem(
+                'ChildClass',
+                CompletionItemKind::CLASS_,
+                null,
+                null,
+                null,
+                null,
+                '\ChildClass'
+            ),
             // Namespaced, `use`d TestClass definition (inserted as TestClass)
             new CompletionItem(
                 'TestClass',
@@ -174,6 +183,15 @@ class CompletionTest extends TestCase
                 null,
                 null,
                 'TestClass'
+            ),
+            new CompletionItem(
+                'ChildClass',
+                CompletionItemKind::CLASS_,
+                'TestNamespace',
+                null,
+                null,
+                null,
+                '\TestNamespace\ChildClass'
             ),
         ], true), $items);
     }

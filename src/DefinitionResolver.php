@@ -115,6 +115,17 @@ class DefinitionResolver
             || ($node instanceof Node\Stmt\PropertyProperty && $node->getAttribute('parentNode')->isStatic())
         );
         $def->fqn = $fqn;
+        if ($node instanceof Node\Stmt\Class_) {
+            $def->extends = [];
+            if ($node->extends) {
+                $def->extends[] = (string)$node->extends;
+            }
+        } else if ($node instanceof Node\Stmt\Interface_) {
+            $def->extends = [];
+            foreach ($node->extends as $n) {
+                $def->extends[] = (string)$n;
+            }
+        }
         $def->symbolInformation = SymbolInformation::fromNode($node, $fqn);
         $def->type = $this->getTypeFromNode($node);
         $def->declarationLine = $this->getDeclarationLineFromNode($node);
@@ -248,7 +259,31 @@ class DefinitionResolver
             } else {
                 $classFqn = substr((string)$varType->getFqsen(), 1);
             }
-            $name = $classFqn . '->' . (string)$node->name;
+            $memberSuffix = '->' . (string)$node->name;
+            if ($node instanceof Node\Expr\MethodCall) {
+                $memberSuffix .= '()';
+            }
+            // Find the right class that implements the member
+            $implementorFqns = [$classFqn];
+            while ($implementorFqn = array_shift($implementorFqns)) {
+                // If the member FQN exists, return it
+                if ($this->index->getDefinition($implementorFqn . $memberSuffix)) {
+                    return $implementorFqn . $memberSuffix;
+                }
+                // Get Definition of implementor class
+                $implementorDef = $this->index->getDefinition($implementorFqn);
+                // If it doesn't exist, return the initial guess
+                if ($implementorDef === null) {
+                    break;
+                }
+                // Repeat for parent class
+                if ($implementorDef->extends) {
+                    foreach ($implementorDef->extends as $extends) {
+                        $implementorFqns[] = $extends;
+                    }
+                }
+            }
+            return $classFqn . $memberSuffix;
         } else if ($parent instanceof Node\Expr\FuncCall) {
             if ($parent->name instanceof Node\Expr) {
                 return null;
@@ -290,15 +325,15 @@ class DefinitionResolver
         } else {
             return null;
         }
+        if (!isset($name)) {
+            return null;
+        }
         if (
             $node instanceof Node\Expr\MethodCall
             || $node instanceof Node\Expr\StaticCall
             || $parent instanceof Node\Expr\FuncCall
         ) {
             $name .= '()';
-        }
-        if (!isset($name)) {
-            return null;
         }
         return $name;
     }

@@ -161,6 +161,18 @@ class GlobalTest extends ServerTestCase
         $this->assertEquals($this->getDefinitionLocation('TestClass::testMethod()'), $result);
     }
 
+    public function testDefinitionForMethodOnChildClass()
+    {
+        // $child->testMethod();
+        // Get definition for testMethod
+        $reference = $this->getReferenceLocations('TestClass::testMethod()')[2];
+        $result = $this->textDocument->definition(
+            new TextDocumentIdentifier($reference->uri),
+            $reference->range->end
+        )->wait();
+        $this->assertEquals($this->getDefinitionLocation('TestClass::testMethod()'), $result);
+    }
+
     public function testDefinitionForProperties()
     {
         // echo $obj->testProperty;
