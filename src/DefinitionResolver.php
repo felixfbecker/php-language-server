@@ -102,17 +102,18 @@ class DefinitionResolver
      */
     public function createDefinitionFromNode(Node $node, string $fqn = null): Definition
     {
+        $parent = $node->getAttribute('parentNode');
         $def = new Definition;
         $def->canBeInstantiated = $node instanceof Node\Stmt\Class_;
         $def->isGlobal = (
             $node instanceof Node\Stmt\ClassLike
-            || $node instanceof Node\Stmt\Namespace_
+            || ($node instanceof Node\Name && $parent instanceof Node\Stmt\Namespace_)
             || $node instanceof Node\Stmt\Function_
-            || $node->getAttribute('parentNode') instanceof Node\Stmt\Const_
+            || $parent instanceof Node\Stmt\Const_
         );
         $def->isStatic = (
             ($node instanceof Node\Stmt\ClassMethod && $node->isStatic())
-            || ($node instanceof Node\Stmt\PropertyProperty && $node->getAttribute('parentNode')->isStatic())
+            || ($node instanceof Node\Stmt\PropertyProperty && $parent->isStatic())
         );
         $def->fqn = $fqn;
         if ($node instanceof Node\Stmt\Class_) {
@@ -203,9 +204,9 @@ class DefinitionResolver
         if (
             $node instanceof Node\Name && (
                 $parent instanceof Node\Stmt\ClassLike
-                || $parent instanceof Node\Stmt\Namespace_
                 || $parent instanceof Node\Param
                 || $parent instanceof Node\FunctionLike
+                || $parent instanceof Node\Stmt\GroupUse
                 || $parent instanceof Node\Expr\New_
                 || $parent instanceof Node\Expr\StaticCall
                 || $parent instanceof Node\Expr\ClassConstFetch
@@ -804,12 +805,13 @@ class DefinitionResolver
      */
     public static function getDefinedFqn(Node $node)
     {
+        $parent = $node->getAttribute('parentNode');
         // Anonymous classes don't count as a definition
         if ($node instanceof Node\Stmt\ClassLike && isset($node->name)) {
             // Class, interface or trait declaration
             return (string)$node->namespacedName;
-        } else if ($node instanceof Node\Stmt\Namespace_) {
-            return (string)$node->name;
+        } else if ($node instanceof Node\Name && $parent instanceof Node\Stmt\Namespace_) {
+            return (string)$node;
         } else if ($node instanceof Node\Stmt\Function_) {
             // Function: use functionName() as the name
             return (string)$node->namespacedName . '()';

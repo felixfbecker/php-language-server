@@ -83,8 +83,8 @@ abstract class ServerTestCase extends TestCase
             'whatever()'                             => new Location($globalReferencesUri, new Range(new Position(21,  0), new Position(23,  1))),
 
             // Namespaced
-            'TestNamespace'                                => new Location($symbolsUri,    new Range(new Position( 2,  0), new Position( 2, 24))),
-            'SecondTestNamespace'                          => new Location($useUri,        new Range(new Position( 2,  0), new Position( 2, 30))),
+            'TestNamespace'                                => new Location($symbolsUri,    new Range(new Position( 2, 10), new Position( 2, 23))),
+            'SecondTestNamespace'                          => new Location($useUri,        new Range(new Position( 2, 10), new Position( 2, 29))),
             'TestNamespace\\TEST_CONST'                    => new Location($symbolsUri,    new Range(new Position( 9,  6), new Position( 9, 22))),
             'TestNamespace\\TestClass'                     => new Location($symbolsUri,    new Range(new Position(20,  0), new Position(61,  1))),
             'TestNamespace\\ChildClass'                    => new Location($symbolsUri,    new Range(new Position(99,  0), new Position(99, 37))),
@@ -102,6 +102,11 @@ abstract class ServerTestCase extends TestCase
         $this->referenceLocations = [
 
             // Namespaced
+            'TestNamespace' => [
+                0 => new Location($referencesUri, new Range(new Position(31, 13), new Position(31, 40))), // use function TestNamespace\test_function;
+                1 => new Location($useUri,        new Range(new Position( 4,  4), new Position( 4, 27))), // use TestNamespace\TestClass;
+                2 => new Location($useUri,        new Range(new Position( 5,  4), new Position( 5, 17)))  // use TestNamespace\{TestTrait, TestInterface};
+            ],
             'TestNamespace\\TEST_CONST' => [
                 0 => new Location($referencesUri, new Range(new Position(29,  5), new Position(29, 15)))
             ],

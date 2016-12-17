@@ -87,7 +87,8 @@ class DefinitionCollectorTest extends TestCase
         $defNodes = $definitionCollector->nodes;
 
         $this->assertEquals(['TestNamespace', 'TestNamespace\\whatever()'], array_keys($defNodes));
-        $this->assertInstanceOf(Node\Stmt\Namespace_::class, $defNodes['TestNamespace']);
+        $this->assertInstanceOf(Node\Name::class, $defNodes['TestNamespace']);
+        $this->assertInstanceOf(Node\Stmt\Namespace_::class, $defNodes['TestNamespace']->getAttribute('parentNode'));
         $this->assertInstanceOf(Node\Stmt\Function_::class, $defNodes['TestNamespace\\whatever()']);
     }
 }
