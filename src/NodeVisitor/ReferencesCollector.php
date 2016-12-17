@@ -40,13 +40,10 @@ class ReferencesCollector extends NodeVisitorAbstract
             $parent = $node->getAttribute('parentNode');
             $grandParent = $parent ? $parent->getAttribute('parentNode') : null;
             $this->addReference($fqn, $node);
-            if (
-                $node instanceof Node\Name
-                && $node->isQualified()
-                && !($parent instanceof Node\Stmt\Namespace_ && $parent->name === $node)
-            ) {
+            if ($node instanceof Node\Name && !($parent instanceof Node\Stmt\Namespace_ && $parent->name === $node)) {
+                $name = $node->getAttribute('originalName');
                 // Add references for each referenced namespace
-                $ns = $fqn;
+                $ns = (string)$name;
                 while (($pos = strrpos($ns, '\\')) !== false) {
                     $ns = substr($ns, 0, $pos);
                     $this->addReference($ns, $node);
