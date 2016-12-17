@@ -48,6 +48,7 @@ class SymbolInformation
      */
     public static function fromNode(Node $node, string $fqn = null)
     {
+        $parent = $node->getAttribute('parentNode');
         $symbol = new self;
         if ($node instanceof Node\Stmt\Class_) {
             $symbol->kind = SymbolKind::CLASS_;
@@ -55,7 +56,7 @@ class SymbolInformation
             $symbol->kind = SymbolKind::CLASS_;
         } else if ($node instanceof Node\Stmt\Interface_) {
             $symbol->kind = SymbolKind::INTERFACE;
-        } else if ($node instanceof Node\Stmt\Namespace_) {
+        } else if ($node instanceof Node\Name && $parent instanceof Node\Stmt\Namespace_) {
             $symbol->kind = SymbolKind::NAMESPACE;
         } else if ($node instanceof Node\Stmt\Function_) {
             $symbol->kind = SymbolKind::FUNCTION;
@@ -77,7 +78,9 @@ class SymbolInformation
         } else {
             return null;
         }
-        if ($node instanceof Node\Expr\Assign || $node instanceof Node\Expr\AssignOp) {
+        if ($node instanceof Node\Name) {
+            $symbol->name = (string)$node;
+        } else if ($node instanceof Node\Expr\Assign || $node instanceof Node\Expr\AssignOp) {
             $symbol->name = $node->var->name;
         } else if ($node instanceof Node\Expr\ClosureUse) {
             $symbol->name = $node->var;
