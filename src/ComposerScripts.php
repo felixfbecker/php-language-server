@@ -32,7 +32,17 @@ class ComposerScripts
             $parser = new Parser;
             $definitionResolver = new DefinitionResolver($index);
 
-            $stubsLocation = Path::canonicalize(__DIR__ . '/../vendor/JetBrains/phpstorm-stubs');
+            $stubsLocation = null;
+            foreach ([__DIR__ . '/../../../JetBrains/phpstorm-stubs', __DIR__ . '/../vendor/JetBrains/phpstorm-stubs'] as $dir) {
+                if (file_exists($dir)) {
+                    $stubsLocation = Path::canonicalize($dir);
+                    break;
+                }
+            }
+            if (!$stubsLocation) {
+                throw new \Exception('JetBrains/phpstorm-stubs package not found');
+            }
+
             $uris = yield $finder->find("$stubsLocation/**/*.php");
 
             foreach ($uris as $uri) {
