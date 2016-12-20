@@ -11,11 +11,12 @@ use Webmozart\PathUtil\Path;
 use Sabre\Uri;
 use function Sabre\Event\coroutine;
 
-require_once __DIR__ . '/../vendor/sabre/event/lib/coroutine.php';
-require_once __DIR__ . '/../vendor/sabre/event/lib/Loop/functions.php';
-require_once __DIR__ . '/../vendor/sabre/event/lib/Promise/functions.php';
-require_once __DIR__ . '/../vendor/sabre/uri/lib/functions.php';
-require_once __DIR__ . '/utils.php';
+foreach ([__DIR__ . '/../../../autoload.php', __DIR__ . '/../autoload.php', __DIR__ . '/../vendor/autoload.php'] as $file) {
+    if (file_exists($file)) {
+        require $file;
+        break;
+    }
+}
 
 class ComposerScripts
 {
