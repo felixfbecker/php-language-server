@@ -579,8 +579,8 @@ class DefinitionResolver
             || $expr instanceof Node\Expr\AssignOp\Mul
         ) {
             if (
-                resolveType($expr->left) instanceof Types\Integer_
-                && resolveType($expr->right) instanceof Types\Integer_
+                $this->resolveExpressionNodeToType($expr->left) instanceof Types\Integer_
+                && $this->resolveExpressionNodeToType($expr->right) instanceof Types\Integer_
             ) {
                 return new Types\Integer;
             }
