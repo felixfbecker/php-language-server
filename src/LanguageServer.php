@@ -54,27 +54,27 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     /**
      * @var ProtocolReader
      */
-    private $protocolReader;
+    protected $protocolReader;
 
     /**
      * @var ProtocolWriter
      */
-    private $protocolWriter;
+    protected $protocolWriter;
 
     /**
      * @var LanguageClient
      */
-    private $client;
+    protected $client;
 
     /**
      * @var FilesFinder
      */
-    private $filesFinder;
+    protected $filesFinder;
 
     /**
      * @var ContentRetriever
      */
-    private $contentRetriever;
+    protected $contentRetriever;
 
     /**
      * @param PotocolReader  $reader
@@ -139,6 +139,8 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     {
         return coroutine(function () use ($capabilities, $rootPath, $processId) {
 
+            yield null;
+
             if ($capabilities->xfilesProvider) {
                 $this->filesFinder = new ClientFilesFinder($this->client);
             } else {
@@ -165,9 +167,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
             );
 
             if ($rootPath !== null) {
-                $pattern = Path::makeAbsolute('**/*.php', $rootPath);
-                $uris = yield $this->filesFinder->find($pattern);
-                $this->index($uris)->otherwise('\\LanguageServer\\crash');
+                $this->index($rootPath)->otherwise('\\LanguageServer\\crash');
             }
 
             $this->textDocument = new Server\TextDocument(
@@ -228,11 +228,15 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     /**
      * Will read and parse the passed source files in the project and add them to the appropiate indexes
      *
+     * @param string $rootPath
      * @return Promise <void>
      */
-    private function index(array $uris): Promise
+    protected function index(string $rootPath): Promise
     {
-        return coroutine(function () use ($uris) {
+        return coroutine(function () use ($rootPath) {
+
+            $pattern = Path::makeAbsolute('**/*.php', $rootPath);
+            $uris = yield $this->filesFinder->find($pattern);
 
             $count = count($uris);
 
