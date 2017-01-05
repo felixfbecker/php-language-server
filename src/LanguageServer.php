@@ -77,6 +77,11 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     protected $contentRetriever;
 
     /**
+     * @var PhpDocumentLoader
+     */
+    protected $documentLoader;
+
+    /**
      * @param PotocolReader  $reader
      * @param ProtocolWriter $writer
      */
