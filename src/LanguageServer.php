@@ -10,21 +10,19 @@ use LanguageServer\Protocol\{
     Message,
     MessageType,
     InitializeResult,
-    SymbolInformation,
-    TextDocumentIdentifier,
     CompletionOptions
 };
 use LanguageServer\FilesFinder\{FilesFinder, ClientFilesFinder, FileSystemFilesFinder};
 use LanguageServer\ContentRetriever\{ContentRetriever, ClientContentRetriever, FileSystemContentRetriever};
 use LanguageServer\Index\{DependenciesIndex, GlobalIndex, Index, ProjectIndex, StubsIndex};
 use AdvancedJsonRpc;
-use Sabre\Event\{Loop, Promise};
+use Sabre\Event\Promise;
 use function Sabre\Event\coroutine;
 use Exception;
 use Throwable;
 use Webmozart\PathUtil\Path;
-use Webmozart\Glob\Glob;
 use Sabre\Uri;
+use function Sabre\Event\Loop\setTimeout;
 
 class LanguageServer extends AdvancedJsonRpc\Dispatcher
 {
@@ -93,43 +91,43 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
             $this->shutdown();
             $this->exit();
         });
-        $this->protocolReader->on('message', function (Message $msg) {
-            coroutine(function () use ($msg) {
-                // Ignore responses, this is the handler for requests and notifications
-                if (AdvancedJsonRpc\Response::isResponse($msg->body)) {
-                    return;
-                }
-                $result = null;
-                $error = null;
-                try {
-                    // Invoke the method handler to get a result
-                    $result = yield $this->dispatch($msg->body);
-                } catch (AdvancedJsonRpc\Error $e) {
-                    // If a ResponseError is thrown, send it back in the Response
-                    $error = $e;
-                } catch (Throwable $e) {
-                    // If an unexpected error occured, send back an INTERNAL_ERROR error response
-                    $error = new AdvancedJsonRpc\Error(
-                        (string)$e,
-                        AdvancedJsonRpc\ErrorCode::INTERNAL_ERROR,
-                        null,
-                        $e
-                    );
-                }
-                // Only send a Response for a Request
-                // Notifications do not send Responses
-                if (AdvancedJsonRpc\Request::isRequest($msg->body)) {
-                    if ($error !== null) {
-                        $responseBody = new AdvancedJsonRpc\ErrorResponse($msg->body->id, $error);
-                    } else {
-                        $responseBody = new AdvancedJsonRpc\SuccessResponse($msg->body->id, $result);
+            $this->protocolReader->on('message', function (Message $msg) {
+                coroutine(function () use ($msg) {
+                    // Ignore responses, this is the handler for requests and notifications
+                    if (AdvancedJsonRpc\Response::isResponse($msg->body)) {
+                        return;
                     }
-                    $this->protocolWriter->write(new Message($responseBody));
-                }
-            })->otherwise('\\LanguageServer\\crash');
-        });
-        $this->protocolWriter = $writer;
-        $this->client = new LanguageClient($reader, $writer);
+                    $result = null;
+                    $error = null;
+                    try {
+                        // Invoke the method handler to get a result
+                        $result = yield $this->dispatch($msg->body);
+                    } catch (AdvancedJsonRpc\Error $e) {
+                        // If a ResponseError is thrown, send it back in the Response
+                        $error = $e;
+                    } catch (Throwable $e) {
+                        // If an unexpected error occured, send back an INTERNAL_ERROR error response
+                        $error = new AdvancedJsonRpc\Error(
+                            (string)$e,
+                            AdvancedJsonRpc\ErrorCode::INTERNAL_ERROR,
+                            null,
+                            $e
+                            );
+                    }
+                    // Only send a Response for a Request
+                    // Notifications do not send Responses
+                    if (AdvancedJsonRpc\Request::isRequest($msg->body)) {
+                        if ($error !== null) {
+                            $responseBody = new AdvancedJsonRpc\ErrorResponse($msg->body->id, $error);
+                        } else {
+                            $responseBody = new AdvancedJsonRpc\SuccessResponse($msg->body->id, $result);
+                        }
+                        $this->protocolWriter->write(new Message($responseBody));
+                    }
+                })->otherwise('\\LanguageServer\\crash');
+            });
+                $this->protocolWriter = $writer;
+                $this->client = new LanguageClient($reader, $writer);
     }
 
     /**
@@ -169,7 +167,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                 $this->contentRetriever,
                 $projectIndex,
                 $definitionResolver
-            );
+                );
 
             if ($rootPath !== null) {
                 $this->index($rootPath)->otherwise('\\LanguageServer\\crash');
@@ -180,10 +178,16 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                 $definitionResolver,
                 $this->client,
                 $globalIndex
-            );
+                );
             // workspace/symbol should only look inside the project source and dependencies
             $this->workspace = new Server\Workspace($projectIndex, $this->client);
 
+            if (extension_loaded('xdebug')) {
+                setTimeout(function () {
+                    $this->client->window->showMessage(MessageType::WARNING, 'You are running PHP Language Server with xdebug enabled. This has a major impact on server performance.');
+                }, 1);
+            }
+            
             $serverCapabilities = new ServerCapabilities();
             // Ask the client to return always full documents (because we need to rebuild the AST from scratch)
             $serverCapabilities->textDocumentSync = TextDocumentSyncKind::FULL;
@@ -259,7 +263,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                     $this->client->window->logMessage(
                         MessageType::LOG,
                         "Parsing file $i/$count: {$uri}"
-                    );
+                        );
                     try {
                         $document = yield $this->documentLoader->load($uri);
                         if (!$document->isVendored()) {
@@ -269,12 +273,12 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                         $this->client->window->logMessage(
                             MessageType::INFO,
                             "Ignoring file {$uri} because it exceeds size limit of {$e->limit} bytes ({$e->size})"
-                        );
+                            );
                     } catch (Exception $e) {
                         $this->client->window->logMessage(
                             MessageType::ERROR,
                             "Error parsing file {$uri}: " . (string)$e
-                        );
+                            );
                     }
                 }
                 $duration = (int)(microtime(true) - $startTime);
@@ -282,7 +286,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                 $this->client->window->logMessage(
                     MessageType::INFO,
                     "All $count PHP files parsed in $duration seconds. $mem MiB allocated."
-                );
+                    );
             }
         });
     }
