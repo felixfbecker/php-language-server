@@ -24,7 +24,7 @@ class PhpDocumentLoader
     /**
      * @var ContentRetriever
      */
-    private $contentRetriever;
+    public $contentRetriever;
 
     /**
      * @var ProjectIndex
