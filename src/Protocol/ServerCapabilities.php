@@ -108,4 +108,25 @@ class ServerCapabilities
      * @var bool|null
      */
     public $renameProvider;
+
+    /**
+     * The server provides workspace references exporting support.
+     *
+     * @var bool|null
+     */
+    public $xworkspaceReferencesProvider;
+
+    /**
+     * The server provides extended text document definition support.
+     *
+     * @var bool|null
+     */
+    public $xdefinitionProvider;
+
+    /**
+     * The server provides workspace dependencies support.
+     *
+     * @var bool|null
+     */
+    public $dependenciesProvider;
 }

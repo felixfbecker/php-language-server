@@ -8,6 +8,8 @@ use PhpParser\{Node, NodeTraverser};
 use LanguageServer\{LanguageClient, PhpDocumentLoader, PhpDocument, DefinitionResolver, CompletionProvider};
 use LanguageServer\NodeVisitor\VariableReferencesCollector;
 use LanguageServer\Protocol\{
+    SymbolLocationInformation,
+    SymbolDescriptor,
     TextDocumentItem,
     TextDocumentIdentifier,
     VersionedTextDocumentIdentifier,
@@ -39,44 +41,58 @@ class TextDocument
      *
      * @var \LanguageServer\LanguageClient
      */
-    private $client;
+    protected $client;
 
     /**
      * @var Project
      */
-    private $project;
+    protected $project;
 
     /**
      * @var PrettyPrinter
      */
-    private $prettyPrinter;
+    protected $prettyPrinter;
 
     /**
      * @var DefinitionResolver
      */
-    private $definitionResolver;
+    protected $definitionResolver;
 
     /**
      * @var CompletionProvider
      */
-    private $completionProvider;
+    protected $completionProvider;
 
     /**
      * @var ReadableIndex
      */
-    private $index;
+    protected $index;
+
+    /**
+     * @var \stdClass|null
+     */
+    protected $composerJson;
+
+    /**
+     * @var \stdClass|null
+     */
+    protected $composerLock;
 
     /**
      * @param PhpDocumentLoader  $documentLoader
      * @param DefinitionResolver $definitionResolver
      * @param LanguageClient     $client
      * @param ReadableIndex      $index
+     * @param \stdClass          $composerJson
+     * @param \stdClass          $composerLock
      */
     public function __construct(
         PhpDocumentLoader $documentLoader,
         DefinitionResolver $definitionResolver,
         LanguageClient $client,
-        ReadableIndex $index
+        ReadableIndex $index,
+        \stdClass $composerJson = null,
+        \stdClass $composerLock = null
     ) {
         $this->documentLoader = $documentLoader;
         $this->client = $client;
@@ -84,6 +100,8 @@ class TextDocument
         $this->definitionResolver = $definitionResolver;
         $this->completionProvider = new CompletionProvider($this->definitionResolver, $index);
         $this->index = $index;
+        $this->composerJson = $composerJson;
+        $this->composerLock = $composerLock;
     }
 
     /**
@@ -247,7 +265,14 @@ class TextDocument
             if ($node === null) {
                 return [];
             }
-            $def = $this->definitionResolver->resolveReferenceNodeToDefinition($node);
+            // Handle definition nodes
+            $fqn = DefinitionResolver::getDefinedFqn($node);
+            if ($fqn !== null) {
+                $def = $this->index->getDefinition($fqn);
+            } else {
+                // Handle reference nodes
+                $def = $this->definitionResolver->resolveReferenceNodeToDefinition($node);
+            }
             if (
                 $def === null
                 || $def->symbolInformation === null
@@ -315,6 +340,63 @@ class TextDocument
         return coroutine(function () use ($textDocument, $position) {
             $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
             return $this->completionProvider->provideCompletion($document, $position);
+        });
+    }
+
+    /**
+     * This method is the same as textDocument/definition, except that
+     *
+     * The method returns metadata about the definition (the same metadata that workspace/xreferences searches for).
+     * The concrete location to the definition (location field) is optional. This is useful because the language server
+     * might not be able to resolve a goto definition request to a concrete location (e.g. due to lack of dependencies)
+     * but still may know some information about it.
+     *
+     * @param TextDocumentIdentifier $textDocument The text document
+     * @param Position               $position     The position inside the text document
+     * @return Promise <SymbolLocationInformation[]>
+     */
+    public function xdefinition(TextDocumentIdentifier $textDocument, Position $position): Promise
+    {
+        return coroutine(function () use ($textDocument, $position) {
+            $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
+            $node = $document->getNodeAtPosition($position);
+            if ($node === null) {
+                return [];
+            }
+            // Handle definition nodes
+            $fqn = DefinitionResolver::getDefinedFqn($node);
+            if ($fqn !== null) {
+                $def = $this->index->getDefinition($fqn);
+            } else {
+                // Handle reference nodes
+                $def = $this->definitionResolver->resolveReferenceNodeToDefinition($node);
+            }
+            if (
+                $def === null
+                || $def->symbolInformation === null
+                || Uri\parse($def->symbolInformation->location->uri)['scheme'] === 'phpstubs'
+            ) {
+                return [];
+            }
+            $symbol = new SymbolDescriptor;
+            foreach (get_object_vars($def->symbolInformation) as $prop => $val) {
+                $symbol->$prop = $val;
+            }
+            $symbol->fqsen = $def->fqn;
+            if (preg_match('/\/vendor\/([^\/]+\/[^\/]+)\//', $def->symbolInformation->location->uri, $matches) && $this->composerLock !== null) {
+                // Definition is inside a dependency
+                $packageName = $matches[1];
+                foreach ($this->composerLock->packages as $package) {
+                    if ($package->name === $packageName) {
+                        $symbol->package = $package;
+                        break;
+                    }
+                }
+            } else if ($this->composerJson !== null) {
+                // Definition belongs to a root package
+                $symbol->package = $this->composerJson;
+            }
+            return [new SymbolLocationInformation($symbol, $symbol->location)];
         });
     }
 }

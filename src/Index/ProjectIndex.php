@@ -42,8 +42,8 @@ class ProjectIndex extends AbstractAggregateIndex
      */
     public function getIndexForUri(string $uri): Index
     {
-        if (preg_match('/\/vendor\/(\w+\/\w+)\//', $uri, $matches)) {
-            $packageName = $matches[0];
+        if (preg_match('/\/vendor\/([^\/]+\/[^\/]+)\//', $uri, $matches)) {
+            $packageName = $matches[1];
             return $this->dependenciesIndex->getDependencyIndex($packageName);
         }
         return $this->sourceIndex;

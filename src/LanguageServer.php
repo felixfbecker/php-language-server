@@ -82,6 +82,30 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     protected $documentLoader;
 
     /**
+     * The parsed composer.json file in the project, if any
+     *
+     * @var \stdClass
+     */
+    protected $composerJson;
+
+    /**
+     * The parsed composer.lock file in the project, if any
+     *
+     * @var \stdClass
+     */
+    protected $composerLock;
+
+    /**
+     * @var GlobalIndex
+     */
+    protected $globalIndex;
+
+    /**
+     * @var DefinitionResolver
+     */
+    protected $definitionResolver;
+
+    /**
      * @param PotocolReader  $reader
      * @param ProtocolWriter $writer
      */
@@ -144,8 +168,6 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     {
         return coroutine(function () use ($capabilities, $rootPath, $processId) {
 
-            yield null;
-
             if ($capabilities->xfilesProvider) {
                 $this->filesFinder = new ClientFilesFinder($this->client);
             } else {
@@ -158,31 +180,53 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                 $this->contentRetriever = new FileSystemContentRetriever;
             }
 
-            $projectIndex = new ProjectIndex(new Index, new DependenciesIndex);
+            $dependenciesIndex = new DependenciesIndex;
+            $sourceIndex = new Index;
+            $projectIndex = new ProjectIndex($sourceIndex, $dependenciesIndex);
             $stubsIndex = StubsIndex::read();
-            $globalIndex = new GlobalIndex($stubsIndex, $projectIndex);
+            $this->globalIndex = new GlobalIndex($stubsIndex, $projectIndex);
 
             // The DefinitionResolver should look in stubs, the project source and dependencies
-            $definitionResolver = new DefinitionResolver($globalIndex);
+            $this->definitionResolver = new DefinitionResolver($this->globalIndex);
 
             $this->documentLoader = new PhpDocumentLoader(
                 $this->contentRetriever,
                 $projectIndex,
-                $definitionResolver
+                $this->definitionResolver
             );
 
             if ($rootPath !== null) {
-                $this->index($rootPath)->otherwise('\\LanguageServer\\crash');
+                yield $this->index($rootPath)->otherwise('LanguageServer\\crash');
             }
 
-            $this->textDocument = new Server\TextDocument(
-                $this->documentLoader,
-                $definitionResolver,
-                $this->client,
-                $globalIndex
-            );
-            // workspace/symbol should only look inside the project source and dependencies
-            $this->workspace = new Server\Workspace($projectIndex, $this->client);
+            // Find composer.json
+            if ($this->composerJson === null) {
+                $composerJsonFiles = yield $this->filesFinder->find(Path::makeAbsolute('**/composer.json', $rootPath));
+                if (!empty($composerJsonFiles)) {
+                    $this->composerJson = json_decode(yield $this->contentRetriever->retrieve($composerJsonFiles[0]));
+                }
+            }
+            // Find composer.lock
+            if ($this->composerLock === null) {
+                $composerLockFiles = yield $this->filesFinder->find(Path::makeAbsolute('**/composer.lock', $rootPath));
+                if (!empty($composerLockFiles)) {
+                    $this->composerLock = json_decode(yield $this->contentRetriever->retrieve($composerLockFiles[0]));
+                }
+            }
+
+            if ($this->textDocument === null) {
+                $this->textDocument = new Server\TextDocument(
+                    $this->documentLoader,
+                    $this->definitionResolver,
+                    $this->client,
+                    $this->globalIndex,
+                    $this->composerJson,
+                    $this->composerLock
+                );
+            }
+            if ($this->workspace === null) {
+                $this->workspace = new Server\Workspace($projectIndex, $dependenciesIndex, $sourceIndex, $this->composerLock, $this->documentLoader);
+            }
 
             $serverCapabilities = new ServerCapabilities();
             // Ask the client to return always full documents (because we need to rebuild the AST from scratch)
@@ -203,6 +247,10 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
             $serverCapabilities->completionProvider = new CompletionOptions;
             $serverCapabilities->completionProvider->resolveProvider = false;
             $serverCapabilities->completionProvider->triggerCharacters = ['$', '>'];
+            // Support global references
+            $serverCapabilities->xworkspaceReferencesProvider = true;
+            $serverCapabilities->xdefinitionProvider = true;
+            $serverCapabilities->xdependenciesProvider = true;
 
             return new InitializeResult($serverCapabilities);
         });
