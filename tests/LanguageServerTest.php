@@ -41,6 +41,9 @@ class LanguageServerTest extends TestCase
         $serverCapabilities->completionProvider = new CompletionOptions;
         $serverCapabilities->completionProvider->resolveProvider = false;
         $serverCapabilities->completionProvider->triggerCharacters = ['$', '>'];
+        $serverCapabilities->xworkspaceReferencesProvider = true;
+        $serverCapabilities->xdefinitionProvider = true;
+        $serverCapabilities->xdependenciesProvider = true;
 
         $this->assertEquals(new InitializeResult($serverCapabilities), $result);
     }
