@@ -196,7 +196,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
             );
 
             if ($rootPath !== null) {
-                yield $this->index($rootPath)->otherwise('LanguageServer\\crash');
+                yield $this->index($rootPath);
             }
 
             // Find composer.json
