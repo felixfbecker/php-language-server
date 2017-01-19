@@ -60,7 +60,7 @@ class LanguageServerTest extends TestCase
             if ($msg->body->method === 'window/logMessage' && $promise->state === Promise::PENDING) {
                 if ($msg->body->params->type === MessageType::ERROR) {
                     $promise->reject(new Exception($msg->body->params->message));
-                } else if (strpos($msg->body->params->message, 'All 33 PHP files parsed') !== false) {
+                } else if (strpos($msg->body->params->message, 'All 31 PHP files parsed') !== false) {
                     $promise->fulfill();
                 }
             }
@@ -106,7 +106,7 @@ class LanguageServerTest extends TestCase
                     if ($promise->state === Promise::PENDING) {
                         $promise->reject(new Exception($msg->body->params->message));
                     }
-                } else if (strpos($msg->body->params->message, 'All 33 PHP files parsed') !== false) {
+                } else if (strpos($msg->body->params->message, 'All 31 PHP files parsed') !== false) {
                     if ($run === 1) {
                         $run++;
                     } else {
