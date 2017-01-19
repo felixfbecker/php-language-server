@@ -144,6 +144,10 @@ class DefinitionResolver
     {
         // Variables are not indexed globally, as they stay in the file scope anyway
         if ($node instanceof Node\Expr\Variable) {
+            // Resolve $this
+            if ($node->name === 'this' && $fqn = $this->getContainingClassFqn($node)) {
+                return $this->index->getDefinition($fqn, false);
+            }
             // Resolve the variable to a definition node (assignment, param or closure use)
             $defNode = self::resolveVariableToNode($node);
             if ($defNode === null) {

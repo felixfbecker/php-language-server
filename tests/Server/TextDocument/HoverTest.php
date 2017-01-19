@@ -172,4 +172,16 @@ class HoverTest extends ServerTestCase
             new Range(new Position(22, 9), new Position(22, 15))
         ), $result);
     }
+
+    public function testHoverForThis()
+    {
+        // $this;
+        // Get hover for $this
+        $uri = pathToUri(realpath(__DIR__ . '/../../../fixtures/global_symbols.php'));
+        $result = $this->textDocument->hover(new TextDocumentIdentifier($uri), new Position(59, 11))->wait();
+        $this->assertEquals(new Hover([
+            new MarkedString('php', "<?php\nclass TestClass implements \\TestInterface"),
+            'Pariatur ut laborum tempor voluptate consequat ea deserunt.'
+        ], new Range(new Position(59, 8), new Position(59, 13))), $result);
+    }
 }
