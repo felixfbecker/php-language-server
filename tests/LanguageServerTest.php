@@ -14,7 +14,8 @@ use LanguageServer\Protocol\{
     TextDocumentIdentifier,
     InitializeResult,
     ServerCapabilities,
-    CompletionOptions
+    CompletionOptions,
+    SignatureHelpOptions
 };
 use AdvancedJsonRpc;
 use Webmozart\Glob\Glob;
@@ -41,6 +42,8 @@ class LanguageServerTest extends TestCase
         $serverCapabilities->completionProvider = new CompletionOptions;
         $serverCapabilities->completionProvider->resolveProvider = false;
         $serverCapabilities->completionProvider->triggerCharacters = ['$', '>'];
+        $serverCapabilities->signatureHelpProvider = new SignatureHelpOptions;
+        $serverCapabilities->signatureHelpProvider->triggerCharacters = ['('];
         $serverCapabilities->xworkspaceReferencesProvider = true;
         $serverCapabilities->xdefinitionProvider = true;
         $serverCapabilities->xdependenciesProvider = true;
@@ -57,7 +60,7 @@ class LanguageServerTest extends TestCase
             if ($msg->body->method === 'window/logMessage' && $promise->state === Promise::PENDING) {
                 if ($msg->body->params->type === MessageType::ERROR) {
                     $promise->reject(new Exception($msg->body->params->message));
-                } else if (strpos($msg->body->params->message, 'All 25 PHP files parsed') !== false) {
+                } else if (strpos($msg->body->params->message, 'All 33 PHP files parsed') !== false) {
                     $promise->fulfill();
                 }
             }
@@ -103,7 +106,7 @@ class LanguageServerTest extends TestCase
                     if ($promise->state === Promise::PENDING) {
                         $promise->reject(new Exception($msg->body->params->message));
                     }
-                } else if (strpos($msg->body->params->message, 'All 25 PHP files parsed') !== false) {
+                } else if (strpos($msg->body->params->message, 'All 33 PHP files parsed') !== false) {
                     if ($run === 1) {
                         $run++;
                     } else {
