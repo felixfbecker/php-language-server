@@ -12,7 +12,8 @@ use LanguageServer\Protocol\{
     InitializeResult,
     SymbolInformation,
     TextDocumentIdentifier,
-    CompletionOptions
+    CompletionOptions,
+    SignatureHelpOptions
 };
 use LanguageServer\FilesFinder\{FilesFinder, ClientFilesFinder, FileSystemFilesFinder};
 use LanguageServer\ContentRetriever\{ContentRetriever, ClientContentRetriever, FileSystemContentRetriever};
