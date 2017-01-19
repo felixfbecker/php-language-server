@@ -141,9 +141,17 @@ class CompletionProvider
             // If the name is an Error node, just filter by the class
             if ($node instanceof Node\Expr\MethodCall || $node instanceof Node\Expr\PropertyFetch) {
                 // For instances, resolve the variable type
-                $prefixes = DefinitionResolver::getFqnsFromType(
-                    $this->definitionResolver->resolveExpressionNodeToType($node->var)
-                );
+                $classNode = null;
+                if ($node->var instanceof Node\Expr\Variable && $node->var->name === 'this') {
+                    $classNode = getClosestNode($node, Node\Stmt\Class_::class);
+                }
+                if ($classNode !== null && !$classNode->isAnonymous()) {
+                    $prefixes = [(string)$classNode->namespacedName];
+                } else {
+                    $prefixes = DefinitionResolver::getFqnsFromType(
+                        $this->definitionResolver->resolveExpressionNodeToType($node->var)
+                    );
+                }
             } else {
                 // Static member reference
                 $prefixes = [$node->class instanceof Node\Name ? (string)$node->class : ''];

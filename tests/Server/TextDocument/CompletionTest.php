@@ -433,4 +433,88 @@ class CompletionTest extends TestCase
             )
         ], true), $items);
     }
+
+    public function testThisWithoutPrefix()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/this.php');
+        $this->loader->open($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(12, 15)
+        )->wait();
+        $this->assertEquals(new CompletionList([
+            new CompletionItem(
+                'foo',
+                CompletionItemKind::PROPERTY,
+                'mixed', // Type of the property
+                null
+            ),
+            new CompletionItem(
+                'bar',
+                CompletionItemKind::PROPERTY,
+                'mixed', // Type of the property
+                null
+            ),
+            new CompletionItem(
+                'method',
+                CompletionItemKind::METHOD,
+                'mixed', // Return type of the method
+                null
+            ),
+            new CompletionItem(
+                'test',
+                CompletionItemKind::METHOD,
+                'mixed', // Return type of the method
+                null
+            )
+        ], true), $items);
+    }
+
+    public function testThisWithPrefix()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/this_with_prefix.php');
+        $this->loader->open($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(12, 16)
+        )->wait();
+        $this->assertEquals(new CompletionList([
+            new CompletionItem(
+                'testProperty',
+                CompletionItemKind::PROPERTY,
+                '\TestClass', // Type of the property
+                'Reprehenderit magna velit mollit ipsum do.'
+            ),
+            new CompletionItem(
+                'testMethod',
+                CompletionItemKind::METHOD,
+                '\TestClass', // Return type of the method
+                'Non culpa nostrud mollit esse sunt laboris in irure ullamco cupidatat amet.'
+            ),
+            new CompletionItem(
+                'foo',
+                CompletionItemKind::PROPERTY,
+                'mixed', // Type of the property
+                null
+            ),
+            new CompletionItem(
+                'bar',
+                CompletionItemKind::PROPERTY,
+                'mixed', // Type of the property
+                null
+            ),
+            new CompletionItem(
+                'method',
+                CompletionItemKind::METHOD,
+                'mixed', // Return type of the method
+                null
+            ),
+            new CompletionItem(
+                'test',
+                CompletionItemKind::METHOD,
+                'mixed', // Return type of the method
+                null
+            )
+        ], true), $items);
+    }
 }
