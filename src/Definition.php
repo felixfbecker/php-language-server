@@ -89,4 +89,11 @@ class Definition
      * @var string
      */
     public $documentation;
+
+    /**
+     * Parameters array (for methods and functions), for use in textDocument/signatureHelp
+     *
+     * @var string[]
+     */
+    public $parameters;
 }

@@ -5,7 +5,7 @@ namespace LanguageServer\Server;
 
 use PhpParser\PrettyPrinter\Standard as PrettyPrinter;
 use PhpParser\{Node, NodeTraverser};
-use LanguageServer\{LanguageClient, PhpDocumentLoader, PhpDocument, DefinitionResolver, CompletionProvider};
+use LanguageServer\{LanguageClient, PhpDocumentLoader, PhpDocument, DefinitionResolver, CompletionProvider, SignatureHelpProvider};
 use LanguageServer\NodeVisitor\VariableReferencesCollector;
 use LanguageServer\Protocol\{
     SymbolLocationInformation,
@@ -64,6 +64,11 @@ class TextDocument
     protected $completionProvider;
 
     /**
+     * @var SignatureHelpProvider
+     */
+    protected $signatureHelpProvider;
+
+    /**
      * @var ReadableIndex
      */
     protected $index;
@@ -99,6 +104,7 @@ class TextDocument
         $this->prettyPrinter = new PrettyPrinter();
         $this->definitionResolver = $definitionResolver;
         $this->completionProvider = new CompletionProvider($this->definitionResolver, $index);
+        $this->signatureHelpProvider = new SignatureHelpProvider($this->definitionResolver, $index);
         $this->index = $index;
         $this->composerJson = $composerJson;
         $this->composerLock = $composerLock;
@@ -340,6 +346,14 @@ class TextDocument
         return coroutine(function () use ($textDocument, $position) {
             $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
             return $this->completionProvider->provideCompletion($document, $position);
+        });
+    }
+
+    public function signatureHelp(TextDocumentIdentifier $textDocument, Position $position): Promise
+    {
+        return coroutine(function () use ($textDocument, $position) {
+            $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
+            return $this->signatureHelpProvider->provideSignature($document, $position);
         });
     }
 

@@ -131,6 +131,12 @@ class DefinitionResolver
         $def->type = $this->getTypeFromNode($node);
         $def->declarationLine = $this->getDeclarationLineFromNode($node);
         $def->documentation = $this->getDocumentationFromNode($node);
+        $def->parameters = [];
+        if ($node instanceof Node\FunctionLike) {
+            foreach ($node->getParams() as $param) {
+                $def->parameters[] = $this->prettyPrinter->prettyPrint([$param]);
+            }
+        }
         return $def;
     }
 

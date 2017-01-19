@@ -55,9 +55,13 @@ class TestClass implements TestInterface
      * @param TestClass $testParameter Lorem sunt velit incididunt mollit
      * @return TestClass
      */
-    public function testMethod($testParameter): TestInterface
+    public function testMethod(
+        string $testParameter = '()',
+        string $asdf = ","
+    ) : TestInterface
     {
         $this->testProperty = $testParameter;
+        $this->testMethod();
     }
 }
 
