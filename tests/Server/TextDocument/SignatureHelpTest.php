@@ -57,7 +57,29 @@ class SignatureHelpTest extends TestCase
         $help->signatures = [];
         $info = new SignatureInformation;
         $help->signatures[] = $info;
-        $info->label = 'method';
+        $info->label = 'method(string $param = "")';
+        $info->parameters = [];
+        $param = new ParameterInformation;
+        $info->parameters[] = $param;
+        $param->label = 'string $param = ""';
+
+        $this->assertEquals($help, $result);
+    }
+
+    public function testMethodClosedReference()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/signatureHelp/methodClosed.php');
+        $this->loader->open($completionUri, file_get_contents($completionUri));
+        $result = $this->textDocument->signatureHelp(
+            new TextDocumentIdentifier($completionUri),
+            new Position(14, 14)
+        )->wait();
+
+        $help = new SignatureHelp;
+        $help->signatures = [];
+        $info = new SignatureInformation;
+        $help->signatures[] = $info;
+        $info->label = 'method(string $param = "")';
         $info->parameters = [];
         $param = new ParameterInformation;
         $info->parameters[] = $param;
@@ -79,7 +101,29 @@ class SignatureHelpTest extends TestCase
         $help->signatures = [];
         $info = new SignatureInformation;
         $help->signatures[] = $info;
-        $info->label = 'method';
+        $info->label = 'method(string $param = "")';
+        $info->parameters = [];
+        $param = new ParameterInformation;
+        $info->parameters[] = $param;
+        $param->label = 'string $param = ""';
+
+        $this->assertEquals($help, $result);
+    }
+
+    public function testMethodNotClosedReference()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/signatureHelp/methodNotClosed.php');
+        $this->loader->open($completionUri, file_get_contents($completionUri));
+        $result = $this->textDocument->signatureHelp(
+            new TextDocumentIdentifier($completionUri),
+            new Position(14, 14)
+        )->wait();
+
+        $help = new SignatureHelp;
+        $help->signatures = [];
+        $info = new SignatureInformation;
+        $help->signatures[] = $info;
+        $info->label = 'method(string $param = "")';
         $info->parameters = [];
         $param = new ParameterInformation;
         $info->parameters[] = $param;
@@ -101,7 +145,7 @@ class SignatureHelpTest extends TestCase
         $help->signatures = [];
         $info = new SignatureInformation;
         $help->signatures[] = $info;
-        $info->label = 'helpFunc1';
+        $info->label = 'helpFunc1(int $count = 0)';
         $info->parameters = [];
         $param = new ParameterInformation;
         $info->parameters[] = $param;
@@ -123,7 +167,7 @@ class SignatureHelpTest extends TestCase
         $help->signatures = [];
         $info = new SignatureInformation;
         $help->signatures[] = $info;
-        $info->label = 'helpFunc2';
+        $info->label = 'helpFunc2(int $count = 0)';
         $info->parameters = [];
         $param = new ParameterInformation;
         $info->parameters[] = $param;
@@ -145,7 +189,7 @@ class SignatureHelpTest extends TestCase
         $help->signatures = [];
         $info = new SignatureInformation;
         $help->signatures[] = $info;
-        $info->label = 'method';
+        $info->label = 'method(string $param = "")';
         $info->parameters = [];
         $param = new ParameterInformation;
         $info->parameters[] = $param;
@@ -167,7 +211,7 @@ class SignatureHelpTest extends TestCase
         $help->signatures = [];
         $info = new SignatureInformation;
         $help->signatures[] = $info;
-        $info->label = 'method';
+        $info->label = 'method(string $param = "")';
         $info->parameters = [];
         $param = new ParameterInformation;
         $info->parameters[] = $param;

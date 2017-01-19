@@ -57,8 +57,6 @@ class SignatureHelpProvider
         }
         $line = substr($line, 0, $newPos->character);
         
-        //echo $line . "\n";
-        //die();
         $newPos->character --;
 
         $node = $doc->getNodeAtPosition($newPos);
@@ -66,17 +64,6 @@ class SignatureHelpProvider
         if ($node instanceof Node\Expr\Error) {
             $node = $node->getAttribute('parentNode');
         }
-        
-        //echo get_class($node);
-        //die();
-        //$def = $this->definitionResolver->resolveReferenceNodeToDefinition($node->var);
-        //var_dump($def);
-        //echo $def->fqn;
-
-        //echo $node->name;
-
-        
-        //die();
 
         if ($node instanceof Node\Expr\Error) {
             $node = $node->getAttribute('parentNode');
@@ -84,7 +71,7 @@ class SignatureHelpProvider
         if ($node instanceof Node\Expr\FuncCall) {
             if ($def = $this->definitionResolver->resolveReferenceNodeToDefinition($node)) {
                 $signature = new SignatureInformation;
-                $signature->label = str_replace('()', '', $def->fqn);
+                $signature->label = str_replace('()', '', $def->fqn) . '('.implode(', ', $def->parameters).')';
                 $signature->documentation = $def->documentation;
                 $signature->parameters = [];
                 foreach ($def->parameters as $param) {
@@ -99,7 +86,7 @@ class SignatureHelpProvider
                 $fqn = $method[0] . '()';
                 if ($def = $this->index->getDefinition($fqn)) {
                     $signature = new SignatureInformation;
-                    $signature->label = $method[0];
+                    $signature->label = $method[0] . '('.implode(', ', $def->parameters).')';
                     $signature->documentation = $def->documentation;
                     $signature->parameters = [];
                     foreach ($def->parameters as $param) {
@@ -113,7 +100,7 @@ class SignatureHelpProvider
         } else if ($node instanceof Node\Expr\MethodCall) {
             if ($def = $this->definitionResolver->resolveReferenceNodeToDefinition($node)) {
                 $signature = new SignatureInformation;
-                $signature->label = str_replace('()', '', explode('->', $def->fqn)[1]);
+                $signature->label = str_replace('()', '', explode('->', $def->fqn)[1]) . '('.implode(', ', $def->parameters).')';
                 $signature->documentation = $def->documentation;
                 $signature->parameters = [];
                 foreach ($def->parameters as $param) {
@@ -125,12 +112,21 @@ class SignatureHelpProvider
             }
         } else if ($node instanceof Node\Expr\PropertyFetch) {
             if ($def = $this->definitionResolver->resolveReferenceNodeToDefinition($node->var)) {
+                $fqn = $def->fqn;
+                if (!$fqn) {
+                    $fqns = DefinitionResolver::getFqnsFromType(
+                        $this->definitionResolver->resolveExpressionNodeToType($node->var)
+                    );
+                    if (count($fqns)) {
+                        $fqn = $fqns[0];
+                    }
+                }
                 $method = trim(substr($line, strrpos($line, ">") + 1));
-                if ($method) {
-                    $fqn = $def->fqn . '->' . $method . '()';
+                if ($method && $fqn) {
+                    $fqn = $fqn . '->' . $method . '()';
                     if ($def = $this->index->getDefinition($fqn)) {
                         $signature = new SignatureInformation;
-                        $signature->label = str_replace('()', '', explode('->', $def->fqn)[1]);
+                        $signature->label = str_replace('()', '', explode('->', $def->fqn)[1]) . '('.implode(', ', $def->parameters).')';
                         $signature->documentation = $def->documentation;
                         $signature->parameters = [];
                         foreach ($def->parameters as $param) {
@@ -145,7 +141,7 @@ class SignatureHelpProvider
         } else if ($node instanceof Node\Expr\StaticCall) {
             if ($def = $this->definitionResolver->resolveReferenceNodeToDefinition($node)) {
                 $signature = new SignatureInformation;
-                $signature->label = str_replace('()', '', explode('::', $def->fqn)[1]);
+                $signature->label = str_replace('()', '', explode('::', $def->fqn)[1]) . '('.implode(', ', $def->parameters).')';
                 $signature->documentation = $def->documentation;
                 $signature->parameters = [];
                 foreach ($def->parameters as $param) {
@@ -162,7 +158,7 @@ class SignatureHelpProvider
                     $fqn = $def->fqn . '::' . $method . '()';
                     if ($def = $this->index->getDefinition($fqn)) {
                         $signature = new SignatureInformation;
-                        $signature->label = str_replace('()', '', explode('::', $def->fqn)[1]);
+                        $signature->label = str_replace('()', '', explode('::', $def->fqn)[1]) . '('.implode(', ', $def->parameters).')';
                         $signature->documentation = $def->documentation;
                         $signature->parameters = [];
                         foreach ($def->parameters as $param) {

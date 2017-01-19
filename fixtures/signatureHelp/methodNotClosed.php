@@ -10,3 +10,6 @@ class HelpClass2
         $this->method(
     }
 }
+
+$a = new HelpClass2;
+$a->method(1, 

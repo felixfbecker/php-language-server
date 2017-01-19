@@ -2,7 +2,7 @@
 
 class HelpClass1
 {
-    protected function method(string $param = "")
+    public function method(string $param = "")
     {
     }
     public function test()
@@ -10,3 +10,6 @@ class HelpClass1
         $this->method();
     }
 }
+
+$a = new HelpClass1;
+$a->method(1, );
