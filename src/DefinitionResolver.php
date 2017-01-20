@@ -668,7 +668,7 @@ class DefinitionResolver
         $expanded = $fqns;
         foreach ($fqns as $fqn) {
             $def = $this->index->getDefinition($fqn);
-            if ($def) {
+            if ($def && $def->extends) {
                 foreach ($this->expandParentFqns($def->extends) as $parent) {
                     $expanded[] = $parent;
                 }
