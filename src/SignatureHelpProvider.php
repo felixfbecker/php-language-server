@@ -162,12 +162,12 @@ class SignatureHelpProvider
             }
             $help->activeSignature = 0;
             $help->activeParameter = 0;
+            $params = ltrim($params, "( ");
             if (strlen(trim($params))) {
                 try {
                     $params = $this->parser->parse('<?php $a = [' . $params . '];', $this->parserErrorHandler)[0]->expr->items;
-                    $help->activeParameter = count($params);
-                } catch (\Exception $e) {
-                }
+                    $help->activeParameter = count($params) - 1;
+                } catch (\Exception $ignore) { }
             }
             $help->signatures[] = $signature;
         }
