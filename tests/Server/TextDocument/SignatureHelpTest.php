@@ -77,6 +77,8 @@ class SignatureHelpTest extends TestCase
 
         $help = new SignatureHelp;
         $help->signatures = [];
+        $help->activeSignature = 0;
+        $help->activeParameter = 1;
         $info = new SignatureInformation;
         $help->signatures[] = $info;
         $info->label = 'method(string $param = "")';
