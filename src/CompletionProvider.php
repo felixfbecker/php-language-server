@@ -130,6 +130,10 @@ class CompletionProvider
         $list = new CompletionList;
         $list->isIncomplete = true;
 
+        //echo get_class($node->var);
+        //var_dump((string)$node->var->name);
+        //die();
+
         // A non-free node means we do NOT suggest global symbols
         if (
             $node instanceof Node\Expr\MethodCall
@@ -141,7 +145,7 @@ class CompletionProvider
             // If the name is an Error node, just filter by the class
             if ($node instanceof Node\Expr\MethodCall || $node instanceof Node\Expr\PropertyFetch) {
                 // For instances, resolve the variable type
-                $prefixes = DefinitionResolver::getFqnsFromType(
+                 $prefixes = DefinitionResolver::getFqnsFromType(
                     $this->definitionResolver->resolveExpressionNodeToType($node->var)
                 );
             } else {

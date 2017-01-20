@@ -423,7 +423,7 @@ class DefinitionResolver
             if ($expr instanceof Node\Expr\Variable && $expr->name === 'this') {
                 $classNode = getClosestNode($expr, Node\Stmt\Class_::class);
                 if ($classNode) {
-                    return self::resolveClassNameToType($classNode->namespacedName);
+                   return self::resolveClassNameToType($classNode->namespacedName);
                 }
                 return new Types\This;
             }
@@ -479,13 +479,19 @@ class DefinitionResolver
                 } else {
                     $classFqn = substr((string)$t->getFqsen(), 1);
                 }
-                $fqn = $classFqn . '->' . $expr->name;
-                if ($expr instanceof Node\Expr\MethodCall) {
-                    $fqn .= '()';
-                }
-                $def = $this->index->getDefinition($fqn);
-                if ($def !== null) {
-                    return $def->type;
+                $extended = $this->expandParentFqns([$classFqn]);
+                foreach ($extended as $f) {
+                    $fqn = $f . '->' . $expr->name;
+                    if ($expr instanceof Node\Expr\MethodCall) {
+                        $fqn .= '()';
+                    }
+                    $def = $this->index->getDefinition($fqn);
+                    if ($def !== null) {
+                        if ($def->type instanceof Types\This || $def->type instanceof Types\Self_) {
+                            return $this->resolveExpressionNodeToType($expr->var);
+                        }
+                        return $def->type;
+                    }
                 }
             }
         }
@@ -649,6 +655,26 @@ class DefinitionResolver
             return new Types\Mixed;
         }
         return new Types\Mixed;
+    }
+
+    /**
+     * Adds the FQNs of all parent classes to an array of FQNs of classes
+     *
+     * @param string[] $fqns
+     * @return string[]
+     */
+    private function expandParentFqns(array $fqns): array
+    {
+        $expanded = $fqns;
+        foreach ($fqns as $fqn) {
+            $def = $this->index->getDefinition($fqn);
+            if ($def) {
+                foreach ($this->expandParentFqns($def->extends) as $parent) {
+                    $expanded[] = $parent;
+                }
+            }
+        }
+        return $expanded;
     }
 
     /**
