@@ -165,8 +165,27 @@ class SignatureHelpProvider
             $params = ltrim($params, "( ");
             if (strlen(trim($params))) {
                 try {
-                    $params = $this->parser->parse('<?php $a = [' . $params . '];', $this->parserErrorHandler)[0]->expr->items;
-                    $help->activeParameter = count($params) - 1;
+                    $lex = new \PhpParser\Lexer();
+                    $lex->startLexing('<?php $a = [ ' . $params, $this->parserErrorHandler);
+                    $value = null;
+                    $lex->getNextToken($value);
+                    $lex->getNextToken($value);
+                    $lex->getNextToken($value);
+                    $params = 0;
+                    $stack = [];
+                    while ($value !== "\0") {
+                        $lex->getNextToken($value);
+                        if ($value === ',' && !count($stack)) {
+                            $help->activeParameter++;
+                        }
+                        if ($value === '(') {
+                            $stack[] = ')';
+                        } else if ($value === '[') {
+                            $stack[] = ']';
+                        } else if (count($stack) && $value === $stack[count($stack)-1]) {
+                            array_pop($stack);
+                        }
+                    }
                 } catch (\Exception $ignore) { }
             }
             $help->signatures[] = $signature;
