@@ -60,7 +60,10 @@ class SignatureHelpProvider
         $help = new SignatureHelp;
         $help->signatures = [];
 
-        $handle = fopen($doc->getUri(), 'r');
+        $handle = fopen('php://temp', 'r+');
+        fwrite($handle, $doc->getContent());
+        fseek($handle, 0);
+
         $lines = [];
         for ($i = 0; $i < $pos->line; $i++) {
             $lines[] = strlen(fgets($handle));
