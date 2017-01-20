@@ -3,9 +3,11 @@ declare(strict_types = 1);
 
 namespace LanguageServer;
 
+use PhpParser\ErrorHandler\Collecting;
 use PhpParser\Node;
 use LanguageServer\Index\ReadableIndex;
 use LanguageServer\Protocol\{
+    Range,
     Position,
     SignatureHelp,
     SignatureInformation,
@@ -25,6 +27,16 @@ class SignatureHelpProvider
     private $index;
 
     /**
+     * @var Parser
+     */
+    private $parser;
+
+    /**
+     * @var Parser
+     */
+    private $parserErrorHandler;
+
+    /**
      * @param DefinitionResolver $definitionResolver
      * @param ReadableIndex      $index
      */
@@ -32,6 +44,8 @@ class SignatureHelpProvider
     {
         $this->definitionResolver = $definitionResolver;
         $this->index = $index;
+        $this->parser = new Parser;
+        $this->parserErrorHandler = new Collecting;
     }
 
     /**
@@ -41,76 +55,52 @@ class SignatureHelpProvider
      * @param Position $pos The cursor position
      * @return SignatureHelp
      */
-    public function provideSignature(PhpDocument $doc, Position $pos): SignatureHelp
+    public function provideSignature(PhpDocument $doc, Position $pos) : SignatureHelp
     {
         $help = new SignatureHelp;
         $help->signatures = [];
 
-        $newPos = clone $pos;
-        $line = explode("\n", $doc->getContent())[$newPos->line];
+        $handle = fopen($doc->getUri(), 'r');
+        $lines = [];
+        for ($i = 0; $i < $pos->line; $i++) {
+            $lines[] = strlen(fgets($handle));
+        }
+        $filePos = ftell($handle) + $pos->character;
+        $line = substr(fgets($handle), 0, $pos->character);
+        fseek($handle, 0);
+        
         do {
-            $newPos->character --;
-        } while ($newPos->character > 0 && $line[$newPos->character] !== "(");
+            $node = $doc->getNodeAtPosition($pos);
+            $pos->character--;
+            if ($pos->character < 0) {
+                $pos->line --;
+                if ($pos->line < 0) {
+                    break;
+                }
+                $pos->character = $lines[$pos->line];
+            }
+        } while ($node === null);
 
-        if (!$newPos->character) {
+        if ($node === null) {
+            fclose($handle);
             return $help;
         }
-        $line = substr($line, 0, $newPos->character);
-        
-        $newPos->character --;
-
-        $node = $doc->getNodeAtPosition($newPos);
-
-        if ($node instanceof Node\Expr\Error) {
+        $i = 0;
+        while (!(
+            $node instanceof Node\Expr\PropertyFetch ||
+            $node instanceof Node\Expr\MethodCall ||
+            $node instanceof Node\Expr\FuncCall ||
+            $node instanceof Node\Expr\ClassConstFetch ||
+            $node instanceof Node\Expr\StaticCall
+        ) && ++$i < 5 && $node !== null) {
             $node = $node->getAttribute('parentNode');
         }
-
-        if ($node instanceof Node\Expr\Error) {
-            $node = $node->getAttribute('parentNode');
-        }
-        if ($node instanceof Node\Expr\FuncCall) {
-            if ($def = $this->definitionResolver->resolveReferenceNodeToDefinition($node)) {
-                $signature = new SignatureInformation;
-                $signature->label = str_replace('()', '', $def->fqn) . '('.implode(', ', $def->parameters).')';
-                $signature->documentation = $def->documentation;
-                $signature->parameters = [];
-                foreach ($def->parameters as $param) {
-                    $p = new ParameterInformation;
-                    $p->label = $param;
-                    $signature->parameters[] = $p;
-                }
-                $help->signatures[] = $signature;
-            }
-        } else if ($node instanceof Node\Name\FullyQualified || $node === null) {
-            if (preg_match('([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$)', $line, $method)) {
-                $fqn = $method[0] . '()';
-                if ($def = $this->index->getDefinition($fqn)) {
-                    $signature = new SignatureInformation;
-                    $signature->label = $method[0] . '('.implode(', ', $def->parameters).')';
-                    $signature->documentation = $def->documentation;
-                    $signature->parameters = [];
-                    foreach ($def->parameters as $param) {
-                        $p = new ParameterInformation;
-                        $p->label = $param;
-                        $signature->parameters[] = $p;
-                    }
-                    $help->signatures[] = $signature;
-                }
-            }
-        } else if ($node instanceof Node\Expr\MethodCall) {
-            if ($def = $this->definitionResolver->resolveReferenceNodeToDefinition($node)) {
-                $signature = new SignatureInformation;
-                $signature->label = str_replace('()', '', explode('->', $def->fqn)[1]) . '('.implode(', ', $def->parameters).')';
-                $signature->documentation = $def->documentation;
-                $signature->parameters = [];
-                foreach ($def->parameters as $param) {
-                    $p = new ParameterInformation;
-                    $p->label = $param;
-                    $signature->parameters[] = $p;
-                }
-                $help->signatures[] = $signature;
-            }
-        } else if ($node instanceof Node\Expr\PropertyFetch) {
+        $params = '';
+        if ($node instanceof Node\Expr\PropertyFetch) {
+            fseek($handle, $node->name->getAttribute('startFilePos'));
+            $method = fread($handle, ($node->name->getAttribute('endFilePos') + 1) - $node->name->getAttribute('startFilePos'));
+            fseek($handle, $node->name->getAttribute('endFilePos') + 1);
+            $params = fread($handle, ($filePos - 1) - $node->name->getAttribute('endFilePos'));
             if ($def = $this->definitionResolver->resolveReferenceNodeToDefinition($node->var)) {
                 $fqn = $def->fqn;
                 if (!$fqn) {
@@ -121,55 +111,65 @@ class SignatureHelpProvider
                         $fqn = $fqns[0];
                     }
                 }
-                $method = trim(substr($line, strrpos($line, ">") + 1));
-                if ($method && $fqn) {
+                if ($fqn) {
                     $fqn = $fqn . '->' . $method . '()';
-                    if ($def = $this->index->getDefinition($fqn)) {
-                        $signature = new SignatureInformation;
-                        $signature->label = str_replace('()', '', explode('->', $def->fqn)[1]) . '('.implode(', ', $def->parameters).')';
-                        $signature->documentation = $def->documentation;
-                        $signature->parameters = [];
-                        foreach ($def->parameters as $param) {
-                            $p = new ParameterInformation;
-                            $p->label = $param;
-                            $signature->parameters[] = $p;
-                        }
-                        $help->signatures[] = $signature;
-                    }
+                    $def = $this->index->getDefinition($fqn);
                 }
             }
+        } else if ($node instanceof Node\Expr\MethodCall) {
+            fseek($handle, $node->getAttribute('startFilePos'));
+            $params = explode('(', fread($handle, $filePos - $node->getAttribute('startFilePos')), 2)[1];
+            $def = $this->definitionResolver->resolveReferenceNodeToDefinition($node);
+        } else if ($node instanceof Node\Expr\FuncCall) {
+            fseek($handle, $node->getAttribute('startFilePos'));
+            $params = explode('(', fread($handle, $filePos - $node->getAttribute('startFilePos')), 2)[1];
+            $fqn = $this->definitionResolver->resolveReferenceNodeToFqn($node->name);
+            $def = $this->index->getDefinition($fqn);
         } else if ($node instanceof Node\Expr\StaticCall) {
-            if ($def = $this->definitionResolver->resolveReferenceNodeToDefinition($node)) {
-                $signature = new SignatureInformation;
-                $signature->label = str_replace('()', '', explode('::', $def->fqn)[1]) . '('.implode(', ', $def->parameters).')';
-                $signature->documentation = $def->documentation;
-                $signature->parameters = [];
-                foreach ($def->parameters as $param) {
-                    $p = new ParameterInformation;
-                    $p->label = $param;
-                    $signature->parameters[] = $p;
-                }
-                $help->signatures[] = $signature;
-            }
+            fseek($handle, $node->getAttribute('startFilePos'));
+            $params = explode('(', fread($handle, $filePos - $node->getAttribute('startFilePos')), 2)[1];
+            $def = $this->definitionResolver->resolveReferenceNodeToDefinition($node);
         } else if ($node instanceof Node\Expr\ClassConstFetch) {
-            if ($def = $this->definitionResolver->resolveReferenceNodeToDefinition($node->class)) {
-                $method = trim(substr($line, strrpos($line, ":") + 1));
-                if ($method) {
-                    $fqn = $def->fqn . '::' . $method . '()';
-                    if ($def = $this->index->getDefinition($fqn)) {
-                        $signature = new SignatureInformation;
-                        $signature->label = str_replace('()', '', explode('::', $def->fqn)[1]) . '('.implode(', ', $def->parameters).')';
-                        $signature->documentation = $def->documentation;
-                        $signature->parameters = [];
-                        foreach ($def->parameters as $param) {
-                            $p = new ParameterInformation;
-                            $p->label = $param;
-                            $signature->parameters[] = $p;
-                        }
-                        $help->signatures[] = $signature;
-                    }
+            fseek($handle, $node->name->getAttribute('endFilePos') + 2);
+            $params = fread($handle, ($filePos - 1) - $node->name->getAttribute('endFilePos'));
+            fseek($handle, $node->name->getAttribute('startFilePos'));
+            $method = fread($handle, ($node->name->getAttribute('endFilePos') + 1) - $node->name->getAttribute('startFilePos'));
+            $method = explode('::', str_replace('()', '', $method), 2);
+            $method = $method[1] ?? $method[0];
+            $fqn = $this->definitionResolver->resolveReferenceNodeToFqn($node->class);
+            $def = $this->index->getDefinition($fqn.'::'.$method.'()');
+        } else {
+            if (!preg_match('(([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\s*\((.*)$)', $line, $method)) {
+                fclose($handle);
+                return $help;
+            }
+            $def = $this->index->getDefinition($method[1] . '()');
+            $params = $method[2];
+        }
+        fclose($handle);
+
+        if ($def) {
+            $method = preg_split('(::|->)', str_replace('()', '', $def->fqn), 2);
+            $method = $method[1] ?? $method[0];
+            $signature = new SignatureInformation;
+            $signature->label = $method . '('.implode(', ', $def->parameters).')';
+            $signature->documentation = $def->documentation;
+            $signature->parameters = [];
+            foreach ($def->parameters as $param) {
+                $p = new ParameterInformation;
+                $p->label = $param;
+                $signature->parameters[] = $p;
+            }
+            $help->activeSignature = 0;
+            $help->activeParameter = 0;
+            if (strlen(trim($params))) {
+                try {
+                    $params = $this->parser->parse('<?php $a = [' . $params . '];', $this->parserErrorHandler)[0]->expr->items;
+                    $help->activeParameter = count($params);
+                } catch (\Exception $e) {
                 }
             }
+            $help->signatures[] = $signature;
         }
 
         return $help;

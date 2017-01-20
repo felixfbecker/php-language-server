@@ -7,9 +7,11 @@ class HelpClass2
     }
     public function test()
     {
-        $this->method(
+        $this->method(1,1);
     }
 }
-
 $a = new HelpClass2;
-$a->method(1, 
+$a
+    ->method(
+        1,
+        array(),
