@@ -12,4 +12,4 @@ class HelpClass1
 }
 
 $a = new HelpClass1;
-$a->method(1, );
+$a->method();

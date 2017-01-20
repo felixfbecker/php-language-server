@@ -72,13 +72,11 @@ class SignatureHelpTest extends TestCase
         $this->loader->open($completionUri, file_get_contents($completionUri));
         $result = $this->textDocument->signatureHelp(
             new TextDocumentIdentifier($completionUri),
-            new Position(14, 14)
+            new Position(14, 11)
         )->wait();
 
         $help = new SignatureHelp;
         $help->signatures = [];
-        $help->activeSignature = 0;
-        $help->activeParameter = 1;
         $info = new SignatureInformation;
         $help->signatures[] = $info;
         $info->label = 'method(string $param = "")';
