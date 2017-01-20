@@ -178,6 +178,9 @@ class SignatureHelpProvider
                     $stack = [];
                     while ($value !== "\0") {
                         $lex->getNextToken($value);
+                        if (($value === ")" || $value === ";") && !count($stack)) {
+                            return $help;
+                        }
                         if ($value === ',' && !count($stack)) {
                             $help->activeParameter++;
                         }
@@ -191,7 +194,9 @@ class SignatureHelpProvider
                     }
                 } catch (\Exception $ignore) { }
             }
-            $help->signatures[] = $signature;
+            if ($help->activeParameter < count($signature->parameters)) {
+                $help->signatures[] = $signature;
+            }
         }
 
         return $help;
