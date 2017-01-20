@@ -192,7 +192,8 @@ class SignatureHelpProvider
                             array_pop($stack);
                         }
                     }
-                } catch (\Exception $ignore) { }
+                } catch (\Exception $ignore) {
+                }
             }
             if ($help->activeParameter < count($signature->parameters)) {
                 $help->signatures[] = $signature;
