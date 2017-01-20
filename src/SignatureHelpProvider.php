@@ -72,8 +72,13 @@ class SignatureHelpProvider
         $line = substr(fgets($handle), 0, $pos->character);
         fseek($handle, 0);
         
+        $i = 0;
+        $orig = null;
         do {
             $node = $doc->getNodeAtPosition($pos);
+            if ($node !== null) {
+                $orig = $node;
+            }
             $pos->character--;
             if ($pos->character < 0) {
                 $pos->line --;
@@ -82,22 +87,23 @@ class SignatureHelpProvider
                 }
                 $pos->character = $lines[$pos->line];
             }
-        } while ($node === null);
-
-        if ($node === null) {
-            fclose($handle);
-            return $help;
-        }
-        $i = 0;
-        while (!(
+        } while (!(
             $node instanceof Node\Expr\PropertyFetch ||
             $node instanceof Node\Expr\MethodCall ||
             $node instanceof Node\Expr\FuncCall ||
             $node instanceof Node\Expr\ClassConstFetch ||
             $node instanceof Node\Expr\StaticCall
-        ) && ++$i < 5 && $node !== null) {
-            $node = $node->getAttribute('parentNode');
+        ) && ++$i < 120);
+
+        if ($node === null) {
+            $node = $orig;
         }
+
+        if ($node === null) {
+            fclose($handle);
+            return $help;
+        }
+        
         $params = '';
         if ($node instanceof Node\Expr\PropertyFetch) {
             fseek($handle, $node->name->getAttribute('startFilePos'));
@@ -142,7 +148,7 @@ class SignatureHelpProvider
             $fqn = $this->definitionResolver->resolveReferenceNodeToFqn($node->class);
             $def = $this->index->getDefinition($fqn.'::'.$method.'()');
         } else {
-            if (!preg_match('(([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\s*\((.*)$)', $line, $method)) {
+            if (!preg_match('(([a-zA-Z_\x7f-\xff][:a-zA-Z0-9_\x7f-\xff]*)\s*\((.*)$)', $line, $method)) {
                 fclose($handle);
                 return $help;
             }

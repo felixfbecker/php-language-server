@@ -7,6 +7,4 @@ class HelpClass4
     }
 }
 
-HelpClass4::method(1, 2, 3
-
-HelpClass4::method(1, 2, 3
+HelpClass4::method(1

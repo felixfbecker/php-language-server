@@ -132,13 +132,13 @@ class SignatureHelpTest extends TestCase
         $this->assertEquals($help, $result);
     }
 
-    public function funcClosed()
+    public function testFuncClosed()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/signatureHelp/funcClosed.php');
         $this->loader->open($completionUri, file_get_contents($completionUri));
         $result = $this->textDocument->signatureHelp(
             new TextDocumentIdentifier($completionUri),
-            new Position(5, 10)
+            new Position(6, 10)
         )->wait();
 
         $help = new SignatureHelp;
@@ -154,13 +154,13 @@ class SignatureHelpTest extends TestCase
         $this->assertEquals($help, $result);
     }
 
-    public function funcNotClosed()
+    public function testFuncNotClosed()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/signatureHelp/funcNotClosed.php');
         $this->loader->open($completionUri, file_get_contents($completionUri));
         $result = $this->textDocument->signatureHelp(
             new TextDocumentIdentifier($completionUri),
-            new Position(5, 10)
+            new Position(6, 10)
         )->wait();
 
         $help = new SignatureHelp;
@@ -176,7 +176,7 @@ class SignatureHelpTest extends TestCase
         $this->assertEquals($help, $result);
     }
 
-    public function staticClosed()
+    public function testStaticClosed()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/signatureHelp/staticClosed.php');
         $this->loader->open($completionUri, file_get_contents($completionUri));
@@ -198,7 +198,7 @@ class SignatureHelpTest extends TestCase
         $this->assertEquals($help, $result);
     }
 
-    public function staticNotClosed()
+    public function testStaticNotClosed()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/signatureHelp/staticNotClosed.php');
         $this->loader->open($completionUri, file_get_contents($completionUri));
