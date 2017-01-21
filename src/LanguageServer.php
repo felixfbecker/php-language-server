@@ -250,7 +250,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
             $serverCapabilities->completionProvider->triggerCharacters = ['$', '>'];
             // Support "Signature Help"
             $serverCapabilities->signatureHelpProvider = new SignatureHelpOptions;
-            $serverCapabilities->signatureHelpProvider->triggerCharacters = ['('];
+            $serverCapabilities->signatureHelpProvider->triggerCharacters = ['(',','];
             // Support global references
             $serverCapabilities->xworkspaceReferencesProvider = true;
             $serverCapabilities->xdefinitionProvider = true;
