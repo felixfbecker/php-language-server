@@ -27,16 +27,6 @@ class SignatureHelpProvider
     private $index;
 
     /**
-     * @var Parser
-     */
-    private $parser;
-
-    /**
-     * @var Parser
-     */
-    private $parserErrorHandler;
-
-    /**
      * @param DefinitionResolver $definitionResolver
      * @param ReadableIndex      $index
      */
@@ -44,8 +34,6 @@ class SignatureHelpProvider
     {
         $this->definitionResolver = $definitionResolver;
         $this->index = $index;
-        $this->parser = new Parser;
-        $this->parserErrorHandler = new Collecting;
     }
 
     /**
@@ -71,7 +59,7 @@ class SignatureHelpProvider
         $filePos = ftell($handle) + $pos->character;
         $line = substr(fgets($handle), 0, $pos->character);
         fseek($handle, 0);
-        
+
         $i = 0;
         $orig = null;
         do {
@@ -103,7 +91,7 @@ class SignatureHelpProvider
             fclose($handle);
             return $help;
         }
-        
+
         $params = '';
         if ($node instanceof Node\Expr\PropertyFetch) {
             fseek($handle, $node->name->getAttribute('startFilePos'));
@@ -175,7 +163,7 @@ class SignatureHelpProvider
             if (strlen(trim($params))) {
                 try {
                     $lex = new \PhpParser\Lexer();
-                    $lex->startLexing('<?php $a = [ ' . $params, $this->parserErrorHandler);
+                    $lex->startLexing('<?php $a = [ ' . $params, new Collecting);
                     $value = null;
                     $lex->getNextToken($value);
                     $lex->getNextToken($value);
