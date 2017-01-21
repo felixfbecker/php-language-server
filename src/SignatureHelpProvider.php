@@ -61,7 +61,7 @@ class SignatureHelpProvider
         $orig = null;
         do {
             $node = $doc->getNodeAtPosition($pos);
-            if ($node !== null) {
+            if ($node !== null && $orig === null) {
                 $orig = $node;
             }
             $pos->character--;
