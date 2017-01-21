@@ -32,10 +32,10 @@ class SignatureHelp
 
     /**
      * @param SignatureInformation[] $signatures      The signatures.
-     * @param bool                   $activeSignature The active signature.
-     * @param bool                   $activeParameter The active parameter of the active signature.
+     * @param int|null               $activeSignature The active signature.
+     * @param int|null               $activeParameter The active parameter of the active signature.
      */
-    public function __construct(array $signatures = [], int $activeSignature = 0, int $activeParameter = 0)
+    public function __construct(array $signatures = [], int $activeSignature = null, int $activeParameter = null)
     {
         $this->signatures = $signatures;
         $this->activeSignature = $activeSignature;

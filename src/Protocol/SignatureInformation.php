@@ -33,9 +33,9 @@ class SignatureInformation
     public $parameters;
 
     /**
-     * @param string                 $label         The label of this signature. Will be shown in the UI.
-     * @param string|null            $documentation The human-readable doc-comment of this signature.
-     * @param ParameterInformation[] $parameters    The parameters of this signature.
+     * @param string                      $label         The label of this signature. Will be shown in the UI.
+     * @param string|null                 $documentation The human-readable doc-comment of this signature.
+     * @param ParameterInformation[]|null $parameters    The parameters of this signature.
      */
     public function __construct(string $label = null, string $documentation = null, array $parameters = [])
     {
