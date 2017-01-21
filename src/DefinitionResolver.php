@@ -479,14 +479,12 @@ class DefinitionResolver
                 } else {
                     $classFqn = substr((string)$t->getFqsen(), 1);
                 }
-                $extended = $this->expandParentFqns([$classFqn]);
-                foreach ($extended as $f) {
-                    $fqn = $f . '->' . $expr->name;
+                foreach ($this->getParentsDefinition($classFqn) as $parent) {
+                    $fqn = $parent->fqn . '->' . $expr->name;
                     if ($expr instanceof Node\Expr\MethodCall) {
                         $fqn .= '()';
                     }
-                    $def = $this->index->getDefinition($fqn);
-                    if ($def !== null) {
+                    if ($def = $this->index->getDefinition($fqn)) {
                         if ($def->type instanceof Types\This || $def->type instanceof Types\Self_) {
                             return $this->resolveExpressionNodeToType($expr->var);
                         }
@@ -660,21 +658,24 @@ class DefinitionResolver
     /**
      * Adds the FQNs of all parent classes to an array of FQNs of classes
      *
-     * @param string[] $fqns
-     * @return string[]
+     * @param string $fqns
+     * @return Definition[]
      */
-    private function expandParentFqns(array $fqns): array
+    private function getParentsDefinition(string $fqn)
     {
-        $expanded = $fqns;
-        foreach ($fqns as $fqn) {
-            $def = $this->index->getDefinition($fqn);
-            if ($def && $def->extends) {
-                foreach ($this->expandParentFqns($def->extends) as $parent) {
-                    $expanded[] = $parent;
+        $def = $this->index->getDefinition($fqn);
+        while ($def) {
+            yield $def;
+            if ($def->extends) {
+                foreach ($def->extends as $parent) {
+                    if (($tmp = $this->index->getDefinition($parent)) && $tmp->canBeInstantiated) {
+                        $def = $tmp;
+                        continue;
+                    }
                 }
             }
+            break;
         }
-        return $expanded;
     }
 
     /**
