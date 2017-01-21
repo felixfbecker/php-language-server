@@ -43,7 +43,7 @@ class LanguageServerTest extends TestCase
         $serverCapabilities->completionProvider->resolveProvider = false;
         $serverCapabilities->completionProvider->triggerCharacters = ['$', '>'];
         $serverCapabilities->signatureHelpProvider = new SignatureHelpOptions;
-        $serverCapabilities->signatureHelpProvider->triggerCharacters = ['('];
+        $serverCapabilities->signatureHelpProvider->triggerCharacters = ['(',','];
         $serverCapabilities->xworkspaceReferencesProvider = true;
         $serverCapabilities->xdefinitionProvider = true;
         $serverCapabilities->xdependenciesProvider = true;

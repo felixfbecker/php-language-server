@@ -45,9 +45,6 @@ class SignatureHelpProvider
      */
     public function provideSignature(PhpDocument $doc, Position $pos) : SignatureHelp
     {
-        $help = new SignatureHelp;
-        $help->signatures = [];
-
         $handle = fopen('php://temp', 'r+');
         fwrite($handle, $doc->getContent());
         fseek($handle, 0);
@@ -89,7 +86,7 @@ class SignatureHelpProvider
 
         if ($node === null) {
             fclose($handle);
-            return $help;
+            return new SignatureHelp;
         }
 
         $params = '';
@@ -138,7 +135,7 @@ class SignatureHelpProvider
         } else {
             if (!preg_match('(([a-zA-Z_\x7f-\xff][:a-zA-Z0-9_\x7f-\xff]*)\s*\((.*)$)', $line, $method)) {
                 fclose($handle);
-                return $help;
+                return new SignatureHelp;
             }
             $def = $this->index->getDefinition($method[1] . '()');
             $params = $method[2];
@@ -148,18 +145,8 @@ class SignatureHelpProvider
         if ($def) {
             $method = preg_split('(::|->)', str_replace('()', '', $def->fqn), 2);
             $method = $method[1] ?? $method[0];
-            $signature = new SignatureInformation;
-            $signature->label = $method . '('.implode(', ', $def->parameters).')';
-            $signature->documentation = $def->documentation;
-            $signature->parameters = [];
-            foreach ($def->parameters as $param) {
-                $p = new ParameterInformation;
-                $p->label = $param;
-                $signature->parameters[] = $p;
-            }
-            $help->activeSignature = 0;
-            $help->activeParameter = 0;
             $params = ltrim($params, "( ");
+            $activeParameter = 0;
             if (strlen(trim($params))) {
                 try {
                     $lex = new \PhpParser\Lexer();
@@ -173,10 +160,10 @@ class SignatureHelpProvider
                     while ($value !== "\0") {
                         $lex->getNextToken($value);
                         if (($value === ")" || $value === ";") && !count($stack)) {
-                            return $help;
+                            return new SignatureHelp;
                         }
                         if ($value === ',' && !count($stack)) {
-                            $help->activeParameter++;
+                            $activeParameter++;
                         }
                         if ($value === '(') {
                             $stack[] = ')';
@@ -189,11 +176,24 @@ class SignatureHelpProvider
                 } catch (\Exception $ignore) {
                 }
             }
-            if ($help->activeParameter < count($signature->parameters)) {
-                $help->signatures[] = $signature;
+            if ($activeParameter < count($def->parameters)) {
+                $params = array_map(function ($v) {
+                    return $v->label;
+                }, $def->parameters);
+                return new SignatureHelp(
+                    [
+                        new SignatureInformation(
+                            $method . '('.implode(', ', $params).')',
+                            $def->documentation,
+                            $def->parameters
+                        )
+                    ],
+                    0,
+                    $activeParameter
+                );
             }
         }
 
-        return $help;
+        return new SignatureHelp;
     }
 }

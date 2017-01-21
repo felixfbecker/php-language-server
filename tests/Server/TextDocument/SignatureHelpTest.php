@@ -53,17 +53,17 @@ class SignatureHelpTest extends TestCase
             new Position(9, 22)
         )->wait();
 
-        $help = new SignatureHelp;
-        $help->signatures = [];
-        $info = new SignatureInformation;
-        $help->signatures[] = $info;
-        $info->label = 'method(string $param = "")';
-        $info->parameters = [];
-        $param = new ParameterInformation;
-        $info->parameters[] = $param;
-        $param->label = 'string $param = ""';
-
-        $this->assertEquals($help, $result);
+        $this->assertEquals(new SignatureHelp(
+            [
+                new SignatureInformation(
+                    'method(string $param = "")',
+                    null,
+                    [
+                        new ParameterInformation('string $param = ""')
+                    ]
+                )
+            ]
+        ), $result);
     }
 
     public function testMethodClosedReference()
@@ -75,17 +75,17 @@ class SignatureHelpTest extends TestCase
             new Position(14, 11)
         )->wait();
 
-        $help = new SignatureHelp;
-        $help->signatures = [];
-        $info = new SignatureInformation;
-        $help->signatures[] = $info;
-        $info->label = 'method(string $param = "")';
-        $info->parameters = [];
-        $param = new ParameterInformation;
-        $info->parameters[] = $param;
-        $param->label = 'string $param = ""';
-
-        $this->assertEquals($help, $result);
+        $this->assertEquals(new SignatureHelp(
+            [
+                new SignatureInformation(
+                    'method(string $param = "")',
+                    null,
+                    [
+                        new ParameterInformation('string $param = ""')
+                    ]
+                )
+            ]
+        ), $result);
     }
 
     public function testMethodNotClosed()
@@ -97,17 +97,17 @@ class SignatureHelpTest extends TestCase
             new Position(9, 22)
         )->wait();
 
-        $help = new SignatureHelp;
-        $help->signatures = [];
-        $info = new SignatureInformation;
-        $help->signatures[] = $info;
-        $info->label = 'method(string $param = "")';
-        $info->parameters = [];
-        $param = new ParameterInformation;
-        $info->parameters[] = $param;
-        $param->label = 'string $param = ""';
-
-        $this->assertEquals($help, $result);
+        $this->assertEquals(new SignatureHelp(
+            [
+                new SignatureInformation(
+                    'method(string $param = "")',
+                    null,
+                    [
+                        new ParameterInformation('string $param = ""')
+                    ]
+                )
+            ]
+        ), $result);
     }
 
     public function testMethodNotClosedReference()
@@ -119,17 +119,17 @@ class SignatureHelpTest extends TestCase
             new Position(14, 14)
         )->wait();
 
-        $help = new SignatureHelp;
-        $help->signatures = [];
-        $info = new SignatureInformation;
-        $help->signatures[] = $info;
-        $info->label = 'method(string $param = "")';
-        $info->parameters = [];
-        $param = new ParameterInformation;
-        $info->parameters[] = $param;
-        $param->label = 'string $param = ""';
-
-        $this->assertEquals($help, $result);
+        $this->assertEquals(new SignatureHelp(
+            [
+                new SignatureInformation(
+                    'method(string $param = "")',
+                    null,
+                    [
+                        new ParameterInformation('string $param = ""')
+                    ]
+                )
+            ]
+        ), $result);
     }
 
     public function testFuncClosed()
@@ -141,17 +141,17 @@ class SignatureHelpTest extends TestCase
             new Position(6, 10)
         )->wait();
 
-        $help = new SignatureHelp;
-        $help->signatures = [];
-        $info = new SignatureInformation;
-        $help->signatures[] = $info;
-        $info->label = 'helpFunc1(int $count = 0)';
-        $info->parameters = [];
-        $param = new ParameterInformation;
-        $info->parameters[] = $param;
-        $param->label = 'int $count = 0';
-
-        $this->assertEquals($help, $result);
+        $this->assertEquals(new SignatureHelp(
+            [
+                new SignatureInformation(
+                    'helpFunc1(int $count = 0)',
+                    null,
+                    [
+                        new ParameterInformation('int $count = 0')
+                    ]
+                )
+            ]
+        ), $result);
     }
 
     public function testFuncNotClosed()
@@ -163,17 +163,17 @@ class SignatureHelpTest extends TestCase
             new Position(6, 10)
         )->wait();
 
-        $help = new SignatureHelp;
-        $help->signatures = [];
-        $info = new SignatureInformation;
-        $help->signatures[] = $info;
-        $info->label = 'helpFunc2(int $count = 0)';
-        $info->parameters = [];
-        $param = new ParameterInformation;
-        $info->parameters[] = $param;
-        $param->label = 'int $count = 0';
-
-        $this->assertEquals($help, $result);
+        $this->assertEquals(new SignatureHelp(
+            [
+                new SignatureInformation(
+                    'helpFunc2(int $count = 0)',
+                    null,
+                    [
+                        new ParameterInformation('int $count = 0')
+                    ]
+                )
+            ]
+        ), $result);
     }
 
     public function testStaticClosed()
@@ -185,17 +185,17 @@ class SignatureHelpTest extends TestCase
             new Position(9, 19)
         )->wait();
 
-        $help = new SignatureHelp;
-        $help->signatures = [];
-        $info = new SignatureInformation;
-        $help->signatures[] = $info;
-        $info->label = 'method(string $param = "")';
-        $info->parameters = [];
-        $param = new ParameterInformation;
-        $info->parameters[] = $param;
-        $param->label = 'string $param = ""';
-
-        $this->assertEquals($help, $result);
+        $this->assertEquals(new SignatureHelp(
+            [
+                new SignatureInformation(
+                    'method(string $param = "")',
+                    null,
+                    [
+                        new ParameterInformation('string $param = ""')
+                    ]
+                )
+            ]
+        ), $result);
     }
 
     public function testStaticNotClosed()
@@ -207,16 +207,16 @@ class SignatureHelpTest extends TestCase
             new Position(9, 19)
         )->wait();
 
-        $help = new SignatureHelp;
-        $help->signatures = [];
-        $info = new SignatureInformation;
-        $help->signatures[] = $info;
-        $info->label = 'method(string $param = "")';
-        $info->parameters = [];
-        $param = new ParameterInformation;
-        $info->parameters[] = $param;
-        $param->label = 'string $param = ""';
-
-        $this->assertEquals($help, $result);
+        $this->assertEquals(new SignatureHelp(
+            [
+                new SignatureInformation(
+                    'method(string $param = "")',
+                    null,
+                    [
+                        new ParameterInformation('string $param = ""')
+                    ]
+                )
+            ]
+        ), $result);
     }
 }
