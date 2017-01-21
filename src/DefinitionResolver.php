@@ -479,17 +479,15 @@ class DefinitionResolver
                 } else {
                     $classFqn = substr((string)$t->getFqsen(), 1);
                 }
-                foreach ($this->getParentsDefinition($classFqn) as $parent) {
-                    $fqn = $parent->fqn . '->' . $expr->name;
-                    if ($expr instanceof Node\Expr\MethodCall) {
-                        $fqn .= '()';
+                $fqn = $classFqn . '->' . $expr->name;
+                if ($expr instanceof Node\Expr\MethodCall) {
+                    $fqn .= '()';
+                }
+                if ($def = $this->index->getDefinition($fqn)) {
+                    if ($def->type instanceof Types\This || $def->type instanceof Types\Self_) {
+                        return $this->resolveExpressionNodeToType($expr->var);
                     }
-                    if ($def = $this->index->getDefinition($fqn)) {
-                        if ($def->type instanceof Types\This || $def->type instanceof Types\Self_) {
-                            return $this->resolveExpressionNodeToType($expr->var);
-                        }
-                        return $def->type;
-                    }
+                    return $def->type;
                 }
             }
         }
@@ -653,29 +651,6 @@ class DefinitionResolver
             return new Types\Mixed;
         }
         return new Types\Mixed;
-    }
-
-    /**
-     * Adds the FQNs of all parent classes to an array of FQNs of classes
-     *
-     * @param string $fqns
-     * @return Definition[]
-     */
-    private function getParentsDefinition(string $fqn)
-    {
-        $def = $this->index->getDefinition($fqn);
-        while ($def) {
-            yield $def;
-            if ($def->extends) {
-                foreach ($def->extends as $parent) {
-                    if (($tmp = $this->index->getDefinition($parent)) && $tmp->canBeInstantiated) {
-                        $def = $tmp;
-                        continue;
-                    }
-                }
-            }
-            break;
-        }
     }
 
     /**
