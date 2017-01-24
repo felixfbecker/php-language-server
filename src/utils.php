@@ -6,7 +6,7 @@ namespace LanguageServer;
 use Throwable;
 use InvalidArgumentException;
 use PhpParser\Node;
-use Sabre\Event\{Loop, Promise};
+use Sabre\Event\{Loop, Promise, EmitterInterface};
 
 /**
  * Transforms an absolute file path into a URI as used by the language server protocol.
@@ -77,6 +77,20 @@ function timeout($seconds = 0): Promise
     $promise = new Promise;
     Loop\setTimeout([$promise, 'fulfill'], $seconds);
     return $promise;
+}
+
+/**
+ * Returns a promise that is fulfilled once the passed event was triggered on the passed EventEmitter
+ *
+ * @param EmitterInterface $emitter
+ * @param string           $event
+ * @return Promise
+ */
+function waitForEvent(EmitterInterface $emitter, string $event): Promise
+{
+    $p = new Promise;
+    $emitter->once($event, [$p, 'fulfill']);
+    return $p;
 }
 
 /**

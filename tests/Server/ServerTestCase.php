@@ -48,6 +48,7 @@ abstract class ServerTestCase extends TestCase
         $sourceIndex       = new Index;
         $dependenciesIndex = new DependenciesIndex;
         $projectIndex      = new ProjectIndex($sourceIndex, $dependenciesIndex);
+        $projectIndex->setComplete();
 
         $definitionResolver   = new DefinitionResolver($projectIndex);
         $client               = new LanguageClient(new MockProtocolStream, new MockProtocolStream);

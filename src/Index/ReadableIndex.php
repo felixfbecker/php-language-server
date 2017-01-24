@@ -4,12 +4,23 @@ declare(strict_types = 1);
 namespace LanguageServer\Index;
 
 use LanguageServer\Definition;
+use Sabre\Event\EmitterInterface;
 
 /**
  * The ReadableIndex interface provides methods to lookup definitions and references
+ *
+ * @event definition-added Emitted when a definition was added
+ * @event complete         Emitted when the index is complete
  */
-interface ReadableIndex
+interface ReadableIndex extends EmitterInterface
 {
+    /**
+     * Returns true if this index is complete
+     *
+     * @return bool
+     */
+    public function isComplete(): bool;
+
     /**
      * Returns an associative array [string => Definition] that maps fully qualified symbol names
      * to Definitions

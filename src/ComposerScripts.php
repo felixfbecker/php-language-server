@@ -58,6 +58,8 @@ class ComposerScripts
                 $document = new PhpDocument($uri, $content, $index, $parser, $docBlockFactory, $definitionResolver);
             }
 
+            $index->setComplete();
+
             echo "Saving Index\n";
 
             $index->save();
