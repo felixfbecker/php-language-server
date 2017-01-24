@@ -34,6 +34,11 @@ class Index implements ReadableIndex
     private $complete = false;
 
     /**
+     * @var bool
+     */
+    private $staticComplete = false;
+
+    /**
      * Marks this index as complete
      *
      * @return void
@@ -45,6 +50,17 @@ class Index implements ReadableIndex
     }
 
     /**
+     * Marks this index as complete for static definitions and references
+     *
+     * @return void
+     */
+    public function setStaticComplete()
+    {
+        $this->complete = true;
+        $this->emit('static-complete');
+    }
+
+    /**
      * Returns true if this index is complete
      *
      * @return bool
@@ -52,6 +68,16 @@ class Index implements ReadableIndex
     public function isComplete(): bool
     {
         return $this->complete;
+    }
+
+    /**
+     * Returns true if this index is complete
+     *
+     * @return bool
+     */
+    public function isStaticComplete(): bool
+    {
+        return $this->staticComplete;
     }
 
     /**

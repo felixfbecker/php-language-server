@@ -67,9 +67,9 @@ class Workspace
     public function symbol(string $query): Promise
     {
         return coroutine(function () use ($query) {
-            // Wait until indexing finished
+            // Wait until indexing for definitions finished
             if (!$this->index->isComplete()) {
-                yield waitForEvent($this->index, 'complete');
+                yield waitForEvent($this->index, 'static-complete');
             }
             $symbols = [];
             foreach ($this->index->getDefinitions() as $fqn => $definition) {

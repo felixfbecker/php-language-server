@@ -314,7 +314,6 @@ class TextDocument
             }
             $definedFqn = DefinitionResolver::getDefinedFqn($node);
             while (true) {
-                fwrite(STDERR, "searching for definition\n");
                 if ($definedFqn) {
                     // Support hover for definitions
                     $def = $this->index->getDefinition($definedFqn);

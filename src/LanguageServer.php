@@ -316,8 +316,8 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
 
             $startTime = microtime(true);
 
-            foreach (['Collecting definitions and static references', 'Collecting dynamic references'] as $run) {
-                $this->client->window->logMessage(MessageType::INFO, $run);
+            foreach (['Collecting definitions and static references', 'Collecting dynamic references'] as $run => $text) {
+                $this->client->window->logMessage(MessageType::INFO, $text);
                 foreach ($uris as $i => $uri) {
                     if ($this->documentLoader->isOpen($uri)) {
                         continue;
@@ -346,7 +346,11 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                         );
                     }
                 }
-                $this->projectIndex->setComplete();
+                if ($run === 0) {
+                    $this->projectIndex->setStaticComplete();
+                } else {
+                    $this->projectIndex->setComplete();
+                }
                 $duration = (int)(microtime(true) - $startTime);
                 $mem = (int)(memory_get_usage(true) / (1024 * 1024));
                 $this->client->window->logMessage(

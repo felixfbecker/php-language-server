@@ -20,15 +20,28 @@ abstract class AbstractAggregateIndex implements ReadableIndex
     public function __construct()
     {
         foreach ($this->getIndexes() as $index) {
-            $index->on('complete', function () {
-                if ($this->isComplete()) {
-                    $this->emit('complete');
-                }
-            });
-            $index->on('definition-added', function () {
-                $this->emit('definition-added');
-            });
+            $this->registerIndex($index);
         }
+    }
+
+    /**
+     * @param ReadableIndex $index
+     */
+    protected function registerIndex(ReadableIndex $index)
+    {
+        $index->on('complete', function () {
+            if ($this->isComplete()) {
+                $this->emit('complete');
+            }
+        });
+        $index->on('static-complete', function () {
+            if ($this->isStaticComplete()) {
+                $this->emit('static-complete');
+            }
+        });
+        $index->on('definition-added', function () {
+            $this->emit('definition-added');
+        });
     }
 
     /**
@@ -44,6 +57,18 @@ abstract class AbstractAggregateIndex implements ReadableIndex
     }
 
     /**
+     * Marks this index as complete for static definitions and references
+     *
+     * @return void
+     */
+    public function setStaticComplete()
+    {
+        foreach ($this->getIndexes() as $index) {
+            $index->setStaticComplete();
+        }
+    }
+
+    /**
      * Returns true if this index is complete
      *
      * @return bool
@@ -52,6 +77,21 @@ abstract class AbstractAggregateIndex implements ReadableIndex
     {
         foreach ($this->getIndexes() as $index) {
             if (!$index->isComplete()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Returns true if this index is complete for static definitions or references
+     *
+     * @return bool
+     */
+    public function isStaticComplete(): bool
+    {
+        foreach ($this->getIndexes() as $index) {
+            if (!$index->isStaticComplete()) {
                 return false;
             }
         }
