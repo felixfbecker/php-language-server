@@ -26,6 +26,7 @@ class ProjectIndex extends AbstractAggregateIndex
     {
         $this->sourceIndex = $sourceIndex;
         $this->dependenciesIndex = $dependenciesIndex;
+        parent::__construct();
     }
 
     /**
