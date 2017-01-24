@@ -227,6 +227,10 @@ class TextDocument
             } else {
                 // Definition with a global FQN
                 $fqn = DefinitionResolver::getDefinedFqn($node);
+                // Wait until indexing finished
+                if (!$this->index->isComplete()) {
+                    yield waitForEvent($this->index, 'complete');
+                }
                 if ($fqn === null) {
                     $fqn = $this->definitionResolver->resolveReferenceNodeToFqn($node);
                     if ($fqn === null) {
