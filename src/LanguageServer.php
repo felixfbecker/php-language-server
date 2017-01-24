@@ -295,7 +295,9 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
      *
      * @param string $rootPath
      */
-    protected function beforeIndex(string $rootPath) {}
+    protected function beforeIndex(string $rootPath)
+    {
+    }
 
     /**
      * Will read and parse the passed source files in the project and add them to the appropiate indexes
