@@ -41,7 +41,6 @@ abstract class AbstractAggregateIndex implements ReadableIndex
         foreach ($this->getIndexes() as $index) {
             $index->setComplete();
         }
-        $this->emit('complete');
     }
 
     /**
