@@ -56,7 +56,7 @@ class Index implements ReadableIndex
      */
     public function setStaticComplete()
     {
-        $this->complete = true;
+        $this->staticComplete = true;
         $this->emit('static-complete');
     }
 
