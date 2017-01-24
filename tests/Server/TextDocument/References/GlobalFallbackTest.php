@@ -16,6 +16,7 @@ class GlobalFallbackTest extends ServerTestCase
     public function setUp()
     {
         $projectIndex         = new ProjectIndex(new Index, new DependenciesIndex);
+        $projectIndex->setComplete();
         $definitionResolver   = new DefinitionResolver($projectIndex);
         $client               = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
         $this->documentLoader = new PhpDocumentLoader(new FileSystemContentRetriever, $projectIndex, $definitionResolver);
