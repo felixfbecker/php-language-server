@@ -274,7 +274,7 @@ class TextDocument
             $fqn = DefinitionResolver::getDefinedFqn($node);
             while (true) {
                 if ($fqn) {
-                    $def = $this->index->getDefinition($definedFqn);
+                    $def = $this->index->getDefinition($fqn);
                 } else {
                     // Handle reference nodes
                     $def = $this->definitionResolver->resolveReferenceNodeToDefinition($node);
@@ -314,6 +314,7 @@ class TextDocument
             }
             $definedFqn = DefinitionResolver::getDefinedFqn($node);
             while (true) {
+                fwrite(STDERR, "searching for definition\n");
                 if ($definedFqn) {
                     // Support hover for definitions
                     $def = $this->index->getDefinition($definedFqn);
