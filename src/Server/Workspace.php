@@ -68,7 +68,7 @@ class Workspace
     {
         return coroutine(function () use ($query) {
             // Wait until indexing for definitions finished
-            if (!$this->index->isComplete()) {
+            if (!$this->index->isStaticComplete()) {
                 yield waitForEvent($this->index, 'static-complete');
             }
             $symbols = [];
