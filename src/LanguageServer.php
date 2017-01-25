@@ -101,6 +101,11 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     protected $globalIndex;
 
     /**
+     * @var ProjectIndex
+     */
+    protected $projectIndex;
+
+    /**
      * @var DefinitionResolver
      */
     protected $definitionResolver;
@@ -182,21 +187,22 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
 
             $dependenciesIndex = new DependenciesIndex;
             $sourceIndex = new Index;
-            $projectIndex = new ProjectIndex($sourceIndex, $dependenciesIndex);
+            $this->projectIndex = new ProjectIndex($sourceIndex, $dependenciesIndex);
             $stubsIndex = StubsIndex::read();
-            $this->globalIndex = new GlobalIndex($stubsIndex, $projectIndex);
+            $this->globalIndex = new GlobalIndex($stubsIndex, $this->projectIndex);
 
             // The DefinitionResolver should look in stubs, the project source and dependencies
             $this->definitionResolver = new DefinitionResolver($this->globalIndex);
 
             $this->documentLoader = new PhpDocumentLoader(
                 $this->contentRetriever,
-                $projectIndex,
+                $this->projectIndex,
                 $this->definitionResolver
             );
 
             if ($rootPath !== null) {
-                yield $this->index($rootPath);
+                yield $this->beforeIndex($rootPath);
+                $this->index($rootPath)->otherwise('\\LanguageServer\\crash');
             }
 
             // Find composer.json
@@ -225,7 +231,13 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                 );
             }
             if ($this->workspace === null) {
-                $this->workspace = new Server\Workspace($projectIndex, $dependenciesIndex, $sourceIndex, $this->composerLock, $this->documentLoader);
+                $this->workspace = new Server\Workspace(
+                    $this->projectIndex,
+                    $dependenciesIndex,
+                    $sourceIndex,
+                    $this->composerLock,
+                    $this->documentLoader
+                );
             }
 
             $serverCapabilities = new ServerCapabilities();
@@ -279,6 +291,15 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     }
 
     /**
+     * Called before indexing, can return a Promise
+     *
+     * @param string $rootPath
+     */
+    protected function beforeIndex(string $rootPath)
+    {
+    }
+
+    /**
      * Will read and parse the passed source files in the project and add them to the appropiate indexes
      *
      * @param string $rootPath
@@ -295,8 +316,8 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
 
             $startTime = microtime(true);
 
-            foreach (['Collecting definitions and static references', 'Collecting dynamic references'] as $run) {
-                $this->client->window->logMessage(MessageType::INFO, $run);
+            foreach (['Collecting definitions and static references', 'Collecting dynamic references'] as $run => $text) {
+                $this->client->window->logMessage(MessageType::INFO, $text);
                 foreach ($uris as $i => $uri) {
                     if ($this->documentLoader->isOpen($uri)) {
                         continue;
@@ -324,6 +345,11 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                             "Error parsing file {$uri}: " . (string)$e
                         );
                     }
+                }
+                if ($run === 0) {
+                    $this->projectIndex->setStaticComplete();
+                } else {
+                    $this->projectIndex->setComplete();
                 }
                 $duration = (int)(microtime(true) - $startTime);
                 $mem = (int)(memory_get_usage(true) / (1024 * 1024));

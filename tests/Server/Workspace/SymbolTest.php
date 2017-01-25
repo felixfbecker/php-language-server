@@ -25,7 +25,7 @@ class SymbolTest extends ServerTestCase
     public function testEmptyQueryReturnsAllSymbols()
     {
         // Request symbols
-        $result = $this->workspace->symbol('');
+        $result = $this->workspace->symbol('')->wait();
         $referencesUri = pathToUri(realpath(__DIR__ . '/../../../fixtures/references.php'));
         // @codingStandardsIgnoreStart
         $this->assertEquals([
@@ -65,7 +65,7 @@ class SymbolTest extends ServerTestCase
     public function testQueryFiltersResults()
     {
         // Request symbols
-        $result = $this->workspace->symbol('testmethod');
+        $result = $this->workspace->symbol('testmethod')->wait();
         // @codingStandardsIgnoreStart
         $this->assertEquals([
             new SymbolInformation('staticTestMethod',   SymbolKind::METHOD,    $this->getDefinitionLocation('TestNamespace\\TestClass::staticTestMethod()'), 'TestNamespace\\TestClass'),

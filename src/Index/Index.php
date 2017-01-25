@@ -4,6 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer\Index;
 
 use LanguageServer\Definition;
+use Sabre\Event\EmitterTrait;
 
 /**
  * Represents the index of a project or dependency
@@ -11,6 +12,8 @@ use LanguageServer\Definition;
  */
 class Index implements ReadableIndex
 {
+    use EmitterTrait;
+
     /**
      * An associative array that maps fully qualified symbol names to Definitions
      *
@@ -24,6 +27,61 @@ class Index implements ReadableIndex
      * @var string[][]
      */
     private $references = [];
+
+    /**
+     * @var bool
+     */
+    private $complete = false;
+
+    /**
+     * @var bool
+     */
+    private $staticComplete = false;
+
+    /**
+     * Marks this index as complete
+     *
+     * @return void
+     */
+    public function setComplete()
+    {
+        if (!$this->isStaticComplete()) {
+            $this->setStaticComplete();
+        }
+        $this->complete = true;
+        $this->emit('complete');
+    }
+
+    /**
+     * Marks this index as complete for static definitions and references
+     *
+     * @return void
+     */
+    public function setStaticComplete()
+    {
+        $this->staticComplete = true;
+        $this->emit('static-complete');
+    }
+
+    /**
+     * Returns true if this index is complete
+     *
+     * @return bool
+     */
+    public function isComplete(): bool
+    {
+        return $this->complete;
+    }
+
+    /**
+     * Returns true if this index is complete
+     *
+     * @return bool
+     */
+    public function isStaticComplete(): bool
+    {
+        return $this->staticComplete;
+    }
 
     /**
      * Returns an associative array [string => Definition] that maps fully qualified symbol names
@@ -65,6 +123,7 @@ class Index implements ReadableIndex
     public function setDefinition(string $fqn, Definition $definition)
     {
         $this->definitions[$fqn] = $definition;
+        $this->emit('definition-added');
     }
 
     /**
