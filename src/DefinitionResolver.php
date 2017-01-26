@@ -483,7 +483,8 @@ class DefinitionResolver
                 if ($expr instanceof Node\Expr\MethodCall) {
                     $fqn .= '()';
                 }
-                if ($def = $this->index->getDefinition($fqn)) {
+                $def = $this->index->getDefinition($fqn);
+                if ($def !== null) {
                     if ($def->type instanceof Types\This || $def->type instanceof Types\Self_) {
                         return $this->resolveExpressionNodeToType($expr->var);
                     }
