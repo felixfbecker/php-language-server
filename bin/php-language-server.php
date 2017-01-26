@@ -2,6 +2,7 @@
 
 use LanguageServer\{LanguageServer, ProtocolStreamReader, ProtocolStreamWriter};
 use Sabre\Event\Loop;
+use Composer\{Factory, XdebugHandler};
 
 $options = getopt('', ['tcp::', 'tcp-server::', 'memory-limit::']);
 
@@ -29,6 +30,9 @@ set_exception_handler(function (\Throwable $e) {
 });
 
 @cli_set_process_title('PHP Language Server');
+
+// If XDebug is enabled, restart without it
+(new XdebugHandler(Factory::createOutput()))->check();
 
 if (!empty($options['tcp'])) {
     // Connect to a TCP server
