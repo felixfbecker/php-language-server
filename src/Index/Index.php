@@ -10,7 +10,7 @@ use Sabre\Event\EmitterTrait;
  * Represents the index of a project or dependency
  * Serializable for caching
  */
-class Index implements ReadableIndex
+class Index implements ReadableIndex, \Serializable
 {
     use EmitterTrait;
 
@@ -184,5 +184,31 @@ class Index implements ReadableIndex
             return;
         }
         array_splice($this->references[$fqn], $index, 1);
+    }
+
+    /**
+     * @param string $serialized
+     * @return void
+     */
+    public function unserialize($serialized)
+    {
+        $data = unserialize($serialized);
+        foreach ($data as $prop => $val) {
+            $this->$prop = $val;
+        }
+    }
+
+    /**
+     * @param string $serialized
+     * @return string
+     */
+    public function serialize()
+    {
+        return serialize([
+            'definitions' => $this->definitions,
+            'references' => $this->references,
+            'complete' => $this->complete,
+            'static-complete' => $this->staticComplete
+        ]);
     }
 }

@@ -28,6 +28,13 @@ class LanguageClient
      */
     public $workspace;
 
+    /**
+     * Handles xcache/* methods
+     *
+     * @var Client\XCache
+     */
+    public $xcache;
+
     public function __construct(ProtocolReader $reader, ProtocolWriter $writer)
     {
         $handler = new ClientHandler($reader, $writer);
@@ -36,5 +43,6 @@ class LanguageClient
         $this->textDocument = new Client\TextDocument($handler, $mapper);
         $this->window = new Client\Window($handler);
         $this->workspace = new Client\Workspace($handler, $mapper);
+        $this->xcache = new Client\XCache($handler);
     }
 }
