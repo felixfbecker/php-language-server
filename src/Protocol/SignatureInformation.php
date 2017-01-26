@@ -37,7 +37,7 @@ class SignatureInformation
      * @param string|null                 $documentation The human-readable doc-comment of this signature.
      * @param ParameterInformation[]|null $parameters    The parameters of this signature.
      */
-    public function __construct(string $label = null, string $documentation = null, array $parameters = [])
+    public function __construct(string $label = null, string $documentation = null, array $parameters = null)
     {
         $this->label = $label;
         $this->documentation = $documentation;
