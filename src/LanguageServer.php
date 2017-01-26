@@ -122,40 +122,66 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
             $this->shutdown();
             $this->exit();
         });
-        $this->protocolReader->on('message', function (Message $msg) {
-            coroutine(function () use ($msg) {
-                // Ignore responses, this is the handler for requests and notifications
-                if (AdvancedJsonRpc\Response::isResponse($msg->body)) {
+        // Map from request ID to subscription
+        $subscriptions = [];
+        $this->protocolReader->on('message', function (Message $msg) use ($subscriptions) {
+            // Ignore responses, this is the handler for requests and notifications
+            if (AdvancedJsonRpc\Response::isResponse($msg->body)) {
+                return;
+            }
+            if ($msg->body->method === '$/cancelRequest') {
+                if (!isset($subscriptions[$msg->body->id])) {
                     return;
                 }
-                $result = null;
-                $error = null;
-                try {
-                    // Invoke the method handler to get a result
-                    $result = yield $this->dispatch($msg->body);
-                } catch (AdvancedJsonRpc\Error $e) {
-                    // If a ResponseError is thrown, send it back in the Response
-                    $error = $e;
-                } catch (Throwable $e) {
-                    // If an unexpected error occured, send back an INTERNAL_ERROR error response
-                    $error = new AdvancedJsonRpc\Error(
-                        (string)$e,
-                        AdvancedJsonRpc\ErrorCode::INTERNAL_ERROR,
-                        null,
-                        $e
+                // Express that we are not interested anymore in the observable
+                $subscriptions[$msg->body->id]->dispose();
+                return;
+            }
+            // The result object that is built through JSON patches
+            $result = null;
+            $error = null;
+            try {
+                // Invoke the method handler to get a result
+                $obs = $this->dispatch($msg->body);
+            } catch (\Throwable $e) {
+                $obs = Observable::error($e);
+            }
+            // Notifications dont need further acting
+            if (AdvancedJsonRpc\Notification::isNotification($msg->body)) {
+                return;
+            }
+            if (!($obs instanceof ObservableInterface)) {
+                $obs = Observable::just($obs);
+            }
+            $subscriptions[$msg->body->id] = $obs->subscribe(new CallbackObserver(
+                function (JSONPatch $patch) use (&$result) {
+                    $this->protocolWriter->write(
+                        new Message(
+                            new AdvancedJsonRpc\Notification(
+                                '$/partialResult', ['id' => $msg->body->id, 'patch' => $patch]
+                            )
+                        )
                     );
-                }
-                // Only send a Response for a Request
-                // Notifications do not send Responses
-                if (AdvancedJsonRpc\Request::isRequest($msg->body)) {
-                    if ($error !== null) {
-                        $responseBody = new AdvancedJsonRpc\ErrorResponse($msg->body->id, $error);
-                    } else {
-                        $responseBody = new AdvancedJsonRpc\SuccessResponse($msg->body->id, $result);
+                    // Apply path to result object for BC
+                    $patch->apply($result);
+                },
+                function (\Exception $error) use ($msg) {
+                    if (!($error instanceof AdvancedJsonRpc\Error)) {
+                        $error = new AdvancedJsonRpc\Error(
+                            (string)$error,
+                            AdvancedJsonRpc\ErrorCode::INTERNAL_ERROR,
+                            null,
+                            $error
+                        );
                     }
-                    $this->protocolWriter->write(new Message($responseBody));
+                    // If an unexpected error occured, send back an INTERNAL_ERROR error response
+                    $this->protocolWriter->write(new Message(new AdvancedJsonRpc\ErrorResponse($msg->body->id, $error)));
+                },
+                function () use ($msg, &$result) {
+                    // Return the built result object for BC
+                    $this->protocolWriter->write(new Message(new AdvancedJsonRpc\SuccessResponse($msg->body->id, $result)));
                 }
-            })->otherwise('\\LanguageServer\\crash');
+            ));
         });
         $this->protocolWriter = $writer;
         $this->client = new LanguageClient($reader, $writer);

@@ -62,10 +62,31 @@ class Workspace
      * The workspace symbol request is sent from the client to the server to list project-wide symbols matching the query string.
      *
      * @param string $query
-     * @return Promise <SymbolInformation[]>
+     * @return Observable <SymbolInformation[]>
      */
-    public function symbol(string $query): Promise
+    public function symbol(string $query): Observable
     {
+        (
+            $this->index->isStaticComplete()
+            ? observableFromEvent($this->index->once('static-complete', function () {
+
+            })
+            : Observable::empty()
+        )
+        return Observable::create(function (ObserverInterface $observer) {
+            // Wait until indexing for definitions finished
+            if (!$this->index->isStaticComplete()) {
+                $this->index->once('static-complete', function () {
+
+                });
+            }
+            $observer->onNext(42);
+            $observer->onCompleted();
+
+            return new CallbackDisposable(function () {
+
+            });
+        });
         return coroutine(function () use ($query) {
             // Wait until indexing for definitions finished
             if (!$this->index->isStaticComplete()) {

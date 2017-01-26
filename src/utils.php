@@ -94,6 +94,20 @@ function waitForEvent(EmitterInterface $emitter, string $event): Promise
 }
 
 /**
+ * Returns a promise that is fulfilled once the passed event was triggered on the passed EventEmitter
+ *
+ * @param EmitterInterface $emitter
+ * @param string           $event
+ * @return Promise
+ */
+function observableFromEvent(EmitterInterface $emitter, string $event): Promise
+{
+    Observable::create()
+    $emitter->once($event, [$p, 'fulfill']);
+    return $p;
+}
+
+/**
  * Returns the closest node of a specific type
  *
  * @param Node $node
