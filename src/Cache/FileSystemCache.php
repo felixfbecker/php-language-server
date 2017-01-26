@@ -59,8 +59,7 @@ class FileSystemCache implements Cache
                 mkdir($this->cacheDir);
             }
             file_put_contents($file, serialize($value));
-            return Promise\resolve(null);
-        } catch (\Exception $e) {
+        } finally {
             return Promise\resolve(null);
         }
     }
