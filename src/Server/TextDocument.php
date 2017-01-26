@@ -30,6 +30,7 @@ use LanguageServer\Index\ReadableIndex;
 use Sabre\Event\Promise;
 use Sabre\Uri;
 use function Sabre\Event\coroutine;
+use function LanguageServer\waitForEvent;
 
 /**
  * Provides method handlers for all textDocument/* methods
@@ -232,6 +233,10 @@ class TextDocument
             } else {
                 // Definition with a global FQN
                 $fqn = DefinitionResolver::getDefinedFqn($node);
+                // Wait until indexing finished
+                if (!$this->index->isComplete()) {
+                    yield waitForEvent($this->index, 'complete');
+                }
                 if ($fqn === null) {
                     $fqn = $this->definitionResolver->resolveReferenceNodeToFqn($node);
                     if ($fqn === null) {
@@ -273,11 +278,18 @@ class TextDocument
             }
             // Handle definition nodes
             $fqn = DefinitionResolver::getDefinedFqn($node);
-            if ($fqn !== null) {
-                $def = $this->index->getDefinition($fqn);
-            } else {
-                // Handle reference nodes
-                $def = $this->definitionResolver->resolveReferenceNodeToDefinition($node);
+            while (true) {
+                if ($fqn) {
+                    $def = $this->index->getDefinition($fqn);
+                } else {
+                    // Handle reference nodes
+                    $def = $this->definitionResolver->resolveReferenceNodeToDefinition($node);
+                }
+                // If no result was found and we are still indexing, try again after the index was updated
+                if ($def !== null || $this->index->isComplete()) {
+                    break;
+                }
+                yield waitForEvent($this->index, 'definition-added');
             }
             if (
                 $def === null
@@ -306,14 +318,22 @@ class TextDocument
             if ($node === null) {
                 return new Hover([]);
             }
-            $range = Range::fromNode($node);
-            if ($definedFqn = DefinitionResolver::getDefinedFqn($node)) {
-                // Support hover for definitions
-                $def = $this->index->getDefinition($definedFqn);
-            } else {
-                // Get the definition for whatever node is under the cursor
-                $def = $this->definitionResolver->resolveReferenceNodeToDefinition($node);
+            $definedFqn = DefinitionResolver::getDefinedFqn($node);
+            while (true) {
+                if ($definedFqn) {
+                    // Support hover for definitions
+                    $def = $this->index->getDefinition($definedFqn);
+                } else {
+                    // Get the definition for whatever node is under the cursor
+                    $def = $this->definitionResolver->resolveReferenceNodeToDefinition($node);
+                }
+                // If no result was found and we are still indexing, try again after the index was updated
+                if ($def !== null || $this->index->isComplete()) {
+                    break;
+                }
+                yield waitForEvent($this->index, 'definition-added');
             }
+            $range = Range::fromNode($node);
             if ($def === null) {
                 return new Hover([], $range);
             }
@@ -378,12 +398,18 @@ class TextDocument
                 return [];
             }
             // Handle definition nodes
-            $fqn = DefinitionResolver::getDefinedFqn($node);
-            if ($fqn !== null) {
-                $def = $this->index->getDefinition($fqn);
-            } else {
-                // Handle reference nodes
-                $def = $this->definitionResolver->resolveReferenceNodeToDefinition($node);
+            while (true) {
+                if ($fqn) {
+                    $def = $this->index->getDefinition($definedFqn);
+                } else {
+                    // Handle reference nodes
+                    $def = $this->definitionResolver->resolveReferenceNodeToDefinition($node);
+                }
+                // If no result was found and we are still indexing, try again after the index was updated
+                if ($def !== null || $this->index->isComplete()) {
+                    break;
+                }
+                yield waitForEvent($this->index, 'definition-added');
             }
             if (
                 $def === null

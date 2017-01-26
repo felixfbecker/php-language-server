@@ -27,7 +27,9 @@ class DependenciesIndex extends AbstractAggregateIndex
     public function getDependencyIndex(string $packageName): Index
     {
         if (!isset($this->indexes[$packageName])) {
-            $this->indexes[$packageName] = new Index;
+            $index = new Index;
+            $this->indexes[$packageName] = $index;
+            $this->registerIndex($index);
         }
         return $this->indexes[$packageName];
     }

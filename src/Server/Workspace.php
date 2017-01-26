@@ -8,6 +8,7 @@ use LanguageServer\Index\{ProjectIndex, DependenciesIndex, Index};
 use LanguageServer\Protocol\{SymbolInformation, SymbolDescriptor, ReferenceInformation, DependencyReference, Location};
 use Sabre\Event\Promise;
 use function Sabre\Event\coroutine;
+use function LanguageServer\waitForEvent;
 
 /**
  * Provides method handlers for all workspace/* methods
@@ -61,17 +62,23 @@ class Workspace
      * The workspace symbol request is sent from the client to the server to list project-wide symbols matching the query string.
      *
      * @param string $query
-     * @return SymbolInformation[]
+     * @return Promise <SymbolInformation[]>
      */
-    public function symbol(string $query): array
+    public function symbol(string $query): Promise
     {
-        $symbols = [];
-        foreach ($this->index->getDefinitions() as $fqn => $definition) {
-            if ($query === '' || stripos($fqn, $query) !== false) {
-                $symbols[] = $definition->symbolInformation;
+        return coroutine(function () use ($query) {
+            // Wait until indexing for definitions finished
+            if (!$this->index->isStaticComplete()) {
+                yield waitForEvent($this->index, 'static-complete');
             }
-        }
-        return $symbols;
+            $symbols = [];
+            foreach ($this->index->getDefinitions() as $fqn => $definition) {
+                if ($query === '' || stripos($fqn, $query) !== false) {
+                    $symbols[] = $definition->symbolInformation;
+                }
+            }
+            return $symbols;
+        });
     }
 
     /**
@@ -86,6 +93,10 @@ class Workspace
         return coroutine(function () use ($query, $files) {
             if ($this->composerLock === null) {
                 return [];
+            }
+            // Wait until indexing finished
+            if (!$this->index->isComplete()) {
+                yield waitForEvent($this->index, 'complete');
             }
             /** Map from URI to array of referenced FQNs in dependencies */
             $refs = [];

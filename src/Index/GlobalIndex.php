@@ -26,6 +26,7 @@ class GlobalIndex extends AbstractAggregateIndex
     {
         $this->stubsIndex = $stubsIndex;
         $this->projectIndex = $projectIndex;
+        parent::__construct();
     }
 
     /**
