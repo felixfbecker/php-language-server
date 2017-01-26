@@ -27,7 +27,9 @@ class ClientCache implements Cache
      */
     public function get(string $key): Promise
     {
-        return $this->client->xcache->get($key)->then('unserialize')->otherwise(function () {});
+        return $this->client->xcache->get($key)->then('unserialize')->otherwise(function () {
+            // Ignore
+        });
     }
 
     /**
@@ -39,6 +41,8 @@ class ClientCache implements Cache
      */
     public function set(string $key, $value): Promise
     {
-        return $this->client->xcache->set($key, serialize($value))->otherwise(function () {});
+        return $this->client->xcache->set($key, serialize($value))->otherwise(function () {
+            // Ignore
+        });
     }
 }
