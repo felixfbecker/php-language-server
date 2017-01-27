@@ -260,40 +260,55 @@ class TextDocument
      *
      * @param TextDocumentIdentifier $textDocument The text document
      * @param Position $position The position inside the text document
-     * @return Promise <Location|Location[]>
+     * @return Observable Will emit JSON Patch operations that eventually result in Location[]
      */
-    public function definition(TextDocumentIdentifier $textDocument, Position $position): Promise
+    public function definition(TextDocumentIdentifier $textDocument, Position $position): Observable
     {
-        return coroutine(function () use ($textDocument, $position) {
-            $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
-            $node = $document->getNodeAtPosition($position);
-            if ($node === null) {
-                return [];
-            }
-            // Handle definition nodes
-            $fqn = DefinitionResolver::getDefinedFqn($node);
-            while (true) {
-                if ($fqn) {
-                    $def = $this->index->getDefinition($fqn);
-                } else {
-                    // Handle reference nodes
-                    $def = $this->definitionResolver->resolveReferenceNodeToDefinition($node);
+        return $this->documentLoader->getOrLoad($textDocument->uri)
+            ->flatMap(function (PhpDocument $document) {
+                $node = $document->getNodeAtPosition($position);
+                if ($node === null) {
+                    return Observable::empty();
                 }
-                // If no result was found and we are still indexing, try again after the index was updated
-                if ($def !== null || $this->index->isComplete()) {
-                    break;
-                }
-                yield waitForEvent($this->index, 'definition-added');
-            }
-            if (
-                $def === null
-                || $def->symbolInformation === null
-                || Uri\parse($def->symbolInformation->location->uri)['scheme'] === 'phpstubs'
-            ) {
-                return [];
-            }
-            return $def->symbolInformation->location;
-        });
+                // Handle definition nodes
+                $fqn = DefinitionResolver::getDefinedFqn($node);
+                return Observable::merge(
+                    observableFromEvent($this->index, 'definition-added')->throttle(100),
+                    observableFromEvent($this->index, 'complete')->take(1)
+                )
+                    // Repeat the following logic as long as the index is not complete
+                    ->takeWhile(function () {
+                        return !$this->index->isComplete();
+                    })
+                    // Try to find the definition on each event
+                    ->map(function () use ($fqn) {
+                        if ($fqn) {
+                            return $this->index->getDefinition($fqn);
+                        } else {
+                            // Handle reference nodes
+                            return $this->definitionResolver->resolveReferenceNodeToDefinition($node);
+                        }
+                    });
+            })
+            // Ignore events where definitions were not found
+            ->filter(function (Definition $def) {
+                return $def === null;
+            })
+            // If we found one definition, complete
+            ->take(1)
+            // Check if we actually have a Definition with location info and Definition is not part of stubs
+            ->filter(function (Definition $def) {
+                return (
+                    $def->symbolInformation === null
+                    || Uri\parse($def->symbolInformation->location->uri)['scheme'] === 'phpstubs'
+                );
+            })
+            // Turn the found Definition into an add operation for the location
+            ->map(function (Definition $def) {
+                return new Operation\Add('/-', $def->symbolInformation->location);
+            })
+            // Initialize with empty array
+            ->startWith(new Operation\Replace('/', []));
     }
 
     /**

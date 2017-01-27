@@ -17,16 +17,19 @@ use LanguageServer\Protocol\{
 use LanguageServer\FilesFinder\{FilesFinder, ClientFilesFinder, FileSystemFilesFinder};
 use LanguageServer\ContentRetriever\{ContentRetriever, ClientContentRetriever, FileSystemContentRetriever};
 use LanguageServer\Index\{DependenciesIndex, GlobalIndex, Index, ProjectIndex, StubsIndex};
-use AdvancedJsonRpc;
+use AdvancedJsonRpc as JsonRpc;
 use Sabre\Event\{Loop, Promise};
 use function Sabre\Event\coroutine;
+use Rx\{Observable, CallbackObserver, ObservableInterface};
+use gamringer\JSONPatch\{Patch, Operation};
+use gamringer\JSONPointer\Pointer;
 use Exception;
 use Throwable;
 use Webmozart\PathUtil\Path;
 use Webmozart\Glob\Glob;
 use Sabre\Uri;
 
-class LanguageServer extends AdvancedJsonRpc\Dispatcher
+class LanguageServer extends JsonRpc\Dispatcher
 {
     /**
      * Handles textDocument/* method calls
@@ -124,22 +127,23 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
         });
         // Map from request ID to subscription
         $subscriptions = [];
-        $this->protocolReader->on('message', function (Message $msg) use ($subscriptions) {
+        $this->protocolReader->on('message', function (Message $msg) use (&$subscriptions) {
             // Ignore responses, this is the handler for requests and notifications
-            if (AdvancedJsonRpc\Response::isResponse($msg->body)) {
+            if (JsonRpc\Response::isResponse($msg->body)) {
                 return;
             }
             if ($msg->body->method === '$/cancelRequest') {
-                if (!isset($subscriptions[$msg->body->id])) {
+                if (!isset($subscriptions[$msg->body->params->id])) {
                     return;
                 }
                 // Express that we are not interested anymore in the observable
-                $subscriptions[$msg->body->id]->dispose();
+                $subscriptions[$msg->body->params->id]->dispose();
+                unset($msg->body->params->id);
                 return;
             }
             // The result object that is built through JSON patches
             $result = null;
-            $error = null;
+            $pointer = new Pointer($result);
             try {
                 // Invoke the method handler to get a result
                 $obs = $this->dispatch($msg->body);
@@ -147,39 +151,35 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                 $obs = Observable::error($e);
             }
             // Notifications dont need further acting
-            if (AdvancedJsonRpc\Notification::isNotification($msg->body)) {
+            if (JsonRpc\Notification::isNotification($msg->body)) {
                 return;
             }
             if (!($obs instanceof ObservableInterface)) {
-                $obs = Observable::just($obs);
+                $obs = Observable::just(new JSONPatch('replace', '/', $obs));
             }
             $subscriptions[$msg->body->id] = $obs->subscribe(new CallbackObserver(
-                function (JSONPatch $patch) use (&$result) {
-                    $this->protocolWriter->write(
-                        new Message(
-                            new AdvancedJsonRpc\Notification(
-                                '$/partialResult', ['id' => $msg->body->id, 'patch' => $patch]
-                            )
-                        )
-                    );
+                function (Operation\Appliable $operation) use ($pointer) {
+                    $this->protocolWriter->write(new Message(new JsonRpc\Notification('$/partialResult', [
+                        'id' => $msg->body->id,
+                        'patch' => [$operation]
+                    ])));
                     // Apply path to result object for BC
-                    $patch->apply($result);
+                    $operation->apply($pointer);
                 },
                 function (\Exception $error) use ($msg) {
-                    if (!($error instanceof AdvancedJsonRpc\Error)) {
-                        $error = new AdvancedJsonRpc\Error(
-                            (string)$error,
-                            AdvancedJsonRpc\ErrorCode::INTERNAL_ERROR,
-                            null,
-                            $error
-                        );
+                    if (!($error instanceof JsonRpc\Error)) {
+                        $error = new JsonRpc\Error((string)$error, JsonRpc\ErrorCode::INTERNAL_ERROR, null, $error);
                     }
                     // If an unexpected error occured, send back an INTERNAL_ERROR error response
-                    $this->protocolWriter->write(new Message(new AdvancedJsonRpc\ErrorResponse($msg->body->id, $error)));
+                    $this->protocolWriter->write(new Message(new JsonRpc\ErrorResponse($msg->body->id, $error)));
                 },
-                function () use ($msg, &$result) {
-                    // Return the built result object for BC
-                    $this->protocolWriter->write(new Message(new AdvancedJsonRpc\SuccessResponse($msg->body->id, $result)));
+                function () use ($msg, &$result, &$subscriptions) {
+                    // Return the complete result object for BC
+                    $this->protocolWriter->write(new Message(new JsonRpc\SuccessResponse($msg->body->id, $result)));
+                    if (isset($subscriptions[$msg->body->id]) {
+                        $subscriptions[$msg->body->id]->dispose();
+                        unset($subscriptions[$msg->body->id]);
+                    }
                 }
             ));
         });

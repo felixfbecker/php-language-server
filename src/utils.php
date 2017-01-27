@@ -79,6 +79,13 @@ function timeout($seconds = 0): Promise
     return $promise;
 }
 
+function observableTimeout($seconds = 0)
+{
+    return Observable::create(function (ObserverInterface $observer) use ($seconds) {
+        Loop\setTimeout([$observer, 'onCompleted'], $seconds);
+    });
+}
+
 /**
  * Returns a promise that is fulfilled once the passed event was triggered on the passed EventEmitter
  *
@@ -94,7 +101,7 @@ function waitForEvent(EmitterInterface $emitter, string $event): Promise
 }
 
 /**
- * Returns a promise that is fulfilled once the passed event was triggered on the passed EventEmitter
+ * Returns an Observable that emits every event. For once semantics use ->take(1)
  *
  * @param EmitterInterface $emitter
  * @param string           $event
@@ -102,9 +109,12 @@ function waitForEvent(EmitterInterface $emitter, string $event): Promise
  */
 function observableFromEvent(EmitterInterface $emitter, string $event): Promise
 {
-    Observable::create()
-    $emitter->once($event, [$p, 'fulfill']);
-    return $p;
+    Observable::create(function (Observer $observer) use ($emitter, $event) {
+        $emitter->on($event, [$observer, 'onNext']);
+        return new CallbackDisposable(function () use ($event, $observer) {
+            return $emitter->removeListener($event, [$observer, 'onNext']);
+        });
+    });
 }
 
 /**

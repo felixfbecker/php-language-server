@@ -7,6 +7,7 @@ use LanguageServer\{LanguageClient, Project, PhpDocumentLoader};
 use LanguageServer\Index\{ProjectIndex, DependenciesIndex, Index};
 use LanguageServer\Protocol\{SymbolInformation, SymbolDescriptor, ReferenceInformation, DependencyReference, Location};
 use Sabre\Event\Promise;
+use Rx\Observable;
 use function Sabre\Event\coroutine;
 use function LanguageServer\waitForEvent;
 
@@ -62,44 +63,31 @@ class Workspace
      * The workspace symbol request is sent from the client to the server to list project-wide symbols matching the query string.
      *
      * @param string $query
-     * @return Observable <SymbolInformation[]>
+     * @return Observable Will yield JSON Patch Operations that eventually result in SymbolInformation[]
      */
     public function symbol(string $query): Observable
     {
-        (
-            $this->index->isStaticComplete()
-            ? observableFromEvent($this->index->once('static-complete', function () {
-
-            })
-            : Observable::empty()
-        )
-        return Observable::create(function (ObserverInterface $observer) {
-            // Wait until indexing for definitions finished
-            if (!$this->index->isStaticComplete()) {
-                $this->index->once('static-complete', function () {
-
-                });
-            }
-            $observer->onNext(42);
-            $observer->onCompleted();
-
-            return new CallbackDisposable(function () {
-
-            });
-        });
-        return coroutine(function () use ($query) {
-            // Wait until indexing for definitions finished
-            if (!$this->index->isStaticComplete()) {
-                yield waitForEvent($this->index, 'static-complete');
-            }
-            $symbols = [];
-            foreach ($this->index->getDefinitions() as $fqn => $definition) {
-                if ($query === '' || stripos($fqn, $query) !== false) {
-                    $symbols[] = $definition->symbolInformation;
+        return Observable::just(null)
+            // Wait for indexing event if not yet finished
+            ->flatMap(function () {
+                if (!$this->index->isStaticComplete()) {
+                    return observableFromEvent($this->index, 'static-complete')->take(1);
                 }
-            }
-            return $symbols;
-        });
+            })
+            // Get definitions from complete index
+            ->flatMap(function () {
+                return Observable::fromArray($this->index->getDefinitions());
+            })
+            // Filter by matching FQN to query
+            ->filter(function (Definition $def) use ($query) {
+                return $query === '' || stripos($def->fqn, $query) !== false;
+            })
+            // Send each SymbolInformation
+            ->map(function (Definition $def) use ($query) {
+                return new Operation\Add('/-', $def->symbolInformation);
+            })
+            // Initialize with an empty array
+            ->startWith(new Operation\Replace('/', []));
     }
 
     /**
@@ -107,74 +95,82 @@ class Workspace
      *
      * @param SymbolDescriptor $query Partial metadata about the symbol that is being searched for.
      * @param string[]         $files An optional list of files to restrict the search to.
-     * @return ReferenceInformation[]
+     * @return Observable ReferenceInformation[]
      */
-    public function xreferences($query, array $files = null): Promise
+    public function xreferences($query, array $files = null): Observable
     {
-        return coroutine(function () use ($query, $files) {
-            if ($this->composerLock === null) {
-                return [];
-            }
-            // Wait until indexing finished
-            if (!$this->index->isComplete()) {
-                yield waitForEvent($this->index, 'complete');
-            }
-            /** Map from URI to array of referenced FQNs in dependencies */
-            $refs = [];
-            // Get all references TO dependencies
-            $fqns = isset($query->fqsen) ? [$query->fqsen] : array_values($this->dependenciesIndex->getDefinitions());
-            foreach ($fqns as $fqn) {
-                foreach ($this->sourceIndex->getReferenceUris($fqn) as $uri) {
-                    if (!isset($refs[$uri])) {
-                        $refs[$uri] = [];
-                    }
-                    if (array_search($uri, $refs[$uri]) === false) {
-                        $refs[$uri][] = $fqn;
+        return Observable::just(null)
+            ->flatMap(function () {
+                if ($this->composerLock === null) {
+                    return Observable::empty();
+                }
+                // Wait until indexing finished
+                if (!$this->index->isComplete()) {
+                    return observableFromEvent($this->index, 'complete')->take(1);
+                }
+            })
+            // Get all definition FQNs in dependencies
+            ->flatMap(function () {
+                if (isset($query->fqsen)) {
+                    $fqns = [$this->dependenciesIndex->getDefinition($query->fqsen)];
+                } else {
+                    $fqns = $this->dependenciesIndex->getDefinitions();
+                }
+                return Observable::fromArray($fqns);
+            })
+            // Get all URIs in the project source that reference those definitions
+            ->flatMap(function (Definition $def) {
+                return Observable::fromArray($this->sourceIndex->getReferenceUris($fqn));
+            })
+            ->distinct()
+            ->flatMap(function (string $uri) {
+                return $this->documentLoader->getOrLoad($uri);
+                $symbol = new SymbolDescriptor;
+                $symbol->fqsen = $fqn;
+                foreach (get_object_vars($def->symbolInformation) as $prop => $val) {
+                    $symbol->$prop = $val;
+                }
+                // Find out package name
+                preg_match('/\/vendor\/([^\/]+\/[^\/]+)\//', $def->symbolInformation->location->uri, $matches);
+                $packageName = $matches[1];
+                foreach (array_merge($this->composerLock->packages, $this->composerLock->{'packages-dev'}) as $package) {
+                    if ($package->name === $packageName) {
+                        $symbol->package = $package;
+                        break;
                     }
                 }
-            }
-            $refInfos = [];
-            foreach ($refs as $uri => $fqns) {
-                foreach ($fqns as $fqn) {
-                    $def = $this->dependenciesIndex->getDefinition($fqn);
-                    $symbol = new SymbolDescriptor;
-                    $symbol->fqsen = $fqn;
-                    foreach (get_object_vars($def->symbolInformation) as $prop => $val) {
-                        $symbol->$prop = $val;
-                    }
-                    // Find out package name
-                    preg_match('/\/vendor\/([^\/]+\/[^\/]+)\//', $def->symbolInformation->location->uri, $matches);
-                    $packageName = $matches[1];
-                    foreach ($this->composerLock->packages as $package) {
-                        if ($package->name === $packageName) {
-                            $symbol->package = $package;
+            })
+                // If there was no FQSEN provided, check if query attributes match
+                if (!isset($query->fqsen)) {
+                    $matches = true;
+                    foreach (get_object_vars($query) as $prop => $val) {
+                        if ($query->$prop != $symbol->$prop) {
+                            $matches = false;
                             break;
                         }
                     }
-                    // If there was no FQSEN provided, check if query attributes match
-                    if (!isset($query->fqsen)) {
-                        $matches = true;
-                        foreach (get_object_vars($query) as $prop => $val) {
-                            if ($query->$prop != $symbol->$prop) {
-                                $matches = false;
-                                break;
-                            }
-                        }
-                        if (!$matches) {
-                            continue;
-                        }
+                    if (!$matches) {
+                        continue;
                     }
-                    $doc = yield $this->documentLoader->getOrLoad($uri);
-                    foreach ($doc->getReferenceNodesByFqn($fqn) as $node) {
-                        $refInfo = new ReferenceInformation;
-                        $refInfo->reference = Location::fromNode($node);
-                        $refInfo->symbol = $symbol;
-                        $refInfos[] = $refInfo;
-                    }
+                }
+                foreach ($doc->getReferenceNodesByFqn($fqn) as $node) {
+                    $refInfo = new ReferenceInformation;
+                    $refInfo->reference = Location::fromNode($node);
+                    $refInfo->symbol = $symbol;
+                    $refInfos[] = $refInfo;
+                }
+            })
+            ->flatMap(function (PhpDocument $doc) use ($fqn) {
+
+            })
+            $refInfos = [];
+            foreach ($refs as $uri => $fqns) {
+                foreach ($fqns as $fqn) {
                 }
             }
             return $refInfos;
-        });
+        })
+            ->startWith(new Operation\Replace('/', []));
     }
 
     /**
