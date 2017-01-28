@@ -171,11 +171,11 @@ class TextDocument
      *
      * @param TextDocumentIdentifier $textDocument The document to format
      * @param FormattingOptions $options The format options
-     * @return Promise <TextEdit[]>
+     * @return Observable <TextEdit[]>
      */
     public function formatting(TextDocumentIdentifier $textDocument, FormattingOptions $options)
     {
-        return $this->documentLoader->getOrLoad($textDocument->uri)->then(function (PhpDocument $document) {
+        $this->documentLoader->getOrLoad($textDocument->uri)->map(function (PhpDocument $document) {
             return $document->getFormattedText();
         });
     }
@@ -185,73 +185,66 @@ class TextDocument
      * denoted by the given text document position.
      *
      * @param ReferenceContext $context
-     * @return Promise <Location[]>
+     * @return Observable Emits JSON Patch operations that eventually result in Location[]
      */
     public function references(
         ReferenceContext $context,
         TextDocumentIdentifier $textDocument,
         Position $position
-    ): Promise {
-        return coroutine(function () use ($textDocument, $position) {
-            $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
-            $node = $document->getNodeAtPosition($position);
-            if ($node === null) {
-                return [];
-            }
-            $locations = [];
-            // Variables always stay in the boundary of the file and need to be searched inside their function scope
-            // by traversing the AST
-            if (
-                $node instanceof Node\Expr\Variable
-                || $node instanceof Node\Param
-                || $node instanceof Node\Expr\ClosureUse
-            ) {
-                if ($node->name instanceof Node\Expr) {
-                    return null;
+    ): Observable {
+        return $this->documentLoader->getOrLoad($textDocument->uri)
+            ->flatMap(function (PhpDocument $document) {
+                $node = $document->getNodeAtPosition($position);
+                if ($node === null) {
+                    return Observable::empty();
                 }
-                // Find function/method/closure scope
-                $n = $node;
-                while (isset($n) && !($n instanceof Node\FunctionLike)) {
-                    $n = $n->getAttribute('parentNode');
-                }
-                if (!isset($n)) {
-                    $n = $node->getAttribute('ownerDocument');
-                }
-                $traverser = new NodeTraverser;
-                $refCollector = new VariableReferencesCollector($node->name);
-                $traverser->addVisitor($refCollector);
-                $traverser->traverse($n->getStmts());
-                foreach ($refCollector->nodes as $ref) {
-                    $locations[] = Location::fromNode($ref);
-                }
-            } else {
-                // Definition with a global FQN
-                $fqn = DefinitionResolver::getDefinedFqn($node);
-                // Wait until indexing finished
-                if (!$this->index->isComplete()) {
-                    yield waitForEvent($this->index, 'complete');
-                }
-                if ($fqn === null) {
-                    $fqn = $this->definitionResolver->resolveReferenceNodeToFqn($node);
-                    if ($fqn === null) {
-                        return [];
+                // Variables always stay in the boundary of the file and need to be searched inside their function scope
+                // by traversing the AST
+                if (
+                    $node instanceof Node\Expr\Variable
+                    || $node instanceof Node\Param
+                    || $node instanceof Node\Expr\ClosureUse
+                ) {
+                    if ($node->name instanceof Node\Expr) {
+                        return Observable::empty();
                     }
-                }
-                $refDocuments = yield Promise\all(array_map(
-                    [$this->documentLoader, 'getOrLoad'],
-                    $this->index->getReferenceUris($fqn)
-                ));
-                foreach ($refDocuments as $document) {
-                    $refs = $document->getReferenceNodesByFqn($fqn);
-                    if ($refs !== null) {
-                        foreach ($refs as $ref) {
-                            $locations[] = Location::fromNode($ref);
+                    // Find function/method/closure scope
+                    $n = $node;
+                    while (isset($n) && !($n instanceof Node\FunctionLike)) {
+                        $n = $n->getAttribute('parentNode');
+                    }
+                    if (!isset($n)) {
+                        $n = $node->getAttribute('ownerDocument');
+                    }
+                    $traverser = new NodeTraverser;
+                    $refCollector = new VariableReferencesCollector($node->name);
+                    $traverser->addVisitor($refCollector);
+                    $traverser->traverse($n->getStmts());
+                    return Observable::fromArray($refCollector->nodes);
+                } else {
+                    // Definition with a global FQN
+                    $fqn = DefinitionResolver::getDefinedFqn($node);
+                    // Wait until indexing finished
+                    if (!$this->index->isComplete()) {
+                        yield waitForEvent($this->index, 'complete');
+                    }
+                    if ($fqn === null) {
+                        $fqn = $this->definitionResolver->resolveReferenceNodeToFqn($node);
+                        if ($fqn === null) {
+                            return Observable::empty();
                         }
                     }
+                    return Observable::fromArray($this->index->getReferenceUris($fqn))
+                        ->flatMap([$this->documentLoader, 'getOrLoad'])
+                        ->flatMap(function (PhpDocument $document) {
+                            return Observable::from($document->getReferenceNodesByFqn($fqn));
+                        });
                 }
-            }
-            return $locations;
-        });
+            })
+            ->map(function (Node $node) {
+                return new Operation\Add('/-', Location::fromNode($node));
+            })
+            ->startWith(new Operation\Replace('/', []));
     }
 
     /**

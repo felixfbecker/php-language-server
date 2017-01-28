@@ -95,7 +95,7 @@ class Workspace
      *
      * @param SymbolDescriptor $query Partial metadata about the symbol that is being searched for.
      * @param string[]         $files An optional list of files to restrict the search to.
-     * @return Observable ReferenceInformation[]
+     * @return Observable That emits JSON Patch operations that eventually result in ReferenceInformation[]
      */
     public function xreferences($query, array $files = null): Observable
     {
@@ -109,25 +109,20 @@ class Workspace
                     return observableFromEvent($this->index, 'complete')->take(1);
                 }
             })
-            // Get all definition FQNs in dependencies
-            ->flatMap(function () {
+            // Get all definitions in dependencies
+            ->flatMap(function () use ($query) {
                 if (isset($query->fqsen)) {
-                    $fqns = [$this->dependenciesIndex->getDefinition($query->fqsen)];
+                    $defs = [$this->dependenciesIndex->getDefinition($query->fqsen)];
                 } else {
-                    $fqns = $this->dependenciesIndex->getDefinitions();
+                    $defs = $this->dependenciesIndex->getDefinitions();
                 }
-                return Observable::fromArray($fqns);
+                return Observable::fromArray($defs);
             })
-            // Get all URIs in the project source that reference those definitions
-            ->flatMap(function (Definition $def) {
-                return Observable::fromArray($this->sourceIndex->getReferenceUris($fqn));
-            })
-            ->distinct()
-            ->flatMap(function (string $uri) {
-                return $this->documentLoader->getOrLoad($uri);
+            ->map(function (Definition $def) {
+                // Create SymbolDescriptor for Definition
                 $symbol = new SymbolDescriptor;
-                $symbol->fqsen = $fqn;
-                foreach (get_object_vars($def->symbolInformation) as $prop => $val) {
+                $symbol->fqsen = $def->fqn;
+                foreach (get_object_vars($def->symbolInformation) as $prop => &$val) {
                     $symbol->$prop = $val;
                 }
                 // Find out package name
@@ -139,52 +134,72 @@ class Workspace
                         break;
                     }
                 }
+                return $symbol;
             })
+            ->filter(function (SymbolDescriptor $symbol) {
                 // If there was no FQSEN provided, check if query attributes match
+                $matches = true;
                 if (!isset($query->fqsen)) {
-                    $matches = true;
                     foreach (get_object_vars($query) as $prop => $val) {
                         if ($query->$prop != $symbol->$prop) {
                             $matches = false;
                             break;
                         }
                     }
-                    if (!$matches) {
-                        continue;
-                    }
                 }
-                foreach ($doc->getReferenceNodesByFqn($fqn) as $node) {
-                    $refInfo = new ReferenceInformation;
-                    $refInfo->reference = Location::fromNode($node);
-                    $refInfo->symbol = $symbol;
-                    $refInfos[] = $refInfo;
-                }
+                return $matches;
             })
-            ->flatMap(function (PhpDocument $doc) use ($fqn) {
-
+            // Get all URIs in the project source that reference those definitions
+            ->flatMap(function (SymbolDescriptor $symbol) {
+                return Observable::fromArray($this->sourceIndex->getReferenceUris($symbol->fqsen))->map(function ($uri) use ($symbol) {
+                    return ['uri' => $uri, 'symbol' => $symbol];
+                });
             })
-            $refInfos = [];
-            foreach ($refs as $uri => $fqns) {
-                foreach ($fqns as $fqn) {
-                }
-            }
-            return $refInfos;
-        })
+            // ['uri' => string, 'symbol' => SymbolDescriptor]
+            ->groupBy(function (array $ref) {
+                return $ref['uri'];
+            })
+            // Observable<['uri' => string, 'symbol' => SymbolDescriptor]>
+            ->map(function (Observable $refs) {
+                // Get document by URI
+                $uri = $refs->getKey();
+                return $this->documentLoader->getOrLoad($uri)
+                    ->flatMap(function (PhpDocument $doc) use ($refs) {
+                        return $refs
+                            ->pluck('symbol')
+                            ->flatMap(function (SymbolDescriptor $symbol) use ($doc) {
+                                return Observable::fromArray($doc->getReferenceNodesByFqn($symbol->fqsen))
+                                    ->map(function (Node $node) use ($symbol) {
+                                        return new ReferenceInformation(Location::fromNode($node), $symbol);
+                                    });
+                            });
+                    });
+            })
+            ->map(function (ReferenceInformation $refInfo) {
+                return new Operation\Add('/-', $refInfo);
+            })
             ->startWith(new Operation\Replace('/', []));
     }
 
     /**
-     * @return DependencyReference[]
+     * @return Observable for JSON Patch operations of DependencyReference[]
      */
-    public function xdependencies(): array
+    public function xdependencies(): Observable
     {
-        if ($this->composerLock === null) {
-            return [];
-        }
-        $dependencyReferences = [];
-        foreach ($this->composerLock->packages as $package) {
-            $dependencyReferences[] = new DependencyReference($package);
-        }
-        return $dependencyReferences;
+        return Observable::just(null)
+            ->flatMap(function () {
+                if ($this->composerLock === null) {
+                    return Observable::empty();
+                }
+                $dependencyReferences = [];
+                return Observable::fromArray(array_merge(
+                    $this->composerLock->packages,
+                    $this->composerLock->{'packages-dev'}
+                ));
+            })
+            ->map(function (\stdClass $package) {
+                return new Operation\Add('/-', new DependencyReference($package));
+            })
+            ->startWith(new Operation\Replace('/', []));
     }
 }
