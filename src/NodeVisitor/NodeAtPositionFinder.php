@@ -3,7 +3,7 @@ declare(strict_types = 1);
 
 namespace LanguageServer\NodeVisitor;
 
-use PhpParser\{NodeVisitorAbstract, Node};
+use PhpParser\{NodeVisitorAbstract, Node, NodeTraverser};
 use LanguageServer\Protocol\{Position, Range};
 
 /**
@@ -35,8 +35,9 @@ class NodeAtPositionFinder extends NodeVisitorAbstract
     public function leaveNode(Node $node)
     {
         $range = Range::fromNode($node);
-        if (!isset($this->node) && $range->includes($this->position)) {
+        if ($range->includes($this->position)) {
             $this->node = $node;
+            return NodeTraverser::STOP_TRAVERSAL;
         }
     }
 }
