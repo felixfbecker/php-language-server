@@ -33,15 +33,13 @@ class Workspace
      * Returns a list of all files in a directory
      *
      * @param string $base The base directory (defaults to the workspace)
-     * @return Promise <TextDocumentIdentifier[]> Array of documents
+     * @return Observable Emits JSON Patches that eventually result in TextDocumentIdentifier[]
      */
-    public function xfiles(string $base = null): Promise
+    public function xfiles(string $base = null): Observable
     {
         return $this->handler->request(
             'workspace/xfiles',
             ['base' => $base]
-        )->then(function (array $textDocuments) {
-            return $this->mapper->mapArray($textDocuments, [], TextDocumentIdentifier::class);
-        });
+        );
     }
 }

@@ -336,7 +336,10 @@ class LanguageServer extends JsonRpc\Dispatcher
         return coroutine(function () use ($rootPath) {
 
             $pattern = Path::makeAbsolute('**/*.php', $rootPath);
-            $uris = yield $this->filesFinder->find($pattern);
+            $this->filesFinder->find($pattern)
+                ->flatMap(function (Operation $op) {
+                    if ($op instanceof Operation\Add && ($op->getPath() === '/' || $op->getPath() )
+                });
 
             $count = count($uris);
 

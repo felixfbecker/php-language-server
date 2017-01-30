@@ -3,8 +3,8 @@ declare(strict_types = 1);
 
 namespace LanguageServer;
 
-use AdvancedJsonRpc;
-use Sabre\Event\Promise;
+use AdvancedJsonRpc as JsonRpc;
+use Rx\Observable;
 
 class ClientHandler
 {
@@ -35,31 +35,38 @@ class ClientHandler
      *
      * @param string $method The method to call
      * @param array|object $params The method parameters
-     * @return Promise <mixed> Resolved with the result of the request or rejected with an error
+     * @return Observable Emits JSON Patch operations for the result
      */
-    public function request(string $method, $params): Promise
+    public function request(string $method, $params): Observable
     {
         $id = $this->idGenerator->generate();
-        return $this->protocolWriter->write(
-            new Protocol\Message(
-                new AdvancedJsonRpc\Request($id, $method, (object)$params)
-            )
-        )->then(function () use ($id) {
-            $promise = new Promise;
-            $listener = function (Protocol\Message $msg) use ($id, $promise, &$listener) {
-                if (AdvancedJsonRpc\Response::isResponse($msg->body) && $msg->body->id === $id) {
-                    // Received a response
-                    $this->protocolReader->removeListener('message', $listener);
-                    if (AdvancedJsonRpc\SuccessResponse::isSuccessResponse($msg->body)) {
-                        $promise->fulfill($msg->body->result);
-                    } else {
-                        $promise->reject($msg->body->error);
-                    }
+        return Observable::defer(function () {
+            return $this->protocolWriter->write(
+                new Protocol\Message(
+                    new AdvancedJsonRpc\Request($id, $method, (object)$params)
+                )
+            );
+        })
+            // Wait for completion
+            ->toArray()
+            // Subscribe to message events
+            ->flatMap(function () {
+                return observableFromEvent($this->protocolReader, 'message');
+            })
+            ->flatMap(function (JsonRpc\Message $msg) {
+                if (JsonRpc\Request::isRequest($msg->body) && $msg->body->method === '$/partialResult' && $msg->body->params->id === $id) {
+                    return Observable::fromArray($msg->body->params->patch)->map(function ($operation) {
+                        return Operation::fromDecodedJson($operation);
+                    });
                 }
-            };
-            $this->protocolReader->on('message', $listener);
-            return $promise;
-        });
+                if (AdvancedJsonRpc\Response::isResponse($msg->body) && $msg->body->id === $id) {
+                    if (AdvancedJsonRpc\SuccessResponse::isSuccessResponse($msg->body)) {
+                        return Observable::just(new Operation\Replace('/', $msg->body->result));
+                    }
+                    return Observable::error($msg->body->error);
+                }
+                return Observable::emptyObservable();
+            });
     }
 
     /**
@@ -67,9 +74,9 @@ class ClientHandler
      *
      * @param string $method The method to call
      * @param array|object $params The method parameters
-     * @return Promise <null> Will be resolved as soon as the notification has been sent
+     * @return Observable Will complete as soon as the notification has been sent
      */
-    public function notify(string $method, $params): Promise
+    public function notify(string $method, $params): Observable
     {
         $id = $this->idGenerator->generate();
         return $this->protocolWriter->write(

@@ -31,11 +31,14 @@ class ClientFilesFinder implements FilesFinder
      * If the client does not support workspace/files, it falls back to searching the file system directly.
      *
      * @param string $glob
-     * @return Promise <string[]> The URIs
+     * @return Observable Emits each URI
      */
-    public function find(string $glob): Promise
+    public function find(string $glob): Observable
     {
-        return $this->client->workspace->xfiles()->then(function (array $textDocuments) use ($glob) {
+        return $this->client->workspace->xfiles()
+            ->flatMap(function (Operation $operation) use ($glob) {
+
+
             $uris = [];
             foreach ($textDocuments as $textDocument) {
                 $path = Uri\parse($textDocument->uri)['path'];

@@ -33,7 +33,7 @@ class ProtocolStreamWriter implements ProtocolWriter
     /**
      * {@inheritdoc}
      */
-    public function write(Message $msg): Promise
+    public function write(Message $msg): Observable
     {
         // if the message queue is currently empty, register a write handler.
         if (empty($this->messages)) {
@@ -42,12 +42,12 @@ class ProtocolStreamWriter implements ProtocolWriter
             });
         }
 
-        $promise = new Promise();
+        $subject = new Subject;
         $this->messages[] = [
             'message' => (string)$msg,
-            'promise' => $promise
+            'subject' => $subject
         ];
-        return $promise;
+        return $subject->asObservable();
     }
 
     /**
@@ -60,7 +60,7 @@ class ProtocolStreamWriter implements ProtocolWriter
         $keepWriting = true;
         while ($keepWriting) {
             $message = $this->messages[0]['message'];
-            $promise = $this->messages[0]['promise'];
+            $subject = $this->messages[0]['subject'];
 
             $bytesWritten = @fwrite($this->output, $message);
 
@@ -78,7 +78,7 @@ class ProtocolStreamWriter implements ProtocolWriter
                     $keepWriting = false;
                 }
 
-                $promise->fulfill();
+                $subject->onComplete();
             } else {
                 $this->messages[0]['message'] = $message;
                 $keepWriting = false;

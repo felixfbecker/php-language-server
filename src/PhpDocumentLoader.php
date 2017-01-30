@@ -80,11 +80,11 @@ class PhpDocumentLoader
      * If the document is not open, loads it.
      *
      * @param string $uri
-     * @return Promise <PhpDocument>
+     * @return Observable PhpDocument
      */
-    public function getOrLoad(string $uri): Promise
+    public function getOrLoad(string $uri): Observable
     {
-        return isset($this->documents[$uri]) ? Promise\resolve($this->documents[$uri]) : $this->load($uri);
+        return isset($this->documents[$uri]) ? Observable::just($this->documents[$uri]) : $this->load($uri);
     }
 
     /**
@@ -93,14 +93,12 @@ class PhpDocumentLoader
      * The document is NOT added to the list of open documents, but definitions are registered.
      *
      * @param string $uri
-     * @return Promise <PhpDocument>
+     * @return Observable <PhpDocument>
      */
-    public function load(string $uri): Promise
+    public function load(string $uri): Observable
     {
-        return coroutine(function () use ($uri) {
-
+        return $this->contentRetriever->retrieve($uri)->map(function (string $content) {
             $limit = 150000;
-            $content = yield $this->contentRetriever->retrieve($uri);
             $size = strlen($content);
             if ($size > $limit) {
                 throw new ContentTooLargeException($uri, $size, $limit);

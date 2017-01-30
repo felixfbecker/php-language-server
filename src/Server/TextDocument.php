@@ -385,52 +385,53 @@ class TextDocument
      */
     public function xdefinition(TextDocumentIdentifier $textDocument, Position $position): Promise
     {
-        return coroutine(function () use ($textDocument, $position) {
-            $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
-            $node = $document->getNodeAtPosition($position);
-            if ($node === null) {
-                return [];
-            }
-            // Handle definition nodes
-            while (true) {
-                if ($fqn) {
-                    $def = $this->index->getDefinition($definedFqn);
-                } else {
-                    // Handle reference nodes
-                    $def = $this->definitionResolver->resolveReferenceNodeToDefinition($node);
+        return $this->documentLoader->getOrLoad($textDocument->uri)
+            ->flatMap(function (PhpDocument $document) {
+                $node = $document->getNodeAtPosition($position);
+                if ($node === null) {
+                    return Observable::empty();
                 }
-                // If no result was found and we are still indexing, try again after the index was updated
-                if ($def !== null || $this->index->isComplete()) {
-                    break;
-                }
-                yield waitForEvent($this->index, 'definition-added');
-            }
-            if (
-                $def === null
-                || $def->symbolInformation === null
-                || Uri\parse($def->symbolInformation->location->uri)['scheme'] === 'phpstubs'
-            ) {
-                return [];
-            }
-            $symbol = new SymbolDescriptor;
-            foreach (get_object_vars($def->symbolInformation) as $prop => $val) {
-                $symbol->$prop = $val;
-            }
-            $symbol->fqsen = $def->fqn;
-            if (preg_match('/\/vendor\/([^\/]+\/[^\/]+)\//', $def->symbolInformation->location->uri, $matches) && $this->composerLock !== null) {
-                // Definition is inside a dependency
-                $packageName = $matches[1];
-                foreach ($this->composerLock->packages as $package) {
-                    if ($package->name === $packageName) {
-                        $symbol->package = $package;
+                // Handle definition nodes
+                while (true) {
+                    if ($fqn) {
+                        $def = $this->index->getDefinition($definedFqn);
+                    } else {
+                        // Handle reference nodes
+                        $def = $this->definitionResolver->resolveReferenceNodeToDefinition($node);
+                    }
+                    // If no result was found and we are still indexing, try again after the index was updated
+                    if ($def !== null || $this->index->isComplete()) {
                         break;
                     }
+                    yield waitForEvent($this->index, 'definition-added');
                 }
-            } else if ($this->composerJson !== null) {
-                // Definition belongs to a root package
-                $symbol->package = $this->composerJson;
-            }
-            return [new SymbolLocationInformation($symbol, $symbol->location)];
+                if (
+                    $def === null
+                    || $def->symbolInformation === null
+                    || Uri\parse($def->symbolInformation->location->uri)['scheme'] === 'phpstubs'
+                ) {
+                    return [];
+                }
+                $symbol = new SymbolDescriptor;
+                foreach (get_object_vars($def->symbolInformation) as $prop => $val) {
+                    $symbol->$prop = $val;
+                }
+                $symbol->fqsen = $def->fqn;
+                if (preg_match('/\/vendor\/([^\/]+\/[^\/]+)\//', $def->symbolInformation->location->uri, $matches) && $this->composerLock !== null) {
+                    // Definition is inside a dependency
+                    $packageName = $matches[1];
+                    foreach ($this->composerLock->packages as $package) {
+                        if ($package->name === $packageName) {
+                            $symbol->package = $package;
+                            break;
+                        }
+                    }
+                } else if ($this->composerJson !== null) {
+                    // Definition belongs to a root package
+                    $symbol->package = $this->composerJson;
+                }
+                return [new SymbolLocationInformation($symbol, $symbol->location)];
+            })
         });
     }
 }
