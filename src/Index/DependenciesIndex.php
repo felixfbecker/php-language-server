@@ -15,7 +15,7 @@ class DependenciesIndex extends AbstractAggregateIndex
     /**
      * @return Index[]
      */
-    public function getIndexes(): array
+    protected function getIndexes(): array
     {
         return $this->indexes;
     }
