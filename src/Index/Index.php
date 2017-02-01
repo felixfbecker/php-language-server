@@ -208,7 +208,7 @@ class Index implements ReadableIndex, \Serializable
             'definitions' => $this->definitions,
             'references' => $this->references,
             'complete' => $this->complete,
-            'static-complete' => $this->staticComplete
+            'staticComplete' => $this->staticComplete
         ]);
     }
 }
