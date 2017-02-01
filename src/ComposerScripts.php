@@ -33,14 +33,14 @@ class ComposerScripts
             $definitionResolver = new DefinitionResolver($index);
 
             $stubsLocation = null;
-            foreach ([__DIR__ . '/../../../JetBrains/phpstorm-stubs', __DIR__ . '/../vendor/JetBrains/phpstorm-stubs'] as $dir) {
+            foreach ([__DIR__ . '/../../../jetbrains/phpstorm-stubs', __DIR__ . '/../vendor/jetbrains/phpstorm-stubs'] as $dir) {
                 if (file_exists($dir)) {
                     $stubsLocation = Path::canonicalize($dir);
                     break;
                 }
             }
             if (!$stubsLocation) {
-                throw new \Exception('JetBrains/phpstorm-stubs package not found');
+                throw new \Exception('jetbrains/phpstorm-stubs package not found');
             }
 
             $uris = yield $finder->find("$stubsLocation/**/*.php");
