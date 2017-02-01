@@ -109,25 +109,3 @@ function getClosestNode(Node $node, string $type)
         }
     }
 }
-
-/**
- * Returns the part of $b that is not overlapped by $a
- * Example:
- *
- *     stripStringOverlap('whatever<?', '<?php') === 'php'
- *
- * @param string $a
- * @param string $b
- * @return string
- */
-function stripStringOverlap(string $a, string $b): string
-{
-    $aLen = strlen($a);
-    $bLen = strlen($b);
-    for ($i = 1; $i <= $bLen; $i++) {
-        if (substr($b, 0, $i) === substr($a, $aLen - $i)) {
-            return substr($b, $i);
-        }
-    }
-    return $b;
-}

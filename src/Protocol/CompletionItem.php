@@ -64,13 +64,16 @@ class CompletionItem
     public $insertText;
 
     /**
-     * An edit which is applied to a document when selecting
-     * this completion. When an edit is provided the value of
-     * insertText is ignored.
+     * A range of text that should be replaced by this completion item.
      *
-     * @var TextEdit|null
+     * Defaults to a range from the start of the current word to the current position.
+     *
+     * *Note:* The range must be a single line range and it must contain the position at which completion
+     * has been requested.
+     *
+     * @var Range|null
      */
-    public $textEdit;
+    public $range;
 
     /**
      * An optional array of additional text edits that are applied when
@@ -106,7 +109,7 @@ class CompletionItem
      * @param string|null     $sortText
      * @param string|null     $filterText
      * @param string|null     $insertText
-     * @param TextEdit|null   $textEdit
+     * @param Range|null      $range
      * @param TextEdit[]|null $additionalTextEdits
      * @param Command|null    $command
      * @param mixed|null      $data
@@ -119,7 +122,7 @@ class CompletionItem
         string $sortText = null,
         string $filterText = null,
         string $insertText = null,
-        TextEdit $textEdit = null,
+        Range $range = null,
         array $additionalTextEdits = null,
         Command $command = null,
         $data = null
@@ -131,7 +134,7 @@ class CompletionItem
         $this->sortText = $sortText;
         $this->filterText = $filterText;
         $this->insertText = $insertText;
-        $this->textEdit = $textEdit;
+        $this->range = $range;
         $this->additionalTextEdits = $additionalTextEdits;
         $this->command = $command;
         $this->data = $data;

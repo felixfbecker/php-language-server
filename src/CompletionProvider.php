@@ -6,8 +6,6 @@ namespace LanguageServer;
 use PhpParser\Node;
 use LanguageServer\Index\ReadableIndex;
 use LanguageServer\Protocol\{
-    TextEdit,
-    Range,
     Position,
     CompletionList,
     CompletionItem,
@@ -272,18 +270,10 @@ class CompletionProvider
                 $item->label = '$' . ($var instanceof Node\Expr\ClosureUse ? $var->var : $var->name);
                 $item->documentation = $this->definitionResolver->getDocumentationFromNode($var);
                 $item->detail = (string)$this->definitionResolver->getTypeFromNode($var);
-                $item->textEdit = new TextEdit(
-                    new Range($pos, $pos),
-                    stripStringOverlap($doc->getRange(new Range(new Position(0, 0), $pos)), $item->label)
-                );
                 $list->items[] = $item;
             }
         } else if ($node instanceof Node\Stmt\InlineHTML || $pos == new Position(0, 0)) {
             $item = new CompletionItem('<?php', CompletionItemKind::KEYWORD);
-            $item->textEdit = new TextEdit(
-                new Range($pos, $pos),
-                stripStringOverlap($doc->getRange(new Range(new Position(0, 0), $pos)), '<?php')
-            );
             $list->items[] = $item;
         }
 
