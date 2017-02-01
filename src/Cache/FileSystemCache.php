@@ -19,11 +19,11 @@ class FileSystemCache implements Cache
     public function __construct()
     {
         if (PHP_OS === 'WINNT') {
-            $this->cacheDir = $_ENV['LOCALAPPDATA'] . '\\PHP Language Server\\';
-        } else if (!empty($_ENV['XDG_CACHE_HOME'])) {
-            $this->cacheDir = $_ENV['XDG_CACHE_HOME'] . '/phpls/';
+            $this->cacheDir = getenv('LOCALAPPDATA') . '\\PHP Language Server\\';
+        } else if (getenv('XDG_CACHE_HOME')) {
+            $this->cacheDir = getenv('XDG_CACHE_HOME') . '/phpls/';
         } else {
-            $this->cacheDir = $_ENV['HOME'] . '/.phpls/';
+            $this->cacheDir = getenv('HOME') . '/.phpls/';
         }
     }
 
