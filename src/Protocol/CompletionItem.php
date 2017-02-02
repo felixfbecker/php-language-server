@@ -64,6 +64,14 @@ class CompletionItem
     public $insertText;
 
     /**
+     * The format of the insert text. The format applies to both the `insertText` property
+     * and the `newText` property of a provided `textEdit`.
+     *
+     * @var InsertTextFormat|null
+     */
+    public $insertTextFormat;
+
+    /**
      * A range of text that should be replaced by this completion item.
      *
      * Defaults to a range from the start of the current word to the current position.
