@@ -7,6 +7,7 @@ use PhpParser\Node;
 use PhpParser\PrettyPrinter\Standard as PrettyPrinter;
 use phpDocumentor\Reflection\{Types, Type, Fqsen, TypeResolver};
 use LanguageServer\Protocol\SymbolInformation;
+use LanguageServer\Protocol\ParameterInformation;
 use LanguageServer\Index\ReadableIndex;
 
 class DefinitionResolver
@@ -131,6 +132,18 @@ class DefinitionResolver
         $def->type = $this->getTypeFromNode($node);
         $def->declarationLine = $this->getDeclarationLineFromNode($node);
         $def->documentation = $this->getDocumentationFromNode($node);
+        $def->parameters = [];
+        if ($node instanceof Node\FunctionLike) {
+            foreach ($node->getParams() as $param) {
+                if (!$param->getAttribute('parentNode')) {
+                    $param->setAttribute('parentNode', $node);
+                }
+                $def->parameters[] = new ParameterInformation(
+                    $this->prettyPrinter->prettyPrint([$param]),
+                    $this->getDocumentationFromNode($param)
+                );
+            }
+        }
         return $def;
     }
 

@@ -1,0 +1,199 @@
+<?php
+declare(strict_types = 1);
+
+namespace LanguageServer;
+
+use PhpParser\ErrorHandler\Collecting;
+use PhpParser\Node;
+use LanguageServer\Index\ReadableIndex;
+use LanguageServer\Protocol\{
+    Range,
+    Position,
+    SignatureHelp,
+    SignatureInformation,
+    ParameterInformation
+};
+
+class SignatureHelpProvider
+{
+    /**
+     * @var DefinitionResolver
+     */
+    private $definitionResolver;
+
+    /**
+     * @var ReadableIndex
+     */
+    private $index;
+
+    /**
+     * @param DefinitionResolver $definitionResolver
+     * @param ReadableIndex      $index
+     */
+    public function __construct(DefinitionResolver $definitionResolver, ReadableIndex $index)
+    {
+        $this->definitionResolver = $definitionResolver;
+        $this->index = $index;
+    }
+
+    /**
+     * Returns signature help for a specific cursor position in a document
+     *
+     * @param PhpDocument $doc The opened document
+     * @param Position $pos The cursor position
+     * @return SignatureHelp
+     */
+    public function provideSignature(PhpDocument $doc, Position $pos) : SignatureHelp
+    {
+        $handle = fopen('php://temp', 'r+');
+        fwrite($handle, $doc->getContent());
+        fseek($handle, 0);
+
+        $lines = [];
+        for ($i = 0; $i < $pos->line; $i++) {
+            $lines[] = strlen(fgets($handle));
+        }
+        $filePos = ftell($handle) + $pos->character;
+        $line = substr(fgets($handle), 0, $pos->character);
+        fseek($handle, 0);
+
+        $i = 0;
+        $orig = null;
+        do {
+            $node = $doc->getNodeAtPosition($pos);
+            if ($node !== null && $orig === null) {
+                $orig = $node;
+            }
+            $pos->character--;
+            if ($pos->character < 0) {
+                $pos->line --;
+                if ($pos->line < 0) {
+                    break;
+                }
+                $pos->character = $lines[$pos->line];
+            }
+        } while (!(
+            $node instanceof Node\Expr\PropertyFetch ||
+            $node instanceof Node\Expr\MethodCall ||
+            $node instanceof Node\Expr\FuncCall ||
+            $node instanceof Node\Expr\ClassConstFetch ||
+            $node instanceof Node\Expr\StaticCall
+        ) && ++$i < 120);
+
+        if ($node === null) {
+            $node = $orig;
+        }
+
+        if ($node === null) {
+            fclose($handle);
+            return new SignatureHelp;
+        }
+
+        $params = '';
+        if ($node instanceof Node\Expr\PropertyFetch) {
+            fseek($handle, $node->name->getAttribute('startFilePos'));
+            $method = fread($handle, ($node->name->getAttribute('endFilePos') + 1) - $node->name->getAttribute('startFilePos'));
+            fseek($handle, $node->name->getAttribute('endFilePos') + 1);
+            $params = fread($handle, ($filePos - 1) - $node->name->getAttribute('endFilePos'));
+            if ($def = $this->definitionResolver->resolveReferenceNodeToDefinition($node->var)) {
+                $fqn = $def->fqn;
+                if (!$fqn) {
+                    $fqns = DefinitionResolver::getFqnsFromType(
+                        $this->definitionResolver->resolveExpressionNodeToType($node->var)
+                    );
+                    if (count($fqns)) {
+                        $fqn = $fqns[0];
+                    }
+                }
+                if ($fqn) {
+                    $fqn = $fqn . '->' . $method . '()';
+                    $def = $this->index->getDefinition($fqn);
+                }
+            }
+        } else if ($node instanceof Node\Expr\MethodCall) {
+            fseek($handle, $node->getAttribute('startFilePos'));
+            $params = explode('(', fread($handle, $filePos - $node->getAttribute('startFilePos')), 2)[1];
+            $def = $this->definitionResolver->resolveReferenceNodeToDefinition($node);
+        } else if ($node instanceof Node\Expr\FuncCall) {
+            fseek($handle, $node->getAttribute('startFilePos'));
+            $params = explode('(', fread($handle, $filePos - $node->getAttribute('startFilePos')), 2)[1];
+            $fqn = $this->definitionResolver->resolveReferenceNodeToFqn($node->name);
+            $def = $this->index->getDefinition($fqn);
+        } else if ($node instanceof Node\Expr\StaticCall) {
+            fseek($handle, $node->getAttribute('startFilePos'));
+            $params = explode('(', fread($handle, $filePos - $node->getAttribute('startFilePos')), 2)[1];
+            $def = $this->definitionResolver->resolveReferenceNodeToDefinition($node);
+        } else if ($node instanceof Node\Expr\ClassConstFetch) {
+            fseek($handle, $node->name->getAttribute('endFilePos') + 2);
+            $params = fread($handle, ($filePos - 1) - $node->name->getAttribute('endFilePos'));
+            fseek($handle, $node->name->getAttribute('startFilePos'));
+            $method = fread($handle, ($node->name->getAttribute('endFilePos') + 1) - $node->name->getAttribute('startFilePos'));
+            $method = explode('::', str_replace('()', '', $method), 2);
+            $method = $method[1] ?? $method[0];
+            $fqn = $this->definitionResolver->resolveReferenceNodeToFqn($node->class);
+            $def = $this->index->getDefinition($fqn.'::'.$method.'()');
+        } else {
+            if (!preg_match('(([a-zA-Z_\x7f-\xff][:a-zA-Z0-9_\x7f-\xff]*)\s*\((.*)$)', $line, $method)) {
+                fclose($handle);
+                return new SignatureHelp;
+            }
+            $def = $this->index->getDefinition($method[1] . '()');
+            $params = $method[2];
+        }
+        fclose($handle);
+
+        if ($def) {
+            $method = preg_split('(::|->)', str_replace('()', '', $def->fqn), 2);
+            $method = $method[1] ?? $method[0];
+            $params = ltrim($params, "( ");
+            $activeParameter = 0;
+            if (strlen(trim($params))) {
+                try {
+                    $lex = new \PhpParser\Lexer();
+                    $lex->startLexing('<?php $a = [ ' . $params, new Collecting);
+                    $value = null;
+                    $lex->getNextToken($value);
+                    $lex->getNextToken($value);
+                    $lex->getNextToken($value);
+                    $params = 0;
+                    $stack = [];
+                    while ($value !== "\0") {
+                        $lex->getNextToken($value);
+                        if (($value === ")" || $value === ";") && !count($stack)) {
+                            return new SignatureHelp;
+                        }
+                        if ($value === ',' && !count($stack)) {
+                            $activeParameter++;
+                        }
+                        if ($value === '(') {
+                            $stack[] = ')';
+                        } else if ($value === '[') {
+                            $stack[] = ']';
+                        } else if (count($stack) && $value === $stack[count($stack)-1]) {
+                            array_pop($stack);
+                        }
+                    }
+                } catch (\Exception $ignore) {
+                }
+            }
+            if ($activeParameter < count($def->parameters)) {
+                $params = array_map(function ($v) {
+                    return $v->label;
+                }, $def->parameters);
+                return new SignatureHelp(
+                    [
+                        new SignatureInformation(
+                            $method . '('.implode(', ', $params).')',
+                            $def->documentation,
+                            $def->parameters
+                        )
+                    ],
+                    0,
+                    $activeParameter
+                );
+            }
+        }
+
+        return new SignatureHelp;
+    }
+}
