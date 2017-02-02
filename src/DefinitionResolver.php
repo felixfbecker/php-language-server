@@ -421,6 +421,10 @@ class DefinitionResolver
     {
         if ($expr instanceof Node\Expr\Variable || $expr instanceof Node\Expr\ClosureUse) {
             if ($expr instanceof Node\Expr\Variable && $expr->name === 'this') {
+                $classNode = getClosestNode($expr, Node\Stmt\Class_::class);
+                if ($classNode) {
+                    return self::resolveClassNameToType($classNode->namespacedName);
+                }
                 return new Types\This;
             }
             // Find variable definition
@@ -481,6 +485,9 @@ class DefinitionResolver
                 }
                 $def = $this->index->getDefinition($fqn);
                 if ($def !== null) {
+                    if ($def->type instanceof Types\This || $def->type instanceof Types\Self_) {
+                        return $this->resolveExpressionNodeToType($expr->var);
+                    }
                     return $def->type;
                 }
             }
