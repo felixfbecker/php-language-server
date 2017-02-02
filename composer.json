@@ -23,7 +23,8 @@
     ],
     "bin": ["bin/php-language-server.php"],
     "scripts": {
-        "parse-stubs": "LanguageServer\\ComposerScripts::parseStubs"
+        "parse-stubs": "LanguageServer\\ComposerScripts::parseStubs",
+        "post-install-cmd": "@parse-stubs"
     },
     "require": {
         "php": ">=7.0",
