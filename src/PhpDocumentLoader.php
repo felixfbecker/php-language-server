@@ -8,6 +8,7 @@ use LanguageServer\Index\ProjectIndex;
 use phpDocumentor\Reflection\DocBlockFactory;
 use Sabre\Event\Promise;
 use function Sabre\Event\coroutine;
+use Microsoft\PhpParser as Tolerant;
 
 /**
  * Takes care of loading documents and managing "open" documents
@@ -37,6 +38,11 @@ class PhpDocumentLoader
     private $parser;
 
     /**
+     * @var Tolerant\Parser
+     */
+    private $tolerantParser;
+
+    /**
      * @var DocBlockFactory
      */
     private $docBlockFactory;
@@ -60,6 +66,7 @@ class PhpDocumentLoader
         $this->projectIndex = $projectIndex;
         $this->definitionResolver = $definitionResolver;
         $this->parser = new Parser;
+        $this->tolerantParser = new Tolerant\Parser();
         $this->docBlockFactory = DocBlockFactory::createInstance();
     }
 
@@ -130,6 +137,7 @@ class PhpDocumentLoader
             $content,
             $this->projectIndex->getIndexForUri($uri),
             $this->parser,
+            $this->tolerantParser,
             $this->docBlockFactory,
             $this->definitionResolver
         );

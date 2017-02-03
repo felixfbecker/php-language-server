@@ -121,6 +121,7 @@ class CompletionProvider
      */
     public function provideCompletion(PhpDocument $doc, Position $pos): CompletionList
     {
+        // This can be made much more performant if the tree follows specific invariants.
         $node = $doc->getNodeAtPosition($pos);
 
         if ($node instanceof Node\Expr\Error) {

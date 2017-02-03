@@ -38,9 +38,16 @@
         "webmozart/glob": "^4.1",
         "sabre/uri": "^2.0",
         "jetbrains/phpstorm-stubs": "dev-master",
-        "composer/composer": "^1.3"
+        "composer/composer": "^1.3",
+        "Microsoft/tolerant-php-parser": "master"
     },
     "minimum-stability": "dev",
+    "repositories": [
+        {
+            "type": "git",
+            "url": "https://github.com/Microsoft/tolerant-php-parser.git"
+        }
+    ],
     "prefer-stable": true,
     "autoload": {
         "psr-4": {

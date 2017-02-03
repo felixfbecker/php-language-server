@@ -3,7 +3,6 @@ declare(strict_types = 1);
 
 namespace LanguageServer\Server;
 
-use PhpParser\PrettyPrinter\Standard as PrettyPrinter;
 use PhpParser\{Node, NodeTraverser};
 use LanguageServer\{LanguageClient, PhpDocumentLoader, PhpDocument, DefinitionResolver, CompletionProvider};
 use LanguageServer\NodeVisitor\VariableReferencesCollector;
@@ -50,11 +49,6 @@ class TextDocument
     protected $project;
 
     /**
-     * @var PrettyPrinter
-     */
-    protected $prettyPrinter;
-
-    /**
      * @var DefinitionResolver
      */
     protected $definitionResolver;
@@ -97,7 +91,6 @@ class TextDocument
     ) {
         $this->documentLoader = $documentLoader;
         $this->client = $client;
-        $this->prettyPrinter = new PrettyPrinter();
         $this->definitionResolver = $definitionResolver;
         $this->completionProvider = new CompletionProvider($this->definitionResolver, $index);
         $this->index = $index;

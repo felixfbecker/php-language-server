@@ -10,6 +10,7 @@ use phpDocumentor\Reflection\DocBlockFactory;
 use Webmozart\PathUtil\Path;
 use Sabre\Uri;
 use function Sabre\Event\coroutine;
+use Microsoft\PhpParser as Tolerant;
 
 foreach ([__DIR__ . '/../../../autoload.php', __DIR__ . '/../autoload.php', __DIR__ . '/../vendor/autoload.php'] as $file) {
     if (file_exists($file)) {
@@ -30,6 +31,7 @@ class ComposerScripts
             $contentRetriever = new FileSystemContentRetriever;
             $docBlockFactory = DocBlockFactory::createInstance();
             $parser = new Parser;
+            $tolerantParser = new Tolerant\Parser();
             $definitionResolver = new DefinitionResolver($index);
 
             $stubsLocation = null;
@@ -55,7 +57,7 @@ class ComposerScripts
                 $parts['scheme'] = 'phpstubs';
                 $uri = Uri\build($parts);
 
-                $document = new PhpDocument($uri, $content, $index, $parser, $docBlockFactory, $definitionResolver);
+                $document = new PhpDocument($uri, $content, $index, $parser, $tolerantParser, $docBlockFactory, $definitionResolver);
             }
 
             $index->setComplete();

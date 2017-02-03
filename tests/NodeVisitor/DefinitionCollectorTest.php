@@ -14,6 +14,7 @@ use LanguageServer\Index\{ProjectIndex, Index, DependenciesIndex};
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\NodeVisitor\{ReferencesAdder, DefinitionCollector};
 use function LanguageServer\pathToUri;
+use Microsoft\PhpParser as Tolerant;
 
 class DefinitionCollectorTest extends TestCase
 {
@@ -22,11 +23,12 @@ class DefinitionCollectorTest extends TestCase
         $path = realpath(__DIR__ . '/../../fixtures/symbols.php');
         $uri = pathToUri($path);
         $parser = new Parser;
+        $tolerantParser = new Tolerant\Parser();
         $docBlockFactory = DocBlockFactory::createInstance();
         $index = new Index;
         $definitionResolver = new DefinitionResolver($index);
         $content = file_get_contents($path);
-        $document = new PhpDocument($uri, $content, $index, $parser, $docBlockFactory, $definitionResolver);
+        $document = new PhpDocument($uri, $content, $index, $parser, $tolerantParser, $docBlockFactory, $definitionResolver);
         $stmts = $parser->parse($content);
 
         $traverser = new NodeTraverser;
@@ -70,11 +72,12 @@ class DefinitionCollectorTest extends TestCase
         $path = realpath(__DIR__ . '/../../fixtures/references.php');
         $uri = pathToUri($path);
         $parser = new Parser;
+        $tolerantParser = new Tolerant\Parser();
         $docBlockFactory = DocBlockFactory::createInstance();
         $index = new Index;
         $definitionResolver = new DefinitionResolver($index);
         $content = file_get_contents($path);
-        $document = new PhpDocument($uri, $content, $index, $parser, $docBlockFactory, $definitionResolver);
+        $document = new PhpDocument($uri, $content, $index, $parser, $tolerantParser, $docBlockFactory, $definitionResolver);
         $stmts = $parser->parse($content);
 
         $traverser = new NodeTraverser;

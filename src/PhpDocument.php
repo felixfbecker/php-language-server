@@ -17,6 +17,7 @@ use PhpParser\{Error, ErrorHandler, Node, NodeTraverser};
 use PhpParser\NodeVisitor\NameResolver;
 use phpDocumentor\Reflection\DocBlockFactory;
 use Sabre\Uri;
+use Microsoft\PhpParser as Tolerant;
 
 class PhpDocument
 {
@@ -108,12 +109,14 @@ class PhpDocument
         string $content,
         Index $index,
         Parser $parser,
+        Tolerant\Parser $tolerantParser,
         DocBlockFactory $docBlockFactory,
         DefinitionResolver $definitionResolver
     ) {
         $this->uri = $uri;
         $this->index = $index;
         $this->parser = $parser;
+        $this->tolerantParser = $tolerantParser;
         $this->docBlockFactory = $docBlockFactory;
         $this->definitionResolver = $definitionResolver;
         $this->updateContent($content);
@@ -133,7 +136,7 @@ class PhpDocument
     /**
      * Updates the content on this document.
      * Re-parses a source file, updates symbols and reports parsing errors
-     * that may have occured as diagnostics.
+     * that may have occurred as diagnostics.
      *
      * @param string $content
      * @return void
@@ -168,7 +171,7 @@ class PhpDocument
             $this->diagnostics[] = Diagnostic::fromError($error, $this->content, DiagnosticSeverity::ERROR, 'php');
         }
 
-        // $stmts can be null in case of a fatal parsing error
+        // $stmts can be null in case of a fatal parsing error <- Interesting. When do fatal parsing errors occur?
         if ($stmts) {
             $traverser = new NodeTraverser;
 
