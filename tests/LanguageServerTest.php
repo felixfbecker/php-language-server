@@ -104,11 +104,7 @@ class LanguageServerTest extends TestCase
                         $promise->reject(new Exception($msg->body->params->message));
                     }
                 } else if (strpos($msg->body->params->message, 'All 25 PHP files parsed') !== false) {
-                    if ($run === 1) {
-                        $run++;
-                    } else {
-                        $promise->fulfill();
-                    }
+                    $promise->fulfill();
                 }
             }
         });

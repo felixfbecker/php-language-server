@@ -17,4 +17,11 @@ class ClientCapabilities
      * @var bool|null
      */
     public $xcontentProvider;
+
+    /**
+     * The client supports xcache/* requests
+     *
+     * @var bool|null
+     */
+    public $xcacheProvider;
 }

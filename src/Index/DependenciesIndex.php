@@ -36,6 +36,17 @@ class DependenciesIndex extends AbstractAggregateIndex
 
     /**
      * @param string $packageName
+     * @param Index  $index
+     * @return void
+     */
+    public function setDependencyIndex(string $packageName, Index $index)
+    {
+        $this->indexes[$packageName] = $index;
+        $this->registerIndex($index);
+    }
+
+    /**
+     * @param string $packageName
      * @return void
      */
     public function removeDependencyIndex(string $packageName)
