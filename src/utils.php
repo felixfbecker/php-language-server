@@ -138,22 +138,11 @@ function stripStringOverlap(string $a, string $b): string
  * in ascending order.
  *
  * @param array
- * @return void
+ * @return array
  */
 function sortUrisLevelOrder(&$uriList)
 {
-    // Parse URIs so we are not continually parsing them while sorting
-    $parsedUriList = array_map(function ($uri) {
-        return Uri\parse($uri);
-    }, $uriList);
-
-    // Sort by number of slashes in parsed URI path, ascending
-    usort($parsedUriList, function ($a, $b) {
-        return substr_count($a['path'], '/') - substr_count($b['path'], '/');
+    usort($uriList, function ($a, $b) {
+        return substr_count(Uri\parse($a)['path'], '/') - substr_count(Uri\parse($b)['path'], '/');
     });
-
-    // Reassemble the URIs
-    $uriList = array_map(function ($parsedUri) {
-        return Uri\build($parsedUri);
-    }, $parsedUriList);
 }
