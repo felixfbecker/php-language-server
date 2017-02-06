@@ -117,7 +117,10 @@ class Indexer
             /** @var string[][] */
             $deps = [];
 
-            $vendorDir = str_replace('/', '\/', @$this->composerJson->config->{'vendor-dir'} ?: 'vendor');
+            $vendorDir = isset($this->composerJson->config->{'vendor-dir'}) ?
+                $this->composerJson->config->{'vendor-dir'}
+                : 'vendor';
+            $vendorDir = str_replace('/', '\/', $vendorDir);
             $this->client->window->logMessage(MessageType::INFO, "Vendor dir: $vendorDir");
 
             foreach ($uris as $uri) {
