@@ -17,13 +17,13 @@ use LanguageServer\Protocol\{
 use LanguageServer\FilesFinder\{FilesFinder, ClientFilesFinder, FileSystemFilesFinder};
 use LanguageServer\ContentRetriever\{ContentRetriever, ClientContentRetriever, FileSystemContentRetriever};
 use LanguageServer\Index\{DependenciesIndex, GlobalIndex, Index, ProjectIndex, StubsIndex};
+use LanguageServer\Cache\{FileSystemCache, ClientCache};
 use AdvancedJsonRpc;
 use Sabre\Event\{Loop, Promise};
 use function Sabre\Event\coroutine;
 use Exception;
 use Throwable;
 use Webmozart\PathUtil\Path;
-use Webmozart\Glob\Glob;
 use Sabre\Uri;
 
 class LanguageServer extends AdvancedJsonRpc\Dispatcher
@@ -202,23 +202,39 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
 
             if ($rootPath !== null) {
                 yield $this->beforeIndex($rootPath);
-                $this->index($rootPath)->otherwise('\\LanguageServer\\crash');
+
+                // Find composer.json
+                if ($this->composerJson === null) {
+                    $composerJsonFiles = yield $this->filesFinder->find(Path::makeAbsolute('**/composer.json', $rootPath));
+                    if (!empty($composerJsonFiles)) {
+                        $this->composerJson = json_decode(yield $this->contentRetriever->retrieve($composerJsonFiles[0]));
+                    }
+                }
+
+                // Find composer.lock
+                if ($this->composerLock === null) {
+                    $composerLockFiles = yield $this->filesFinder->find(Path::makeAbsolute('**/composer.lock', $rootPath));
+                    if (!empty($composerLockFiles)) {
+                        $this->composerLock = json_decode(yield $this->contentRetriever->retrieve($composerLockFiles[0]));
+                    }
+                }
+
+                $cache = $capabilities->xcacheProvider ? new ClientCache($this->client) : new FileSystemCache;
+
+                // Index in background
+                $indexer = new Indexer(
+                    $this->filesFinder,
+                    $rootPath,
+                    $this->client,
+                    $cache,
+                    $dependenciesIndex,
+                    $sourceIndex,
+                    $this->documentLoader,
+                    $this->composerLock
+                );
+                $indexer->index()->otherwise('\\LanguageServer\\crash');
             }
 
-            // Find composer.json
-            if ($this->composerJson === null) {
-                $composerJsonFiles = yield $this->filesFinder->find(Path::makeAbsolute('**/composer.json', $rootPath));
-                if (!empty($composerJsonFiles)) {
-                    $this->composerJson = json_decode(yield $this->contentRetriever->retrieve($composerJsonFiles[0]));
-                }
-            }
-            // Find composer.lock
-            if ($this->composerLock === null) {
-                $composerLockFiles = yield $this->filesFinder->find(Path::makeAbsolute('**/composer.lock', $rootPath));
-                if (!empty($composerLockFiles)) {
-                    $this->composerLock = json_decode(yield $this->contentRetriever->retrieve($composerLockFiles[0]));
-                }
-            }
 
             if ($this->textDocument === null) {
                 $this->textDocument = new Server\TextDocument(
@@ -297,67 +313,5 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
      */
     protected function beforeIndex(string $rootPath)
     {
-    }
-
-    /**
-     * Will read and parse the passed source files in the project and add them to the appropiate indexes
-     *
-     * @param string $rootPath
-     * @return Promise <void>
-     */
-    protected function index(string $rootPath): Promise
-    {
-        return coroutine(function () use ($rootPath) {
-
-            $pattern = Path::makeAbsolute('**/*.php', $rootPath);
-            $uris = yield $this->filesFinder->find($pattern);
-
-            $count = count($uris);
-
-            $startTime = microtime(true);
-
-            foreach (['Collecting definitions and static references', 'Collecting dynamic references'] as $run => $text) {
-                $this->client->window->logMessage(MessageType::INFO, $text);
-                foreach ($uris as $i => $uri) {
-                    if ($this->documentLoader->isOpen($uri)) {
-                        continue;
-                    }
-
-                    // Give LS to the chance to handle requests while indexing
-                    yield timeout();
-                    $this->client->window->logMessage(
-                        MessageType::LOG,
-                        "Parsing file $i/$count: {$uri}"
-                    );
-                    try {
-                        $document = yield $this->documentLoader->load($uri);
-                        if (!$document->isVendored()) {
-                            $this->client->textDocument->publishDiagnostics($uri, $document->getDiagnostics());
-                        }
-                    } catch (ContentTooLargeException $e) {
-                        $this->client->window->logMessage(
-                            MessageType::INFO,
-                            "Ignoring file {$uri} because it exceeds size limit of {$e->limit} bytes ({$e->size})"
-                        );
-                    } catch (Exception $e) {
-                        $this->client->window->logMessage(
-                            MessageType::ERROR,
-                            "Error parsing file {$uri}: " . (string)$e
-                        );
-                    }
-                }
-                if ($run === 0) {
-                    $this->projectIndex->setStaticComplete();
-                } else {
-                    $this->projectIndex->setComplete();
-                }
-                $duration = (int)(microtime(true) - $startTime);
-                $mem = (int)(memory_get_usage(true) / (1024 * 1024));
-                $this->client->window->logMessage(
-                    MessageType::INFO,
-                    "All $count PHP files parsed in $duration seconds. $mem MiB allocated."
-                );
-            }
-        });
     }
 }

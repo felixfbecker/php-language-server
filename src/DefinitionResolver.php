@@ -448,6 +448,9 @@ class DefinitionResolver
             if (strtolower((string)$expr->name) === 'true' || strtolower((string)$expr->name) === 'false') {
                 return new Types\Boolean;
             }
+            if (strtolower((string)$expr->name) === 'null') {
+                return new Types\Null_;
+            }
             // Resolve constant
             $fqn = (string)($expr->getAttribute('namespacedName') ?? $expr->name);
             $def = $this->index->getDefinition($fqn, true);
