@@ -138,7 +138,7 @@ function stripStringOverlap(string $a, string $b): string
  * in ascending order.
  *
  * @param array
- * @return array
+ * @return void
  */
 function sortUrisLevelOrder(&$uriList)
 {
