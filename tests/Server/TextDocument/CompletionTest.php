@@ -444,23 +444,25 @@ class CompletionTest extends TestCase
         )->wait();
         $this->assertEquals(new CompletionList([
             new CompletionItem(
-                '$abc',
-                CompletionItemKind::VARIABLE,
-                null,
-                null,
-                null,
-                null,
-                '$abc'
-            ),
-            new CompletionItem(
                 '$abc2',
                 CompletionItemKind::VARIABLE,
+                'int',
                 null,
                 null,
                 null,
                 null,
-                '$abc2'
+                new TextEdit(new Range(new Position(4, 8), new Position(4, 8)), 'c2')
             ),
+            new CompletionItem(
+                '$abc',
+                CompletionItemKind::VARIABLE,
+                'int',
+                null,
+                null,
+                null,
+                null,
+                new TextEdit(new Range(new Position(4, 8), new Position(4, 8)), 'c')
+            )
         ], true), $items);
     }
 }
