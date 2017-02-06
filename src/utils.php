@@ -7,7 +7,7 @@ use Throwable;
 use InvalidArgumentException;
 use PhpParser\Node;
 use Sabre\Event\{Loop, Promise, EmitterInterface};
-use function Sabre\Uri\parse;
+use Sabre\Uri;
 
 /**
  * Transforms an absolute file path into a URI as used by the language server protocol.
@@ -137,14 +137,12 @@ function stripStringOverlap(string $a, string $b): string
  * Use for sorting an array of URIs by number of segments
  * in ascending order.
  *
- * Example:
- *     usort($uriList, 'LanguageServer\sortByLeastSlashes');
- *
- * @param $a string
- * @param $b string
- * @return integer
+ * @param array
+ * @return array
  */
-function sortByLeastSlashes($a, $b)
+function sortUrisLevelOrder(&$uriList)
 {
-    return substr_count(parse($a)['path'], '/') - substr_count(parse($b)['path'], '/');
+    usort($uriList, function ($a, $b) {
+        return substr_count(Uri\parse($a)['path'], '/') - substr_count(Uri\parse($b)['path'], '/');
+    });
 }

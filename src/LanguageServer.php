@@ -25,7 +25,6 @@ use Exception;
 use Throwable;
 use Webmozart\PathUtil\Path;
 use Sabre\Uri;
-use function LanguageServer\sortByLeastSlashes;
 
 class LanguageServer extends AdvancedJsonRpc\Dispatcher
 {
@@ -207,9 +206,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                 // Find composer.json
                 if ($this->composerJson === null) {
                     $composerJsonFiles = yield $this->filesFinder->find(Path::makeAbsolute('**/composer.json', $rootPath));
-                    // If we sort our findings by number of slashes (least to greatest),
-                    // the first entry will be the project's root composer.json.
-                    usort($composerJsonFiles, 'LanguageServer\sortByLeastSlashes');
+                    sortUrisLevelOrder($composerJsonFiles);
 
                     if (!empty($composerJsonFiles)) {
                         $this->composerJson = json_decode(yield $this->contentRetriever->retrieve($composerJsonFiles[0]));
@@ -219,10 +216,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                 // Find composer.lock
                 if ($this->composerLock === null) {
                     $composerLockFiles = yield $this->filesFinder->find(Path::makeAbsolute('**/composer.lock', $rootPath));
-
-                    // If we sort our findings by number of slashes (least to greatest),
-                    // the first entry will be the project's root composer.lock.
-                    usort($composerLockFiles, 'LanguageServer\sortByLeastSlashes');
+                    sortUrisLevelOrder($composerLockFiles);
 
                     if (!empty($composerLockFiles)) {
                         $this->composerLock = json_decode(yield $this->contentRetriever->retrieve($composerLockFiles[0]));
