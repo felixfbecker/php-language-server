@@ -60,6 +60,11 @@ class Indexer
     private $composerLock;
 
     /**
+     * @var \stdClasss
+     */
+    private $composerJson;
+
+    /**
      * @param FilesFinder       $filesFinder
      * @param string            $rootPath
      * @param LanguageClient    $client
@@ -77,7 +82,8 @@ class Indexer
         DependenciesIndex $dependenciesIndex,
         Index $sourceIndex,
         PhpDocumentLoader $documentLoader,
-        \stdClass $composerLock = null
+        \stdClass $composerLock = null,
+        \stdClass $composerJson = null
     ) {
         $this->filesFinder = $filesFinder;
         $this->rootPath = $rootPath;
@@ -87,6 +93,7 @@ class Indexer
         $this->sourceIndex = $sourceIndex;
         $this->documentLoader = $documentLoader;
         $this->composerLock = $composerLock;
+        $this->composerJson = $composerJson;
     }
 
     /**
@@ -109,8 +116,12 @@ class Indexer
             $source = [];
             /** @var string[][] */
             $deps = [];
+
+            $vendorDir = str_replace('/', '\/', @$this->composerJson->config->{'vendor-dir'} ?: 'vendor');
+            $this->client->window->logMessage(MessageType::INFO, "Vendor dir: $vendorDir");
+
             foreach ($uris as $uri) {
-                if ($this->composerLock !== null && preg_match('/\/vendor\/([^\/]+\/[^\/]+)\//', $uri, $matches)) {
+                if ($this->composerLock !== null && preg_match("/\/$vendorDir\/([^\/]+\/[^\/]+)\//", $uri, $matches)) {
                     // Dependency file
                     $packageName = $matches[1];
                     if (!isset($deps[$packageName])) {
@@ -174,6 +185,8 @@ class Indexer
                     if ($cacheKey !== null) {
                         $this->client->window->logMessage(MessageType::INFO, "Storing $packageKey in cache");
                         $this->cache->set($cacheKey, $index);
+                    } else {
+                        $this->client->window->logMessage(MessageType::INFO, "Cannot cache $packageName, cache key was null. Either you are using a 'dev-' version or your composer.lock is missing references.");
                     }
                 }
             }

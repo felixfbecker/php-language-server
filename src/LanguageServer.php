@@ -206,6 +206,13 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                 // Find composer.json
                 if ($this->composerJson === null) {
                     $composerJsonFiles = yield $this->filesFinder->find(Path::makeAbsolute('**/composer.json', $rootPath));
+
+                    // If we sort our findings by string length (shortest to longest),
+                    // the first entry will be the project's root composer.json.
+                    usort($composerJsonFiles, function ($a, $b) {
+                        return strlen($a) - strlen($b);
+                    });
+
                     if (!empty($composerJsonFiles)) {
                         $this->composerJson = json_decode(yield $this->contentRetriever->retrieve($composerJsonFiles[0]));
                     }
@@ -214,6 +221,13 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                 // Find composer.lock
                 if ($this->composerLock === null) {
                     $composerLockFiles = yield $this->filesFinder->find(Path::makeAbsolute('**/composer.lock', $rootPath));
+
+                    // If we sort our findings by string length (shortest to longest),
+                    // the first entry will be the project's root composer.lock.
+                    usort($composerLockFiles, function ($a, $b) {
+                        return strlen($a) - strlen($b);
+                    });
+
                     if (!empty($composerLockFiles)) {
                         $this->composerLock = json_decode(yield $this->contentRetriever->retrieve($composerLockFiles[0]));
                     }
@@ -230,7 +244,8 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                     $dependenciesIndex,
                     $sourceIndex,
                     $this->documentLoader,
-                    $this->composerLock
+                    $this->composerLock,
+                    $this->composerJson
                 );
                 $indexer->index()->otherwise('\\LanguageServer\\crash');
             }
