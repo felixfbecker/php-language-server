@@ -186,7 +186,7 @@ class Indexer
                         $this->client->window->logMessage(MessageType::INFO, "Storing $packageKey in cache");
                         $this->cache->set($cacheKey, $index);
                     } else {
-                        $this->client->window->logMessage(MessageType::INFO, "Cannot cache $packageName, cache key was null. Either you are using a 'dev-' version or your composer.lock is missing references.");
+                        $this->client->window->logMessage(MessageType::WARNING, "Could not compute cache key for $packageName");
                     }
                 }
             }
