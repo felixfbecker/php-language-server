@@ -124,7 +124,7 @@ class Workspace
                     // Find out package name
                     preg_match('/\/vendor\/([^\/]+\/[^\/]+)\//', $def->symbolInformation->location->uri, $matches);
                     $packageName = $matches[1];
-                    foreach ($this->composerLock->packages as $package) {
+                    foreach (array_merge($this->composerLock->packages, $this->composerLock->{'packages-dev'}) as $package) {
                         if ($package->name === $packageName) {
                             $symbol->package = $package;
                             break;
@@ -165,7 +165,7 @@ class Workspace
             return [];
         }
         $dependencyReferences = [];
-        foreach ($this->composerLock->packages as $package) {
+        foreach (array_merge($this->composerLock->packages, $this->composerLock->{'packages-dev'}) as $package) {
             $dependencyReferences[] = new DependencyReference($package);
         }
         return $dependencyReferences;

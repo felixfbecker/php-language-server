@@ -412,7 +412,7 @@ class TextDocument
             if (preg_match('/\/vendor\/([^\/]+\/[^\/]+)\//', $def->symbolInformation->location->uri, $matches) && $this->composerLock !== null) {
                 // Definition is inside a dependency
                 $packageName = $matches[1];
-                foreach ($this->composerLock->packages as $package) {
+                foreach (array_merge($this->composerLock->packages, $this->composerLock->{'packages-dev'}) as $package) {
                     if ($package->name === $packageName) {
                         $symbol->package = $package;
                         break;
