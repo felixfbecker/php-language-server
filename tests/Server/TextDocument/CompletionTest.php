@@ -440,7 +440,7 @@ class CompletionTest extends TestCase
         $this->loader->open($completionUri, file_get_contents($completionUri));
         $items = $this->textDocument->completion(
             new TextDocumentIdentifier($completionUri),
-            new Position(5, 8)
+            new Position(4, 8)
         )->wait();
         $this->assertEquals(new CompletionList([
             new CompletionItem(
@@ -463,5 +463,4 @@ class CompletionTest extends TestCase
             ),
         ], true), $items);
     }
-
 }
