@@ -8,7 +8,7 @@ use LanguageServer\Index\{ProjectIndex, DependenciesIndex, Index};
 use LanguageServer\Protocol\{SymbolInformation, SymbolDescriptor, ReferenceInformation, DependencyReference, Location};
 use Sabre\Event\Promise;
 use function Sabre\Event\coroutine;
-use function LanguageServer\{waitForEvent,getPackageName};
+use function LanguageServer\{waitForEvent, getPackageName};
 
 /**
  * Provides method handlers for all workspace/* methods
