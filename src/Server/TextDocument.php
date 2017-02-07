@@ -30,7 +30,7 @@ use LanguageServer\Index\ReadableIndex;
 use Sabre\Event\Promise;
 use Sabre\Uri;
 use function Sabre\Event\coroutine;
-use function LanguageServer\{waitForEvent,isVendored};
+use function LanguageServer\{waitForEvent, isVendored};
 
 /**
  * Provides method handlers for all textDocument/* methods
