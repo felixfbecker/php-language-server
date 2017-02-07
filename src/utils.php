@@ -169,13 +169,13 @@ function isVendored(PhpDocument $document, \stdClass $composerJson = null): bool
  * @param \stdClass|null $composerJson
  * @param string         $uri
  * @param array          $matches
- * @return string
+ * @return string|null
  */
-function getPackageName(\stdClass $composerJson = null, string $uri): ?string
+function getPackageName(string $uri, \stdClass $composerJson = null): ?string
 {
     $vendorDir = str_replace('/', '\/', getVendorDir($composerJson));
     preg_match("/\/$vendorDir\/([^\/]+\/[^\/]+)\//", $uri, $matches);
-    return isset($matches[1]) ? $matches[1] : null;
+    return $matches[1] ?? null;
 }
 
 /**
@@ -187,7 +187,5 @@ function getPackageName(\stdClass $composerJson = null, string $uri): ?string
  */
 function getVendorDir(\stdClass $composerJson = null): string
 {
-    return isset($composerJson->config->{'vendor-dir'}) ?
-        $composerJson->config->{'vendor-dir'}
-        : 'vendor';
+    return $composerJson->config->{'vendor-dir'} ?? 'vendor';
 }

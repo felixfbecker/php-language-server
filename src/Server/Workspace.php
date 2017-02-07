@@ -8,8 +8,7 @@ use LanguageServer\Index\{ProjectIndex, DependenciesIndex, Index};
 use LanguageServer\Protocol\{SymbolInformation, SymbolDescriptor, ReferenceInformation, DependencyReference, Location};
 use Sabre\Event\Promise;
 use function Sabre\Event\coroutine;
-use function LanguageServer\waitForEvent;
-use function LanguageServer\getPackageName;
+use function LanguageServer\{waitForEvent,getPackageName};
 
 /**
  * Provides method handlers for all workspace/* methods
@@ -124,7 +123,7 @@ class Workspace
                         $symbol->$prop = $val;
                     }
                     // Find out package name
-                    $packageName = getPackageName($this->composerJson, $def->symbolInformation->location->uri);
+                    $packageName = getPackageName($def->symbolInformation->location->uri, $this->composerJson);
                     foreach (array_merge($this->composerLock->packages, $this->composerLock->{'packages-dev'}) as $package) {
                         if ($package->name === $packageName) {
                             $symbol->package = $package;

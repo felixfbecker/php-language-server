@@ -46,7 +46,7 @@ class ProjectIndex extends AbstractAggregateIndex
      */
     public function getIndexForUri(string $uri): Index
     {
-        $packageName = getPackageName($this->composerJson, $uri);
+        $packageName = getPackageName($uri, $this->composerJson);
         if ($packageName) {
             return $this->dependenciesIndex->getDependencyIndex($packageName);
         }
