@@ -137,7 +137,7 @@ function stripStringOverlap(string $a, string $b): string
  * Use for sorting an array of URIs by number of segments
  * in ascending order.
  *
- * @param array
+ * @param array $uriList
  * @return void
  */
 function sortUrisLevelOrder(&$uriList)
@@ -145,4 +145,48 @@ function sortUrisLevelOrder(&$uriList)
     usort($uriList, function ($a, $b) {
         return substr_count(Uri\parse($a)['path'], '/') - substr_count(Uri\parse($b)['path'], '/');
     });
+}
+
+/**
+ * Checks a document against the composer.json to see if it
+ * is a vendored document
+ *
+ * @param PhpDocument    $document
+ * @param \stdClass|null $composerJson
+ * @return bool
+ */
+function isVendored(PhpDocument $document, \stdClass $composerJson = null): bool
+{
+    $path = Uri\parse($document->getUri())['path'];
+    $vendorDir = getVendorDir($composerJson);
+    return strpos($path, "/$vendorDir/") !== false;
+}
+
+/**
+ * Check a given URI against the composer.json to see if it
+ * is a vendored URI
+ *
+ * @param \stdClass|null $composerJson
+ * @param string         $uri
+ * @param array          $matches
+ * @return int
+ */
+function uriInVendorDir(\stdClass $composerJson = null, string $uri, &$matches): int
+{
+    $vendorDir = str_replace('/', '\/', getVendorDir($composerJson));
+    return preg_match("/\/$vendorDir\/([^\/]+\/[^\/]+)\//", $uri, $matches);
+}
+
+/**
+ * Helper function to get the vendor directory from composer.json
+ * or default to 'vendor'
+ *
+ * @param \stdClass|null $composerJson
+ * @return string
+ */
+function getVendorDir(\stdClass $composerJson = null): string
+{
+    return isset($composerJson->config->{'vendor-dir'}) ?
+        $composerJson->config->{'vendor-dir'}
+        : 'vendor';
 }

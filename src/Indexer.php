@@ -117,14 +117,8 @@ class Indexer
             /** @var string[][] */
             $deps = [];
 
-            $vendorDir = isset($this->composerJson->config->{'vendor-dir'}) ?
-                $this->composerJson->config->{'vendor-dir'}
-                : 'vendor';
-            $vendorDir = str_replace('/', '\/', $vendorDir);
-            $this->client->window->logMessage(MessageType::INFO, "Vendor dir: $vendorDir");
-
             foreach ($uris as $uri) {
-                if ($this->composerLock !== null && preg_match("/\/$vendorDir\/([^\/]+\/[^\/]+)\//", $uri, $matches)) {
+                if ($this->composerLock !== null && uriInVendorDir($this->composerJson, $uri, $matches)) {
                     // Dependency file
                     $packageName = $matches[1];
                     if (!isset($deps[$packageName])) {
@@ -221,7 +215,7 @@ class Indexer
                 $this->client->window->logMessage(MessageType::LOG, "Parsing $uri");
                 try {
                     $document = yield $this->documentLoader->load($uri);
-                    if (!$document->isVendored()) {
+                    if (!isVendored($document, $this->composerJson)) {
                         $this->client->textDocument->publishDiagnostics($uri, $document->getDiagnostics());
                     }
                 } catch (ContentTooLargeException $e) {

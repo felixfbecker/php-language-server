@@ -134,7 +134,7 @@ class TextDocument
     public function didOpen(TextDocumentItem $textDocument)
     {
         $document = $this->documentLoader->open($textDocument->uri, $textDocument->text);
-        if (!$document->isVendored()) {
+        if (!\LanguageServer\isVendored($document, $this->composerJson)) {
             $this->client->textDocument->publishDiagnostics($textDocument->uri, $document->getDiagnostics());
         }
     }

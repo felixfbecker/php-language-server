@@ -42,18 +42,18 @@ class PhpDocumentTest extends TestCase
     public function testIsVendored()
     {
         $document = $this->createDocument('file:///dir/vendor/x.php', "<?php\n$\$a = new SomeClass;");
-        $this->assertEquals(true, $document->isVendored());
+        $this->assertEquals(true, \LanguageServer\isVendored($document));
 
         $document = $this->createDocument('file:///c:/dir/vendor/x.php', "<?php\n$\$a = new SomeClass;");
-        $this->assertEquals(true, $document->isVendored());
+        $this->assertEquals(true, \LanguageServer\isVendored($document));
 
         $document = $this->createDocument('file:///vendor/x.php', "<?php\n$\$a = new SomeClass;");
-        $this->assertEquals(true, $document->isVendored());
+        $this->assertEquals(true, \LanguageServer\isVendored($document));
 
         $document = $this->createDocument('file:///dir/vendor.php', "<?php\n$\$a = new SomeClass;");
-        $this->assertEquals(false, $document->isVendored());
+        $this->assertEquals(false, \LanguageServer\isVendored($document));
 
         $document = $this->createDocument('file:///dir/x.php', "<?php\n$\$a = new SomeClass;");
-        $this->assertEquals(false, $document->isVendored());
+        $this->assertEquals(false, \LanguageServer\isVendored($document));
     }
 }

@@ -22,10 +22,11 @@ class ProjectIndex extends AbstractAggregateIndex
      */
     private $sourceIndex;
 
-    public function __construct(Index $sourceIndex, DependenciesIndex $dependenciesIndex)
+    public function __construct(Index $sourceIndex, DependenciesIndex $dependenciesIndex, \stdClass $composerJson = null)
     {
         $this->sourceIndex = $sourceIndex;
         $this->dependenciesIndex = $dependenciesIndex;
+        $this->composerJson = $composerJson;
         parent::__construct();
     }
 
@@ -43,7 +44,7 @@ class ProjectIndex extends AbstractAggregateIndex
      */
     public function getIndexForUri(string $uri): Index
     {
-        if (preg_match('/\/vendor\/([^\/]+\/[^\/]+)\//', $uri, $matches)) {
+        if (\LanguageServer\uriInVendorDir($this->composerJson, $uri, $matches)) {
             $packageName = $matches[1];
             return $this->dependenciesIndex->getDependencyIndex($packageName);
         }

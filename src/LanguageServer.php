@@ -187,7 +187,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
 
             $dependenciesIndex = new DependenciesIndex;
             $sourceIndex = new Index;
-            $this->projectIndex = new ProjectIndex($sourceIndex, $dependenciesIndex);
+            $this->projectIndex = new ProjectIndex($sourceIndex, $dependenciesIndex, $this->composerJson);
             $stubsIndex = StubsIndex::read();
             $this->globalIndex = new GlobalIndex($stubsIndex, $this->projectIndex);
 
@@ -257,7 +257,8 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                     $dependenciesIndex,
                     $sourceIndex,
                     $this->composerLock,
-                    $this->documentLoader
+                    $this->documentLoader,
+                    $this->composerJson
                 );
             }
 

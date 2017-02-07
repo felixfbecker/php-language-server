@@ -221,17 +221,6 @@ class PhpDocument
     }
 
     /**
-     * Returns true if the document is a dependency
-     *
-     * @return bool
-     */
-    public function isVendored(): bool
-    {
-        $path = Uri\parse($this->uri)['path'];
-        return strpos($path, '/vendor/') !== false;
-    }
-
-    /**
      * Returns array of TextEdit changes to format this document.
      *
      * @return \LanguageServer\Protocol\TextEdit[]

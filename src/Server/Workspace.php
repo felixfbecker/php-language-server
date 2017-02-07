@@ -49,13 +49,14 @@ class Workspace
      * @param \stdClass         $composerLock      The parsed composer.lock of the project, if any
      * @param PhpDocumentLoader $documentLoader    PhpDocumentLoader instance to load documents
      */
-    public function __construct(ProjectIndex $index, DependenciesIndex $dependenciesIndex, Index $sourceIndex, \stdClass $composerLock = null, PhpDocumentLoader $documentLoader)
+    public function __construct(ProjectIndex $index, DependenciesIndex $dependenciesIndex, Index $sourceIndex, \stdClass $composerLock = null, PhpDocumentLoader $documentLoader, \stdClass $composerJson = null)
     {
         $this->sourceIndex = $sourceIndex;
         $this->index = $index;
         $this->dependenciesIndex = $dependenciesIndex;
         $this->composerLock = $composerLock;
         $this->documentLoader = $documentLoader;
+        $this->composerJson = $composerJson;
     }
 
     /**
@@ -122,7 +123,7 @@ class Workspace
                         $symbol->$prop = $val;
                     }
                     // Find out package name
-                    preg_match('/\/vendor\/([^\/]+\/[^\/]+)\//', $def->symbolInformation->location->uri, $matches);
+                    uriInVendorDir($this->composerJson, $def->symbolInformation->location->uri, $matches);
                     $packageName = $matches[1];
                     foreach ($this->composerLock->packages as $package) {
                         if ($package->name === $packageName) {
