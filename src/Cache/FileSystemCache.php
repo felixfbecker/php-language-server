@@ -18,7 +18,7 @@ class FileSystemCache implements Cache
 
     public function __construct()
     {
-        if (PHP_OS === 'WINNT') {
+        if (strtoupper(substr(php_uname('s'), 0, 3)) === 'WIN') {
             $this->cacheDir = getenv('LOCALAPPDATA') . '\\PHP Language Server\\';
         } else if (getenv('XDG_CACHE_HOME')) {
             $this->cacheDir = getenv('XDG_CACHE_HOME') . '/phpls/';
