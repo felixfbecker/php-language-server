@@ -60,6 +60,11 @@ class Indexer
     private $composerLock;
 
     /**
+     * @var \stdClasss
+     */
+    private $composerJson;
+
+    /**
      * @param FilesFinder       $filesFinder
      * @param string            $rootPath
      * @param LanguageClient    $client
@@ -77,7 +82,8 @@ class Indexer
         DependenciesIndex $dependenciesIndex,
         Index $sourceIndex,
         PhpDocumentLoader $documentLoader,
-        \stdClass $composerLock = null
+        \stdClass $composerLock = null,
+        \stdClass $composerJson = null
     ) {
         $this->filesFinder = $filesFinder;
         $this->rootPath = $rootPath;
@@ -87,6 +93,7 @@ class Indexer
         $this->sourceIndex = $sourceIndex;
         $this->documentLoader = $documentLoader;
         $this->composerLock = $composerLock;
+        $this->composerJson = $composerJson;
     }
 
     /**
@@ -109,10 +116,11 @@ class Indexer
             $source = [];
             /** @var string[][] */
             $deps = [];
+
             foreach ($uris as $uri) {
-                if ($this->composerLock !== null && preg_match('/\/vendor\/([^\/]+\/[^\/]+)\//', $uri, $matches)) {
+                $packageName = getPackageName($uri, $this->composerJson);
+                if ($this->composerLock !== null && $packageName) {
                     // Dependency file
-                    $packageName = $matches[1];
                     if (!isset($deps[$packageName])) {
                         $deps[$packageName] = [];
                     }
@@ -174,6 +182,8 @@ class Indexer
                     if ($cacheKey !== null) {
                         $this->client->window->logMessage(MessageType::INFO, "Storing $packageKey in cache");
                         $this->cache->set($cacheKey, $index);
+                    } else {
+                        $this->client->window->logMessage(MessageType::WARNING, "Could not compute cache key for $packageName");
                     }
                 }
             }
@@ -205,7 +215,7 @@ class Indexer
                 $this->client->window->logMessage(MessageType::LOG, "Parsing $uri");
                 try {
                     $document = yield $this->documentLoader->load($uri);
-                    if (!$document->isVendored()) {
+                    if (!isVendored($document, $this->composerJson)) {
                         $this->client->textDocument->publishDiagnostics($uri, $document->getDiagnostics());
                     }
                 } catch (ContentTooLargeException $e) {

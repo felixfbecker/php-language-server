@@ -8,7 +8,7 @@ use LanguageServer\Index\{ProjectIndex, DependenciesIndex, Index};
 use LanguageServer\Protocol\{SymbolInformation, SymbolDescriptor, ReferenceInformation, DependencyReference, Location};
 use Sabre\Event\Promise;
 use function Sabre\Event\coroutine;
-use function LanguageServer\waitForEvent;
+use function LanguageServer\{waitForEvent, getPackageName};
 
 /**
  * Provides method handlers for all workspace/* methods
@@ -49,13 +49,14 @@ class Workspace
      * @param \stdClass         $composerLock      The parsed composer.lock of the project, if any
      * @param PhpDocumentLoader $documentLoader    PhpDocumentLoader instance to load documents
      */
-    public function __construct(ProjectIndex $index, DependenciesIndex $dependenciesIndex, Index $sourceIndex, \stdClass $composerLock = null, PhpDocumentLoader $documentLoader)
+    public function __construct(ProjectIndex $index, DependenciesIndex $dependenciesIndex, Index $sourceIndex, \stdClass $composerLock = null, PhpDocumentLoader $documentLoader, \stdClass $composerJson = null)
     {
         $this->sourceIndex = $sourceIndex;
         $this->index = $index;
         $this->dependenciesIndex = $dependenciesIndex;
         $this->composerLock = $composerLock;
         $this->documentLoader = $documentLoader;
+        $this->composerJson = $composerJson;
     }
 
     /**
@@ -122,8 +123,7 @@ class Workspace
                         $symbol->$prop = $val;
                     }
                     // Find out package name
-                    preg_match('/\/vendor\/([^\/]+\/[^\/]+)\//', $def->symbolInformation->location->uri, $matches);
-                    $packageName = $matches[1];
+                    $packageName = getPackageName($def->symbolInformation->location->uri, $this->composerJson);
                     foreach (array_merge($this->composerLock->packages, $this->composerLock->{'packages-dev'}) as $package) {
                         if ($package->name === $packageName) {
                             $symbol->package = $package;
