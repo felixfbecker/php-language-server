@@ -118,9 +118,9 @@ class Indexer
             $deps = [];
 
             foreach ($uris as $uri) {
-                if ($this->composerLock !== null && uriInVendorDir($this->composerJson, $uri, $matches)) {
+                $packageName = getPackageName($this->composerJson, $uri);
+                if ($this->composerLock !== null && $packageName) {
                     // Dependency file
-                    $packageName = $matches[1];
                     if (!isset($deps[$packageName])) {
                         $deps[$packageName] = [];
                     }

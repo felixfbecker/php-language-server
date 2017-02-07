@@ -3,6 +3,8 @@ declare(strict_types = 1);
 
 namespace LanguageServer\Index;
 
+use function LanguageServer\getPackageName;
+
 /**
  * A project index manages the source and dependency indexes
  */
@@ -44,8 +46,8 @@ class ProjectIndex extends AbstractAggregateIndex
      */
     public function getIndexForUri(string $uri): Index
     {
-        if (\LanguageServer\uriInVendorDir($this->composerJson, $uri, $matches)) {
-            $packageName = $matches[1];
+        $packageName = getPackageName($this->composerJson, $uri);
+        if ($packageName) {
             return $this->dependenciesIndex->getDependencyIndex($packageName);
         }
         return $this->sourceIndex;

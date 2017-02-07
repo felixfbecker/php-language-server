@@ -9,6 +9,7 @@ use LanguageServer\Protocol\{SymbolInformation, SymbolDescriptor, ReferenceInfor
 use Sabre\Event\Promise;
 use function Sabre\Event\coroutine;
 use function LanguageServer\waitForEvent;
+use function LanguageServer\getPackageName;
 
 /**
  * Provides method handlers for all workspace/* methods
@@ -123,8 +124,7 @@ class Workspace
                         $symbol->$prop = $val;
                     }
                     // Find out package name
-                    uriInVendorDir($this->composerJson, $def->symbolInformation->location->uri, $matches);
-                    $packageName = $matches[1];
+                    $packageName = getPackageName($this->composerJson, $def->symbolInformation->location->uri);
                     foreach ($this->composerLock->packages as $package) {
                         if ($package->name === $packageName) {
                             $symbol->package = $package;

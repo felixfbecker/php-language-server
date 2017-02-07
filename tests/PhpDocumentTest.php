@@ -12,6 +12,7 @@ use LanguageServer\ContentRetriever\FileSystemContentRetriever;
 use LanguageServer\Protocol\{SymbolKind, Position, ClientCapabilities};
 use LanguageServer\Index\{Index, ProjectIndex, DependenciesIndex};
 use PhpParser\Node;
+use function LanguageServer\isVendored;
 
 class PhpDocumentTest extends TestCase
 {
@@ -42,18 +43,18 @@ class PhpDocumentTest extends TestCase
     public function testIsVendored()
     {
         $document = $this->createDocument('file:///dir/vendor/x.php', "<?php\n$\$a = new SomeClass;");
-        $this->assertEquals(true, \LanguageServer\isVendored($document));
+        $this->assertEquals(true, isVendored($document));
 
         $document = $this->createDocument('file:///c:/dir/vendor/x.php', "<?php\n$\$a = new SomeClass;");
-        $this->assertEquals(true, \LanguageServer\isVendored($document));
+        $this->assertEquals(true, isVendored($document));
 
         $document = $this->createDocument('file:///vendor/x.php', "<?php\n$\$a = new SomeClass;");
-        $this->assertEquals(true, \LanguageServer\isVendored($document));
+        $this->assertEquals(true, isVendored($document));
 
         $document = $this->createDocument('file:///dir/vendor.php', "<?php\n$\$a = new SomeClass;");
-        $this->assertEquals(false, \LanguageServer\isVendored($document));
+        $this->assertEquals(false, isVendored($document));
 
         $document = $this->createDocument('file:///dir/x.php', "<?php\n$\$a = new SomeClass;");
-        $this->assertEquals(false, \LanguageServer\isVendored($document));
+        $this->assertEquals(false, isVendored($document));
     }
 }
