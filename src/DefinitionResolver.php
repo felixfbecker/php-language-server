@@ -708,7 +708,7 @@ class DefinitionResolver
     {
         if (is_string($node)) {
             // Resolve a string like "bool" to a type object
-            return $this->typeResolver->resolve($node->returnType);
+            return $this->typeResolver->resolve($node);
         }
         if ($node instanceof Node\Name) {
             return new Types\Object_(new Fqsen('\\' . (string)$node));
