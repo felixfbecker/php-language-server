@@ -187,7 +187,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
 
             $dependenciesIndex = new DependenciesIndex;
             $sourceIndex = new Index;
-            $this->projectIndex = new ProjectIndex($sourceIndex, $dependenciesIndex);
+            $this->projectIndex = new ProjectIndex($sourceIndex, $dependenciesIndex, $this->composerJson);
             $stubsIndex = StubsIndex::read();
             $this->globalIndex = new GlobalIndex($stubsIndex, $this->projectIndex);
 
@@ -206,6 +206,8 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                 // Find composer.json
                 if ($this->composerJson === null) {
                     $composerJsonFiles = yield $this->filesFinder->find(Path::makeAbsolute('**/composer.json', $rootPath));
+                    sortUrisLevelOrder($composerJsonFiles);
+
                     if (!empty($composerJsonFiles)) {
                         $this->composerJson = json_decode(yield $this->contentRetriever->retrieve($composerJsonFiles[0]));
                     }
@@ -214,6 +216,8 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                 // Find composer.lock
                 if ($this->composerLock === null) {
                     $composerLockFiles = yield $this->filesFinder->find(Path::makeAbsolute('**/composer.lock', $rootPath));
+                    sortUrisLevelOrder($composerLockFiles);
+
                     if (!empty($composerLockFiles)) {
                         $this->composerLock = json_decode(yield $this->contentRetriever->retrieve($composerLockFiles[0]));
                     }
@@ -230,7 +234,8 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                     $dependenciesIndex,
                     $sourceIndex,
                     $this->documentLoader,
-                    $this->composerLock
+                    $this->composerLock,
+                    $this->composerJson
                 );
                 $indexer->index()->otherwise('\\LanguageServer\\crash');
             }
@@ -252,7 +257,8 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                     $dependenciesIndex,
                     $sourceIndex,
                     $this->composerLock,
-                    $this->documentLoader
+                    $this->documentLoader,
+                    $this->composerJson
                 );
             }
 

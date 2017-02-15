@@ -30,7 +30,7 @@ use LanguageServer\Index\ReadableIndex;
 use Sabre\Event\Promise;
 use Sabre\Uri;
 use function Sabre\Event\coroutine;
-use function LanguageServer\waitForEvent;
+use function LanguageServer\{waitForEvent, isVendored};
 
 /**
  * Provides method handlers for all textDocument/* methods
@@ -134,7 +134,7 @@ class TextDocument
     public function didOpen(TextDocumentItem $textDocument)
     {
         $document = $this->documentLoader->open($textDocument->uri, $textDocument->text);
-        if (!$document->isVendored()) {
+        if (!isVendored($document, $this->composerJson)) {
             $this->client->textDocument->publishDiagnostics($textDocument->uri, $document->getDiagnostics());
         }
     }
@@ -409,10 +409,10 @@ class TextDocument
                 $symbol->$prop = $val;
             }
             $symbol->fqsen = $def->fqn;
-            if (preg_match('/\/vendor\/([^\/]+\/[^\/]+)\//', $def->symbolInformation->location->uri, $matches) && $this->composerLock !== null) {
+            $packageName = getPackageName($def->symbolInformation->location->uri, $this->composerJson);
+            if ($packageName && $this->composerLock !== null) {
                 // Definition is inside a dependency
-                $packageName = $matches[1];
-                foreach ($this->composerLock->packages as $package) {
+                foreach (array_merge($this->composerLock->packages, $this->composerLock->{'packages-dev'}) as $package) {
                     if ($package->name === $packageName) {
                         $symbol->package = $package;
                         break;

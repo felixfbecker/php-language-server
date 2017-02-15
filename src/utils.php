@@ -7,6 +7,7 @@ use Throwable;
 use InvalidArgumentException;
 use PhpParser\Node;
 use Sabre\Event\{Loop, Promise, EmitterInterface};
+use Sabre\Uri;
 
 /**
  * Transforms an absolute file path into a URI as used by the language server protocol.
@@ -130,4 +131,61 @@ function stripStringOverlap(string $a, string $b): string
         }
     }
     return $b;
+}
+
+/**
+ * Use for sorting an array of URIs by number of segments
+ * in ascending order.
+ *
+ * @param array $uriList
+ * @return void
+ */
+function sortUrisLevelOrder(&$uriList)
+{
+    usort($uriList, function ($a, $b) {
+        return substr_count(Uri\parse($a)['path'], '/') - substr_count(Uri\parse($b)['path'], '/');
+    });
+}
+
+/**
+ * Checks a document against the composer.json to see if it
+ * is a vendored document
+ *
+ * @param PhpDocument    $document
+ * @param \stdClass|null $composerJson
+ * @return bool
+ */
+function isVendored(PhpDocument $document, \stdClass $composerJson = null): bool
+{
+    $path = Uri\parse($document->getUri())['path'];
+    $vendorDir = getVendorDir($composerJson);
+    return strpos($path, "/$vendorDir/") !== false;
+}
+
+/**
+ * Check a given URI against the composer.json to see if it
+ * is a vendored URI
+ *
+ * @param \stdClass|null $composerJson
+ * @param string         $uri
+ * @param array          $matches
+ * @return string|null
+ */
+function getPackageName(string $uri, \stdClass $composerJson = null)
+{
+    $vendorDir = str_replace('/', '\/', getVendorDir($composerJson));
+    preg_match("/\/$vendorDir\/([^\/]+\/[^\/]+)\//", $uri, $matches);
+    return $matches[1] ?? null;
+}
+
+/**
+ * Helper function to get the vendor directory from composer.json
+ * or default to 'vendor'
+ *
+ * @param \stdClass|null $composerJson
+ * @return string
+ */
+function getVendorDir(\stdClass $composerJson = null): string
+{
+    return $composerJson->config->{'vendor-dir'} ?? 'vendor';
 }
