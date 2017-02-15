@@ -433,4 +433,36 @@ class CompletionTest extends TestCase
             )
         ], true), $items);
     }
+
+    public function testBarePhp()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/bare_php.php');
+        $this->loader->open($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(4, 8)
+        )->wait();
+        $this->assertEquals(new CompletionList([
+            new CompletionItem(
+                '$abc2',
+                CompletionItemKind::VARIABLE,
+                'int',
+                null,
+                null,
+                null,
+                null,
+                new TextEdit(new Range(new Position(4, 8), new Position(4, 8)), 'c2')
+            ),
+            new CompletionItem(
+                '$abc',
+                CompletionItemKind::VARIABLE,
+                'int',
+                null,
+                null,
+                null,
+                null,
+                new TextEdit(new Range(new Position(4, 8), new Position(4, 8)), 'c')
+            )
+        ], true), $items);
+    }
 }
