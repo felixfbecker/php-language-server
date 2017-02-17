@@ -38,7 +38,7 @@ class NodeAtPositionFinder extends NodeVisitorAbstract
             $range = Range::fromNode($node);
             if ($range->includes($this->position)) {
                 $this->node = $node;
-                return NodeTraverser::STOP_TRAVERSAL
+                return NodeTraverser::STOP_TRAVERSAL;
             }
         }
     }
