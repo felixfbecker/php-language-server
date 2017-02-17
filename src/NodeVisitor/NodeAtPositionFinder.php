@@ -15,7 +15,7 @@ class NodeAtPositionFinder extends NodeVisitorAbstract
     /**
      * The node at the position, if found
      *
-     * @var Node
+     * @var Node|null
      */
     public $node;
 
@@ -34,9 +34,11 @@ class NodeAtPositionFinder extends NodeVisitorAbstract
 
     public function leaveNode(Node $node)
     {
-        $range = Range::fromNode($node);
-        if (!isset($this->node) && $range->includes($this->position)) {
-            $this->node = $node;
+        if ($this->node === null) {
+            $range = Range::fromNode($node);
+            if ($range->includes($this->position)) {
+                $this->node = $node;
+            }
         }
     }
 }
