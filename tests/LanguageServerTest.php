@@ -117,4 +117,31 @@ class LanguageServerTest extends TestCase
         $this->assertTrue($filesCalled);
         $this->assertTrue($contentCalled);
     }
+
+    public function testIndexingMultipleFileTypes()
+    {
+        $promise = new Promise;
+        $input = new MockProtocolStream;
+        $output = new MockProtocolStream;
+        $options = (object)[
+            'fileTypes' => [
+                '.php',
+                '.inc'
+            ]
+        ];
+
+        $output->on('message', function (Message $msg) use ($promise, &$foundFiles) {
+            if ($msg->body->method === 'window/logMessage' && $promise->state === Promise::PENDING) {
+                if ($msg->body->params->type === MessageType::ERROR) {
+                    $promise->reject(new Exception($msg->body->params->message));
+                } else if (strpos($msg->body->params->message, 'All 27 PHP files parsed') !== false) {
+                    $promise->fulfill();
+                }
+            }
+        });
+        $server = new LanguageServer($input, $output);
+        $capabilities = new ClientCapabilities;
+        $server->initialize($capabilities, realpath(__DIR__ . '/../fixtures'), getmypid(), $options);
+        $promise->wait();
+    }
 }
