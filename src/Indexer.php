@@ -78,7 +78,7 @@ class Indexer
      * @param Index                  $sourceIndex
      * @param PhpDocumentLoader      $documentLoader
      * @param \stdClass|null         $composerLock
-     * @param IndexerOptions|null    $options
+     * @param Options|null           $options
      */
     public function __construct(
         FilesFinder $filesFinder,
