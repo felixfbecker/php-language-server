@@ -416,7 +416,7 @@ class DefinitionResolver
      * If the type could not be resolved, returns Types\Mixed.
      *
      * @param \PhpParser\Node\Expr $expr
-     * @return \phpDocumentor\Reflection\Type|\phpDocumentor\Type|null
+     * @return \phpDocumentor\Reflection\Type
      */
     public function resolveExpressionNodeToType(Node\Expr $expr): Type
     {
@@ -714,7 +714,7 @@ class DefinitionResolver
      * Returns null if the node does not have a type.
      *
      * @param Node $node
-     * @return \phpDocumentor\Type|null
+     * @return \phpDocumentor\Reflection\Type|null
      */
     public function getTypeFromNode(Node $node)
     {
@@ -732,6 +732,7 @@ class DefinitionResolver
                     }
                 }
             }
+            $type = null;
             if ($node->type !== null) {
                 // Use PHP7 return type hint
                 if (is_string($node->type)) {
