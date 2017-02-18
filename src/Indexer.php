@@ -112,7 +112,7 @@ class Indexer
     public function index(): Promise
     {
         return coroutine(function () {
-            $fileTypes = implode(',', $this->options->fileTypes);
+            $fileTypes = implode(',', $this->options->getFileTypes());
             $pattern = Path::makeAbsolute('**/*{' . $fileTypes . '}', $this->rootPath);
             $uris = yield $this->filesFinder->find($pattern);
 
