@@ -7,49 +7,23 @@ class Options
     /**
      * Filetypes the indexer should process
      *
-     * @var array
+     * @var string[]
      */
-    private $fileTypes = [".php"];
+    public $fileTypes = ['.php'];
 
     /**
-     * @param \Traversable|\stdClass|array|null $options
-     */
-    public function __construct($options = null)
-    {
-        // Do nothing when the $options parameter is not an object
-        if (!is_object($options) && !is_array($options) && (!$options instanceof \Traversable)) {
-            return;
-        }
-
-        foreach ($options as $option => $value) {
-            $method = 'set' . ucfirst($option);
-
-            call_user_func([$this, $method], $value);
-        }
-    }
-
-    /**
-     * Validate and set options for file types
+     * Validate/Filter input and set options for file types
      *
      * @param array $fileTypes List of file types
      */
     public function setFileTypes(array $fileTypes)
     {
         $fileTypes = filter_var_array($fileTypes, FILTER_SANITIZE_STRING);
-        $fileTypes =  filter_var($fileTypes, FILTER_CALLBACK, ['options' => [$this, 'filterFileTypes']]);
-        $fileTypes = array_filter($fileTypes);
+        $fileTypes =  filter_var($fileTypes, FILTER_CALLBACK, ['options' => [$this, 'filterFileTypes']]); // validate file type format
+        $fileTypes = array_filter($fileTypes, 'strlen'); // filter empty items
+        $fileTypes = array_values($fileTypes); //rebase indexes
 
         $this->fileTypes = !empty($fileTypes) ? $fileTypes : $this->fileTypes;
-    }
-
-    /**
-     * Get list of registered file types
-     *
-     * @return array
-     */
-    public function getFileTypes(): array
-    {
-        return $this->fileTypes;
     }
 
     /**
