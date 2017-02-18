@@ -5,6 +5,7 @@ namespace LanguageServer\Tests;
 
 use PHPUnit\Framework\TestCase;
 use LanguageServer\LanguageServer;
+use LanguageServer\Options;
 use LanguageServer\Protocol\{
     Message,
     ClientCapabilities,
@@ -123,12 +124,12 @@ class LanguageServerTest extends TestCase
         $promise = new Promise;
         $input = new MockProtocolStream;
         $output = new MockProtocolStream;
-        $options = (object)[
-            'fileTypes' => [
-                '.php',
-                '.inc'
-            ]
-        ];
+        $options = new Options;
+
+        $options->setFileTypes([
+            '.php',
+            '.inc'
+        ]);
 
         $output->on('message', function (Message $msg) use ($promise, &$foundFiles) {
             if ($msg->body->method === 'window/logMessage' && $promise->state === Promise::PENDING) {
