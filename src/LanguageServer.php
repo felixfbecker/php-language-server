@@ -191,6 +191,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
             $this->projectIndex = new ProjectIndex($sourceIndex, $dependenciesIndex, $this->composerJson);
             $stubsIndex = StubsIndex::read();
             $this->globalIndex = new GlobalIndex($stubsIndex, $this->projectIndex);
+            $initializationOptions = $initializationOptions ?? new Options;
 
             // The DefinitionResolver should look in stubs, the project source and dependencies
             $this->definitionResolver = new DefinitionResolver($this->globalIndex);
