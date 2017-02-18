@@ -6,7 +6,7 @@ namespace LanguageServer\Tests;
 use PHPUnit\Framework\TestCase;
 use LanguageServer\Options;
 
-class LanguageServerTest extends TestCase
+class OptionsTest extends TestCase
 {
     public function testFileTypesOption()
     {
