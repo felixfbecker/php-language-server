@@ -65,14 +65,20 @@ class Indexer
     private $composerJson;
 
     /**
-     * @param FilesFinder       $filesFinder
-     * @param string            $rootPath
-     * @param LanguageClient    $client
-     * @param Cache             $cache
-     * @param DependenciesIndex $dependenciesIndex
-     * @param Index             $sourceIndex
-     * @param PhpDocumentLoader $documentLoader
-     * @param \stdClass|null    $composerLock
+     * @var Options
+     */
+    private $options;
+
+    /**
+     * @param FilesFinder            $filesFinder
+     * @param string                 $rootPath
+     * @param LanguageClient         $client
+     * @param Cache                  $cache
+     * @param DependenciesIndex      $dependenciesIndex
+     * @param Index                  $sourceIndex
+     * @param PhpDocumentLoader      $documentLoader
+     * @param \stdClass|null         $composerLock
+     * @param IndexerOptions|null    $options
      */
     public function __construct(
         FilesFinder $filesFinder,
@@ -83,7 +89,8 @@ class Indexer
         Index $sourceIndex,
         PhpDocumentLoader $documentLoader,
         \stdClass $composerLock = null,
-        \stdClass $composerJson = null
+        \stdClass $composerJson = null,
+        Options $options = null
     ) {
         $this->filesFinder = $filesFinder;
         $this->rootPath = $rootPath;
@@ -94,6 +101,7 @@ class Indexer
         $this->documentLoader = $documentLoader;
         $this->composerLock = $composerLock;
         $this->composerJson = $composerJson;
+        $this->options = $options;
     }
 
     /**
@@ -104,8 +112,8 @@ class Indexer
     public function index(): Promise
     {
         return coroutine(function () {
-
-            $pattern = Path::makeAbsolute('**/*.php', $this->rootPath);
+            $fileTypes = implode(',', $this->options->fileTypes);
+            $pattern = Path::makeAbsolute('**/*{' . $fileTypes . '}', $this->rootPath);
             $uris = yield $this->filesFinder->find($pattern);
 
             $count = count($uris);
