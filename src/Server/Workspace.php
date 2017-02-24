@@ -170,4 +170,9 @@ class Workspace
         }
         return $dependencyReferences;
     }
+
+    public function didChangeConfiguration($settings = null)
+    {
+        $this->index->wipe();
+    }
 }

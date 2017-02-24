@@ -42,6 +42,9 @@ abstract class AbstractAggregateIndex implements ReadableIndex
         $index->on('definition-added', function () {
             $this->emit('definition-added');
         });
+        $index->on('wipe', function() {
+            $this->emit('wipe');
+        });
     }
 
     /**
@@ -146,5 +149,15 @@ abstract class AbstractAggregateIndex implements ReadableIndex
             }
         }
         return $refs;
+    }
+
+    /**
+     * Wipe all indexes for a reindex
+     */
+    public function wipe()
+    {
+        foreach ($this->getIndexes() as $index) {
+            $index->wipe();
+        }
     }
 }
