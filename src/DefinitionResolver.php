@@ -89,10 +89,14 @@ class DefinitionResolver
         } else {
             $docBlock = $node->getAttribute('docBlock');
             if ($docBlock !== null) {
-                if (empty($docBlock->getDescription()->render())) {
+                // check wether we have a description, when true, add a new paragraph
+                // with the description
+                $description = $docBlock->getDescription()->render();
+
+                if (empty(($description))) {
                     return $docBlock->getSummary();
                 } else {
-                    return $docBlock->getSummary() . "\n\n" . $docBlock->getDescription();
+                    return $docBlock->getSummary() . "\n\n" . $description;
                 }
             }
         }
