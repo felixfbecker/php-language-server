@@ -93,7 +93,7 @@ class DefinitionResolver
                 // with the description
                 $description = $docBlock->getDescription()->render();
 
-                if (empty(($description))) {
+                if (empty($description)) {
                     return $docBlock->getSummary();
                 } else {
                     return $docBlock->getSummary() . "\n\n" . $description;
