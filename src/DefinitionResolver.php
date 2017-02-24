@@ -89,7 +89,7 @@ class DefinitionResolver
         } else {
             $docBlock = $node->getAttribute('docBlock');
             if ($docBlock !== null) {
-                return $docBlock->getSummary();
+                return $docBlock->getDescription();
             }
         }
     }
