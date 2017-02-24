@@ -43,11 +43,11 @@ sint. Officia culpa pariatur laborum nostrud cupidatat consequat mollit.'
         $this->assertEquals(new Hover([
             new MarkedString('php', "<?php\nclass TestClass implements \\TestInterface"),
             'Pariatur ut laborum tempor voluptate consequat ea deserunt.' . "\n\n" .
-            'Deserunt enim minim sunt sint ea nisi. Deserunt excepteur tempor id nostrud
-laboris commodo ad commodo velit mollit qui non officia id. Nulla duis veniam
-veniam officia deserunt et non dolore mollit ea quis eiusmod sit non. Occaecat
-consequat sunt culpa exercitation pariatur id reprehenderit nisi incididunt Lorem
-sint. Officia culpa pariatur laborum nostrud cupidatat consequat mollit.'
+            'Deserunt enim minim sunt sint ea nisi. Deserunt excepteur tempor id nostrud' . "\n" .
+            'laboris commodo ad commodo velit mollit qui non officia id. Nulla duis veniam' . "\n" .
+            'veniam officia deserunt et non dolore mollit ea quis eiusmod sit non. Occaecat' . "\n" .
+            'consequat sunt culpa exercitation pariatur id reprehenderit nisi incididunt Lorem' . "\n" .
+            'sint. Officia culpa pariatur laborum nostrud cupidatat consequat mollit.'
         ], $definition->range), $result);
     }
 
@@ -192,11 +192,11 @@ sint. Officia culpa pariatur laborum nostrud cupidatat consequat mollit.'
         $this->assertEquals(new Hover([
             new MarkedString('php', "<?php\nclass TestClass implements \\TestInterface"),
             'Pariatur ut laborum tempor voluptate consequat ea deserunt.' . "\n\n" .
-            'Deserunt enim minim sunt sint ea nisi. Deserunt excepteur tempor id nostrud
-laboris commodo ad commodo velit mollit qui non officia id. Nulla duis veniam
-veniam officia deserunt et non dolore mollit ea quis eiusmod sit non. Occaecat
-consequat sunt culpa exercitation pariatur id reprehenderit nisi incididunt Lorem
-sint. Officia culpa pariatur laborum nostrud cupidatat consequat mollit.'
+            'Deserunt enim minim sunt sint ea nisi. Deserunt excepteur tempor id nostrud' . "\n" .
+            'laboris commodo ad commodo velit mollit qui non officia id. Nulla duis veniam' . "\n" .
+            'veniam officia deserunt et non dolore mollit ea quis eiusmod sit non. Occaecat' . "\n" .
+            'consequat sunt culpa exercitation pariatur id reprehenderit nisi incididunt Lorem' . "\n" .
+            'sint. Officia culpa pariatur laborum nostrud cupidatat consequat mollit.'
         ], new Range(new Position(59, 8), new Position(59, 13))), $result);
     }
 }
