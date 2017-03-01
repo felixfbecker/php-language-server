@@ -5,7 +5,7 @@ namespace LanguageServer\Server;
 
 use PhpParser\{Node, NodeTraverser};
 use LanguageServer\{
-    DefinitionResolverInterface, LanguageClient, PhpDocumentLoader, PhpDocument, DefinitionResolver, CompletionProvider
+    DefinitionResolverInterface, FqnUtilities, LanguageClient, PhpDocumentLoader, PhpDocument, DefinitionResolver, CompletionProvider
 };
 use LanguageServer\NodeVisitor\VariableReferencesCollector;
 use LanguageServer\Protocol\{
@@ -221,7 +221,7 @@ class TextDocument
                 }
             } else {
                 // Definition with a global FQN
-                $fqn = DefinitionResolver::getDefinedFqn($node);
+                $fqn = FqnUtilities::getDefinedFqn($node);
                 // Wait until indexing finished
                 if (!$this->index->isComplete()) {
                     yield waitForEvent($this->index, 'complete');
@@ -266,7 +266,7 @@ class TextDocument
                 return [];
             }
             // Handle definition nodes
-            $fqn = DefinitionResolver::getDefinedFqn($node);
+            $fqn = FqnUtilities::getDefinedFqn($node);
             while (true) {
                 if ($fqn) {
                     $def = $this->index->getDefinition($fqn);
@@ -307,7 +307,7 @@ class TextDocument
             if ($node === null) {
                 return new Hover([]);
             }
-            $definedFqn = DefinitionResolver::getDefinedFqn($node);
+            $definedFqn = FqnUtilities::getDefinedFqn($node);
             while (true) {
                 if ($definedFqn) {
                     // Support hover for definitions

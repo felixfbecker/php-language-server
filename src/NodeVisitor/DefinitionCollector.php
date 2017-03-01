@@ -5,7 +5,7 @@ namespace LanguageServer\NodeVisitor;
 
 use PhpParser\{NodeVisitorAbstract, Node};
 use LanguageServer\{
-    Definition, DefinitionResolver, DefinitionResolverInterface
+    Definition, DefinitionResolver, DefinitionResolverInterface, FqnUtilities
 };
 use LanguageServer\Protocol\SymbolInformation;
 
@@ -38,7 +38,7 @@ class DefinitionCollector extends NodeVisitorAbstract
 
     public function enterNode(Node $node)
     {
-        $fqn = DefinitionResolver::getDefinedFqn($node);
+        $fqn = FqnUtilities::getDefinedFqn($node);
         // Only index definitions with an FQN (no variables)
         if ($fqn === null) {
             return;

@@ -142,7 +142,7 @@ class CompletionProvider
             // If the name is an Error node, just filter by the class
             if ($node instanceof Node\Expr\MethodCall || $node instanceof Node\Expr\PropertyFetch) {
                 // For instances, resolve the variable type
-                $prefixes = DefinitionResolver::getFqnsFromType(
+                $prefixes = FqnUtilities::getFqnsFromType(
                     $this->definitionResolver->resolveExpressionNodeToType($node->var)
                 );
             } else {

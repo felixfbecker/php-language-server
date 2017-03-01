@@ -171,31 +171,6 @@ class DefinitionResolver implements DefinitionResolverInterface
     }
 
     /**
-     * Returns all possible FQNs in a type
-     *
-     * @param Type $type
-     * @return string[]
-     */
-    public static function getFqnsFromType(Type $type): array
-    {
-        $fqns = [];
-        if ($type instanceof Types\Object_) {
-            $fqsen = $type->getFqsen();
-            if ($fqsen !== null) {
-                $fqns[] = substr((string)$fqsen, 1);
-            }
-        }
-        if ($type instanceof Types\Compound) {
-            for ($i = 0; $t = $type->get($i); $i++) {
-                foreach (self::getFqnsFromType($type) as $fqn) {
-                    $fqns[] = $fqn;
-                }
-            }
-        }
-        return $fqns;
-    }
-
-    /**
      * Given any node, returns the FQN of the symbol that is referenced
      * Returns null if the FQN could not be resolved or the reference node references a variable
      *
@@ -366,7 +341,7 @@ class DefinitionResolver implements DefinitionResolverInterface
      * @param Node\Expr\Variable|Node\Expr\ClosureUse $var The variable access
      * @return Node\Expr\Assign|Node\Expr\AssignOp|Node\Param|Node\Expr\ClosureUse|null
      */
-    public static function resolveVariableToNode(Node\Expr $var)
+    private static function resolveVariableToNode(Node\Expr $var)
     {
         $n = $var;
         // When a use is passed, start outside the closure to not return immediatly
