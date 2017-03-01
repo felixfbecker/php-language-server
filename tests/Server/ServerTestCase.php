@@ -54,7 +54,7 @@ abstract class ServerTestCase extends TestCase
         $client               = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
         $this->documentLoader = new PhpDocumentLoader(new FileSystemContentRetriever, $projectIndex, $definitionResolver);
         $this->textDocument   = new Server\TextDocument($this->documentLoader, $definitionResolver, $client, $projectIndex);
-        $this->workspace      = new Server\Workspace($projectIndex, $dependenciesIndex, $sourceIndex, null, $this->documentLoader);
+        $this->workspace      = new Server\Workspace($client, $projectIndex, $dependenciesIndex, $sourceIndex, null, $this->documentLoader);
 
         $globalSymbolsUri    = pathToUri(realpath(__DIR__ . '/../../fixtures/global_symbols.php'));
         $globalReferencesUri = pathToUri(realpath(__DIR__ . '/../../fixtures/global_references.php'));

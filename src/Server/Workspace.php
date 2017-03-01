@@ -5,7 +5,15 @@ namespace LanguageServer\Server;
 
 use LanguageServer\{LanguageClient, Project, PhpDocumentLoader};
 use LanguageServer\Index\{ProjectIndex, DependenciesIndex, Index};
-use LanguageServer\Protocol\{SymbolInformation, SymbolDescriptor, ReferenceInformation, DependencyReference, Location};
+use LanguageServer\Protocol\{
+    FileChangeType,
+    FileEvent,
+    SymbolInformation,
+    SymbolDescriptor,
+    ReferenceInformation,
+    DependencyReference,
+    Location
+};
 use Sabre\Event\Promise;
 use function Sabre\Event\coroutine;
 use function LanguageServer\{waitForEvent, getPackageName};
@@ -15,6 +23,11 @@ use function LanguageServer\{waitForEvent, getPackageName};
  */
 class Workspace
 {
+    /**
+     * @var LanguageClient
+     */
+    public $client;
+
     /**
      * The symbol index for the workspace
      *
@@ -43,14 +56,16 @@ class Workspace
     public $documentLoader;
 
     /**
+     * @param LanguageClient    $client            LanguageClient instance used to signal updated results
      * @param ProjectIndex      $index             Index that is searched on a workspace/symbol request
      * @param DependenciesIndex $dependenciesIndex Index that is used on a workspace/xreferences request
      * @param DependenciesIndex $sourceIndex       Index that is used on a workspace/xreferences request
      * @param \stdClass         $composerLock      The parsed composer.lock of the project, if any
      * @param PhpDocumentLoader $documentLoader    PhpDocumentLoader instance to load documents
      */
-    public function __construct(ProjectIndex $index, DependenciesIndex $dependenciesIndex, Index $sourceIndex, \stdClass $composerLock = null, PhpDocumentLoader $documentLoader, \stdClass $composerJson = null)
+    public function __construct(LanguageClient $client, ProjectIndex $index, DependenciesIndex $dependenciesIndex, Index $sourceIndex, \stdClass $composerLock = null, PhpDocumentLoader $documentLoader, \stdClass $composerJson = null)
     {
+        $this->client = $client;
         $this->sourceIndex = $sourceIndex;
         $this->index = $index;
         $this->dependenciesIndex = $dependenciesIndex;
@@ -80,6 +95,20 @@ class Workspace
             }
             return $symbols;
         });
+    }
+
+    /**
+     * The watched files notification is sent from the client to the server when the client detects changes to files watched by the language client.
+     *
+     * @param FileEvent[] $changes
+     * @return void
+     */
+    public function didChangeWatchedFiles(array $changes) : void {
+        foreach ($changes as $change) {
+            if ($change->type === FileChangeType::DELETED) {
+                $this->client->textDocument->publishDiagnostics($change->uri, []);
+            }
+        }
     }
 
     /**
