@@ -103,7 +103,8 @@ class Workspace
      * @param FileEvent[] $changes
      * @return void
      */
-    public function didChangeWatchedFiles(array $changes) : void {
+    public function didChangeWatchedFiles(array $changes)
+    {
         foreach ($changes as $change) {
             if ($change->type === FileChangeType::DELETED) {
                 $this->client->textDocument->publishDiagnostics($change->uri, []);
