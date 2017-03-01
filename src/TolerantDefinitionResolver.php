@@ -9,7 +9,7 @@ use phpDocumentor\Reflection\{Types, Type, Fqsen, TypeResolver};
 use LanguageServer\Protocol\SymbolInformation;
 use LanguageServer\Index\ReadableIndex;
 
-class DefinitionResolver implements DefinitionResolverInterface
+class TolerantDefinitionResolver implements DefinitionResolverInterface
 {
     /**
      * @var \LanguageServer\Index\ReadableIndex

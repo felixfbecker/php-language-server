@@ -3,6 +3,7 @@ declare(strict_types = 1);
 
 namespace LanguageServer\NodeVisitor;
 
+use LanguageServer\DefinitionResolverInterface;
 use PhpParser\{NodeVisitorAbstract, Node};
 use LanguageServer\DefinitionResolver;
 
@@ -20,14 +21,14 @@ class ReferencesCollector extends NodeVisitorAbstract
     public $nodes = [];
 
     /**
-     * @var DefinitionResolver
+     * @var DefinitionResolverInterface
      */
     private $definitionResolver;
 
     /**
-     * @param DefinitionResolver $definitionResolver The DefinitionResolver to resolve reference nodes to definitions
+     * @param DefinitionResolverInterface $definitionResolver The DefinitionResolver to resolve reference nodes to definitions
      */
-    public function __construct(DefinitionResolver $definitionResolver)
+    public function __construct(DefinitionResolverInterface $definitionResolver)
     {
         $this->definitionResolver = $definitionResolver;
     }

@@ -5,7 +5,9 @@ namespace LanguageServer\Tests\Server;
 
 use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
-use LanguageServer\{Server, Client, LanguageClient, Project, PhpDocument, PhpDocumentLoader, DefinitionResolver};
+use LanguageServer\{
+    DefinitionResolverFactory, Server, Client, LanguageClient, Project, PhpDocument, PhpDocumentLoader, DefinitionResolver
+};
 use LanguageServer\ContentRetriever\FileSystemContentRetriever;
 use LanguageServer\Index\{Index, ProjectIndex, DependenciesIndex};
 use LanguageServer\Protocol\{
@@ -32,7 +34,7 @@ class PhpDocumentLoaderTest extends TestCase
         $this->loader = new PhpDocumentLoader(
             new FileSystemContentRetriever,
             $projectIndex,
-            new DefinitionResolver($projectIndex)
+            DefinitionResolverFactory::create($projectIndex)
         );
     }
 

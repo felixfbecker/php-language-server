@@ -4,7 +4,9 @@ declare(strict_types = 1);
 namespace LanguageServer\Server;
 
 use PhpParser\{Node, NodeTraverser};
-use LanguageServer\{LanguageClient, PhpDocumentLoader, PhpDocument, DefinitionResolver, CompletionProvider};
+use LanguageServer\{
+    DefinitionResolverInterface, LanguageClient, PhpDocumentLoader, PhpDocument, DefinitionResolver, CompletionProvider
+};
 use LanguageServer\NodeVisitor\VariableReferencesCollector;
 use LanguageServer\Protocol\{
     SymbolLocationInformation,
@@ -49,7 +51,7 @@ class TextDocument
     protected $project;
 
     /**
-     * @var DefinitionResolver
+     * @var DefinitionResolverInterface
      */
     protected $definitionResolver;
 
@@ -74,16 +76,16 @@ class TextDocument
     protected $composerLock;
 
     /**
-     * @param PhpDocumentLoader  $documentLoader
-     * @param DefinitionResolver $definitionResolver
-     * @param LanguageClient     $client
-     * @param ReadableIndex      $index
-     * @param \stdClass          $composerJson
-     * @param \stdClass          $composerLock
+     * @param PhpDocumentLoader $documentLoader
+     * @param DefinitionResolverInterface $definitionResolver
+     * @param LanguageClient $client
+     * @param ReadableIndex $index
+     * @param \stdClass $composerJson
+     * @param \stdClass $composerLock
      */
     public function __construct(
         PhpDocumentLoader $documentLoader,
-        DefinitionResolver $definitionResolver,
+        DefinitionResolverInterface $definitionResolver,
         LanguageClient $client,
         ReadableIndex $index,
         \stdClass $composerJson = null,

@@ -5,7 +5,9 @@ namespace LanguageServer\Tests\Server\TextDocument;
 
 use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
-use LanguageServer\{Server, Client, LanguageClient, ClientHandler, PhpDocumentLoader, DefinitionResolver};
+use LanguageServer\{
+    DefinitionResolverFactory, Server, Client, LanguageClient, ClientHandler, PhpDocumentLoader, DefinitionResolver
+};
 use LanguageServer\Index\{Index, ProjectIndex, DependenciesIndex};
 use LanguageServer\ContentRetriever\FileSystemContentRetriever;
 use LanguageServer\Protocol\{TextDocumentIdentifier, TextDocumentItem, DiagnosticSeverity, ClientCapabilities};
@@ -38,7 +40,7 @@ class ParseErrorsTest extends TestCase
             }
         };
         $projectIndex = new ProjectIndex(new Index, new DependenciesIndex);
-        $definitionResolver = new DefinitionResolver($projectIndex);
+        $definitionResolver = DefinitionResolverFactory::create($projectIndex);
         $loader = new PhpDocumentLoader(new FileSystemContentRetriever, $projectIndex, $definitionResolver);
         $this->textDocument = new Server\TextDocument($loader, $definitionResolver, $client, $projectIndex);
     }

@@ -7,7 +7,9 @@ use PHPUnit\Framework\TestCase;
 use PhpParser\{NodeTraverser, Node};
 use PhpParser\NodeVisitor\NameResolver;
 use phpDocumentor\Reflection\DocBlockFactory;
-use LanguageServer\{LanguageClient, PhpDocument, PhpDocumentLoader, Parser, DefinitionResolver};
+use LanguageServer\{
+    DefinitionResolverFactory, LanguageClient, PhpDocument, PhpDocumentLoader, Parser, DefinitionResolver
+};
 use LanguageServer\ContentRetriever\FileSystemContentRetriever;
 use LanguageServer\Protocol\ClientCapabilities;
 use LanguageServer\Index\{ProjectIndex, Index, DependenciesIndex};
@@ -26,7 +28,7 @@ class DefinitionCollectorTest extends TestCase
         $tolerantParser = new Tolerant\Parser();
         $docBlockFactory = DocBlockFactory::createInstance();
         $index = new Index;
-        $definitionResolver = new DefinitionResolver($index);
+        $definitionResolver = DefinitionResolverFactory::create($index);
         $content = file_get_contents($path);
         $document = new PhpDocument($uri, $content, $index, $parser, $tolerantParser, $docBlockFactory, $definitionResolver);
         $stmts = $parser->parse($content);
@@ -75,7 +77,7 @@ class DefinitionCollectorTest extends TestCase
         $tolerantParser = new Tolerant\Parser();
         $docBlockFactory = DocBlockFactory::createInstance();
         $index = new Index;
-        $definitionResolver = new DefinitionResolver($index);
+        $definitionResolver = DefinitionResolverFactory::create($index);
         $content = file_get_contents($path);
         $document = new PhpDocument($uri, $content, $index, $parser, $tolerantParser, $docBlockFactory, $definitionResolver);
         $stmts = $parser->parse($content);

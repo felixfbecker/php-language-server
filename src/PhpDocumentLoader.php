@@ -48,19 +48,19 @@ class PhpDocumentLoader
     private $docBlockFactory;
 
     /**
-     * @var DefinitionResolver
+     * @var DefinitionResolverInterface
      */
     private $definitionResolver;
 
     /**
-     * @param ContentRetriever   $contentRetriever
-     * @param ProjectIndex       $project
-     * @param DefinitionResolver $definitionResolver
+     * @param ContentRetriever $contentRetriever
+     * @param ProjectIndex $project
+     * @param DefinitionResolverInterface $definitionResolver
      */
     public function __construct(
         ContentRetriever $contentRetriever,
         ProjectIndex $projectIndex,
-        DefinitionResolver $definitionResolver
+        DefinitionResolverInterface $definitionResolver
     ) {
         $this->contentRetriever = $contentRetriever;
         $this->projectIndex = $projectIndex;

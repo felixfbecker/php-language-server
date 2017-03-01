@@ -32,7 +32,7 @@ class ComposerScripts
             $docBlockFactory = DocBlockFactory::createInstance();
             $parser = new Parser;
             $tolerantParser = new Tolerant\Parser();
-            $definitionResolver = new DefinitionResolver($index);
+            $definitionResolver = DefinitionResolverFactory::create($index);
 
             $stubsLocation = null;
             foreach ([__DIR__ . '/../../../jetbrains/phpstorm-stubs', __DIR__ . '/../vendor/jetbrains/phpstorm-stubs'] as $dir) {

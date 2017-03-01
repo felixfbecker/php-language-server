@@ -88,7 +88,7 @@ class CompletionProvider
     ];
 
     /**
-     * @var DefinitionResolver
+     * @var DefinitionResolverInterface
      */
     private $definitionResolver;
 
@@ -103,10 +103,10 @@ class CompletionProvider
     private $index;
 
     /**
-     * @param DefinitionResolver $definitionResolver
-     * @param ReadableIndex      $index
+     * @param DefinitionResolverInterface $definitionResolver
+     * @param ReadableIndex $index
      */
-    public function __construct(DefinitionResolver $definitionResolver, ReadableIndex $index)
+    public function __construct(DefinitionResolverInterface $definitionResolver, ReadableIndex $index)
     {
         $this->definitionResolver = $definitionResolver;
         $this->index = $index;

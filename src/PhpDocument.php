@@ -38,7 +38,7 @@ class PhpDocument
     /**
      * The DefinitionResolver instance to resolve reference nodes to definitions
      *
-     * @var DefinitionResolver
+     * @var DefinitionResolverInterface
      */
     private $definitionResolver;
 
@@ -97,12 +97,12 @@ class PhpDocument
     private $diagnostics;
 
     /**
-     * @param string             $uri                The URI of the document
-     * @param string             $content            The content of the document
-     * @param Index              $index              The Index to register definitions and references to
-     * @param Parser             $parser             The PHPParser instance
-     * @param DocBlockFactory    $docBlockFactory    The DocBlockFactory instance to parse docblocks
-     * @param DefinitionResolver $definitionResolver The DefinitionResolver to resolve definitions to symbols in the workspace
+     * @param string $uri The URI of the document
+     * @param string $content The content of the document
+     * @param Index $index The Index to register definitions and references to
+     * @param Parser $parser The PHPParser instance
+     * @param DocBlockFactory $docBlockFactory The DocBlockFactory instance to parse docblocks
+     * @param DefinitionResolverInterface $definitionResolver The DefinitionResolver to resolve definitions to symbols in the workspace
      */
     public function __construct(
         string $uri,
@@ -111,7 +111,7 @@ class PhpDocument
         Parser $parser,
         Tolerant\Parser $tolerantParser,
         DocBlockFactory $docBlockFactory,
-        DefinitionResolver $definitionResolver
+        DefinitionResolverInterface $definitionResolver
     ) {
         $this->uri = $uri;
         $this->index = $index;

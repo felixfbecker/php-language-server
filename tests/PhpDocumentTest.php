@@ -6,7 +6,9 @@ namespace LanguageServer\Tests\Server;
 use PHPUnit\Framework\TestCase;
 use phpDocumentor\Reflection\DocBlockFactory;
 use LanguageServer\Tests\MockProtocolStream;
-use LanguageServer\{LanguageClient, PhpDocument, DefinitionResolver, Parser};
+use LanguageServer\{
+    DefinitionResolverFactory, LanguageClient, PhpDocument, DefinitionResolver, Parser
+};
 use LanguageServer\NodeVisitor\NodeAtPositionFinder;
 use LanguageServer\ContentRetriever\FileSystemContentRetriever;
 use LanguageServer\Protocol\{SymbolKind, Position, ClientCapabilities};
@@ -23,7 +25,7 @@ class PhpDocumentTest extends TestCase
         $tolerantParser = new Tolerant\Parser();
         $docBlockFactory = DocBlockFactory::createInstance();
         $index = new Index;
-        $definitionResolver = new DefinitionResolver($index);
+        $definitionResolver = DefinitionResolverFactory::create($index);
         return new PhpDocument($uri, $content, $index, $parser, $tolerantParser, $docBlockFactory, $definitionResolver);
     }
 
