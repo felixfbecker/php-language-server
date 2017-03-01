@@ -22,12 +22,10 @@ class DidChangeWatchedFilesTest extends ServerTestCase
         $loader = new PhpDocumentLoader(new FileSystemContentRetriever(), $projectIndex, $definitionResolver);
         $workspace = new Server\Workspace($client, $projectIndex, $dependenciesIndex, $sourceIndex, null, $loader, null);
 
-        $fileEvent = new FileEvent();
-        $fileEvent->uri = 'my uri';
-        $fileEvent->type = FileChangeType::DELETED;
+        $fileEvent = new FileEvent('my uri', FileChangeType::DELETED);
 
         $isDiagnosticsCleared = false;
-        $writer->on('message', function (Message $message) use ($fileEvent, & $isDiagnosticsCleared) {
+        $writer->on('message', function (Message $message) use ($fileEvent, &$isDiagnosticsCleared) {
             if ($message->body->method === "textDocument/publishDiagnostics") {
                 $this->assertEquals($message->body->params->uri, $fileEvent->uri);
                 $this->assertEquals($message->body->params->diagnostics, []);
