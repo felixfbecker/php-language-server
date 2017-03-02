@@ -3,7 +3,7 @@ declare(strict_types = 1);
 
 namespace LanguageServer\Server;
 
-use LanguageServer\{LanguageClient, Project, PhpDocumentLoader};
+use LanguageServer\{LanguageClient, Project, PhpDocumentLoader, Options, Indexer};
 use LanguageServer\Index\{ProjectIndex, DependenciesIndex, Index};
 use LanguageServer\Protocol\{SymbolInformation, SymbolDescriptor, ReferenceInformation, DependencyReference, Location};
 use Sabre\Event\Promise;
@@ -33,6 +33,16 @@ class Workspace
     private $sourceIndex;
 
     /**
+     * @var Options
+     */
+    private $options;
+
+    /**
+     * @var Indexer
+     */
+    private $indexer;
+
+    /**
      * @var \stdClass
      */
     public $composerLock;
@@ -48,8 +58,10 @@ class Workspace
      * @param DependenciesIndex $sourceIndex       Index that is used on a workspace/xreferences request
      * @param \stdClass         $composerLock      The parsed composer.lock of the project, if any
      * @param PhpDocumentLoader $documentLoader    PhpDocumentLoader instance to load documents
+     * @param Indexer           $indexer
+     * @param Options            $options
      */
-    public function __construct(ProjectIndex $index, DependenciesIndex $dependenciesIndex, Index $sourceIndex, \stdClass $composerLock = null, PhpDocumentLoader $documentLoader, \stdClass $composerJson = null)
+    public function __construct(ProjectIndex $index, DependenciesIndex $dependenciesIndex, Index $sourceIndex, \stdClass $composerLock = null, PhpDocumentLoader $documentLoader, \stdClass $composerJson = null, Indexer $indexer = null, Options $options = null)
     {
         $this->sourceIndex = $sourceIndex;
         $this->index = $index;
@@ -57,6 +69,8 @@ class Workspace
         $this->composerLock = $composerLock;
         $this->documentLoader = $documentLoader;
         $this->composerJson = $composerJson;
+        $this->indexer = $indexer;
+        $this->options = $options;
     }
 
     /**
@@ -171,8 +185,43 @@ class Workspace
         return $dependencyReferences;
     }
 
-    public function didChangeConfiguration($settings = null)
+    /**
+     * @param Options|null $settings
+     */
+    public function didChangeConfiguration(Options $settings = null)
     {
-        $this->index->wipe();
+        if ($settings === null) {
+            return;
+        }
+
+        $changedOptions = $this->getChangedOptions($settings);
+        $this->options = $settings;
+
+        if (!empty(array_intersect($changedOptions, $this->options->getIndexerOptions()))) {
+            // check list of options that changed since last time against the list of valid indexer options
+
+            // start wiping from the main index
+            $this->index->wipe();
+
+            // check for existing indexer and start indexing
+            if ($this->indexer) {
+                $this->indexer->index()->otherwise('\\LanguageServer\\crash');
+            }
+        }
+    }
+
+    /**
+     * Get a list with all options that changed since last time
+     *
+     * @param Options $settings
+     * @return array List with changed options
+     */
+    private function getChangedOptions(Options $settings): array
+    {
+        // squash nested array for comparing changed options
+        $old = array_map('json_encode', get_object_vars($this->options));
+        $new = array_map('json_encode', get_object_vars($settings));
+
+        return array_keys(array_diff($old, $new));
     }
 }
