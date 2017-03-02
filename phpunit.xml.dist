@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit bootstrap="vendor/autoload.php">
+<phpunit bootstrap="src/bootstrap.php">
     <testsuites>
         <testsuite name="PHP Language Server Test Suite">
             <directory>./tests</directory>
