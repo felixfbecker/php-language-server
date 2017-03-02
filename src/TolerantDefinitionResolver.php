@@ -42,7 +42,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
      * @param Node $node
      * @return string
      */
-    public function getDeclarationLineFromNode(Node $node): string
+    public function getDeclarationLineFromNode($node): string
     {
         if ($node instanceof Node\Stmt\PropertyProperty || $node instanceof Node\Const_) {
             // Properties and constants can have multiple declarations
@@ -70,7 +70,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
      * @param Node $node
      * @return string|null
      */
-    public function getDocumentationFromNode(Node $node)
+    public function getDocumentationFromNode($node)
     {
         if ($node instanceof Node\Stmt\PropertyProperty || $node instanceof Node\Const_) {
             $node = $node->getAttribute('parentNode');
@@ -101,7 +101,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
      * @param string $fqn
      * @return Definition
      */
-    public function createDefinitionFromNode(Node $node, string $fqn = null): Definition
+    public function createDefinitionFromNode($node, string $fqn = null): Definition
     {
         $parent = $node->getAttribute('parentNode');
         $def = new Definition;
@@ -141,7 +141,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
      * @param Node $node Any reference node
      * @return Definition|null
      */
-    public function resolveReferenceNodeToDefinition(Node $node)
+    public function resolveReferenceNodeToDefinition($node)
     {
         // Variables are not indexed globally, as they stay in the file scope anyway
         if ($node instanceof Node\Expr\Variable) {
@@ -177,7 +177,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
      * @param Node $node
      * @return string|null
      */
-    public function resolveReferenceNodeToFqn(Node $node)
+    public function resolveReferenceNodeToFqn($node)
     {
         $parent = $node->getAttribute('parentNode');
 
@@ -393,7 +393,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
      * @param \PhpParser\Node\Expr $expr
      * @return \phpDocumentor\Reflection\Type
      */
-    public function resolveExpressionNodeToType(Node\Expr $expr): Type
+    public function resolveExpressionNodeToType($expr): Type
     {
         if ($expr instanceof Node\Expr\Variable || $expr instanceof Node\Expr\ClosureUse) {
             if ($expr instanceof Node\Expr\Variable && $expr->name === 'this') {
@@ -691,7 +691,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
      * @param Node $node
      * @return \phpDocumentor\Reflection\Type|null
      */
-    public function getTypeFromNode(Node $node)
+    public function getTypeFromNode($node)
     {
         if ($node instanceof Node\Param) {
             // Parameters
@@ -798,7 +798,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
      * @param Node $node
      * @return string|null
      */
-    public static function getDefinedFqn(Node $node)
+    public static function getDefinedFqn($node)
     {
         $parent = $node->getAttribute('parentNode');
         // Anonymous classes don't count as a definition
