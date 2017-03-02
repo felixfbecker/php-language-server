@@ -51,9 +51,9 @@ abstract class ServerTestCase extends TestCase
 
     public function setUp()
     {
-        $sourceIndex       = new Index;
-        $dependenciesIndex = new DependenciesIndex;
-        $this->projectIndex      = new ProjectIndex($sourceIndex, $dependenciesIndex);
+        $sourceIndex        = new Index;
+        $dependenciesIndex  = new DependenciesIndex;
+        $this->projectIndex = new ProjectIndex($sourceIndex, $dependenciesIndex);
         $this->projectIndex->setComplete();
 
         $rootPath    = realpath(__DIR__ . '/../../fixtures/');
@@ -61,14 +61,15 @@ abstract class ServerTestCase extends TestCase
         $filesFinder = new FileSystemFilesFinder;
         $cache       = new FileSystemCache;
 
-        $this->input = new MockProtocolStream;
+        $this->input  = new MockProtocolStream;
         $this->output = new MockProtocolStream;
+
         $definitionResolver   = new DefinitionResolver($this->projectIndex);
         $client               = new LanguageClient($this->input, $this->output);
         $this->documentLoader = new PhpDocumentLoader(new FileSystemContentRetriever, $this->projectIndex, $definitionResolver);
         $this->textDocument   = new Server\TextDocument($this->documentLoader, $definitionResolver, $client, $this->projectIndex);
         $indexer              = new Indexer($filesFinder, $rootPath, $client, $cache, $dependenciesIndex, $sourceIndex, $this->documentLoader, null, null, $options);
-        $this->workspace      = new Server\Workspace($this->projectIndex, $dependenciesIndex, $sourceIndex, null, $this->documentLoader, null, $indexer, $options);
+        $this->workspace      = new Server\Workspace($client, $this->projectIndex, $dependenciesIndex, $sourceIndex, null, $this->documentLoader, null, $indexer, $options);
 
         $globalSymbolsUri    = pathToUri(realpath(__DIR__ . '/../../fixtures/global_symbols.php'));
         $globalReferencesUri = pathToUri(realpath(__DIR__ . '/../../fixtures/global_references.php'));
