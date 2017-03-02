@@ -3,6 +3,7 @@ declare(strict_types = 1);
 
 namespace LanguageServer;
 
+use LanguageServer\Protocol\TolerantSymbolInformation;
 use PhpParser\Node;
 use PhpParser\PrettyPrinter\Standard as PrettyPrinter;
 use phpDocumentor\Reflection\{Types, Type, Fqsen, TypeResolver};
@@ -128,7 +129,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
                 $def->extends[] = (string)$n;
             }
         }
-        $def->symbolInformation = SymbolInformation::fromNode($node, $fqn);
+        $def->symbolInformation = TolerantSymbolInformation::fromNode($node, $fqn);
         $def->type = $this->getTypeFromNode($node);
         $def->declarationLine = $this->getDeclarationLineFromNode($node);
         $def->documentation = $this->getDocumentationFromNode($node);
