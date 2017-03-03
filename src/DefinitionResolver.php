@@ -813,7 +813,9 @@ class DefinitionResolver
             // Unknown
             return new Types\Mixed;
         }
-        return null;
+        // Return Types\Mixed in case nothing was found
+        // TODO: Find cases that don't match any rule and handle them'
+        return new Types\Mixed;
     }
 
     /**
