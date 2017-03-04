@@ -20,7 +20,7 @@ class DidChangeConfigurationTest extends ServerTestCase
     /**
      * didChangeConfiguration does not need to do anything when no options/settings are passed
      */
-    public function test_no_option_passed()
+    public function testNoOptionPassed()
     {
         $client = new LanguageClient(new MockProtocolStream(), $writer = new MockProtocolStream());
         $projectIndex = new ProjectIndex($sourceIndex = new Index(), $dependenciesIndex = new DependenciesIndex());
@@ -35,7 +35,7 @@ class DidChangeConfigurationTest extends ServerTestCase
     /**
      * When the passed options/settings do not differ from the previous, it has nothing to do
      */
-    public function test_fails_with_invalid_options_type_or_format()
+    public function testFailsWithInvalidOptionsTypeOrFormat()
     {
         $options = new Options;
         $client = new LanguageClient(new MockProtocolStream(), $writer = new MockProtocolStream());
@@ -51,7 +51,7 @@ class DidChangeConfigurationTest extends ServerTestCase
     /**
      * When the passed options/settings do not differ from the previous, it has nothing to do
      */
-    public function test_no_changed_options()
+    public function testNoChangedOptions()
     {
         $options = new Options;
         $client = new LanguageClient(new MockProtocolStream(), $writer = new MockProtocolStream());
@@ -67,7 +67,7 @@ class DidChangeConfigurationTest extends ServerTestCase
     /**
      * Verify that the required methods for a reindex are called
      */
-    public function test_fileTypes_option_triggers_a_reindex()
+    public function testFileTypesOptionTriggersAReindex()
     {
         $sourceIndex = new Index;
         $dependenciesIndex = new DependenciesIndex;
@@ -108,7 +108,7 @@ class DidChangeConfigurationTest extends ServerTestCase
     /**
      * Be sure that the indexer gets the new options/settings and uses them
      */
-    public function test_indexer_uses_new_options()
+    public function testIndexerUsesNewOptions()
     {
         $promise = new Promise;
         $sourceIndex = new Index;

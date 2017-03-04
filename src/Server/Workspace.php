@@ -274,7 +274,7 @@ class Workspace
     {
         $old = get_object_vars($this->options);
         $new = get_object_vars($settings);
-        $changed = array_udiff($old, $new, function($a, $b) {
+        $changed = array_udiff($old, $new, function ($a, $b) {
             // custom callback since array_diff uses strings for comparison
 
             return $a <=> $b;
