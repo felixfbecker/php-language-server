@@ -216,7 +216,7 @@ class Workspace
     }
 
     /**
-     * Fires when client changes settings in the client
+     * A notification sent from the client to the server to signal the change of configuration settings.
      *
      * The default paramter type is Options but it also accepts different types
      * which will be transformed on demand.
