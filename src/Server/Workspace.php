@@ -248,10 +248,14 @@ class Workspace
      */
     private function getChangedOptions(Options $settings): array
     {
-        // squash nested array for comparing changed options
-        $old = array_map('json_encode', get_object_vars($this->options));
-        $new = array_map('json_encode', get_object_vars($settings));
+        $old = get_object_vars($this->options);
+        $new = get_object_vars($settings);
+        $changed = array_udiff($old, $new, function($a, $b) {
+            // custom callback since array_diff uses strings for comparison
 
-        return array_keys(array_diff($old, $new));
+            return $a <=> $b;
+        });
+
+        return array_keys($changed);
     }
 }
