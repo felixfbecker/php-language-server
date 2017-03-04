@@ -229,6 +229,9 @@ class Workspace
      */
     public function didChangeConfiguration($settings = null): bool
     {
+        // List of options that affect the indexer
+        $indexerOptions = ['fileTypes'];
+
         if ($settings === null) {
             return false;
         }
@@ -253,7 +256,7 @@ class Workspace
             $this->options->$prop = $val;
         }
 
-        if ($this->indexer && !empty(array_intersect($changedOptions, $this->options->getIndexerOptions()))) {
+        if ($this->indexer && !empty(array_intersect($changedOptions, $indexerOptions))) {
             // check list of options that changed since last time against the list of valid indexer options
 
             // wipe main index and start reindexing

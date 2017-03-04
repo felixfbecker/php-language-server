@@ -12,11 +12,6 @@ class Options
     public $fileTypes = ['.php'];
 
     /**
-     * List of options that affect the indexer
-     */
-    private $indexerOptions = ['fileTypes'];
-
-    /**
      * Validate/Filter input and set options for file types
      *
      * @param array $fileTypes List of file types
@@ -29,16 +24,6 @@ class Options
         $fileTypes = array_values($fileTypes); //rebase indexes
 
         $this->fileTypes = !empty($fileTypes) ? $fileTypes : $this->fileTypes;
-    }
-
-    /**
-     * Get list with options that affect the indexer
-     *
-     * @return array
-     */
-    public function getIndexerOptions(): array
-    {
-        return $this->indexerOptions;
     }
 
     /**
