@@ -51,7 +51,7 @@ class DidChangeConfigurationTest extends ServerTestCase
             if ($msg->body->method === 'window/logMessage' && $promise->state === Promise::PENDING) {
                 if ($msg->body->params->type === MessageType::ERROR) {
                     $promise->reject(new Exception($msg->body->params->message));
-                } elseif (strpos($msg->body->params->message, 'All 0 PHP files parsed') !== false) {
+                } elseif (strpos($msg->body->params->message, 'All 1 PHP files parsed') !== false) {
                     $promise->fulfill();
                 }
             }

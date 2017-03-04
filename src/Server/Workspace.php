@@ -225,18 +225,17 @@ class Workspace
         }
 
         $changedOptions = $this->getChangedOptions($settings);
-        $this->options = $settings;
 
-        if (!empty(array_intersect($changedOptions, $this->options->getIndexerOptions()))) {
+        foreach (get_object_vars($settings) as $prop => $val) {
+            $this->options->$prop = $val;
+        }
+
+        if ($this->indexer && !empty(array_intersect($changedOptions, $this->options->getIndexerOptions()))) {
             // check list of options that changed since last time against the list of valid indexer options
 
-            // start wiping from the main index
+            // wipe main index and start reindexing
             $this->index->wipe();
-
-            // check for existing indexer and start indexing
-            if ($this->indexer) {
-                $this->indexer->index()->otherwise('\\LanguageServer\\crash');
-            }
+            $this->indexer->index()->otherwise('\\LanguageServer\\crash');
         }
     }
 
