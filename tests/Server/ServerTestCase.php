@@ -31,10 +31,6 @@ abstract class ServerTestCase extends TestCase
      */
     protected $documentLoader;
 
-    protected $projectIndex;
-    protected $input;
-    protected $output;
-
     /**
      * Map from FQN to Location of definition
      *
@@ -53,23 +49,20 @@ abstract class ServerTestCase extends TestCase
     {
         $sourceIndex        = new Index;
         $dependenciesIndex  = new DependenciesIndex;
-        $this->projectIndex = new ProjectIndex($sourceIndex, $dependenciesIndex);
-        $this->projectIndex->setComplete();
+        $projectIndex = new ProjectIndex($sourceIndex, $dependenciesIndex);
+        $projectIndex->setComplete();
 
         $rootPath    = realpath(__DIR__ . '/../../fixtures/');
         $options     = new Options;
         $filesFinder = new FileSystemFilesFinder;
         $cache       = new FileSystemCache;
 
-        $this->input  = new MockProtocolStream;
-        $this->output = new MockProtocolStream;
-
-        $definitionResolver   = new DefinitionResolver($this->projectIndex);
-        $client               = new LanguageClient($this->input, $this->output);
-        $this->documentLoader = new PhpDocumentLoader(new FileSystemContentRetriever, $this->projectIndex, $definitionResolver);
-        $this->textDocument   = new Server\TextDocument($this->documentLoader, $definitionResolver, $client, $this->projectIndex);
+        $definitionResolver   = new DefinitionResolver($projectIndex);
+        $client               = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
+        $this->documentLoader = new PhpDocumentLoader(new FileSystemContentRetriever, $projectIndex, $definitionResolver);
+        $this->textDocument   = new Server\TextDocument($this->documentLoader, $definitionResolver, $client, $projectIndex);
         $indexer              = new Indexer($filesFinder, $rootPath, $client, $cache, $dependenciesIndex, $sourceIndex, $this->documentLoader, null, null, $options);
-        $this->workspace      = new Server\Workspace($client, $this->projectIndex, $dependenciesIndex, $sourceIndex, null, $this->documentLoader, null, $indexer, $options);
+        $this->workspace      = new Server\Workspace($client, $projectIndex, $dependenciesIndex, $sourceIndex, null, $this->documentLoader, null, $indexer, $options);
 
         $globalSymbolsUri    = pathToUri(realpath(__DIR__ . '/../../fixtures/global_symbols.php'));
         $globalReferencesUri = pathToUri(realpath(__DIR__ . '/../../fixtures/global_references.php'));

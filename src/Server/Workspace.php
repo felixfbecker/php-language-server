@@ -224,12 +224,13 @@ class Workspace
      * Currently only the vscode format is supported
      *
      * @param mixed|null $settings
-     * @return void
+     * @return bool
+     * @throws \Exception Settings format not valid
      */
-    public function didChangeConfiguration($settings = null)
+    public function didChangeConfiguration($settings = null): bool
     {
         if ($settings === null) {
-            return;
+            return false;
         }
 
         // VSC sends the settings with the config section as main key
@@ -239,13 +240,13 @@ class Workspace
         }
 
         if (!($settings instanceof Options)) {
-            return;
+            throw new \Exception('Settings format not valid.');
         }
 
         $changedOptions = $this->getChangedOptions($settings);
 
         if (empty($changedOptions)) {
-            return;
+            return false;
         }
 
         foreach (get_object_vars($settings) as $prop => $val) {
@@ -259,6 +260,8 @@ class Workspace
             $this->index->wipe();
             $this->indexer->index()->otherwise('\\LanguageServer\\crash');
         }
+
+        return true;
     }
 
     /**
