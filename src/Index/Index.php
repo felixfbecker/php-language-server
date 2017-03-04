@@ -218,7 +218,5 @@ class Index implements ReadableIndex, \Serializable
         $this->references = [];
         $this->complete = false;
         $this->staticComplete = false;
-
-        $this->emit('wipe');
     }
 }

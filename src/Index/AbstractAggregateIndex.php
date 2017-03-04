@@ -42,9 +42,6 @@ abstract class AbstractAggregateIndex implements ReadableIndex
         $index->on('definition-added', function () {
             $this->emit('definition-added');
         });
-        $index->on('wipe', function() {
-            $this->emit('wipe');
-        });
     }
 
     /**
