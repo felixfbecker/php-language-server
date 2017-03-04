@@ -216,15 +216,37 @@ class Workspace
     }
 
     /**
-     * @param Options|null $settings
+     * Fires when client changes settings in the client
+     *
+     * The default paramter type is Options but it also accepts different types
+     * which will be transformed on demand.
+     *
+     * Currently only the vscode format is supported
+     *
+     * @param mixed|null $settings
+     * @return void
      */
-    public function didChangeConfiguration(Options $settings = null)
+    public function didChangeConfiguration($settings = null)
     {
         if ($settings === null) {
             return;
         }
 
+        // VSC sends the settings with the config section as main key
+        if ($settings instanceof \stdClass && $settings->phpIntelliSense) {
+            $mapper = new \JsonMapper();
+            $settings = $mapper->map($settings->phpIntelliSense, new Options);
+        }
+
+        if (!($settings instanceof Options)) {
+            return;
+        }
+
         $changedOptions = $this->getChangedOptions($settings);
+
+        if (empty($changedOptions)) {
+            return;
+        }
 
         foreach (get_object_vars($settings) as $prop => $val) {
             $this->options->$prop = $val;
