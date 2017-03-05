@@ -22,20 +22,29 @@ use Microsoft\PhpParser as Tolerant;
 class TolerantTreeAnalyzer implements TreeAnalyzerInterface {
     private $parser;
 
+    /** @var Tolerant\Node */
     private $stmts;
 
-    public function __construct(Parser $parser, $content, $docBlockFactory, $definitionResolver, $uri) {
+    /**
+     * TolerantTreeAnalyzer constructor.
+     * @param Tolerant\Parser $parser
+     * @param $content
+     * @param $docBlockFactory
+     * @param TolerantDefinitionResolver $definitionResolver
+     * @param $uri
+     */
+    public function __construct($parser, $content, $docBlockFactory, $definitionResolver, $uri) {
         $this->uri = $uri;
         $this->parser = $parser;
         $this->docBlockFactory = $docBlockFactory;
         $this->definitionResolver = $definitionResolver;
         $this->content = $content;
-        $this->$stmts = $this->parser->parse($content);
+        $this->stmts = $this->parser->parseSourceFile($content, $uri);
 
         // TODO - docblock errors
 
          foreach ($this->stmts->getDescendantNodes() as $node) {
-            $fqn = DefinitionResolver::getDefinedFqn($node);
+            $fqn = $definitionResolver::getDefinedFqn($node);
             // Only index definitions with an FQN (no variables)
             if ($fqn === null) {
                 continue;
@@ -47,7 +56,8 @@ class TolerantTreeAnalyzer implements TreeAnalyzerInterface {
 
     public function getDiagnostics() {
         $diagnostics = [];
-        foreach (Tolerant\DiagnosticsProvider::getDiagnostics($tolerantStmts) as $_error) {
+        $content = $this->stmts->getFileContents();
+        foreach (Tolerant\DiagnosticsProvider::getDiagnostics($this->stmts) as $_error) {
             $range = Tolerant\PositionUtilities::getRangeFromPosition($_error->start, $_error->length, $content);
 
             $diagnostics[] = new Diagnostic(

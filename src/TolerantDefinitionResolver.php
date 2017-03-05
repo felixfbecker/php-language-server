@@ -6,9 +6,12 @@ namespace LanguageServer;
 use LanguageServer\Protocol\TolerantSymbolInformation;
 use PhpParser\Node;
 use PhpParser\PrettyPrinter\Standard as PrettyPrinter;
-use phpDocumentor\Reflection\{Types, Type, Fqsen, TypeResolver};
+use phpDocumentor\Reflection\{
+    DocBlockFactory, Types, Type, Fqsen, TypeResolver
+};
 use LanguageServer\Protocol\SymbolInformation;
 use LanguageServer\Index\ReadableIndex;
+use Microsoft\PhpParser as Tolerant;
 
 class TolerantDefinitionResolver implements DefinitionResolverInterface
 {
@@ -38,99 +41,157 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
     }
 
     /**
-     * Builds the declaration line for a given node
+     * Builds the declaration line for a given node.
      *
-     * @param Node $node
+     *
+     * @param Tolerant\Node $node
      * @return string
      */
     public function getDeclarationLineFromNode($node): string
     {
-        if ($node instanceof Node\Stmt\PropertyProperty || $node instanceof Node\Const_) {
-            // Properties and constants can have multiple declarations
-            // Use the parent node (that includes the modifiers), but only render the requested declaration
-            $child = $node;
-            /** @var Node */
-            $node = $node->getAttribute('parentNode');
-            $defLine = clone $node;
-            $defLine->props = [$child];
-        } else {
-            $defLine = clone $node;
+        // TODO Tolerant\Node\Statement\FunctionStaticDeclaration::class
+
+        // we should have a better way of determining whether something is a property or constant
+        // If part of a declaration list -> get the parent declaration
+        if (
+            // PropertyDeclaration // public $a, $b, $c;
+            $node instanceof Tolerant\Node\Expression\Variable &&
+            ($propertyDeclaration = $node->getFirstAncestor(Tolerant\Node\PropertyDeclaration::class)) !== null
+        ) {
+            $defLine = $propertyDeclaration->getText();
+            $defLineStart = $propertyDeclaration->getStart();
+
+            $defLine = \substr_replace(
+                $defLine,
+                $node->getFullText(),
+                $propertyDeclaration->propertyElements->getFullStart() - $defLineStart,
+                $propertyDeclaration->propertyElements->getWidth()
+            );
+        } elseif (
+            // ClassConstDeclaration or ConstDeclaration // const A = 1, B = 2;
+            $node instanceof Tolerant\Node\ConstElement &&
+            ($constDeclaration = $node->getFirstAncestor(Tolerant\Node\Statement\ConstDeclaration::class, Tolerant\Node\ClassConstDeclaration::class))
+        ) {
+            $defLine = $constDeclaration->getText();
+            $defLineStart = $constDeclaration->getStart();
+
+            $defLine = \substr_replace(
+                $defLine,
+                $node->getFullText(),
+                $constDeclaration->constElements->getFullStart() - $defLineStart,
+                $constDeclaration->constElements->getWidth()
+            );
         }
-        // Don't include the docblock in the declaration string
-        $defLine->setAttribute('comments', []);
-        if (isset($defLine->stmts)) {
-            $defLine->stmts = [];
+
+        // Get the current node
+        else {
+            $defLine = $node->getText();
         }
-        $defText = $this->prettyPrinter->prettyPrint([$defLine]);
-        return strstr($defText, "\n", true) ?: $defText;
+
+        $defLine = \strtok($defLine, "\n");
+
+        return $defLine;
     }
 
     /**
      * Gets the documentation string for a node, if it has one
      *
-     * @param Node $node
+     * @param Tolerant\Node $node
      * @return string|null
      */
     public function getDocumentationFromNode($node)
     {
-        if ($node instanceof Node\Stmt\PropertyProperty || $node instanceof Node\Const_) {
-            $node = $node->getAttribute('parentNode');
+        // For properties and constants, set the node to the declaration node, rather than the individual property.
+        // This is because they get defined as part of a list.
+        $constOrPropertyDeclaration = $node->getFirstAncestor(
+            Tolerant\Node\PropertyDeclaration::class,
+            Tolerant\Node\Statement\ConstDeclaration::class,
+            Tolerant\Node\ClassConstDeclaration::class
+        );
+        if ($constOrPropertyDeclaration !== null) {
+            $node = $constOrPropertyDeclaration;
         }
-        if ($node instanceof Node\Param) {
-            $fn = $node->getAttribute('parentNode');
-            $docBlock = $fn->getAttribute('docBlock');
+
+        // For parameters, parse the documentation to get the parameter tag.
+        if ($node instanceof Tolerant\Node\Parameter) {
+            $functionLikeDeclaration = $this->getFunctionLikeDeclarationFromParameter($node);
+            $variableName = $node->variableName->getText($node->getFileContents());
+            $docBlock = $this->getDocBlock($functionLikeDeclaration);
+
             if ($docBlock !== null) {
-                $tags = $docBlock->getTagsByName('param');
-                foreach ($tags as $tag) {
-                    if ($tag->getVariableName() === $node->name) {
-                        return $tag->getDescription()->render();
-                    }
-                }
+                $parameterDocBlockTag = $this->getDocBlockTagForParameter($docBlock, $variableName);
+                return $parameterDocBlockTag !== null ? $parameterDocBlockTag->getDescription()->render() : null;
+
             }
-        } else {
-            $docBlock = $node->getAttribute('docBlock');
+        }
+        // for everything else, get the doc block summary corresponding to the current node.
+        else {
+            $docBlock = $this->getDocBlock($node);
             if ($docBlock !== null) {
                 return $docBlock->getSummary();
             }
         }
     }
 
+    function getDocBlock(Tolerant\Node $node) {
+        // TODO context information
+        static $docBlockFactory;
+        $docBlockFactory = $docBlockFactory ?? DocBlockFactory::createInstance();
+        $docCommentText = $node->getDocCommentText();
+        return $docCommentText !== null ? $docBlockFactory->create($docCommentText) : null;
+    }
+
     /**
      * Create a Definition for a definition node
      *
-     * @param Node $node
+     * @param Tolerant\Node $node
      * @param string $fqn
      * @return Definition
      */
     public function createDefinitionFromNode($node, string $fqn = null): Definition
     {
-        $parent = $node->getAttribute('parentNode');
         $def = new Definition;
-        $def->canBeInstantiated = $node instanceof Node\Stmt\Class_;
+
+        // this determines whether the suggestion will show after "new"
+        $def->isClass = $node instanceof Tolerant\Node\Statement\ClassDeclaration;
+
         $def->isGlobal = (
-            $node instanceof Node\Stmt\ClassLike
-            || ($node instanceof Node\Name && $parent instanceof Node\Stmt\Namespace_)
-            || $node instanceof Node\Stmt\Function_
-            || $parent instanceof Node\Stmt\Const_
+            $node instanceof Tolerant\Node\Statement\InterfaceDeclaration
+            || $node instanceof Tolerant\Node\Statement\ClassDeclaration
+            || $node instanceof Tolerant\Node\Statement\TraitDeclaration
+
+            || $node instanceof Tolerant\Node\Statement\NamespaceDefinition && $node->name !== null
+
+            || $node instanceof Tolerant\Node\Statement\FunctionDeclaration
+
+            || $node instanceof Tolerant\Node\Statement\ConstDeclaration
+            || $node instanceof Tolerant\Node\ClassConstDeclaration
         );
+
         $def->isStatic = (
-            ($node instanceof Node\Stmt\ClassMethod && $node->isStatic())
-            || ($node instanceof Node\Stmt\PropertyProperty && $parent->isStatic())
+            ($node instanceof Tolerant\Node\MethodDeclaration && $node->isStatic())
+            || ($node instanceof Tolerant\Node\Expression\Variable &&
+                ($propertyDeclaration = $node->getFirstAncestor(Tolerant\Node\PropertyDeclaration::class)) !== null &&
+                $propertyDeclaration->isStatic())
         );
         $def->fqn = $fqn;
-        if ($node instanceof Node\Stmt\Class_) {
+        if ($node instanceof Tolerant\Node\Statement\ClassDeclaration) {
             $def->extends = [];
-            if ($node->extends) {
-                $def->extends[] = (string)$node->extends;
+            if ($node->classBaseClause !== null && $node->classBaseClause->baseClass !== null) {
+                $def->extends[] = (string)$node->classBaseClause->baseClass;
             }
-        } else if ($node instanceof Node\Stmt\Interface_) {
+            // TODO what about class interfaces
+        } else if ($node instanceof Tolerant\Node\Statement\InterfaceDeclaration) {
             $def->extends = [];
-            foreach ($node->extends as $n) {
-                $def->extends[] = (string)$n;
+            if ($node->interfaceBaseClause !== null && $node->interfaceBaseClause->interfaceNameList !== null) {
+                foreach ($node->interfaceBaseClause->interfaceNameList->getChildNodes() as $n) {
+                    $def->extends[] = (string)$n;
+                }
             }
         }
         $def->symbolInformation = TolerantSymbolInformation::fromNode($node, $fqn);
-        $def->type = $this->getTypeFromNode($node);
+//        $def->type = $this->getTypeFromNode($node); //TODO
+        $def->type = new Types\Mixed;
         $def->declarationLine = $this->getDeclarationLineFromNode($node);
         $def->documentation = $this->getDocumentationFromNode($node);
         return $def;
@@ -796,60 +857,97 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
      * Returns the fully qualified name (FQN) that is defined by a node
      * Returns null if the node does not declare any symbol that can be referenced by an FQN
      *
-     * @param Node $node
+     * @param Tolerant\Node $node
      * @return string|null
      */
     public static function getDefinedFqn($node)
     {
-        $parent = $node->getAttribute('parentNode');
+        $parent = $node->getParent();
         // Anonymous classes don't count as a definition
-        if ($node instanceof Node\Stmt\ClassLike && isset($node->name)) {
-            // Class, interface or trait declaration
-            return (string)$node->namespacedName;
-        } else if ($node instanceof Node\Name && $parent instanceof Node\Stmt\Namespace_) {
-            return (string)$node;
-        } else if ($node instanceof Node\Stmt\Function_) {
+        // INPUT                    OUTPUT:
+        // namespace A\B;
+        // class C { }              A\B\C
+        // interface C { }          A\B\C
+        // trait C { }              A\B\C
+        if (
+            $node instanceof Tolerant\Node\Statement\ClassDeclaration ||
+            $node instanceof Tolerant\Node\Statement\InterfaceDeclaration ||
+            $node instanceof Tolerant\Node\Statement\TraitDeclaration
+        ) {
+            return (string) $node->getNamespacedName();
+        }
+
+        // INPUT                   OUTPUT:
+        // namespace A\B;           A\B
+        else if ($node instanceof Tolerant\Node\Statement\NamespaceDefinition && $node->name instanceof Tolerant\Node\QualifiedName) {
+            return (string) $node->name;
+        }
+        // INPUT                   OUTPUT:
+        // namespace A\B;
+        // function a();           A\B\a();
+        else if ($node instanceof Tolerant\Node\Statement\FunctionDeclaration) {
             // Function: use functionName() as the name
-            return (string)$node->namespacedName . '()';
-        } else if ($node instanceof Node\Stmt\ClassMethod) {
+            return (string)$node->getNamespacedName() . '()';
+        }
+        // INPUT                        OUTPUT
+        // namespace A\B;
+        // class C {
+        //   function a () {}           A\B\C::a()
+        //   static function b() {}     A\B\C->b()
+        // }
+        else if ($node instanceof Tolerant\Node\MethodDeclaration) {
             // Class method: use ClassName->methodName() as name
-            $class = $node->getAttribute('parentNode');
+            $class = $node->getFirstAncestor(Tolerant\Node\Statement\ClassDeclaration::class);
             if (!isset($class->name)) {
                 // Ignore anonymous classes
                 return null;
             }
             if ($node->isStatic()) {
-                return (string)$class->namespacedName . '::' . (string)$node->name . '()';
+                return (string)$class->getNamespacedName() . '::' . $node->getName() . '()';
             } else {
-                return (string)$class->namespacedName . '->' . (string)$node->name . '()';
+                return (string)$class->getNamespacedName() . '->' . $node->getName() . '()';
             }
-        } else if ($node instanceof Node\Stmt\PropertyProperty) {
-            $property = $node->getAttribute('parentNode');
-            $class = $property->getAttribute('parentNode');
-            if (!isset($class->name)) {
-                // Ignore anonymous classes
-                return null;
-            }
-            if ($property->isStatic()) {
+        }
+
+        // INPUT                        OUTPUT
+        // namespace A\B;
+        // class C {
+        //   static $a = 4, $b = 4      A\B\C::$a, A\B\C::$b
+        //   $a = 4, $b = 4             A\B\C->$a, A\B\C->$b
+        // }
+        else if (
+            $node instanceof Tolerant\Node\Expression\Variable &&
+            ($propertyDeclaration = $node->getFirstAncestor(Tolerant\Node\PropertyDeclaration::class)) !== null &&
+            ($classDeclaration = $node->getFirstAncestor(Tolerant\Node\Statement\ClassDeclaration::class)) !== null)
+        {
+            if ($propertyDeclaration->isStatic()) {
                 // Static Property: use ClassName::$propertyName as name
-                return (string)$class->namespacedName . '::$' . (string)$node->name;
-            } else {
+                return (string)$classDeclaration->getNamespacedName() . '::$' . (string)$node->getName();
+            } elseif (($name = $node->getName()) !== null) {
                 // Instance Property: use ClassName->propertyName as name
-                return (string)$class->namespacedName . '->' . (string)$node->name;
+                return (string)$classDeclaration->getNamespacedName() . '->' . $name;
             }
-        } else if ($node instanceof Node\Const_) {
-            $parent = $node->getAttribute('parentNode');
-            if ($parent instanceof Node\Stmt\Const_) {
+        }
+
+        // INPUT                        OUTPUT
+        // namespace A\B;
+        // const FOO = 5;               A\B\FOO
+        // class C {
+        //   const $a, $b = 4           A\B\C::$a(), A\B\C::$b
+        // }
+        else if ($node instanceof Tolerant\Node\ConstElement) {
+            $constDeclaration = $node->getFirstAncestor(Tolerant\Node\Statement\ConstDeclaration::class, Tolerant\Node\ClassConstDeclaration::class);
+            if ($constDeclaration instanceof Tolerant\Node\Statement\ConstDeclaration) {
                 // Basic constant: use CONSTANT_NAME as name
-                return (string)$node->namespacedName;
+                return (string)$node->getNamespacedName();
             }
-            if ($parent instanceof Node\Stmt\ClassConst) {
+            if ($constDeclaration instanceof Tolerant\Node\ClassConstDeclaration) {
                 // Class constant: use ClassName::CONSTANT_NAME as name
-                $class = $parent->getAttribute('parentNode');
-                if (!isset($class->name) || $class->name instanceof Node\Expr) {
+                $classDeclaration = $constDeclaration->getFirstAncestor(Tolerant\Node\Statement\ClassDeclaration::class);
+                if (!isset($classDeclaration->name)) {
                     return null;
                 }
-                return (string)$class->namespacedName . '::' . $node->name;
+                return (string)$classDeclaration->getNamespacedName() . '::' . $node->getName();
             }
         }
     }

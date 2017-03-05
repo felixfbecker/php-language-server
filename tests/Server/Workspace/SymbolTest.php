@@ -29,7 +29,7 @@ class SymbolTest extends ServerTestCase
         $referencesUri = pathToUri(realpath(__DIR__ . '/../../../fixtures/references.php'));
         // @codingStandardsIgnoreStart
         $this->assertEquals([
-            new SymbolInformation('TestNamespace',      SymbolKind::NAMESPACE, new Location($referencesUri, new Range(new Position(2, 10), new Position(2, 23))), ''),
+            new SymbolInformation('TestNamespace',      SymbolKind::NAMESPACE, new Location($referencesUri, new Range(new Position(2, 0), new Position(2, 24))), ''),
             // Namespaced
             new SymbolInformation('TEST_CONST',         SymbolKind::CONSTANT,  $this->getDefinitionLocation('TestNamespace\\TEST_CONST'),                    'TestNamespace'),
             new SymbolInformation('TestClass',          SymbolKind::CLASS_,    $this->getDefinitionLocation('TestNamespace\\TestClass'),                     'TestNamespace'),

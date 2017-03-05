@@ -88,8 +88,8 @@ abstract class ServerTestCase extends TestCase
             'whatever()'                             => new Location($globalReferencesUri, new Range(new Position(21,  0), new Position(23,  1))),
 
             // Namespaced
-            'TestNamespace'                                => new Location($symbolsUri,    new Range(new Position( 2, 10), new Position( 2, 23))),
-            'SecondTestNamespace'                          => new Location($useUri,        new Range(new Position( 2, 10), new Position( 2, 29))),
+            'TestNamespace'                                => new Location($symbolsUri,    new Range(new Position( 2, 0), new Position( 2, 24))),
+            'SecondTestNamespace'                          => new Location($useUri,        new Range(new Position( 2, 0), new Position( 2, 30))),
             'TestNamespace\\TEST_CONST'                    => new Location($symbolsUri,    new Range(new Position( 9,  6), new Position( 9, 22))),
             'TestNamespace\\TestClass'                     => new Location($symbolsUri,    new Range(new Position(20,  0), new Position(61,  1))),
             'TestNamespace\\ChildClass'                    => new Location($symbolsUri,    new Range(new Position(99,  0), new Position(99, 37))),

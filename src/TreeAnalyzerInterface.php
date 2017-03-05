@@ -20,7 +20,7 @@ use Sabre\Uri;
 use Microsoft\PhpParser as Tolerant;
 
 interface TreeAnalyzerInterface {
-    public function __construct(Parser $parser, $content, $docBlockFactory, $definitionResolver, $uri);
+    public function __construct($parser, $content, $docBlockFactory, $definitionResolver, $uri);
 
     public function getDiagnostics();
 

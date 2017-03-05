@@ -28,7 +28,7 @@ class TreeAnalyzer implements TreeAnalyzerInterface {
 
     private $diagnostics;
 
-    public function __construct(Parser $parser, $content, $docBlockFactory, $definitionResolver, $uri) {
+    public function __construct($parser, $content, $docBlockFactory, $definitionResolver, $uri) {
         $this->uri = $uri;
         $this->parser = $parser;
         $this->docBlockFactory = $docBlockFactory;
