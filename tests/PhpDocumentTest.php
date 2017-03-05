@@ -7,7 +7,7 @@ use PHPUnit\Framework\TestCase;
 use phpDocumentor\Reflection\DocBlockFactory;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\{
-    DefinitionResolverFactory, LanguageClient, PhpDocument, DefinitionResolver, Parser
+    ParserResourceFactory, LanguageClient, PhpDocument, DefinitionResolver, Parser
 };
 use LanguageServer\NodeVisitor\NodeAtPositionFinder;
 use LanguageServer\ContentRetriever\FileSystemContentRetriever;
@@ -21,12 +21,11 @@ class PhpDocumentTest extends TestCase
 {
     public function createDocument(string $uri, string $content)
     {
-        $parser = new Parser;
-        $tolerantParser = new Tolerant\Parser();
+        $parser = ParserResourceFactory::getParser();
         $docBlockFactory = DocBlockFactory::createInstance();
         $index = new Index;
-        $definitionResolver = DefinitionResolverFactory::create($index);
-        return new PhpDocument($uri, $content, $index, $parser, $tolerantParser, $docBlockFactory, $definitionResolver);
+        $definitionResolver = ParserResourceFactory::getDefinitionResolver($index);
+        return new PhpDocument($uri, $content, $index, $parser, $docBlockFactory, $definitionResolver);
     }
 
     public function testParsesVariableVariables()

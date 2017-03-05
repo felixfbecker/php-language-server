@@ -30,9 +30,8 @@ class ComposerScripts
             $finder = new FileSystemFilesFinder;
             $contentRetriever = new FileSystemContentRetriever;
             $docBlockFactory = DocBlockFactory::createInstance();
-            $parser = new Parser;
-            $tolerantParser = new Tolerant\Parser();
-            $definitionResolver = DefinitionResolverFactory::create($index);
+            $parser = ParserResourceFactory::getParser();
+            $definitionResolver = ParserResourceFactory::getDefinitionResolver($index);
 
             $stubsLocation = null;
             foreach ([__DIR__ . '/../../../jetbrains/phpstorm-stubs', __DIR__ . '/../vendor/jetbrains/phpstorm-stubs'] as $dir) {
@@ -57,7 +56,7 @@ class ComposerScripts
                 $parts['scheme'] = 'phpstubs';
                 $uri = Uri\build($parts);
 
-                $document = new PhpDocument($uri, $content, $index, $parser, $tolerantParser, $docBlockFactory, $definitionResolver);
+                $document = new PhpDocument($uri, $content, $index, $parser, $docBlockFactory, $definitionResolver);
             }
 
             $index->setComplete();

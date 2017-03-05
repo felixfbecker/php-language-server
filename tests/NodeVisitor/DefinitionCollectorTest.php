@@ -8,7 +8,7 @@ use PhpParser\{NodeTraverser, Node};
 use PhpParser\NodeVisitor\NameResolver;
 use phpDocumentor\Reflection\DocBlockFactory;
 use LanguageServer\{
-    DefinitionResolverFactory, LanguageClient, PhpDocument, PhpDocumentLoader, Parser, DefinitionResolver
+    ParserResourceFactory, LanguageClient, PhpDocument, PhpDocumentLoader, Parser, DefinitionResolver
 };
 use LanguageServer\ContentRetriever\FileSystemContentRetriever;
 use LanguageServer\Protocol\ClientCapabilities;
@@ -24,13 +24,12 @@ class DefinitionCollectorTest extends TestCase
     {
         $path = realpath(__DIR__ . '/../../fixtures/symbols.php');
         $uri = pathToUri($path);
-        $parser = new Parser;
-        $tolerantParser = new Tolerant\Parser();
+        $parser = ParserResourceFactory::getParser();
         $docBlockFactory = DocBlockFactory::createInstance();
         $index = new Index;
-        $definitionResolver = DefinitionResolverFactory::create($index);
+        $definitionResolver = ParserResourceFactory::getDefinitionResolver($index);
         $content = file_get_contents($path);
-        $document = new PhpDocument($uri, $content, $index, $parser, $tolerantParser, $docBlockFactory, $definitionResolver);
+        $document = new PhpDocument($uri, $content, $index, $parser, $docBlockFactory, $definitionResolver);
         $stmts = $parser->parse($content);
 
         $traverser = new NodeTraverser;
@@ -73,13 +72,12 @@ class DefinitionCollectorTest extends TestCase
     {
         $path = realpath(__DIR__ . '/../../fixtures/references.php');
         $uri = pathToUri($path);
-        $parser = new Parser;
-        $tolerantParser = new Tolerant\Parser();
+        $parser = ParserResourceFactory::getParser();
         $docBlockFactory = DocBlockFactory::createInstance();
         $index = new Index;
-        $definitionResolver = DefinitionResolverFactory::create($index);
+        $definitionResolver = ParserResourceFactory::getDefinitionResolver($index);
         $content = file_get_contents($path);
-        $document = new PhpDocument($uri, $content, $index, $parser, $tolerantParser, $docBlockFactory, $definitionResolver);
+        $document = new PhpDocument($uri, $content, $index, $parser, $docBlockFactory, $definitionResolver);
         $stmts = $parser->parse($content);
 
         $traverser = new NodeTraverser;

@@ -6,7 +6,7 @@ namespace LanguageServer\Tests\Server;
 use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\{
-    DefinitionResolverFactory, Server, LanguageClient, PhpDocumentLoader, DefinitionResolver
+    ParserResourceFactory, Server, LanguageClient, PhpDocumentLoader, DefinitionResolver
 };
 use LanguageServer\Index\{ProjectIndex, StubsIndex, GlobalIndex, DependenciesIndex, Index};
 use LanguageServer\ContentRetriever\FileSystemContentRetriever;
@@ -52,7 +52,7 @@ abstract class ServerTestCase extends TestCase
         $projectIndex      = new ProjectIndex($sourceIndex, $dependenciesIndex);
         $projectIndex->setComplete();
 
-        $definitionResolver   = DefinitionResolverFactory::create($projectIndex);
+        $definitionResolver   = ParserResourceFactory::getDefinitionResolver($projectIndex);
         $client               = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
         $this->documentLoader = new PhpDocumentLoader(new FileSystemContentRetriever, $projectIndex, $definitionResolver);
         $this->textDocument   = new Server\TextDocument($this->documentLoader, $definitionResolver, $client, $projectIndex);

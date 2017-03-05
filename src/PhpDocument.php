@@ -97,18 +97,10 @@ class PhpDocument
     private $diagnostics;
 
     /**
-     * Microsoft\PhpParser\Parser instance
-     *
-     * @var Tolerant\Parser
-     */
-    private $tolerantParser;
-
-    /**
      * @param string $uri The URI of the document
      * @param string $content The content of the document
      * @param Index $index The Index to register definitions and references to
      * @param Parser $parser The PHPParser instance
-     * @param Parser $tolerantParser The tolerant PHP Parser instance
      * @param DocBlockFactory $docBlockFactory The DocBlockFactory instance to parse docblocks
      * @param DefinitionResolverInterface $definitionResolver The DefinitionResolver to resolve definitions to symbols in the workspace
      */
@@ -116,15 +108,13 @@ class PhpDocument
         string $uri,
         string $content,
         Index $index,
-        Parser $parser,
-        Tolerant\Parser $tolerantParser,
+        $parser,
         DocBlockFactory $docBlockFactory,
         DefinitionResolverInterface $definitionResolver
     ) {
         $this->uri = $uri;
         $this->index = $index;
         $this->parser = $parser;
-        $this->tolerantParser = $tolerantParser;
         $this->docBlockFactory = $docBlockFactory;
         $this->definitionResolver = $definitionResolver;
         $this->updateContent($content);
@@ -171,7 +161,11 @@ class PhpDocument
         $this->definitions = null;
         $this->definitionNodes = null;
 
-        $treeAnalyzer = new TreeAnalyzer($this->parser, $content, $this->docBlockFactory, $this->definitionResolver, $this->uri);
+        $treeAnalyzerClass = $this->parser instanceof Parser 
+            ? TreeAnalyzer::class
+            : TolerantTreeAnalyzer::class;
+            
+        $treeAnalyzer = new $treeAnalyzerClass($this->parser, $content, $this->docBlockFactory, $this->definitionResolver, $this->uri);
 
         $this->diagnostics = $treeAnalyzer->getDiagnostics();
 

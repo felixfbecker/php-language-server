@@ -19,7 +19,7 @@ use phpDocumentor\Reflection\DocBlockFactory;
 use Sabre\Uri;
 use Microsoft\PhpParser as Tolerant;
 
-class TreeAnalyzer {
+class TreeAnalyzer implements TreeAnalyzerInterface {
     private $parser;
 
     private $stmts;

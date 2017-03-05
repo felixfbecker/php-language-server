@@ -65,8 +65,7 @@ class PhpDocumentLoader
         $this->contentRetriever = $contentRetriever;
         $this->projectIndex = $projectIndex;
         $this->definitionResolver = $definitionResolver;
-        $this->parser = new Parser;
-        $this->tolerantParser = new Tolerant\Parser();
+        $this->parser = ParserResourceFactory::getParser();
         $this->docBlockFactory = DocBlockFactory::createInstance();
     }
 
@@ -137,7 +136,6 @@ class PhpDocumentLoader
             $content,
             $this->projectIndex->getIndexForUri($uri),
             $this->parser,
-            $this->tolerantParser,
             $this->docBlockFactory,
             $this->definitionResolver
         );
