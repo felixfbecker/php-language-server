@@ -97,10 +97,18 @@ class PhpDocument
     private $diagnostics;
 
     /**
+     * Microsoft\PhpParser\Parser instance
+     *
+     * @var Tolerant\Parser
+     */
+    private $tolerantParser;
+
+    /**
      * @param string $uri The URI of the document
      * @param string $content The content of the document
      * @param Index $index The Index to register definitions and references to
      * @param Parser $parser The PHPParser instance
+     * @param Parser $tolerantParser The tolerant PHP Parser instance
      * @param DocBlockFactory $docBlockFactory The DocBlockFactory instance to parse docblocks
      * @param DefinitionResolverInterface $definitionResolver The DefinitionResolver to resolve definitions to symbols in the workspace
      */
@@ -163,64 +171,26 @@ class PhpDocument
         $this->definitions = null;
         $this->definitionNodes = null;
 
-        $errorHandler = new ErrorHandler\Collecting;
-        $stmts = $this->parser->parse($content, $errorHandler);
+        $treeAnalyzer = new TreeAnalyzer($this->parser, $content, $this->docBlockFactory, $this->definitionResolver, $this->uri);
 
-        $this->diagnostics = [];
-        foreach ($errorHandler->getErrors() as $error) {
-            $this->diagnostics[] = Diagnostic::fromError($error, $this->content, DiagnosticSeverity::ERROR, 'php');
+        $this->diagnostics = $treeAnalyzer->getDiagnostics();
+
+        $this->definitions = $treeAnalyzer->getDefinitions();
+
+        $this->definitionNodes = $treeAnalyzer->getDefinitionNodes();
+
+        $this->referenceNodes = $treeAnalyzer->getReferenceNodes();
+        
+        foreach ($this->definitions as $fqn => $definition) {
+            $this->index->setDefinition($fqn, $definition);
         }
 
-        // $stmts can be null in case of a fatal parsing error <- Interesting. When do fatal parsing errors occur?
-        if ($stmts) {
-            $traverser = new NodeTraverser;
-
-            // Resolve aliased names to FQNs
-            $traverser->addVisitor(new NameResolver($errorHandler));
-
-            // Add parentNode, previousSibling, nextSibling attributes
-            $traverser->addVisitor(new ReferencesAdder($this));
-
-            // Add column attributes to nodes
-            $traverser->addVisitor(new ColumnCalculator($content));
-
-            // Parse docblocks and add docBlock attributes to nodes
-            $docBlockParser = new DocBlockParser($this->docBlockFactory);
-            $traverser->addVisitor($docBlockParser);
-
-            $traverser->traverse($stmts);
-
-            // Report errors from parsing docblocks
-            foreach ($docBlockParser->errors as $error) {
-                $this->diagnostics[] = Diagnostic::fromError($error, $this->content, DiagnosticSeverity::WARNING, 'php');
-            }
-
-            $traverser = new NodeTraverser;
-
-            // Collect all definitions
-            $definitionCollector = new DefinitionCollector($this->definitionResolver);
-            $traverser->addVisitor($definitionCollector);
-
-            // Collect all references
-            $referencesCollector = new ReferencesCollector($this->definitionResolver);
-            $traverser->addVisitor($referencesCollector);
-
-            $traverser->traverse($stmts);
-
-            // Register this document on the project for all the symbols defined in it
-            $this->definitions = $definitionCollector->definitions;
-            $this->definitionNodes = $definitionCollector->nodes;
-            foreach ($definitionCollector->definitions as $fqn => $definition) {
-                $this->index->setDefinition($fqn, $definition);
-            }
-            // Register this document on the project for references
-            $this->referenceNodes = $referencesCollector->nodes;
-            foreach ($referencesCollector->nodes as $fqn => $nodes) {
-                $this->index->addReferenceUri($fqn, $this->uri);
-            }
-
-            $this->stmts = $stmts;
+        // Register this document on the project for references
+        foreach ($this->referenceNodes as $fqn => $nodes) {
+            $this->index->addReferenceUri($fqn, $this->uri);
         }
+        
+        $this->stmts = $treeAnalyzer->getStmts();
     }
 
     /**
