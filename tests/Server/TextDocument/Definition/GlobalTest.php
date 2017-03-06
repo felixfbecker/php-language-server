@@ -24,8 +24,9 @@ class GlobalTest extends ServerTestCase
         // namespace keyword
         $result = $this->textDocument->definition(
             new TextDocumentIdentifier(pathToUri(realpath(__DIR__ . '/../../../../fixtures/references.php'))),
-            new Position(2, 4)
+            new Position(1, 0)
         )->wait();
+        var_dump($result);
         $this->assertEquals([], $result);
     }
 

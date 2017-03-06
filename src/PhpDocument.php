@@ -256,7 +256,11 @@ class PhpDocument
             return $finder->node;
         } else {
             $offset = $position->toOffset($this->stmts->getFileContents());
-            return $this->stmts->getDescendantNodeAtPosition($offset);
+            $node = $this->stmts->getDescendantNodeAtPosition($offset);
+            if ($node->getStart() > $offset) {
+                return null;
+            }
+            return $node;
         }
     }
 

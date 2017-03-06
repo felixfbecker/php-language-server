@@ -55,7 +55,7 @@ class TestClass implements TestInterface
      * @param TestClass $testParameter Lorem sunt velit incididunt mollit
      * @return TestClass
      */
-    public function testMethod($testParameter): TestInterface
+    public function testMethod($testParameter) : TestInterface
     {
         $this->testProperty = $testParameter;
     }
