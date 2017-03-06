@@ -209,11 +209,8 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
     public function resolveReferenceNodeToDefinition($node)
     {
         $parent = $node->getParent();
-        if ($parent instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression) {
-            $node = $parent;
-        }
         // Variables are not indexed globally, as they stay in the file scope anyway
-        if ($node instanceof Tolerant\Node\Expression\Variable) {
+        if ($node instanceof Tolerant\Node\Expression\Variable && !($parent instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression)) {
             // Resolve $this
             if ($node->getName() === 'this' && $fqn = $this->getContainingClassFqn($node)) {
                 return $this->index->getDefinition($fqn, false);
@@ -374,14 +371,15 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             $name = (string)($node->getNamespacedName());
         }
         else if (
-            ($scoped = $node) instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression
-            || ($node instanceof Tolerant\Node\Expression\CallExpression && ($scoped = $node->callableExpression) instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression)
+            ($scoped = $node) instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression ||
+            ($scoped = $node->parent) instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression
+            || ($node->parent instanceof Tolerant\Node\Expression\CallExpression && ($scoped = $node->parent->callableExpression) instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression)
         ) {
 //            if ($scoped->memberName instanceof Tolerant\Node\Expression) {
                 // Cannot get definition of dynamic names
 //                return null;
 //            }
-            $className = (string)$scoped->scopeResolutionQualifier->getText();
+            $className = $scoped->scopeResolutionQualifier->getText();
             if ($className === 'self' || $className === 'static' || $className === 'parent') {
                 // self and static are resolved to the containing class
                 $classNode = $node->getFirstAncestor(Tolerant\Node\Statement\ClassDeclaration::class);
@@ -393,16 +391,23 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
                     if (!isset($node->extends)) {
                         return null;
                     }
-                    $className = (string)$classNode->extends;
+                    $className = (string)$classNode->extends->getResolvedName();
                 } else {
                     $className = (string)$classNode->getNamespacedName();
                 }
+            } elseif ($scoped->scopeResolutionQualifier instanceof Tolerant\Node\QualifiedName) {
+                $className = $scoped->scopeResolutionQualifier->getResolvedName();
             }
             if ($scoped->memberName instanceof Tolerant\Node\Expression\Variable) {
                 $name = (string)$className . '::$' . $scoped->memberName->getName();
             } else {
                 $name = (string)$className . '::' . $scoped->memberName->getText($node->getFileContents());
             }
+
+            if ($scoped->parent instanceof Tolerant\Node\Expression\CallExpression) {
+                $name .= '()';
+            }
+            return $name;
         }
         else {
             return null;
