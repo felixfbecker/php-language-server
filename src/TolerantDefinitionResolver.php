@@ -121,7 +121,6 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
 
             if ($docBlock !== null) {
                 $parameterDocBlockTag = $this->getDocBlockTagForParameter($docBlock, $variableName);
-                var_dump($parameterDocBlockTag);
                 return $parameterDocBlockTag !== null ? $parameterDocBlockTag->getDescription()->render() : null;
 
             }
@@ -640,17 +639,19 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             || ($scopedAccess = $expr) instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression
         ) {
             $classType = $this->resolveClassNameToType($scopedAccess->scopeResolutionQualifier);
+            var_dump($classType);
             if (!($classType instanceof Types\Object_) || $classType->getFqsen() === null /*|| $expr->name instanceof Tolerant\Node\Expression*/) {
                 return new Types\Mixed;
             }
             $fqn = substr((string)$classType->getFqsen(), 1) . '::';
-            if ($expr instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression && $expr->memberName instanceof Tolerant\Node\Expression\Variable) {
-                $fqn .= '$';
-            }
+//            if ($expr instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression && $expr->memberName instanceof Tolerant\Node\Expression\Variable) {
+//                $fqn .= '$';
+//            }
             $fqn .= $scopedAccess->memberName->getText() ?? $scopedAccess->memberName->getText($expr->getFileContents()); // TODO is there a cleaner way to do this?
             if ($expr instanceof Tolerant\Node\Expression\CallExpression) {
                 $fqn .= '()';
             }
+            var_dump($fqn);
             $def = $this->index->getDefinition($fqn);
             if ($def === null) {
                 return new Types\Mixed;
@@ -783,7 +784,9 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             return new Types\Array_($valueType, $keyType);
         }
         if ($expr instanceof Tolerant\Node\Expression\SubscriptExpression) {
+            var_dump("SUBSCRIPT");
             $varType = $this->resolveExpressionNodeToType($expr->postfixExpression);
+            var_dump($varType);
             if (!($varType instanceof Types\Array_)) {
                 return new Types\Mixed;
             }
