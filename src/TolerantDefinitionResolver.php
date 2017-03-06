@@ -251,7 +251,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
 // TODO all name tokens should be a part of a node
         if ($node instanceof Tolerant\Node\QualifiedName) {
             // For extends, implements, type hints and classes of classes of static calls use the name directly
-            $name = (string)$node->getResolvedName() ?? $node->getText();
+            $name = (string)($node->getResolvedName() ?? $node->getText());
             if (($useClause = $node->getFirstAncestor(Tolerant\Node\NamespaceUseGroupClause::class, Tolerant\Node\Statement\NamespaceUseDeclaration::class)) !== null) {
                 if ($useClause instanceof Tolerant\Node\NamespaceUseGroupClause) {
                     $prefix = $useClause->parent->parent->namespaceName;
@@ -269,7 +269,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
                 }
             }
 
-            if ($node->getFirstAncestor(Tolerant\Node\Expression\CallExpression::class) !== null) {
+            if ($node->parent instanceof Tolerant\Node\Expression\CallExpression) {
                 $name .= '()';
             }
 // does this work for function calls?
