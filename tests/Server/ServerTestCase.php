@@ -195,7 +195,7 @@ abstract class ServerTestCase extends TestCase
                 3 => new Location($globalReferencesUri, new Range(new Position(39,  0), new Position(39, 49)))  // TestClass::$staticTestProperty[123]->testProperty;
             ],
             'TestClass::staticTestProperty' => [
-                0 => new Location($globalReferencesUri, new Range(new Position( 8,  5), new Position( 8, 35))), // echo TestClass::$staticTestProperty;
+                0 => new Location($globalReferencesUri, new Range(new Position( 8,  16), new Position( 8, 35))), // echo TestClass::$staticTestProperty;
                 1 => new Location($globalReferencesUri, new Range(new Position(39,  0), new Position(39, 30)))  // TestClass::$staticTestProperty[123]->testProperty;
             ],
             'TestClass::staticTestMethod()' => [

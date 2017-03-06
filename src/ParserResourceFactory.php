@@ -6,7 +6,7 @@ use Microsoft\PhpParser as Tolerant;
 use LanguageServer\Index\ReadableIndex;
 
 class ParserResourceFactory {
-    const PARSER_KIND = ParserKind::TOLERANT_PHP_PARSER;
+    const PARSER_KIND = ParserKind::DIAGNOSTIC_TOLERANT_PHP_PARSER;
     
     public static function getParser() {
         if (self::PARSER_KIND === ParserKind::PHP_PARSER) {
@@ -19,8 +19,10 @@ class ParserResourceFactory {
     public static function getDefinitionResolver(ReadableIndex $index) {
         if (self::PARSER_KIND === ParserKind::PHP_PARSER) {
             return new DefinitionResolver($index);
-        } else {
+        } elseif (self::PARSER_KIND === ParserKind::TOLERANT_PHP_PARSER) {
             return new TolerantDefinitionResolver($index);
+        } elseif (self::PARSER_KIND === ParserKind::DIAGNOSTIC_TOLERANT_PHP_PARSER) {
+            return new LoggedTolerantDefinitionResolver($index);
         }
     }
 
