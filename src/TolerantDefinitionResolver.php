@@ -181,13 +181,13 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
         if ($node instanceof Tolerant\Node\Statement\ClassDeclaration) {
             $def->extends = [];
             if ($node->classBaseClause !== null && $node->classBaseClause->baseClass !== null) {
-                $def->extends[] = (string)$node->classBaseClause->baseClass;
+                $def->extends[] = (string)$node->classBaseClause->baseClass->getResolvedName();
             }
             // TODO what about class interfaces
         } else if ($node instanceof Tolerant\Node\Statement\InterfaceDeclaration) {
             $def->extends = [];
             if ($node->interfaceBaseClause !== null && $node->interfaceBaseClause->interfaceNameList !== null) {
-                foreach ($node->interfaceBaseClause->interfaceNameList->getChildNodes() as $n) {
+                foreach ($node->interfaceBaseClause->interfaceNameList->getValues() as $n) {
                     $def->extends[] = (string)$n;
                 }
             }
@@ -306,6 +306,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             }
             // Get the type of the left-hand expression
             $varType = $this->resolveExpressionNodeToType($access->dereferencableExpression);
+            var_dump($varType);
             if ($varType instanceof Types\Compound) {
                 // For compound types, use the first FQN we find
                 // (popular use case is ClassName|null)
@@ -333,6 +334,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
                 return null;
             } else {
                 $classFqn = substr((string)$varType->getFqsen(), 1);
+                var_dump($classFqn);
             }
             $memberSuffix = '->' . (string)($access->memberName->getText() ?? $access->memberName->getText($node->getFileContents()));
             if ($node instanceof Tolerant\Node\Expression\CallExpression) {
@@ -340,9 +342,12 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             }
             // Find the right class that implements the member
             $implementorFqns = [$classFqn];
+
             while ($implementorFqn = array_shift($implementorFqns)) {
+                    var_dump($implementorFqn . $memberSuffix);
                 // If the member FQN exists, return it
                 if ($this->index->getDefinition($implementorFqn . $memberSuffix)) {
+
                     return $implementorFqn . $memberSuffix;
                 }
                 // Get Definition of implementor class
@@ -358,6 +363,10 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
                     }
                 }
             }
+
+            var_dump("SUFFIX");
+            var_dump($classFqn);
+            var_dump($memberSuffix);
             return $classFqn . $memberSuffix;
         }
         else if ($parent instanceof Tolerant\Node\Expression\CallExpression && $node instanceof Tolerant\Node\QualifiedName) {
