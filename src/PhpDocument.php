@@ -64,7 +64,7 @@ class PhpDocument
     /**
      * The AST of the document
      *
-     * @var Node[]
+     * @var Node[] | Tolerant\Node
      */
     private $stmts;
 
@@ -161,11 +161,7 @@ class PhpDocument
         $this->definitions = null;
         $this->definitionNodes = null;
 
-        $treeAnalyzerClass = $this->parser instanceof Parser 
-            ? TreeAnalyzer::class
-            : TolerantTreeAnalyzer::class;
-            
-        $treeAnalyzer = new $treeAnalyzerClass($this->parser, $content, $this->docBlockFactory, $this->definitionResolver, $this->uri);
+        $treeAnalyzer = ParserResourceFactory::getTreeAnalyzer($this->parser, $content, $this->docBlockFactory, $this->definitionResolver, $this->uri);
 
         $this->diagnostics = $treeAnalyzer->getDiagnostics();
 
@@ -251,11 +247,17 @@ class PhpDocument
         if ($this->stmts === null) {
             return null;
         }
-        $traverser = new NodeTraverser;
-        $finder = new NodeAtPositionFinder($position);
-        $traverser->addVisitor($finder);
-        $traverser->traverse($this->stmts);
-        return $finder->node;
+
+        if (\is_array($this->stmts)) {
+            $traverser = new NodeTraverser;
+            $finder = new NodeAtPositionFinder($position);
+            $traverser->addVisitor($finder);
+            $traverser->traverse($this->stmts);
+            return $finder->node;
+        } else {
+            $offset = $position->toOffset($this->stmts->getFileContents());
+            return $this->stmts->getDescendantNodeAtPosition($offset);
+        }
     }
 
     /**

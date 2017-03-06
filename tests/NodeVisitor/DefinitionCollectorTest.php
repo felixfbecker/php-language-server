@@ -4,17 +4,12 @@ declare(strict_types = 1);
 namespace LanguageServer\Tests\Server\TextDocument;
 
 use PHPUnit\Framework\TestCase;
-use PhpParser\{NodeTraverser, Node};
-use PhpParser\NodeVisitor\NameResolver;
+use PhpParser\{Node};
 use phpDocumentor\Reflection\DocBlockFactory;
 use LanguageServer\{
-    ParserResourceFactory, LanguageClient, PhpDocument, PhpDocumentLoader, Parser, DefinitionResolver
+    ParserResourceFactory
 };
-use LanguageServer\ContentRetriever\FileSystemContentRetriever;
-use LanguageServer\Protocol\ClientCapabilities;
-use LanguageServer\Index\{ProjectIndex, Index, DependenciesIndex};
-use LanguageServer\Tests\MockProtocolStream;
-use LanguageServer\NodeVisitor\{ReferencesAdder, DefinitionCollector};
+use LanguageServer\Index\{Index};
 use function LanguageServer\pathToUri;
 use Microsoft\PhpParser as Tolerant;
 
@@ -23,23 +18,7 @@ class DefinitionCollectorTest extends TestCase
     public function testCollectsSymbols()
     {
         $path = realpath(__DIR__ . '/../../fixtures/symbols.php');
-        $uri = pathToUri($path);
-        $parser = ParserResourceFactory::getParser();
-        $docBlockFactory = DocBlockFactory::createInstance();
-        $index = new Index;
-        $definitionResolver = ParserResourceFactory::getDefinitionResolver($index);
-        $content = file_get_contents($path);
-        $document = new PhpDocument($uri, $content, $index, $parser, $docBlockFactory, $definitionResolver);
-        $stmts = $parser->parse($content);
-
-        $traverser = new NodeTraverser;
-        $traverser->addVisitor(new NameResolver);
-        $traverser->addVisitor(new ReferencesAdder($document));
-        $definitionCollector = new DefinitionCollector($definitionResolver);
-        $traverser->addVisitor($definitionCollector);
-        $traverser->traverse($stmts);
-
-        $defNodes = $definitionCollector->nodes;
+        $defNodes = $this->collectDefinitions($path);
 
         $this->assertEquals([
             'TestNamespace',
@@ -55,43 +34,47 @@ class DefinitionCollectorTest extends TestCase
             'TestNamespace\\test_function()',
             'TestNamespace\\ChildClass'
         ], array_keys($defNodes));
-        $this->assertInstanceOf(Node\Const_::class, $defNodes['TestNamespace\\TEST_CONST']);
-        $this->assertInstanceOf(Node\Stmt\Class_::class, $defNodes['TestNamespace\\TestClass']);
-        $this->assertInstanceOf(Node\Const_::class, $defNodes['TestNamespace\\TestClass::TEST_CLASS_CONST']);
-        $this->assertInstanceOf(Node\Stmt\PropertyProperty::class, $defNodes['TestNamespace\\TestClass::$staticTestProperty']);
-        $this->assertInstanceOf(Node\Stmt\PropertyProperty::class, $defNodes['TestNamespace\\TestClass->testProperty']);
-        $this->assertInstanceOf(Node\Stmt\ClassMethod::class, $defNodes['TestNamespace\\TestClass::staticTestMethod()']);
-        $this->assertInstanceOf(Node\Stmt\ClassMethod::class, $defNodes['TestNamespace\\TestClass->testMethod()']);
-        $this->assertInstanceOf(Node\Stmt\Trait_::class, $defNodes['TestNamespace\\TestTrait']);
-        $this->assertInstanceOf(Node\Stmt\Interface_::class, $defNodes['TestNamespace\\TestInterface']);
-        $this->assertInstanceOf(Node\Stmt\Function_::class, $defNodes['TestNamespace\\test_function()']);
-        $this->assertInstanceOf(Node\Stmt\Class_::class, $defNodes['TestNamespace\\ChildClass']);
+
+
+        $this->assertInstanceOf(Tolerant\Node\ConstElement::class, $defNodes['TestNamespace\\TEST_CONST']);
+        $this->assertInstanceOf(Tolerant\Node\Statement\ClassDeclaration::class, $defNodes['TestNamespace\\TestClass']);
+        $this->assertInstanceOf(Tolerant\Node\ConstElement::class, $defNodes['TestNamespace\\TestClass::TEST_CLASS_CONST']);
+        // TODO - should we parse properties more strictly?
+        $this->assertInstanceOf(Tolerant\Node\Expression\Variable::class, $defNodes['TestNamespace\\TestClass::$staticTestProperty']);
+        $this->assertInstanceOf(Tolerant\Node\Expression\Variable::class, $defNodes['TestNamespace\\TestClass->testProperty']);
+        $this->assertInstanceOf(Tolerant\Node\MethodDeclaration::class, $defNodes['TestNamespace\\TestClass::staticTestMethod()']);
+        $this->assertInstanceOf(Tolerant\Node\MethodDeclaration::class, $defNodes['TestNamespace\\TestClass->testMethod()']);
+        $this->assertInstanceOf(Tolerant\Node\Statement\TraitDeclaration::class, $defNodes['TestNamespace\\TestTrait']);
+        $this->assertInstanceOf(Tolerant\Node\Statement\InterfaceDeclaration::class, $defNodes['TestNamespace\\TestInterface']);
+        $this->assertInstanceOf(Tolerant\Node\Statement\FunctionDeclaration::class, $defNodes['TestNamespace\\test_function()']);
+        $this->assertInstanceOf(Tolerant\Node\Statement\ClassDeclaration::class, $defNodes['TestNamespace\\ChildClass']);
     }
 
     public function testDoesNotCollectReferences()
     {
         $path = realpath(__DIR__ . '/../../fixtures/references.php');
+        $defNodes = $this->collectDefinitions($path);
+
+        $this->assertEquals(['TestNamespace', 'TestNamespace\\whatever()'], array_keys($defNodes));
+        $this->assertInstanceOf(Tolerant\Node\Statement\NamespaceDefinition::class, $defNodes['TestNamespace']);
+        $this->assertInstanceOf(Tolerant\Node\Statement\FunctionDeclaration::class, $defNodes['TestNamespace\\whatever()']);
+    }
+
+    /**
+     * @param $path
+     * @return Node
+     */
+    private function collectDefinitions($path):array
+    {
         $uri = pathToUri($path);
         $parser = ParserResourceFactory::getParser();
+
         $docBlockFactory = DocBlockFactory::createInstance();
         $index = new Index;
         $definitionResolver = ParserResourceFactory::getDefinitionResolver($index);
         $content = file_get_contents($path);
-        $document = new PhpDocument($uri, $content, $index, $parser, $docBlockFactory, $definitionResolver);
-        $stmts = $parser->parse($content);
 
-        $traverser = new NodeTraverser;
-        $traverser->addVisitor(new NameResolver);
-        $traverser->addVisitor(new ReferencesAdder($document));
-        $definitionCollector = new DefinitionCollector($definitionResolver);
-        $traverser->addVisitor($definitionCollector);
-        $traverser->traverse($stmts);
-
-        $defNodes = $definitionCollector->nodes;
-
-        $this->assertEquals(['TestNamespace', 'TestNamespace\\whatever()'], array_keys($defNodes));
-        $this->assertInstanceOf(Node\Name::class, $defNodes['TestNamespace']);
-        $this->assertInstanceOf(Node\Stmt\Namespace_::class, $defNodes['TestNamespace']->getAttribute('parentNode'));
-        $this->assertInstanceOf(Node\Stmt\Function_::class, $defNodes['TestNamespace\\whatever()']);
+        $treeAnalyzer = ParserResourceFactory::getTreeAnalyzer($parser, $content, $docBlockFactory, $definitionResolver, $uri);
+        return $treeAnalyzer->getDefinitionNodes();
     }
 }

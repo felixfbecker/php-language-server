@@ -39,8 +39,16 @@ class PhpDocumentTest extends TestCase
     {
         $document = $this->createDocument('whatever', "<?php\n$\$a = new SomeClass;");
         $node = $document->getNodeAtPosition(new Position(1, 13));
-        $this->assertInstanceOf(Node\Name\FullyQualified::class, $node);
+        $this->assertQualifiedName($node);
         $this->assertEquals('SomeClass', (string)$node);
+    }
+
+    private function assertQualifiedName($node) {
+        if ($node instanceof Node) {
+            $this->assertInstanceOf(Node\Name\FullyQualified::class, $node);
+        } else {
+            $this->assertInstanceOf(Tolerant\Node\QualifiedName::class, $node);
+        }
     }
 
     public function testIsVendored()

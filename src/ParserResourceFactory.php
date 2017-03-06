@@ -8,7 +8,7 @@ use LanguageServer\Index\ReadableIndex;
 class ParserResourceFactory {
     const PARSER_KIND = ParserKind::TOLERANT_PHP_PARSER;
     
-    public function getParser() {
+    public static function getParser() {
         if (self::PARSER_KIND === ParserKind::PHP_PARSER) {
             return new Parser;
         } else {
@@ -16,11 +16,20 @@ class ParserResourceFactory {
         }
     }
 
-    public function getDefinitionResolver(ReadableIndex $index) {
+    public static function getDefinitionResolver(ReadableIndex $index) {
         if (self::PARSER_KIND === ParserKind::PHP_PARSER) {
             return new DefinitionResolver($index);
         } else {
             return new TolerantDefinitionResolver($index);
+        }
+    }
+
+    public static function getTreeAnalyzer($parser, $content, $docBlockFactory, $definitionResolver, $uri)
+    {
+        if (self::PARSER_KIND === ParserKind::PHP_PARSER) {
+            return new TreeAnalyzer($parser, $content, $docBlockFactory, $definitionResolver, $uri);
+        } else {
+            return new TolerantTreeAnalyzer($parser, $content, $docBlockFactory, $definitionResolver, $uri);
         }
     }
 }
