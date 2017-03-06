@@ -66,6 +66,8 @@ class TolerantSymbolInformation
             $symbol->name = $node->getName();
         } else if (isset($node->name)) {
             $symbol->name = trim((string)$node->name->getText($node->getFileContents()), "$");
+        } else if (isset($node->variableName)) {
+            $symbol->name = $node->variableName->getText($node);
         } else {
             return null;
         }
