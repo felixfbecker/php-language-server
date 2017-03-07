@@ -112,6 +112,7 @@ class LoggedTolerantDefinitionResolver extends TolerantDefinitionResolver
      */
     public function resolveReferenceNodeToDefinition($node)
     {
+        var_dump(array_keys($this->index->getDefinitions()));
         self::$logger = true;
         return $this->logMethod('resolveReferenceNodeToDefinition', $node);
     }

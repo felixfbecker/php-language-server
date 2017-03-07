@@ -18,7 +18,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
     /**
      * @var \LanguageServer\Index\ReadableIndex
      */
-    private $index;
+    protected $index;
 
     /**
      * @var \phpDocumentor\Reflection\TypeResolver
@@ -244,14 +244,14 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
      * @return string|null
      */
     public function resolveReferenceNodeToFqn($node) {
-
-
         $parent = $node->getParent();
 // TODO all name tokens should be a part of a node
         if ($node instanceof Tolerant\Node\QualifiedName) {
             // For extends, implements, type hints and classes of classes of static calls use the name directly
-            $name = (string)($node->getResolvedName() ?? $node->getText());
+            $name = $node->getResolvedName();
+
             if (($useClause = $node->getFirstAncestor(Tolerant\Node\NamespaceUseGroupClause::class, Tolerant\Node\Statement\NamespaceUseDeclaration::class)) !== null) {
+                $name = (string)($name ?? $node->getText());
                 if ($useClause instanceof Tolerant\Node\NamespaceUseGroupClause) {
                     $prefix = $useClause->parent->parent->namespaceName;
                     $prefix = $prefix === null ? "" : $prefix->getText();
@@ -266,6 +266,9 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
                 if ($useClause->functionOrConst->kind === Tolerant\TokenKind::FunctionKeyword) {
                     $name .= '()';
                 }
+            }
+            else {
+                $name = (string)($name ?? (string)$node->getNamespacedName());
             }
 
             if ($node->parent instanceof Tolerant\Node\Expression\CallExpression) {
@@ -333,6 +336,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
                 // Left-hand expression could not be resolved to a class
                 return null;
             } else {
+                var_dump("AAAHHHHH");
                 $classFqn = substr((string)$varType->getFqsen(), 1);
                 var_dump($classFqn);
             }
