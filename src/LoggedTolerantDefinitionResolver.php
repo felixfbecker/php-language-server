@@ -52,7 +52,7 @@ class LoggedTolerantDefinitionResolver extends TolerantDefinitionResolver
             } else {
                 $resultText = $result ?? "NULL";
             }
-            echo "> RESULT[$methodName]: " . $resultText . "\n";
+            echo "> RESULT[$callStr]: " . $resultText . "\n";
         }
         return $result;
     }
