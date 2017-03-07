@@ -438,7 +438,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
     private function isConstantFetch(Tolerant\Node $node) : bool {
         return
             $node instanceof Tolerant\Node\QualifiedName &&
-            ($node->parent instanceof Tolerant\Node\Statement\ExpressionStatement || $node->parent instanceof Tolerant\Node\Expression) &&
+            ($node->parent instanceof Tolerant\Node\Statement\ExpressionStatement || $node->parent instanceof Tolerant\Node\Expression || $node->parent instanceof Tolerant\Node\DelimitedList\ExpressionList) &&
             !(
                 $node->parent instanceof Tolerant\Node\Expression\MemberAccessExpression || $node->parent instanceof Tolerant\Node\Expression\CallExpression ||
                 $node->parent instanceof Tolerant\Node\Expression\ObjectCreationExpression ||
