@@ -44,7 +44,7 @@ class ComposerScripts
             }
 
             $uris = yield $finder->find("$stubsLocation/**/*.php");
-
+            $uris = [];
             foreach ($uris as $uri) {
                 echo "Parsing $uri\n";
                 $content = yield $contentRetriever->retrieve($uri);
