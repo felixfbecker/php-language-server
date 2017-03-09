@@ -3,9 +3,11 @@ declare(strict_types = 1);
 
 namespace LanguageServer\Server;
 
+use Microsoft\PhpParser as Tolerant;
+use phpDocumentor\Reflection\DocBlock\Tags\Param;
 use PhpParser\{Node, NodeTraverser};
 use LanguageServer\{
-    DefinitionResolverInterface, FqnUtilities, LanguageClient, PhpDocumentLoader, PhpDocument, DefinitionResolver, CompletionProvider
+    DefinitionResolverInterface, FqnUtilities, LanguageClient, PhpDocumentLoader, PhpDocument, DefinitionResolver, CompletionProvider, TolerantDefinitionResolver, TolerantTreeAnalyzer
 };
 use LanguageServer\NodeVisitor\VariableReferencesCollector;
 use LanguageServer\Protocol\{
@@ -197,31 +199,35 @@ class TextDocument
             // Variables always stay in the boundary of the file and need to be searched inside their function scope
             // by traversing the AST
             if (
-                $node instanceof Node\Expr\Variable
-                || $node instanceof Node\Param
-                || $node instanceof Node\Expr\ClosureUse
+
+            ($node instanceof Tolerant\Node\Expression\Variable && !($node->getParent()->getParent() instanceof Tolerant\Node\PropertyDeclaration))
+                || $node instanceof Tolerant\Node\Parameter
+                || $node instanceof Tolerant\Node\UseVariableName
             ) {
-                if ($node->name instanceof Node\Expr) {
+                if (isset($node->name) && $node->name instanceof Tolerant\Node\Expression) {
                     return null;
                 }
                 // Find function/method/closure scope
                 $n = $node;
-                while (isset($n) && !($n instanceof Node\FunctionLike)) {
-                    $n = $n->getAttribute('parentNode');
+
+                $n = $n->getFirstAncestor(Tolerant\Node\Statement\FunctionDeclaration::class, Tolerant\Node\MethodDeclaration::class, Tolerant\Node\Expression\AnonymousFunctionCreationExpression::class, Tolerant\Node\SourceFileNode::class);
+
+                if ($n === null) {
+                    $n = $node->getFirstAncestor(Tolerant\Node\Statement\ExpressionStatement::class)->getParent();
                 }
-                if (!isset($n)) {
-                    $n = $node->getAttribute('ownerDocument');
-                }
-                $traverser = new NodeTraverser;
-                $refCollector = new VariableReferencesCollector($node->name);
-                $traverser->addVisitor($refCollector);
-                $traverser->traverse($n->getStmts());
-                foreach ($refCollector->nodes as $ref) {
-                    $locations[] = Location::fromNode($ref);
+
+                foreach ($n->getDescendantNodes() as $descendantNode) {
+                    if ($descendantNode instanceof Tolerant\Node\Expression\Variable &&
+                        $descendantNode->getName() === $node->getName()
+                    ) {
+                        var_dump($descendantNode->getName());
+                        $locations[] = Location::fromNode($descendantNode);
+                    }
                 }
             } else {
                 // Definition with a global FQN
                 $fqn = FqnUtilities::getDefinedFqn($node);
+                // var_dump($fqn);
                 // Wait until indexing finished
                 if (!$this->index->isComplete()) {
                     yield waitForEvent($this->index, 'complete');
@@ -240,6 +246,7 @@ class TextDocument
                     $refs = $document->getReferenceNodesByFqn($fqn);
                     if ($refs !== null) {
                         foreach ($refs as $ref) {
+                            // var_dump($ref->getNodeKindName());
                             $locations[] = Location::fromNode($ref);
                         }
                     }

@@ -28,6 +28,7 @@ class NamespacedTest extends GlobalTest
             new TextDocumentIdentifier($definition->uri),
             $definition->range->end
         )->wait();
+        // var_dump($result);
         $this->assertEquals(parent::getReferenceLocations('TestNamespace'), $result);
     }
 }

@@ -229,7 +229,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             if ($node->getName() === 'this' && $fqn = $this->getContainingClassFqn($node)) {
                 return $this->index->getDefinition($fqn, false);
             }
-            // TODO running throug thid for class constants or properties
+            // TODO running through thid for class constants or properties
 
             // Resolve the variable to a definition node (assignment, param or closure use)
             $defNode = $this->resolveVariableToNode($node);
@@ -246,7 +246,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
         }
         // If the node is a function or constant, it could be namespaced, but PHP falls back to global
         // http://php.net/manual/en/language.namespaces.fallback.php
-        $globalFallback = $this->isConstantFetch($node) || $node->getFirstAncestor(Tolerant\Node\Expression\CallExpression::class) !== null;
+        $globalFallback = $this->isConstantFetch($node) || $node->parent instanceof Tolerant\Node\Expression\CallExpression;
         // Return the Definition object from the index index
         return $this->index->getDefinition($fqn, $globalFallback);
     }
@@ -278,7 +278,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
                     }
                 }
 
-                if ($useClause->functionOrConst->kind === Tolerant\TokenKind::FunctionKeyword) {
+                if ($useClause->functionOrConst !== null && $useClause->functionOrConst->kind === Tolerant\TokenKind::FunctionKeyword) {
                     $name .= '()';
                 }
             }
@@ -356,7 +356,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
 
                 // TODO
 //                $classFqn = $node->getNamespaceDefinition()->name->getNamespacedName() . (string)$varType->getFqsen();
-                var_dump($classFqn);
+//                var_dump($classFqn);
             }
             $memberSuffix = '->' . (string)($access->memberName->getText() ?? $access->memberName->getText($node->getFileContents()));
             if ($node instanceof Tolerant\Node\Expression\CallExpression) {
@@ -453,8 +453,9 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
         return $name;
     }
 
-    private function isConstantFetch(Tolerant\Node $node) : bool {
+    public static function isConstantFetch(Tolerant\Node $node) : bool {
         return
+            (
             $node instanceof Tolerant\Node\QualifiedName &&
             ($node->parent instanceof Tolerant\Node\Statement\ExpressionStatement || $node->parent instanceof Tolerant\Node\Expression || $node->parent instanceof Tolerant\Node\DelimitedList\ExpressionList) &&
             !(
@@ -462,7 +463,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
                 $node->parent instanceof Tolerant\Node\Expression\ObjectCreationExpression ||
                 $node->parent instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression || $node->parent instanceof Tolerant\Node\Expression\AnonymousFunctionCreationExpression ||
                 ($node->parent instanceof Tolerant\Node\Expression\BinaryExpression && $node->parent->operator->kind === Tolerant\TokenKind::InstanceOfKeyword)
-            );
+            ));
     }
 
     /**
@@ -547,7 +548,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
         );
     }
 
-    static function isFunctionLike(Tolerant\Node $node) {
+    public static function isFunctionLike(Tolerant\Node $node) {
         return
             $node instanceof Tolerant\Node\Statement\FunctionDeclaration ||
             $node instanceof Tolerant\Node\MethodDeclaration ||
@@ -638,7 +639,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             }
             $var = $access->dereferencableExpression;
 
-            var_dump("HERE!!!");
+//            var_dump("HERE!!!");
             // Resolve object
             $objType = $this->resolveExpressionNodeToType($var);
 //            var_dump($objType);
@@ -655,16 +656,16 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
                     return new Types\Mixed;
                 } else {
                     $classFqn = substr((string)$t->getFqsen(), 1);
-                    var_dump($classFqn);
+//                    var_dump($classFqn);
                 }
                 $fqn = $classFqn . '->' . $access->memberName->getText($expr->getFileContents());
                 if ($expr instanceof Tolerant\Node\Expression\CallExpression) {
                     $fqn .= '()';
                 }
-                var_dump($fqn);
+//                var_dump($fqn);
 //                var_dump($fqn);
                 $def = $this->index->getDefinition($fqn);
-                var_dump($def);
+//                var_dump($def);
                 if ($def !== null) {
                     return $def->type;
                 }

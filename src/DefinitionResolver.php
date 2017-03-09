@@ -132,6 +132,7 @@ class DefinitionResolver implements DefinitionResolverInterface
         $def->type = $this->getTypeFromNode($node);
         $def->declarationLine = $this->getDeclarationLineFromNode($node);
         $def->documentation = $this->getDocumentationFromNode($node);
+//        var_dump($def);
         return $def;
     }
 
@@ -440,6 +441,8 @@ class DefinitionResolver implements DefinitionResolverInterface
             }
             // Resolve object
             $objType = $this->resolveExpressionNodeToType($expr->var);
+            // var_dump((string)$expr->var->name);
+//            var_dump($objType);
             if (!($objType instanceof Types\Compound)) {
                 $objType = new Types\Compound([$objType]);
             }
@@ -453,6 +456,7 @@ class DefinitionResolver implements DefinitionResolverInterface
                     return new Types\Mixed;
                 } else {
                     $classFqn = substr((string)$t->getFqsen(), 1);
+                    // var_dump($classFqn);
                 }
                 $fqn = $classFqn . '->' . $expr->name;
                 if ($expr instanceof Node\Expr\MethodCall) {
@@ -771,6 +775,9 @@ class DefinitionResolver implements DefinitionResolverInterface
                 && !empty($varTags = $docBlock->getTagsByName('var'))
                 && ($type = $varTags[0]->getType())
             ) {
+                if ((string)$type === "\\TestNamespace\\TestClass") {
+                    var_dump($type);
+                }
                 return $type;
             }
             // Resolve the expression
