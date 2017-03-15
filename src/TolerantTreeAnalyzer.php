@@ -61,7 +61,7 @@ class TolerantTreeAnalyzer implements TreeAnalyzerInterface {
                 $node->parent instanceof Tolerant\Node\Expression\CallExpression ||
                 $node->memberName instanceof Tolerant\Token
                 ))
-                || ($parent instanceof Tolerant\Node\Statement\NamespaceDefinition && $parent->name->getStart() === $node->getStart())
+                || ($parent instanceof Tolerant\Node\Statement\NamespaceDefinition && $parent->name !== null && $parent->name->getStart() === $node->getStart())
                 ) {
                 continue;
             }
