@@ -1,0 +1,9 @@
+[submodule "validation/frameworks/php-language-server"]
+	path = validation/frameworks/php-language-server
+	url = https://github.com/felixfbecker/php-language-server
+[submodule "validation/frameworks/wordpress"]
+	path = validation/frameworks/wordpress
+	url = https://github.com/wordpress/wordpress
+[submodule "validation/frameworks/drupal"]
+	path = validation/frameworks/drupal
+	url = https://github.com/drupal/drupal
