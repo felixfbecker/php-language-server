@@ -95,9 +95,8 @@ class DefinitionResolver
 
                 if (empty($description)) {
                     return $docBlock->getSummary();
-                } else {
-                    return $docBlock->getSummary() . "\n\n" . $description;
                 }
+                return $docBlock->getSummary() . "\n\n" . $description;
             }
         }
     }
