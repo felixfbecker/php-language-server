@@ -33,7 +33,7 @@ if (count($testProviderArray) === 0) {
 }
 
 foreach ($testProviderArray as $idx=>$testCaseFile) {
-    if ($idx > 10) {
+    if ($idx > 20) {
         exit();
     }
 

@@ -536,7 +536,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
                 break;
             }
             // Check each previous sibling node for a variable assignment to that variable
-            while ($n->getPreviousSibling() && $n = $n->getPreviousSibling()) {
+            while (($prevSibling = $n->getPreviousSibling()) !== null && $n = $prevSibling) {
                 if ($n instanceof Tolerant\Node\Statement\ExpressionStatement) {
                     $n = $n->expression;
                 }

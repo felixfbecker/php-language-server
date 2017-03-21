@@ -25,6 +25,8 @@ class TolerantTreeAnalyzer implements TreeAnalyzerInterface {
     /** @var Tolerant\Node */
     private $stmts;
 
+    private $diagnostics;    
+
     /**
      * TolerantTreeAnalyzer constructor.
      * @param Tolerant\Parser $parser
@@ -100,15 +102,12 @@ class TolerantTreeAnalyzer implements TreeAnalyzerInterface {
                 }
             }
         }
-    }
 
-    public function getDiagnostics() {
-        $diagnostics = [];
-        $content = $this->stmts->getFileContents();
         foreach (Tolerant\DiagnosticsProvider::getDiagnostics($this->stmts) as $_error) {
+            $this->diagnostics = [];
             $range = Tolerant\PositionUtilities::getRangeFromPosition($_error->start, $_error->length, $content);
 
-            $diagnostics[] = new Diagnostic(
+            $this->diagnostics[] = new Diagnostic(
                 $_error->message,
                 new Range(
                     new Position($range->start->line, $range->start->character),
@@ -116,7 +115,10 @@ class TolerantTreeAnalyzer implements TreeAnalyzerInterface {
                 )
             );
         }
-        return $diagnostics;
+    }
+    
+    public function getDiagnostics() {
+        return $this->diagnostics;
     }
 
     private function addReference(string $fqn, Tolerant\Node $node)
