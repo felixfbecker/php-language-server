@@ -576,6 +576,11 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
      */
     public function resolveExpressionNodeToType($expr): Type
     {
+        if (!($expr instanceof Tolerant\Node)) {
+            // TODO some members are null or Missing/SkippedToken
+            // How do we handle this more generally?
+            return new Types\Mixed;
+        }
         if ($expr instanceof Tolerant\Node\Expression\Variable || $expr instanceof Tolerant\Node\UseVariableName) {
             if ($expr instanceof Tolerant\Node\Expression\Variable && $expr->getName() === 'this') {
                 return new Types\This;
