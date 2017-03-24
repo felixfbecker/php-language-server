@@ -103,8 +103,8 @@ class TolerantTreeAnalyzer implements TreeAnalyzerInterface {
             }
         }
 
+        $this->diagnostics = [];
         foreach (Tolerant\DiagnosticsProvider::getDiagnostics($this->stmts) as $_error) {
-            $this->diagnostics = [];
             $range = Tolerant\PositionUtilities::getRangeFromPosition($_error->start, $_error->length, $content);
 
             $this->diagnostics[] = new Diagnostic(
