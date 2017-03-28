@@ -342,7 +342,7 @@ class DefinitionResolver implements DefinitionResolverInterface
      * @param Node\Expr\Variable|Node\Expr\ClosureUse $var The variable access
      * @return Node\Expr\Assign|Node\Expr\AssignOp|Node\Param|Node\Expr\ClosureUse|null
      */
-    private static function resolveVariableToNode(Node\Expr $var)
+    private function resolveVariableToNode(Node\Expr $var)
     {
         $n = $var;
         // When a use is passed, start outside the closure to not return immediatly
@@ -648,7 +648,7 @@ class DefinitionResolver implements DefinitionResolverInterface
      * @param Node $class
      * @return Type
      */
-    private static function resolveClassNameToType(Node $class): Type
+    private function resolveClassNameToType(Node $class): Type
     {
         if ($class instanceof Node\Expr) {
             return new Types\Mixed;
