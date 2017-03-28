@@ -30,7 +30,7 @@ class ValidationTest extends TestCase
 
             foreach (new RecursiveIteratorIterator($iterator) as $file) {
                 if (strpos((string)$file, ".php") !== false) {
-                    if ($file->getSize() < 100000 ) {
+                    if ($file->getSize() < 100000) {
                         $testProviderArray[$frameworkName . "::" . $file->getBasename()] = [$file->getPathname(), $frameworkName];
                     }
                 }
@@ -68,6 +68,8 @@ class ValidationTest extends TestCase
             file_put_contents($outFile, $fileContents);
             $this->fail((string)$e);
         }
+
+        $this->assertNotNull($document->getStmts());
 
         if (file_exists($outFile)) {
             unlink($outFile);

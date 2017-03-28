@@ -229,9 +229,9 @@ class PhpDocument
     /**
      * Returns the AST of the document
      *
-     * @return Node[]
+     * @return Node[] | Tolerant\Node | null
      */
-    public function getStmts(): array
+    public function getStmts()
     {
         return $this->stmts;
     }
