@@ -6,6 +6,7 @@ namespace LanguageServer;
 use LanguageServer\Cache\Cache;
 use LanguageServer\FilesFinder\FilesFinder;
 use LanguageServer\Index\{DependenciesIndex, Index};
+use LanguageServer\Protocol\Message;
 use LanguageServer\Protocol\MessageType;
 use Webmozart\PathUtil\Path;
 use Composer\Semver\VersionParser;
@@ -192,10 +193,18 @@ class Indexer
             $mem = (int)(memory_get_usage(true) / (1024 * 1024));
             $this->client->window->logMessage(
                 MessageType::INFO,
-                "All $count PHP files parsed in $duration seconds. $mem MiB allocated."
+                "All $count PHP files parsed in $duration seconds. $mem MiB allocated. " . \count($this->nullDocs) . " null docs"
             );
+            foreach ($this->nullDocs as $nullDoc) {
+                $this->client->window->logMessage(
+                    MessageType::INFO,
+                    $nullDoc
+                );
+            }
         });
     }
+
+    private $nullDocs = [];
 
     /**
      * @param array $files
@@ -215,6 +224,9 @@ class Indexer
                 $this->client->window->logMessage(MessageType::LOG, "Parsing $uri");
                 try {
                     $document = yield $this->documentLoader->load($uri);
+                    if ($document->getStmts() === null) {
+                        $this->nullDocs[] = $document->getUri();
+                    }
                     if (!isVendored($document, $this->composerJson)) {
                         $this->client->textDocument->publishDiagnostics($uri, $document->getDiagnostics());
                     }
