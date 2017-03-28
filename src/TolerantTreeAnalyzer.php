@@ -45,15 +45,28 @@ class TolerantTreeAnalyzer implements TreeAnalyzerInterface {
 
         // TODO - docblock errors
 
-         foreach ($this->stmts->getDescendantNodes() as $node) {
-            $fqn = $definitionResolver::getDefinedFqn($node);
-            // Only index definitions with an FQN (no variables)
-            if ($fqn === null) {
-                continue;
-            }
-            $this->definitionNodes[$fqn] = $node;
-            $this->definitions[$fqn] = $this->definitionResolver->createDefinitionFromNode($node, $fqn);
-        }
+        foreach ($this->stmts->getDescendantNodesAndTokens() as $node) {
+             if ($node instanceof Tolerant\Node) {
+                $fqn = $definitionResolver::getDefinedFqn($node);
+                // Only index definitions with an FQN (no variables)
+                if ($fqn === null) {
+                    continue;
+                }
+                $this->definitionNodes[$fqn] = $node;
+                $this->definitions[$fqn] = $this->definitionResolver->createDefinitionFromNode($node, $fqn);
+             }
+             if (($_error = Tolerant\DiagnosticsProvider::checkDiagnostics($node)) !== null) {
+                 $range = Tolerant\PositionUtilities::getRangeFromPosition($_error->start, $_error->length, $content);
+
+                 $this->diagnostics[] = new Diagnostic(
+                     $_error->message,
+                     new Range(
+                         new Position($range->start->line, $range->start->character),
+                         new Position($range->end->line, $range->start->character)
+                     )
+                 );
+             }
+         }
 
         foreach ($this->stmts->getDescendantNodes() as $node) {
             $parent = $node->parent;
@@ -90,7 +103,7 @@ class TolerantTreeAnalyzer implements TreeAnalyzerInterface {
             // Namespaced constant access and function calls also need to register a reference
             // to the global version because PHP falls back to global at runtime
             // http://php.net/manual/en/language.namespaces.fallback.php
-            if ($definitionResolver::isConstantFetch($node) ||
+            if (TolerantDefinitionResolver::isConstantFetch($node) ||
                 ($parent instanceof Tolerant\Node\Expression\CallExpression
                     && !(
                         $node instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression
@@ -102,23 +115,10 @@ class TolerantTreeAnalyzer implements TreeAnalyzerInterface {
                 }
             }
         }
-
-        $this->diagnostics = [];
-        foreach (Tolerant\DiagnosticsProvider::getDiagnostics($this->stmts) as $_error) {
-            $range = Tolerant\PositionUtilities::getRangeFromPosition($_error->start, $_error->length, $content);
-
-            $this->diagnostics[] = new Diagnostic(
-                $_error->message,
-                new Range(
-                    new Position($range->start->line, $range->start->character),
-                    new Position($range->end->line, $range->start->character)
-                )
-            );
-        }
     }
     
     public function getDiagnostics() {
-        return $this->diagnostics;
+        return $this->diagnostics ?? [];
     }
 
     private function addReference(string $fqn, Tolerant\Node $node)

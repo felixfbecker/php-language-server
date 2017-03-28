@@ -326,17 +326,17 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             }
         }*/
 
-        else if (($node instanceof Tolerant\Node\Expression\CallExpression &&
-                ($access = $node->callableExpression) instanceof Tolerant\Node\Expression\MemberAccessExpression) || (
+        else if (
+            $node instanceof Tolerant\Node\Expression\CallExpression &&
+                (($access = $node->callableExpression) instanceof Tolerant\Node\Expression\MemberAccessExpression ||
                 ($access = $node) instanceof Tolerant\Node\Expression\MemberAccessExpression
-            )) {
+                )) {
             if ($access->memberName instanceof Tolerant\Node\Expression) {
                 // Cannot get definition if right-hand side is expression
                 return null;
             }
             // Get the type of the left-hand expression
             $varType = $this->resolveExpressionNodeToType($access->dereferencableExpression);
-//            var_dump($varType);
             if ($varType instanceof Types\Compound) {
                 // For compound types, use the first FQN we find
                 // (popular use case is ClassName|null)
@@ -363,7 +363,6 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
                 // Left-hand expression could not be resolved to a class
                 return null;
             } else {
-//                var_dump("AAAHHHHH");
                 $classFqn = substr((string)$varType->getFqsen(), 1);
 
                 // TODO
@@ -597,7 +596,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
         if ($expr instanceof Tolerant\Node\Expression\CallExpression &&
             !($expr->callableExpression instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression ||
                 $expr->callableExpression instanceof Tolerant\Node\Expression\MemberAccessExpression)) {
-
+            
             // Find the function definition
             if ($expr->callableExpression instanceof Tolerant\Node\Expression) {
                 // Cannot get type for dynamic function call
