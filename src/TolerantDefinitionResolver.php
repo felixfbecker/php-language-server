@@ -327,10 +327,10 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
         }*/
 
         else if (
-            $node instanceof Tolerant\Node\Expression\CallExpression &&
-                (($access = $node->callableExpression) instanceof Tolerant\Node\Expression\MemberAccessExpression ||
-                ($access = $node) instanceof Tolerant\Node\Expression\MemberAccessExpression
-                )) {
+        ($node instanceof Tolerant\Node\Expression\CallExpression &&
+            ($access = $node->callableExpression) instanceof Tolerant\Node\Expression\MemberAccessExpression) || (
+        ($access = $node) instanceof Tolerant\Node\Expression\MemberAccessExpression)
+        ) {
             if ($access->memberName instanceof Tolerant\Node\Expression) {
                 // Cannot get definition if right-hand side is expression
                 return null;
