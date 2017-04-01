@@ -446,7 +446,7 @@ class DefinitionResolver
                 // Cannot get type for dynamic function call
                 return new Types\Mixed;
             }
-            $fqn = (string)($expr->getAttribute('namespacedName') ?? $expr->name);
+            $fqn = (string)($expr->getAttribute('namespacedName') ?? $expr->name . '()');
             $def = $this->index->getDefinition($fqn, true);
             if ($def !== null) {
                 return $def->type;
