@@ -52,7 +52,9 @@ class SymbolInformation
         $symbol = new self;
         if ($node instanceof Node\Stmt\Class_|| $node instanceof Node\Stmt\Trait_) {
             $symbol->kind = SymbolKind::CLASS_;
-        } else if ($node instanceof Node\Stmt\Interface_ || ($node instanceof Node\Name && $parent instanceof Node\Stmt\Namespace_)) {
+        } else if ($node instanceof Node\Stmt\Interface_) {
+            $symbol->kind = SymbolKind::INTERFACE;
+        } else if ($node instanceof Node\Name && $parent instanceof Node\Stmt\Namespace_) {
             $symbol->kind = SymbolKind::NAMESPACE;
         } else if ($node instanceof Node\Stmt\Function_) {
             $symbol->kind = SymbolKind::FUNCTION;
