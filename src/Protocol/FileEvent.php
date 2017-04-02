@@ -20,4 +20,14 @@ class FileEvent
      * @var int
      */
     public $type;
+
+    /**
+     * @param string $uri
+     * @param int $type
+     */
+    public function __construct(string $uri, int $type)
+    {
+        $this->uri = $uri;
+        $this->type = $type;
+    }
 }
