@@ -157,8 +157,8 @@ class HoverTest extends ServerTestCase
     }
 
     public function testHoverForGlobalConstant() {
-        // HELLO;
-        // Get hover for HELLO
+        // print TEST_PROPERTY ? 'true' : 'false';
+        // Get hover for TEST_PROPERTY
         $reference = $this->getReferenceLocations('TEST_PROPERTY')[0];
         $result = $this->textDocument->hover(
             new TextDocumentIdentifier($reference->uri),
