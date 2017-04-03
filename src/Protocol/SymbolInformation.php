@@ -84,9 +84,8 @@ class SymbolInformation
             $symbol->name = $node->var;
         } else if (isset($node->name)) {
             $symbol->name = (string)$node->name;
-        } else if
-            (
-                    $node instanceof Node\Expr\FuncCall
+        } else if (
+                $node instanceof Node\Expr\FuncCall
                 &&  $node->name instanceof Node\Name
                 &&  (string)$node->name === 'define'
                 &&  isset($node->args[0])

@@ -229,6 +229,23 @@ class CompletionTest extends TestCase
         ], true), $items);
     }
 
+    public function testGlobalConstant() {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/constant_with_namespace.php');
+        $this->loader->open($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(11, 7)
+        )->wait();
+
+        var_dump($items);
+        $this->assertEquals(new CompletionList([
+            new CompletionItem(
+                'HELLO',
+                CompletionItemKind::VARIABLE
+            )
+        ], true), $items);
+    }
+
     public function testStaticPropertyWithPrefix()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/static_property_with_prefix.php');
