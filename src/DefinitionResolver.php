@@ -89,7 +89,14 @@ class DefinitionResolver
         } else {
             $docBlock = $node->getAttribute('docBlock');
             if ($docBlock !== null) {
-                return $docBlock->getSummary();
+                // check wether we have a description, when true, add a new paragraph
+                // with the description
+                $description = $docBlock->getDescription()->render();
+
+                if (empty($description)) {
+                    return $docBlock->getSummary();
+                }
+                return $docBlock->getSummary() . "\n\n" . $description;
             }
         }
     }
@@ -439,7 +446,7 @@ class DefinitionResolver
                 // Cannot get type for dynamic function call
                 return new Types\Mixed;
             }
-            $fqn = (string)($expr->getAttribute('namespacedName') ?? $expr->name);
+            $fqn = (string)($expr->getAttribute('namespacedName') ?? $expr->name) . '()';
             $def = $this->index->getDefinition($fqn, true);
             if ($def !== null) {
                 return $def->type;

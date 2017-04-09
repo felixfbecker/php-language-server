@@ -253,6 +253,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
             }
             if ($this->workspace === null) {
                 $this->workspace = new Server\Workspace(
+                    $this->client,
                     $this->projectIndex,
                     $dependenciesIndex,
                     $sourceIndex,

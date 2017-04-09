@@ -22,7 +22,12 @@ class HoverTest extends ServerTestCase
         )->wait();
         $this->assertEquals(new Hover([
             new MarkedString('php', "<?php\nclass TestClass implements \\TestInterface"),
-            'Pariatur ut laborum tempor voluptate consequat ea deserunt.'
+            'Pariatur ut laborum tempor voluptate consequat ea deserunt.' . "\n\n" .
+            'Deserunt enim minim sunt sint ea nisi. Deserunt excepteur tempor id nostrud' . "\n" .
+            'laboris commodo ad commodo velit mollit qui non officia id. Nulla duis veniam' . "\n" .
+            'veniam officia deserunt et non dolore mollit ea quis eiusmod sit non. Occaecat' . "\n" .
+            'consequat sunt culpa exercitation pariatur id reprehenderit nisi incididunt Lorem' . "\n" .
+            'sint. Officia culpa pariatur laborum nostrud cupidatat consequat mollit.'
         ], $reference->range), $result);
     }
 
@@ -37,7 +42,12 @@ class HoverTest extends ServerTestCase
         )->wait();
         $this->assertEquals(new Hover([
             new MarkedString('php', "<?php\nclass TestClass implements \\TestInterface"),
-            'Pariatur ut laborum tempor voluptate consequat ea deserunt.'
+            'Pariatur ut laborum tempor voluptate consequat ea deserunt.' . "\n\n" .
+            'Deserunt enim minim sunt sint ea nisi. Deserunt excepteur tempor id nostrud' . "\n" .
+            'laboris commodo ad commodo velit mollit qui non officia id. Nulla duis veniam' . "\n" .
+            'veniam officia deserunt et non dolore mollit ea quis eiusmod sit non. Occaecat' . "\n" .
+            'consequat sunt culpa exercitation pariatur id reprehenderit nisi incididunt Lorem' . "\n" .
+            'sint. Officia culpa pariatur laborum nostrud cupidatat consequat mollit.'
         ], $definition->range), $result);
     }
 
@@ -181,7 +191,12 @@ class HoverTest extends ServerTestCase
         $result = $this->textDocument->hover(new TextDocumentIdentifier($uri), new Position(59, 11))->wait();
         $this->assertEquals(new Hover([
             new MarkedString('php', "<?php\nclass TestClass implements \\TestInterface"),
-            'Pariatur ut laborum tempor voluptate consequat ea deserunt.'
+            'Pariatur ut laborum tempor voluptate consequat ea deserunt.' . "\n\n" .
+            'Deserunt enim minim sunt sint ea nisi. Deserunt excepteur tempor id nostrud' . "\n" .
+            'laboris commodo ad commodo velit mollit qui non officia id. Nulla duis veniam' . "\n" .
+            'veniam officia deserunt et non dolore mollit ea quis eiusmod sit non. Occaecat' . "\n" .
+            'consequat sunt culpa exercitation pariatur id reprehenderit nisi incididunt Lorem' . "\n" .
+            'sint. Officia culpa pariatur laborum nostrud cupidatat consequat mollit.'
         ], new Range(new Position(59, 8), new Position(59, 13))), $result);
     }
 }
