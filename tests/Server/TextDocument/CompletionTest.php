@@ -160,7 +160,12 @@ class CompletionTest extends TestCase
                 'TestClass',
                 CompletionItemKind::CLASS_,
                 null,
-                'Pariatur ut laborum tempor voluptate consequat ea deserunt.',
+                'Pariatur ut laborum tempor voluptate consequat ea deserunt.' . "\n\n" .
+                'Deserunt enim minim sunt sint ea nisi. Deserunt excepteur tempor id nostrud' . "\n" .
+                'laboris commodo ad commodo velit mollit qui non officia id. Nulla duis veniam' . "\n" .
+                'veniam officia deserunt et non dolore mollit ea quis eiusmod sit non. Occaecat' . "\n" .
+                'consequat sunt culpa exercitation pariatur id reprehenderit nisi incididunt Lorem' . "\n" .
+                'sint. Officia culpa pariatur laborum nostrud cupidatat consequat mollit.',
                 null,
                 null,
                 '\TestClass'
@@ -179,7 +184,12 @@ class CompletionTest extends TestCase
                 'TestClass',
                 CompletionItemKind::CLASS_,
                 'TestNamespace',
-                'Pariatur ut laborum tempor voluptate consequat ea deserunt.',
+                'Pariatur ut laborum tempor voluptate consequat ea deserunt.' . "\n\n" .
+                'Deserunt enim minim sunt sint ea nisi. Deserunt excepteur tempor id nostrud' . "\n" .
+                'laboris commodo ad commodo velit mollit qui non officia id. Nulla duis veniam' . "\n" .
+                'veniam officia deserunt et non dolore mollit ea quis eiusmod sit non. Occaecat' . "\n" .
+                'consequat sunt culpa exercitation pariatur id reprehenderit nisi incididunt Lorem' . "\n" .
+                'sint. Officia culpa pariatur laborum nostrud cupidatat consequat mollit.',
                 null,
                 null,
                 'TestClass'
@@ -218,7 +228,12 @@ class CompletionTest extends TestCase
                 'TestClass',
                 CompletionItemKind::CLASS_,
                 'TestNamespace',
-                'Pariatur ut laborum tempor voluptate consequat ea deserunt.'
+                'Pariatur ut laborum tempor voluptate consequat ea deserunt.' . "\n\n" .
+                'Deserunt enim minim sunt sint ea nisi. Deserunt excepteur tempor id nostrud' . "\n" .
+                'laboris commodo ad commodo velit mollit qui non officia id. Nulla duis veniam' . "\n" .
+                'veniam officia deserunt et non dolore mollit ea quis eiusmod sit non. Occaecat' . "\n" .
+                'consequat sunt culpa exercitation pariatur id reprehenderit nisi incididunt Lorem' . "\n" .
+                'sint. Officia culpa pariatur laborum nostrud cupidatat consequat mollit.'
             )
         ], true), $items);
     }
@@ -356,7 +371,12 @@ class CompletionTest extends TestCase
                 'TestClass',
                 CompletionItemKind::CLASS_,
                 null,
-                'Pariatur ut laborum tempor voluptate consequat ea deserunt.',
+                'Pariatur ut laborum tempor voluptate consequat ea deserunt.' . "\n\n" .
+                'Deserunt enim minim sunt sint ea nisi. Deserunt excepteur tempor id nostrud' . "\n" .
+                'laboris commodo ad commodo velit mollit qui non officia id. Nulla duis veniam' . "\n" .
+                'veniam officia deserunt et non dolore mollit ea quis eiusmod sit non. Occaecat' . "\n" .
+                'consequat sunt culpa exercitation pariatur id reprehenderit nisi incididunt Lorem' . "\n" .
+                'sint. Officia culpa pariatur laborum nostrud cupidatat consequat mollit.',
                 null,
                 null,
                 'TestClass'
