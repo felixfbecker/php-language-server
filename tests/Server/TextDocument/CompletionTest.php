@@ -237,7 +237,6 @@ class CompletionTest extends TestCase
             new Position(11, 7)
         )->wait();
 
-        var_dump($items);
         $this->assertEquals(new CompletionList([
             new CompletionItem(
                 'HELLO',
