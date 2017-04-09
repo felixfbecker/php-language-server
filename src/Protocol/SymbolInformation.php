@@ -60,6 +60,8 @@ class SymbolInformation
             $symbol->kind = SymbolKind::NAMESPACE;
         } else if ($node instanceof Node\Stmt\Function_) {
             $symbol->kind = SymbolKind::FUNCTION;
+        } else if ($node instanceof Node\Stmt\ClassMethod && ($node->name === '__construct' || $node->name === '__destruct')) {
+            $symbol->kind = SymbolKind::CONSTRUCTOR;
         } else if ($node instanceof Node\Stmt\ClassMethod) {
             $symbol->kind = SymbolKind::METHOD;
         } else if ($node instanceof Node\Stmt\PropertyProperty) {

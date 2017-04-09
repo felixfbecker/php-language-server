@@ -86,20 +86,23 @@ abstract class ServerTestCase extends TestCase
             'whatever()'                             => new Location($globalReferencesUri, new Range(new Position(21,  0), new Position(23,  1))),
 
             // Namespaced
-            'TestNamespace'                                => new Location($symbolsUri,    new Range(new Position( 2, 10), new Position( 2, 23))),
-            'SecondTestNamespace'                          => new Location($useUri,        new Range(new Position( 2, 10), new Position( 2, 29))),
-            'TestNamespace\\TEST_CONST'                    => new Location($symbolsUri,    new Range(new Position( 9,  6), new Position( 9, 22))),
-            'TestNamespace\\TestClass'                     => new Location($symbolsUri,    new Range(new Position(20,  0), new Position(61,  1))),
-            'TestNamespace\\ChildClass'                    => new Location($symbolsUri,    new Range(new Position(99,  0), new Position(99, 37))),
-            'TestNamespace\\TestTrait'                     => new Location($symbolsUri,    new Range(new Position(63,  0), new Position(66,  1))),
-            'TestNamespace\\TestInterface'                 => new Location($symbolsUri,    new Range(new Position(68,  0), new Position(71,  1))),
+            'TestNamespace'                                => new Location($symbolsUri,    new Range(new Position( 2, 10), new Position( 2,  23))),
+            'SecondTestNamespace'                          => new Location($useUri,        new Range(new Position( 2, 10), new Position( 2,  29))),
+            'TestNamespace\\TEST_CONST'                    => new Location($symbolsUri,    new Range(new Position( 9,  6), new Position( 9,  22))),
+            'TestNamespace\\TestClass'                     => new Location($symbolsUri,    new Range(new Position(20,  0), new Position(61,   1))),
+            'TestNamespace\\ChildClass'                    => new Location($symbolsUri,    new Range(new Position(99,  0), new Position(99,  37))),
+            'TestNamespace\\TestTrait'                     => new Location($symbolsUri,    new Range(new Position(63,  0), new Position(66,   1))),
+            'TestNamespace\\TestInterface'                 => new Location($symbolsUri,    new Range(new Position(68,  0), new Position(71,   1))),
             'TestNamespace\\TestClass::TEST_CLASS_CONST'   => new Location($symbolsUri,    new Range(new Position(27, 10), new Position(27,  32))),
-            'TestNamespace\\TestClass::testProperty'       => new Location($symbolsUri,    new Range(new Position(41, 11), new Position(41, 24))),
-            'TestNamespace\\TestClass::staticTestProperty' => new Location($symbolsUri,    new Range(new Position(34, 18), new Position(34, 37))),
-            'TestNamespace\\TestClass::staticTestMethod()' => new Location($symbolsUri,    new Range(new Position(46,  4), new Position(49,  5))),
-            'TestNamespace\\TestClass::testMethod()'       => new Location($symbolsUri,    new Range(new Position(57,  4), new Position(60,  5))),
-            'TestNamespace\\test_function()'               => new Location($symbolsUri,    new Range(new Position(78,  0), new Position(81,  1))),
-            'TestNamespace\\whatever()'                    => new Location($referencesUri, new Range(new Position(21,  0), new Position(23,  1)))
+            'TestNamespace\\TestClass::testProperty'       => new Location($symbolsUri,    new Range(new Position(41, 11), new Position(41,  24))),
+            'TestNamespace\\TestClass::staticTestProperty' => new Location($symbolsUri,    new Range(new Position(34, 18), new Position(34,  37))),
+            'TestNamespace\\TestClass::staticTestMethod()' => new Location($symbolsUri,    new Range(new Position(46,  4), new Position(49,   5))),
+            'TestNamespace\\TestClass::testMethod()'       => new Location($symbolsUri,    new Range(new Position(57,  4), new Position(60,   5))),
+            'TestNamespace\\test_function()'               => new Location($symbolsUri,    new Range(new Position(78,  0), new Position(81,   1))),
+            'TestNamespace\\whatever()'                    => new Location($referencesUri, new Range(new Position(21,  0), new Position(23,   1))),
+            'TestNamespace\\Example'                       => new Location($symbolsUri,    new Range(new Position(101, 0), new Position(104,  1))),
+            'TestNamespace\\Example::__construct'          => new Location($symbolsUri,    new Range(new Position(102, 4), new Position(102, 36))),
+            'TestNamespace\\Example::__destruct'           => new Location($symbolsUri,    new Range(new Position(103, 4), new Position(103, 35)))
         ];
 
         $this->referenceLocations = [
