@@ -203,6 +203,15 @@ class CompletionTest extends TestCase
                 null,
                 '\TestNamespace\ChildClass'
             ),
+            new CompletionItem(
+                'Example',
+                CompletionItemKind::CLASS_,
+                'TestNamespace',
+                null,
+                null,
+                null,
+                '\TestNamespace\Example'
+            )
         ], true), $items);
     }
 
