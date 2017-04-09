@@ -9,7 +9,7 @@ namespace HELLO {
 
     }
 
-    \He
+    \HE
 }
 
 namespace {

@@ -72,7 +72,7 @@ abstract class ServerTestCase extends TestCase
         $this->definitionLocations = [
 
             // Global
-            'TEST_PROPERTY'                          => new Location($globalSymbolsUri,    new Range(new Position(106,  4), new Position(106, 31))),
+            'TEST_PROPERTY'                          => new Location($globalSymbolsUri,    new Range(new Position(106,  0), new Position(106, 30))),
             'TEST_CONST'                             => new Location($globalSymbolsUri,    new Range(new Position( 9,  6), new Position( 9, 22))),
             'TestClass'                              => new Location($globalSymbolsUri,    new Range(new Position(20,  0), new Position(61,  1))),
             'ChildClass'                             => new Location($globalSymbolsUri,    new Range(new Position(99,  0), new Position(99, 37))),

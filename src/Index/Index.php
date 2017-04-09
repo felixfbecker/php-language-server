@@ -122,6 +122,19 @@ class Index implements ReadableIndex, \Serializable
      */
     public function setDefinition(string $fqn, Definition $definition)
     {
+        if($fqn === null) {
+            try {
+                throw new \Exception;
+            } catch(\Exception $e) {
+                echo PHP_EOL;
+                var_dump($fqn);
+                echo PHP_EOL;
+                var_dump($definition);
+                echo PHP_EOL;
+                echo $e->getTraceAsString();
+                echo PHP_EOL;
+            }
+        }
         $this->definitions[$fqn] = $definition;
         $this->emit('definition-added');
     }
