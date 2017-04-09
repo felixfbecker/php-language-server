@@ -58,6 +58,19 @@ class SymbolTest extends ServerTestCase
             new SymbolInformation('TEST_PROPERTY',      SymbolKind::VARIABLE,  $this->getDefinitionLocation('TEST_PROPERTY'),                                ''),
             new SymbolInformation('whatever',           SymbolKind::FUNCTION,  $this->getDefinitionLocation('whatever()'),                                   ''),
 
+            new SymbolInformation('TEST_CONST',         SymbolKind::CONSTANT,    $this->getDefinitionLocation('TEST_CONST'),                                   ''),
+            new SymbolInformation('TestClass',          SymbolKind::CLASS_,      $this->getDefinitionLocation('TestClass'),                                    ''),
+            new SymbolInformation('TEST_CLASS_CONST',   SymbolKind::CONSTANT,    $this->getDefinitionLocation('TestClass::TEST_CLASS_CONST'),                  'TestClass'),
+            new SymbolInformation('staticTestProperty', SymbolKind::PROPERTY,    $this->getDefinitionLocation('TestClass::staticTestProperty'),                'TestClass'),
+            new SymbolInformation('testProperty',       SymbolKind::PROPERTY,    $this->getDefinitionLocation('TestClass::testProperty'),                      'TestClass'),
+            new SymbolInformation('staticTestMethod',   SymbolKind::METHOD,      $this->getDefinitionLocation('TestClass::staticTestMethod()'),                'TestClass'),
+            new SymbolInformation('testMethod',         SymbolKind::METHOD,      $this->getDefinitionLocation('TestClass::testMethod()'),                      'TestClass'),
+            new SymbolInformation('TestTrait',          SymbolKind::CLASS_,      $this->getDefinitionLocation('TestTrait'),                                    ''),
+            new SymbolInformation('TestInterface',      SymbolKind::INTERFACE,   $this->getDefinitionLocation('TestInterface'),                                ''),
+            new SymbolInformation('test_function',      SymbolKind::FUNCTION,    $this->getDefinitionLocation('test_function()'),                              ''),
+            new SymbolInformation('ChildClass',         SymbolKind::CLASS_,      $this->getDefinitionLocation('ChildClass'),                                   ''),
+            new SymbolInformation('whatever',           SymbolKind::FUNCTION,    $this->getDefinitionLocation('whatever()'),                                   ''),
+
             new SymbolInformation('SecondTestNamespace', SymbolKind::NAMESPACE, $this->getDefinitionLocation('SecondTestNamespace'), '')
         ], $result);
         // @codingStandardsIgnoreEnd
