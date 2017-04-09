@@ -68,7 +68,7 @@ class SymbolTest extends ServerTestCase
     public function testQueryFiltersResults()
     {
         // Request symbols
-          $result = $this->workspace->symbol('testmethod')->wait();
+        $result = $this->workspace->symbol('testmethod')->wait();
         // @codingStandardsIgnoreStart
         $this->assertEquals([
             new SymbolInformation('staticTestMethod',   SymbolKind::METHOD,    $this->getDefinitionLocation('TestNamespace\\TestClass::staticTestMethod()'), 'TestNamespace\\TestClass'),
