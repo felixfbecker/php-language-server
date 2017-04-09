@@ -61,7 +61,7 @@ class SymbolInformation
             // constants with define()
             $symbol->kind = SymbolKind::CONSTANT;
             $symbol->name = (string)$node->args[0]->value->value;
-        } elseif ($node instanceof Node\Stmt\Class_|| $node instanceof Node\Stmt\Trait_) {
+        } elseif ($node instanceof Node\Stmt\Class_ || $node instanceof Node\Stmt\Trait_) {
             $symbol->kind = SymbolKind::CLASS_;
         } else if ($node instanceof Node\Stmt\Interface_) {
             $symbol->kind = SymbolKind::INTERFACE;
