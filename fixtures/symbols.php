@@ -98,3 +98,8 @@ new class {
 };
 
 class ChildClass extends TestClass {}
+
+class Example {
+    public function __construct() {}
+    public function __destruct() {}
+}
