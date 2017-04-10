@@ -887,6 +887,6 @@ class DefinitionResolver
                 return null;
             }
             return (string)$node->args[0]->value->value;
-         }
+        }
     }
 }
