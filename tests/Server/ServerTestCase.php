@@ -72,18 +72,19 @@ abstract class ServerTestCase extends TestCase
         $this->definitionLocations = [
 
             // Global
-            'TEST_CONST'                             => new Location($globalSymbolsUri,    new Range(new Position( 9,  6), new Position( 9, 22))),
-            'TestClass'                              => new Location($globalSymbolsUri,    new Range(new Position(20,  0), new Position(61,  1))),
-            'ChildClass'                             => new Location($globalSymbolsUri,    new Range(new Position(99,  0), new Position(99, 37))),
-            'TestTrait'                              => new Location($globalSymbolsUri,    new Range(new Position(63,  0), new Position(66,  1))),
-            'TestInterface'                          => new Location($globalSymbolsUri,    new Range(new Position(68,  0), new Position(71,  1))),
-            'TestClass::TEST_CLASS_CONST'            => new Location($globalSymbolsUri,    new Range(new Position(27, 10), new Position(27, 32))),
-            'TestClass::testProperty'                => new Location($globalSymbolsUri,    new Range(new Position(41, 11), new Position(41, 24))),
-            'TestClass::staticTestProperty'          => new Location($globalSymbolsUri,    new Range(new Position(34, 18), new Position(34, 37))),
-            'TestClass::staticTestMethod()'          => new Location($globalSymbolsUri,    new Range(new Position(46,  4), new Position(49,  5))),
-            'TestClass::testMethod()'                => new Location($globalSymbolsUri,    new Range(new Position(57,  4), new Position(60,  5))),
-            'test_function()'                        => new Location($globalSymbolsUri,    new Range(new Position(78,  0), new Position(81,  1))),
-            'whatever()'                             => new Location($globalReferencesUri, new Range(new Position(21,  0), new Position(23,  1))),
+            'TEST_PROPERTY'                          => new Location($globalSymbolsUri,    new Range(new Position(104, 0), new Position(104, 30))),
+            'TEST_CONST'                             => new Location($globalSymbolsUri,    new Range(new Position( 9,  6), new Position( 9,  22))),
+            'TestClass'                              => new Location($globalSymbolsUri,    new Range(new Position(20,  0), new Position(61,   1))),
+            'ChildClass'                             => new Location($globalSymbolsUri,    new Range(new Position(99,  0), new Position(99,  37))),
+            'TestTrait'                              => new Location($globalSymbolsUri,    new Range(new Position(63,  0), new Position(66,   1))),
+            'TestInterface'                          => new Location($globalSymbolsUri,    new Range(new Position(68,  0), new Position(71,   1))),
+            'TestClass::TEST_CLASS_CONST'            => new Location($globalSymbolsUri,    new Range(new Position(27, 10), new Position(27,  32))),
+            'TestClass::testProperty'                => new Location($globalSymbolsUri,    new Range(new Position(41, 11), new Position(41,  24))),
+            'TestClass::staticTestProperty'          => new Location($globalSymbolsUri,    new Range(new Position(34, 18), new Position(34,  37))),
+            'TestClass::staticTestMethod()'          => new Location($globalSymbolsUri,    new Range(new Position(46,  4), new Position(49,   5))),
+            'TestClass::testMethod()'                => new Location($globalSymbolsUri,    new Range(new Position(57,  4), new Position(60,   5))),
+            'test_function()'                        => new Location($globalSymbolsUri,    new Range(new Position(78,  0), new Position(81,   1))),
+            'whatever()'                             => new Location($globalReferencesUri, new Range(new Position(21,  0), new Position(23,   1))),
 
             // Namespaced
             'TestNamespace'                                => new Location($symbolsUri,    new Range(new Position( 2, 10), new Position( 2,  23))),
@@ -163,6 +164,9 @@ abstract class ServerTestCase extends TestCase
             ],
 
             // Global
+            'TEST_PROPERTY' => [
+                0 => new Location($globalSymbolsUri,    new Range(new Position(106, 6), new Position(106, 19)))
+            ],
             'TEST_CONST' => [
                 0 => new Location($referencesUri,       new Range(new Position(29,  5), new Position(29, 15))),
                 1 => new Location($globalReferencesUri, new Range(new Position(29,  5), new Position(29, 15)))

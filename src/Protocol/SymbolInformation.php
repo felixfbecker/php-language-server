@@ -50,9 +50,18 @@ class SymbolInformation
     {
         $parent = $node->getAttribute('parentNode');
         $symbol = new self;
-        if ($node instanceof Node\Stmt\Class_) {
-            $symbol->kind = SymbolKind::CLASS_;
-        } else if ($node instanceof Node\Stmt\Trait_) {
+        if (
+            $node instanceof Node\Expr\FuncCall
+            && $node->name instanceof Node\Name
+            && strtolower((string)$node->name) === 'define'
+            && isset($node->args[0])
+            && $node->args[0]->value instanceof Node\Scalar\String_
+        ) {
+            // constants with define() like
+            // define('TEST_PROPERTY', true);
+            $symbol->kind = SymbolKind::CONSTANT;
+            $symbol->name = (string)$node->args[0]->value->value;
+        } else if ($node instanceof Node\Stmt\Class_ || $node instanceof Node\Stmt\Trait_) {
             $symbol->kind = SymbolKind::CLASS_;
         } else if ($node instanceof Node\Stmt\Interface_) {
             $symbol->kind = SymbolKind::INTERFACE;
