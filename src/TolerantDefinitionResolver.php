@@ -177,7 +177,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
 
         // this determines whether the suggestion will show after "new"
         // TODO name
-        $def->isClass = $node instanceof Tolerant\Node\Statement\ClassDeclaration;
+        $def->canBeInstantiated = $node instanceof Tolerant\Node\Statement\ClassDeclaration;
 
         $def->isGlobal = (
             $node instanceof Tolerant\Node\Statement\InterfaceDeclaration
