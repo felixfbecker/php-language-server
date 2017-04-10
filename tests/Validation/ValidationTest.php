@@ -6,6 +6,7 @@ namespace LanguageServer\Tests;
 
 use Exception;
 use LanguageServer\Index\Index;
+use LanguageServer\ParserKind;
 use LanguageServer\ParserResourceFactory;
 use LanguageServer\PhpDocument;
 use phpDocumentor\Reflection\DocBlockFactory;
@@ -16,6 +17,7 @@ use AdvancedJsonRpc;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use Sabre\Event\Loop;
+use Microsoft\PhpParser as Tolerant;
 
 class ValidationTest extends TestCase
 {
@@ -29,7 +31,7 @@ class ValidationTest extends TestCase
             $iterator = new RecursiveDirectoryIterator(__DIR__ . "/../../validation/frameworks/" . $frameworkName);
 
             foreach (new RecursiveIteratorIterator($iterator) as $file) {
-                if (strpos((string)$file, ".php") !== false) {
+                if (strpos((string)$file, ".php") !== false && strpos((string)$file, "drupal") === false) {
                     if ($file->getSize() < 100000) {
                         $testProviderArray[$frameworkName . "::" . $file->getBasename()] = [$file->getPathname(), $frameworkName];
                     }
@@ -75,5 +77,47 @@ class ValidationTest extends TestCase
             unlink($outFile);
         }
         // echo json_encode($parser->getErrors($sourceFile));
+    }
+
+    /**
+     * @dataProvider frameworkErrorProvider
+     */
+    public function testDefinitionErrors($testCaseFile, $frameworkName) {
+        $fileContents = file_get_contents($testCaseFile);
+        echo "$testCaseFile\n";
+
+        $parserKinds = [ParserKind::DIAGNOSTIC_PHP_PARSER, ParserKind::DIAGNOSTIC_TOLERANT_PHP_PARSER];
+        $maxRecursion = [];
+        $definitions = [];
+
+        foreach ($parserKinds as $kind) {
+            global $parserKind;
+            $parserKind = $kind;
+
+            $index = new Index;
+            $docBlockFactory = DocBlockFactory::createInstance();
+
+            $definitionResolver = ParserResourceFactory::getDefinitionResolver($index);
+            $parser = ParserResourceFactory::getParser();
+
+            try {
+                $document = new PhpDocument($testCaseFile, $fileContents, $index, $parser, $docBlockFactory, $definitionResolver);
+            } catch (\Exception $e) {
+                continue;
+            }
+
+            $fqns = [];
+            foreach ($document->getDefinitions() as $defn) {
+                $fqns[] = $defn->fqn;
+            }
+
+            if (isset($definitions[$testCaseFile])) {
+                var_dump($definitions[$testCaseFile]);
+                $this->assertEquals($definitions[$testCaseFile], $fqns);
+            }
+
+            $definitions[$testCaseFile] = $fqns;
+            $maxRecursion[$testCaseFile] = $definitionResolver::$maxRecursion;
+        }
     }
 }
