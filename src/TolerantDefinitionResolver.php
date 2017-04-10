@@ -1095,7 +1095,11 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
         // }
         else if ($node instanceof Tolerant\Node\MethodDeclaration) {
             // Class method: use ClassName->methodName() as name
-            $class = $node->getFirstAncestor(Tolerant\Node\Statement\ClassDeclaration::class, Tolerant\Node\Statement\TraitDeclaration::class, Tolerant\Node\Statement\InterfaceDeclaration::class);
+            $class = $node->getFirstAncestor(
+                Tolerant\Node\Statement\ClassDeclaration::class,
+                Tolerant\Node\Statement\InterfaceDeclaration::class,
+                Tolerant\Node\Statement\TraitDeclaration::class
+            );
             if (!isset($class->name)) {
                 // Ignore anonymous classes
                 return null;
@@ -1117,7 +1121,11 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             $node instanceof Tolerant\Node\Expression\Variable &&
             ($propertyDeclaration = $node->getFirstAncestor(Tolerant\Node\PropertyDeclaration::class)) !== null &&
             ($classDeclaration =
-                $node->getFirstAncestor(Tolerant\Node\Statement\ClassDeclaration::class, Tolerant\Node\Statement\InterfaceDeclaration::class, Tolerant\Node\Statement\TraitDeclaration::class)
+                $node->getFirstAncestor(
+                    Tolerant\Node\Statement\ClassDeclaration::class,
+                    Tolerant\Node\Statement\InterfaceDeclaration::class,
+                    Tolerant\Node\Statement\TraitDeclaration::class
+                )
             ) !== null)
         {
             if ($propertyDeclaration->isStatic()) {
@@ -1143,7 +1151,11 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             }
             if ($constDeclaration instanceof Tolerant\Node\ClassConstDeclaration) {
                 // Class constant: use ClassName::CONSTANT_NAME as name
-                $classDeclaration = $constDeclaration->getFirstAncestor(Tolerant\Node\Statement\ClassDeclaration::class);
+                $classDeclaration = $constDeclaration->getFirstAncestor(
+                    Tolerant\Node\Statement\ClassDeclaration::class,
+                    Tolerant\Node\Statement\InterfaceDeclaration::class,
+                    Tolerant\Node\Statement\TraitDeclaration::class
+                );
                 if (!isset($classDeclaration->name)) {
                     return null;
                 }
