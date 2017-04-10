@@ -31,7 +31,7 @@ class ValidationTest extends TestCase
             $iterator = new RecursiveDirectoryIterator(__DIR__ . "/../../validation/frameworks/" . $frameworkName);
 
             foreach (new RecursiveIteratorIterator($iterator) as $file) {
-                if (strpos((string)$file, ".php") !== false && strpos((string)$file, "drupal") === false) {
+                if (strpos(\strrev((string)$file), \strrev(".php")) === 0) {
                     if ($file->getSize() < 100000) {
                         $testProviderArray[$frameworkName . "::" . $file->getBasename()] = [$file->getPathname(), $frameworkName];
                     }
@@ -89,6 +89,7 @@ class ValidationTest extends TestCase
         $parserKinds = [ParserKind::DIAGNOSTIC_PHP_PARSER, ParserKind::DIAGNOSTIC_TOLERANT_PHP_PARSER];
         $maxRecursion = [];
         $definitions = [];
+        $types = [];
 
         foreach ($parserKinds as $kind) {
             global $parserKind;
@@ -106,17 +107,25 @@ class ValidationTest extends TestCase
                 continue;
             }
 
+            if ($document->getStmts() === null) {
+                $this->markTestSkipped("null AST");
+            }
+
             $fqns = [];
+            $currentTypes = [];
             foreach ($document->getDefinitions() as $defn) {
                 $fqns[] = $defn->fqn;
+                $currentTypes[$defn->fqn] = $defn->type;
             }
 
             if (isset($definitions[$testCaseFile])) {
                 var_dump($definitions[$testCaseFile]);
                 $this->assertEquals($definitions[$testCaseFile], $fqns);
+//                $this->assertEquals($types[$testCaseFile], $currentTypes);
             }
 
             $definitions[$testCaseFile] = $fqns;
+            $types[$testCaseFile] = $currentTypes;
             $maxRecursion[$testCaseFile] = $definitionResolver::$maxRecursion;
         }
     }
