@@ -1096,6 +1096,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
         else if ($node instanceof Tolerant\Node\MethodDeclaration) {
             // Class method: use ClassName->methodName() as name
             $class = $node->getFirstAncestor(
+                Tolerant\Node\Expression\ObjectCreationExpression::class,
                 Tolerant\Node\Statement\ClassDeclaration::class,
                 Tolerant\Node\Statement\InterfaceDeclaration::class,
                 Tolerant\Node\Statement\TraitDeclaration::class
@@ -1122,11 +1123,12 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             ($propertyDeclaration = $node->getFirstAncestor(Tolerant\Node\PropertyDeclaration::class)) !== null &&
             ($classDeclaration =
                 $node->getFirstAncestor(
+                    Tolerant\Node\Statement\ObjectCreationExpression::class,
                     Tolerant\Node\Statement\ClassDeclaration::class,
                     Tolerant\Node\Statement\InterfaceDeclaration::class,
                     Tolerant\Node\Statement\TraitDeclaration::class
                 )
-            ) !== null)
+            ) !== null && !($classDeclaration instanceof Tolerant\Node\Statement\ObjectCreationExpression))
         {
             if ($propertyDeclaration->isStatic()) {
                 // Static Property: use ClassName::$propertyName as name
