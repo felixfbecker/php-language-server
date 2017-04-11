@@ -342,7 +342,7 @@ class DefinitionResolver implements DefinitionResolverInterface
      * @param Node\Expr\Variable|Node\Expr\ClosureUse $var The variable access
      * @return Node\Expr\Assign|Node\Expr\AssignOp|Node\Param|Node\Expr\ClosureUse|null
      */
-    private function resolveVariableToNode(Node\Expr $var)
+    public function resolveVariableToNode($var)
     {
         $n = $var;
         // When a use is passed, start outside the closure to not return immediatly
@@ -401,6 +401,7 @@ class DefinitionResolver implements DefinitionResolverInterface
                 return new Types\This;
             }
             // Find variable definition
+
             $defNode = $this->resolveVariableToNode($expr);
             if ($defNode instanceof Node\Expr) {
                 return $this->resolveExpressionNodeToType($defNode);
@@ -748,7 +749,8 @@ class DefinitionResolver implements DefinitionResolverInterface
                     // Resolve a string like "bool" to a type object
                     return $this->typeResolver->resolve($node->returnType);
                 }
-                return new Types\Object_(new Fqsen('\\' . (string)$node->returnType));
+                return new Types\Mixed;
+//                return new Types\Object_(new Fqsen('\\' . (string)$node->returnType));
             }
             // Unknown return type
             return new Types\Mixed;

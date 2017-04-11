@@ -44,7 +44,7 @@ trait LoggedDefinitionResolverTrait
         if ($param2 !== -1) {
             if (self::$logger === true) {
                 $callStr .= $this->getString($param1) . ", " . $this->getString($param2) . ")\n";
-                echo $callStr;
+                echo str_repeat("\t", self::$recursion) . $callStr;
             }
             $start = microtime(true);
             for ($i = 0; $i < self::$repeat; $i++) {
@@ -57,7 +57,7 @@ trait LoggedDefinitionResolverTrait
         } else {
             if (self::$logger === true) {
                 $callStr .= $this->getString($param1) . ")\n";
-                echo $callStr;
+                echo str_repeat("\t", self::$recursion) . $callStr;
             }
             $start = microtime(true);
             for ($i = 0; $i < self::$repeat; $i++) {
@@ -82,14 +82,17 @@ trait LoggedDefinitionResolverTrait
             } else {
                 $resultText = $result ?? "NULL";
             }
-            echo "> RESULT[$callStr]: " . $resultText . "\n";
+            echo str_repeat("\t", self::$recursion + 1) . "> RESULT[$callStr]: " . $resultText . "\n";
         }
         return $result;
     }
 
     private function getString($param) {
         if ($param instanceof Tolerant\Node) {
-            return "[" . $param->getNodeKindName() . "] " . $param->getText();
+            return "[" . $param->getNodeKindName() . "] " . \strtok($param->getText(), "\n");
+        } elseif ($param instanceof Node) {
+            $pretty = isset($param->name) ? (string) $param->name : "UNKNOWN";
+            return "[" . $param->getType() . "] " . \strtok($pretty, "\n");
         }
         return (string)$param;
     }
@@ -143,7 +146,7 @@ trait LoggedDefinitionResolverTrait
     public function resolveReferenceNodeToDefinition($node)
     {
 //        var_dump(array_keys(self::$instance->index->getDefinitions()));
-        self::$logger = true;
+        self::$logger = false;
         return $this->logMethod('resolveReferenceNodeToDefinition', $node);
     }
 
@@ -164,7 +167,7 @@ trait LoggedDefinitionResolverTrait
      * @param Node\Expr\Variable|Node\Expr\ClosureUse $var The variable access
      * @return Node\Expr\Assign|Node\Expr\AssignOp|Node\Param|Node\Expr\ClosureUse|null
      */
-    public function resolveVariableToNode(Tolerant\Node $var)
+    public function resolveVariableToNode($var)
     {
         return $this->logMethod('resolveVariableToNode', $var);
     }

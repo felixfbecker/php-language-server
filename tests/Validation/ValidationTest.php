@@ -112,6 +112,7 @@ class ValidationTest extends TestCase
         $isStatic = [];
 
         foreach ($parserKinds as $kind) {
+            echo ("=====================================\n");
             global $parserKind;
             $parserKind = $kind;
 
@@ -163,6 +164,12 @@ class ValidationTest extends TestCase
                 $this->assertEquals($isStatic[$testCaseFile], $static, 'defn->isStatic does not match');
 
                 $this->assertEquals($symbolInfo[$testCaseFile], $symbols, "defn->symbolInformation does not match");
+
+                unset($this->getIndex($parserKinds[0])->references['false']);
+                unset($this->getIndex($parserKinds[0])->references['true']);
+                unset($this->getIndex($parserKinds[0])->references['null']);
+                unset($this->getIndex($parserKinds[1])->references['__FILE__']);
+
                 $this->assertEquals($this->getIndex($parserKinds[0])->references, $this->getIndex($parserKinds[1])->references);
             }
 

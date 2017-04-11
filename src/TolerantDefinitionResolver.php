@@ -339,6 +339,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             }
             // Get the type of the left-hand expression
             $varType = $this->resolveExpressionNodeToType($access->dereferencableExpression);
+
             if ($varType instanceof Types\Compound) {
                 // For compound types, use the first FQN we find
                 // (popular use case is ClassName|null)
@@ -501,7 +502,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
      * @param Node\Expr\Variable|Node\Expr\ClosureUse $var The variable access
      * @return Node\Expr\Assign|Node\Expr\AssignOp|Node\Param|Node\Expr\ClosureUse|null
      */
-    public function resolveVariableToNode(Tolerant\Node $var)
+    public function resolveVariableToNode($var)
     {
         $n = $var;
         // When a use is passed, start outside the closure to not return immediately
@@ -998,7 +999,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
 
         // for variables / assignments, get the documented type the assignment resolves to.
         if ($node instanceof Tolerant\Node\Expression\Variable) {
-            $node = $node->getFirstAncestor(Tolerant\Node\Expression\AssignmentExpression::class) ?? $node;
+            $node = $node->parent;
         }
         if (
             ($declarationNode = $node->getFirstAncestor(
@@ -1047,7 +1048,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
     private function getDocBlockTagForParameter($docBlock, $variableName) {
         $tags = $docBlock->getTagsByName('param');
         foreach ($tags as $tag) {
-            if ($tag->getVariableName() === $variableName) {
+            if ($tag->getVariableName() === \ltrim($variableName, "$")) {
                 return $tag;
             }
         }
