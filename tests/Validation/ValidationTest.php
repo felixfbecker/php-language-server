@@ -45,6 +45,7 @@ class ValidationTest extends TestCase
     }
 
     /**
+     * @group validation
      * @dataProvider frameworkErrorProvider
      */
     public function testFramworkErrors($testCaseFile, $frameworkName) {
@@ -80,6 +81,7 @@ class ValidationTest extends TestCase
     }
 
     /**
+     * @group validation
      * @dataProvider frameworkErrorProvider
      */
     public function testDefinitionErrors($testCaseFile, $frameworkName) {
