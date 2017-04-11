@@ -68,7 +68,7 @@ foreach($frameworks as $framework) {
 
             try {
                 $document = new PhpDocument($testCaseFile, $fileContents, $index, $parser, $docBlockFactory, $definitionResolver);
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 continue;
             }
         }
