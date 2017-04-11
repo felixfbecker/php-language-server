@@ -26,7 +26,7 @@ class Index implements ReadableIndex, \Serializable
      *
      * @var string[][]
      */
-    private $references = [];
+    public $references = [];
 
     /**
      * @var bool

@@ -28,6 +28,9 @@ class ValidationTest extends TestCase
         $testProviderArray = array();
         foreach ($frameworks as $frameworkDir) {
             $frameworkName = basename($frameworkDir);
+            if ($frameworkName !== "wordpress") {
+                continue;
+            }
             $iterator = new RecursiveDirectoryIterator(__DIR__ . "/../../validation/frameworks/" . $frameworkName);
 
             foreach (new RecursiveIteratorIterator($iterator) as $file) {
@@ -80,6 +83,15 @@ class ValidationTest extends TestCase
         // echo json_encode($parser->getErrors($sourceFile));
     }
 
+    private $index = [];
+
+    private function getIndex($kind) {
+        if (!isset($this->index[$kind])) {
+            $this->index[$kind] = new Index();
+        }
+        return $this->index[$kind];
+    }
+
     /**
      * @group validation
      * @dataProvider frameworkErrorProvider
@@ -91,13 +103,19 @@ class ValidationTest extends TestCase
         $parserKinds = [ParserKind::DIAGNOSTIC_PHP_PARSER, ParserKind::DIAGNOSTIC_TOLERANT_PHP_PARSER];
         $maxRecursion = [];
         $definitions = [];
+        $instantiated = [];
         $types = [];
+        $symbolInfo = [];
+        $extend = [];
+        $isGlobal = [];
+        $documentation = [];
+        $isStatic = [];
 
         foreach ($parserKinds as $kind) {
             global $parserKind;
             $parserKind = $kind;
 
-            $index = new Index;
+            $index = $this->getIndex($kind);
             $docBlockFactory = DocBlockFactory::createInstance();
 
             $definitionResolver = ParserResourceFactory::getDefinitionResolver($index);
@@ -115,19 +133,48 @@ class ValidationTest extends TestCase
 
             $fqns = [];
             $currentTypes = [];
+            $canBeInstantiated = [];
+            $symbols = [];
+            $extends = [];
+            $global = [];
+            $docs = [];
+            $static = [];
             foreach ($document->getDefinitions() as $defn) {
                 $fqns[] = $defn->fqn;
                 $currentTypes[$defn->fqn] = $defn->type;
+                $canBeInstantiated[$defn->fqn] = $defn->canBeInstantiated;
+
+                $defn->symbolInformation->location = null;
+                $symbols[$defn->fqn] = $defn->symbolInformation;
+
+                $extends[$defn->fqn] = $defn->extends;
+                $global[$defn->fqn] = $defn->isGlobal;
+                $docs[$defn->fqn] = $defn->documentation;
+                $static[$defn->fqn] = $defn->isStatic;
             }
 
             if (isset($definitions[$testCaseFile])) {
-                var_dump($definitions[$testCaseFile]);
-                $this->assertEquals($definitions[$testCaseFile], $fqns);
-//                $this->assertEquals($types[$testCaseFile], $currentTypes);
+                $this->assertEquals($definitions[$testCaseFile], $fqns, 'defn->fqn does not match');
+//                $this->assertEquals($types[$testCaseFile], $currentTypes, "defn->type does not match");
+                $this->assertEquals($instantiated[$testCaseFile], $canBeInstantiated, "defn->canBeInstantiated does not match");
+                $this->assertEquals($extend[$testCaseFile], $extends, 'defn->extends does not match');
+                $this->assertEquals($isGlobal[$testCaseFile], $global, 'defn->isGlobal does not match');
+                $this->assertEquals($documentation[$testCaseFile], $docs, 'defn->documentation does not match');
+                $this->assertEquals($isStatic[$testCaseFile], $static, 'defn->isStatic does not match');
+
+                $this->assertEquals($symbolInfo[$testCaseFile], $symbols, "defn->symbolInformation does not match");
+                $this->assertEquals($this->getIndex($parserKinds[0])->references, $this->getIndex($parserKinds[1])->references);
             }
 
             $definitions[$testCaseFile] = $fqns;
             $types[$testCaseFile] = $currentTypes;
+            $instantiated[$testCaseFile] = $canBeInstantiated;
+            $symbolInfo[$testCaseFile] = $symbols;
+            $extend[$testCaseFile] = $extends;
+            $isGlobal[$testCaseFile] = $global;
+            $documentation[$testCaseFile] = $docs;
+            $isStatic[$testCaseFile] = $static;
+
             $maxRecursion[$testCaseFile] = $definitionResolver::$maxRecursion;
         }
     }
