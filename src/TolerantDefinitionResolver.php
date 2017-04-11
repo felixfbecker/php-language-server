@@ -132,12 +132,13 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             }
         }
         // for everything else, get the doc block summary corresponding to the current node.
-        else {
+        elseif (!($node instanceof Tolerant\Node\Statement\NamespaceDefinition)) {
             $docBlock = $this->getDocBlock($node);
             if ($docBlock !== null) {
                 return $docBlock->getSummary();
             }
         }
+        return null;
     }
 
     function getDocBlock(Tolerant\Node $node) {
@@ -145,12 +146,12 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
         $namespaceDefinition = $node->getNamespaceDefinition();
         $context = null;
         if ($namespaceDefinition !== null && $namespaceDefinition->name !== null) {
-            $name = (string)$namespaceDefinition->name->getNamespacedName();
             list($namespaceImportTable,,) = $namespaceDefinition->name->getImportTablesForCurrentScope($namespaceDefinition);
             foreach ($namespaceImportTable as $alias=>$name) {
                 $namespaceImportTable[$alias] = (string)$name;
             }
-            $context = new Types\Context($name, $namespaceImportTable);
+            $namespaceName = (string)$namespaceDefinition->name->getNamespacedName();
+            $context = new Types\Context($namespaceName, $namespaceImportTable);
         }
 
         $docCommentText = $node->getDocCommentText();
@@ -190,6 +191,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             || $node instanceof Tolerant\Node\Statement\FunctionDeclaration
 
             || $node instanceof Tolerant\Node\Statement\ConstDeclaration
+            || $node instanceof Tolerant\Node\ConstElement && $node->parent->parent instanceof Tolerant\Node\Statement\ConstDeclaration
             // || $node instanceof Tolerant\Node\ClassConstDeclaration
         );
 
@@ -201,16 +203,16 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
         );
         $def->fqn = $fqn;
         if ($node instanceof Tolerant\Node\Statement\ClassDeclaration) {
+            $def->extends = []; // TODO - don't instantiate array
             if ($node->classBaseClause !== null && $node->classBaseClause->baseClass !== null) {
-                $def->extends = [];
                 $def->extends[] = (string)$node->classBaseClause->baseClass->getResolvedName();
             }
             // TODO what about class interfaces
         } else if ($node instanceof Tolerant\Node\Statement\InterfaceDeclaration) {
+            $def->extends = [];
             if ($node->interfaceBaseClause !== null && $node->interfaceBaseClause->interfaceNameList !== null) {
-                $def->extends = [];
                 foreach ($node->interfaceBaseClause->interfaceNameList->getValues() as $n) {
-                    $def->extends[] = $n->getText() ?? $n->getText($node->getFileContents());
+                    $def->extends[] = (string)$n->getResolvedName();
                 }
             }
         }
