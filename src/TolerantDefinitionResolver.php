@@ -306,32 +306,11 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
 // does this work for function calls?
             return $name;
         }
-        /*elseif ($node instanceof Tolerant\Node\Expression\CallExpression || ($node = $node->getFirstAncestor(Tolerant\Node\Expression\CallExpression::class)) !== null) {
-            if ($node->callableExpression instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression) {
-                $qualifier = $node->callableExpression->scopeResolutionQualifier;
-                if ($qualifier instanceof Tolerant\Token) {
-                    // resolve this/self/parent
-                } elseif ($qualifier instanceof Tolerant\Node\QualifiedName) {
-                    $name = $qualifier->getResolvedName() ?? $qualifier->getNamespacedName();
-                    $name .= "::";
-                    $memberName = $node->callableExpression->memberName;
-                    if ($memberName instanceof Tolerant\Token) {
-                        $name .= $memberName->getText($node->getFileContents());
-                    } elseif ($memberName instanceof Tolerant\Node\Expression\Variable) {
-                        $name .= $memberName->getText();
-                    } else {
-                        return null;
-                    }
-                    $name .= "()";
-                    return $name;
-                }
-            }
-        }*/
 
         else if (
         ($node instanceof Tolerant\Node\Expression\CallExpression &&
-            ($access = $node->callableExpression) instanceof Tolerant\Node\Expression\MemberAccessExpression) || (
-        ($access = $node) instanceof Tolerant\Node\Expression\MemberAccessExpression)
+            ($access = $node->callableExpression) instanceof Tolerant\Node\Expression\MemberAccessExpression)
+        || (($access = $node) instanceof Tolerant\Node\Expression\MemberAccessExpression)
         ) {
             if ($access->memberName instanceof Tolerant\Node\Expression) {
                 // Cannot get definition if right-hand side is expression
@@ -373,7 +352,8 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
 //                var_dump($classFqn);
             }
             $memberSuffix = '->' . (string)($access->memberName->getText() ?? $access->memberName->getText($node->getFileContents()));
-            if ($node instanceof Tolerant\Node\Expression\CallExpression) {
+            if ($node instanceof Tolerant\Node\Expression\CallExpression || $node->parent instanceof Tolerant\Node\Expression\CallExpression) {
+                // TODO - this is redundant
                 $memberSuffix .= '()';
             }
             // Find the right class that implements the member
