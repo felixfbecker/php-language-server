@@ -308,9 +308,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
         }
 
         else if (
-        ($node instanceof Tolerant\Node\Expression\CallExpression &&
-            ($access = $node->callableExpression) instanceof Tolerant\Node\Expression\MemberAccessExpression)
-        || (($access = $node) instanceof Tolerant\Node\Expression\MemberAccessExpression)
+        (($access = $node) instanceof Tolerant\Node\Expression\MemberAccessExpression)
         ) {
             if ($access->memberName instanceof Tolerant\Node\Expression) {
                 // Cannot get definition if right-hand side is expression
@@ -352,7 +350,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
 //                var_dump($classFqn);
             }
             $memberSuffix = '->' . (string)($access->memberName->getText() ?? $access->memberName->getText($node->getFileContents()));
-            if ($node instanceof Tolerant\Node\Expression\CallExpression || $node->parent instanceof Tolerant\Node\Expression\CallExpression) {
+            if ($node->parent instanceof Tolerant\Node\Expression\CallExpression) {
                 // TODO - this is redundant
                 $memberSuffix .= '()';
             }
@@ -577,8 +575,10 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             }
         }
         if ($expr instanceof Tolerant\Node\Expression\CallExpression &&
-            !($expr->callableExpression instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression ||
-                $expr->callableExpression instanceof Tolerant\Node\Expression\MemberAccessExpression)) {
+            !(
+                $expr->callableExpression instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression ||
+                $expr->callableExpression instanceof Tolerant\Node\Expression\MemberAccessExpression)
+            ) {
             
             // Find the function definition
             if ($expr->callableExpression instanceof Tolerant\Node\Expression) {
@@ -594,29 +594,6 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
                     return $def->type;
                 }
             }
-
-            /*
-            $isScopedPropertyAccess = $expr->callableExpression instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression;
-                $prefix = $isScopedPropertyAccess ?
-                $expr->callableExpression->scopeResolutionQualifier : $expr->callableExpression->dereferencableExpression;
-
-            if ($prefix instanceof Tolerant\Node\QualifiedName) {
-                $name = $prefix->getNamespacedName() ?? $prefix->getText();
-            } elseif ($prefix instanceof Tolerant\Token) {
-                // TODO DOES THIS EVER HAPPEN?
-                $name = $prefix->getText($expr->getText());
-            }
-
-            if (isset($name)) {
-                $memberNameText = $expr->callableExpression->memberName instanceof Node
-                    ? $expr->callableExpression->memberName->getText() : $expr->callableExpression->memberName->getText($expr->getFileContents());
-                $fqn = $name . ($isScopedPropertyAccess ? "::" : "->") . $memberNameText . "()";
-
-                $def = $this->index->getDefinition($fqn, true);
-                if ($def !== null) {
-                    return $def->type;
-                }
-            }*/
         }
         if (strtolower((string)$expr->getText()) === 'true' || strtolower((string)$expr->getText()) === 'false') {
             return new Types\Boolean;
@@ -630,9 +607,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
                 return $def->type;
             }
         }
-        if (($expr instanceof Tolerant\Node\Expression\CallExpression &&
-                ($access = $expr->callableExpression) instanceof Tolerant\Node\Expression\MemberAccessExpression)
-            || ($access = $expr) instanceof Tolerant\Node\Expression\MemberAccessExpression) {
+        if (($access = $expr) instanceof Tolerant\Node\Expression\MemberAccessExpression) {
             if ($access->memberName instanceof Tolerant\Node\Expression) {
                 return new Types\Mixed;
             }
@@ -658,7 +633,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
 //                    var_dump($classFqn);
                 }
                 $fqn = $classFqn . '->' . $access->memberName->getText($expr->getFileContents());
-                if ($expr instanceof Tolerant\Node\Expression\CallExpression) {
+                if ($expr->parent instanceof Tolerant\Node\Expression\CallExpression) {
                     $fqn .= '()';
                 }
 //                var_dump($fqn);
@@ -671,8 +646,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             }
         }
         if (
-            $expr instanceof Tolerant\Node\Expression\CallExpression && ($scopedAccess = $expr->callableExpression) instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression
-            || ($scopedAccess = $expr) instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression
+            ($scopedAccess = $expr) instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression
         ) {
             $classType = $this->resolveClassNameToType($scopedAccess->scopeResolutionQualifier);
 //            var_dump($classType);
@@ -684,7 +658,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
 //                $fqn .= '$';
 //            }
             $fqn .= $scopedAccess->memberName->getText() ?? $scopedAccess->memberName->getText($expr->getFileContents()); // TODO is there a cleaner way to do this?
-            if ($expr instanceof Tolerant\Node\Expression\CallExpression) {
+            if ($expr->parent instanceof Tolerant\Node\Expression\CallExpression) {
                 $fqn .= '()';
             }
 //            var_dump($fqn);
