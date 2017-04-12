@@ -156,6 +156,21 @@ class HoverTest extends ServerTestCase
         ], $reference->range), $result);
     }
 
+    public function testHoverForGlobalConstant()
+    {
+        // print TEST_PROPERTY ? 'true' : 'false';
+        // Get hover for TEST_PROPERTY
+        $reference = $this->getReferenceLocations('TEST_PROPERTY')[0];
+        $result = $this->textDocument->hover(
+            new TextDocumentIdentifier($reference->uri),
+            $reference->range->end
+        )->wait();
+        $this->assertEquals(new Hover([
+            new MarkedString('php', "<?php\n\\define('TEST_PROPERTY', \\false);"),
+            'Lorem ipsum dolor sit amet, consectetur.'
+        ], $reference->range), $result);
+    }
+
     public function testHoverForVariable()
     {
         // echo $var;
