@@ -766,10 +766,10 @@ class DefinitionResolver
             $docBlock = $node->getAttribute('docBlock');
             if ($docBlock !== null) {
                 // use @var tag
-                foreach($docBlock->getTagsByName('var') as $varTag) {
+                foreach ($docBlock->getTagsByName('var') as $varTag) {
                     $type = $varTag->getType();
 
-                    if($type === null) {
+                    if ($type === null) {
                         break;
                     }
                     return $type;
@@ -924,6 +924,6 @@ class DefinitionResolver
                 return null;
             }
             return (string)$node->args[0]->value->value;
-         }
+        }
     }
 }
