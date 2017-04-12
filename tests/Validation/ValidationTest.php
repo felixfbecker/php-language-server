@@ -28,9 +28,9 @@ class ValidationTest extends TestCase
         $testProviderArray = array();
         foreach ($frameworks as $frameworkDir) {
             $frameworkName = basename($frameworkDir);
-            if ($frameworkName !== "wordpress") {
-                continue;
-            }
+//            if ($frameworkName !== "wordpress") {
+//                continue;
+//            }
             $iterator = new RecursiveDirectoryIterator(__DIR__ . "/../../validation/frameworks/" . $frameworkName);
 
             foreach (new RecursiveIteratorIterator($iterator) as $file) {
@@ -85,11 +85,11 @@ class ValidationTest extends TestCase
 
     private $index = [];
 
-    private function getIndex($kind) {
-        if (!isset($this->index[$kind])) {
-            $this->index[$kind] = new Index();
+    private function getIndex($kind, $frameworkName) {
+        if (!isset($this->index[$kind][$frameworkName])) {
+            $this->index[$kind][$frameworkName] = new Index();
         }
-        return $this->index[$kind];
+        return $this->index[$kind][$frameworkName];
     }
 
     /**
@@ -101,6 +101,8 @@ class ValidationTest extends TestCase
         echo "$testCaseFile\n";
 
         $parserKinds = [ParserKind::DIAGNOSTIC_PHP_PARSER, ParserKind::DIAGNOSTIC_TOLERANT_PHP_PARSER];
+        $parserKinds = [ParserKind::PHP_PARSER, ParserKind::TOLERANT_PHP_PARSER];
+
         $maxRecursion = [];
         $definitions = [];
         $instantiated = [];
@@ -116,7 +118,7 @@ class ValidationTest extends TestCase
             global $parserKind;
             $parserKind = $kind;
 
-            $index = $this->getIndex($kind);
+            $index = $this->getIndex($kind, $frameworkName);
             $docBlockFactory = DocBlockFactory::createInstance();
 
             $definitionResolver = ParserResourceFactory::getDefinitionResolver($index);
@@ -165,12 +167,25 @@ class ValidationTest extends TestCase
 
                 $this->assertEquals($symbolInfo[$testCaseFile], $symbols, "defn->symbolInformation does not match");
 
-                unset($this->getIndex($parserKinds[0])->references['false']);
-                unset($this->getIndex($parserKinds[0])->references['true']);
-                unset($this->getIndex($parserKinds[0])->references['null']);
-                unset($this->getIndex($parserKinds[1])->references['__FILE__']);
+                unset($this->getIndex($parserKinds[0], $frameworkName)->references['false']);
+                unset($this->getIndex($parserKinds[0], $frameworkName)->references['true']);
+                unset($this->getIndex($parserKinds[0], $frameworkName)->references['null']);
+                unset($this->getIndex($parserKinds[0], $frameworkName)->references['FALSE']);
+                unset($this->getIndex($parserKinds[0], $frameworkName)->references['TRUE']);
+                unset($this->getIndex($parserKinds[0], $frameworkName)->references['NULL']);
 
-                $this->assertEquals($this->getIndex($parserKinds[0])->references, $this->getIndex($parserKinds[1])->references);
+//                unset($this->getIndex($parserKinds[1])->references['__LINE__']);
+//                unset($this->getIndex($parserKinds[1])->references['__FILE__']);
+//                unset($this->getIndex($parserKinds[1])->references['Exception']);
+//                unset($this->getIndex($parserKinds[1])->references['__METHOD__']);
+//                unset($this->getIndex($parserKinds[1])->references['__FUNCTION__']);
+//                unset($this->getIndex($parserKinds[1])->references['Requests_Exception']);
+
+                try {
+                    $this->assertArraySubset($this->getIndex($parserKinds[0], $frameworkName)->references, $this->getIndex($parserKinds[1], $frameworkName)->references);
+                } catch (\Throwable $e) {
+                    $this->assertEquals($this->getIndex($parserKinds[0], $frameworkName)->references, $this->getIndex($parserKinds[1], $frameworkName)->references);
+                }
             }
 
             $definitions[$testCaseFile] = $fqns;
@@ -182,7 +197,7 @@ class ValidationTest extends TestCase
             $documentation[$testCaseFile] = $docs;
             $isStatic[$testCaseFile] = $static;
 
-            $maxRecursion[$testCaseFile] = $definitionResolver::$maxRecursion;
+//            $maxRecursion[$testCaseFile] = $definitionResolver::$maxRecursion;
         }
     }
 }
