@@ -89,7 +89,14 @@ class DefinitionResolver
         } else {
             $docBlock = $node->getAttribute('docBlock');
             if ($docBlock !== null) {
-                return $docBlock->getSummary();
+                // check wether we have a description, when true, add a new paragraph
+                // with the description
+                $description = $docBlock->getDescription()->render();
+
+                if (empty($description)) {
+                    return $docBlock->getSummary();
+                }
+                return $docBlock->getSummary() . "\n\n" . $description;
             }
         }
     }
@@ -439,7 +446,7 @@ class DefinitionResolver
                 // Cannot get type for dynamic function call
                 return new Types\Mixed;
             }
-            $fqn = (string)($expr->getAttribute('namespacedName') ?? $expr->name);
+            $fqn = (string)($expr->getAttribute('namespacedName') ?? $expr->name) . '()';
             $def = $this->index->getDefinition($fqn, true);
             if ($def !== null) {
                 return $def->type;
@@ -725,10 +732,12 @@ class DefinitionResolver
                 // Use @param tag
                 foreach ($docBlock->getTagsByName('param') as $paramTag) {
                     if ($paramTag->getVariableName() === $node->name) {
-                        if ($paramTag->getType() === null) {
+                        $type = $paramTag->getType();
+
+                        if ($type === null) {
                             break;
                         }
-                        return $paramTag->getType();
+                        return $type;
                     }
                 }
             }
@@ -752,6 +761,41 @@ class DefinitionResolver
             }
             return $type ?? new Types\Mixed;
         }
+
+        if ($node instanceof Node\Var_) {
+            $docBlock = $node->getAttribute('docBlock');
+            if ($docBlock !== null) {
+                // use @var tag
+                foreach($docBlock->getTagsByName('var') as $varTag) {
+                    $type = $varTag->getType();
+
+                    if($type === null) {
+                        break;
+                    }
+                    return $type;
+                }
+            }
+            $type = null;
+            if ($node->type !== null) {
+                // Use PHP7 return type hint
+                if (is_string($node->type)) {
+                    // Resolve a string like "bool" to a type object
+                    $type = $this->typeResolver->resolve($node->type);
+                } else {
+                    $type = new Types\Object_(new Fqsen('\\' . (string)$node->type));
+                }
+            }
+            if ($node->default !== null) {
+                $defaultType = $this->resolveExpressionNodeToType($node->default);
+                if (isset($type) && !is_a($type, get_class($defaultType))) {
+                    $type = new Types\Compound([$type, $defaultType]);
+                } else {
+                    $type = $defaultType;
+                }
+            }
+            return $type ?? new Types\Mixed;
+        }
+
         if ($node instanceof Node\FunctionLike) {
             // Functions/methods
             $docBlock = $node->getAttribute('docBlock');
@@ -875,6 +919,11 @@ class DefinitionResolver
                 }
                 return (string)$class->namespacedName . '::' . $node->name;
             }
-        }
+        } else if ($node instanceof Node\Expr\FuncCall && $node->name instanceof Node\Name && strtolower((string)$node->name) === 'define') {
+            if (!isset($node->args[0]) || !($node->args[0]->value instanceof Node\Scalar\String_)) {
+                return null;
+            }
+            return (string)$node->args[0]->value->value;
+         }
     }
 }

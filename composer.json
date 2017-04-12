@@ -28,7 +28,7 @@
     },
     "require": {
         "php": ">=7.0",
-        "nikic/php-parser": "^3.0.4",
+        "nikic/php-parser": "^3.0.5",
         "phpdocumentor/reflection-docblock": "^3.0",
         "sabre/event": "^5.0",
         "felixfbecker/advanced-json-rpc": "^2.0",

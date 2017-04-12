@@ -98,3 +98,10 @@ new class {
 };
 
 class ChildClass extends TestClass {}
+
+/**
+ * Lorem ipsum dolor sit amet, consectetur.
+ */
+define('TEST_PROPERTY', false);
+
+print TEST_PROPERTY ? 'true' : 'false';
