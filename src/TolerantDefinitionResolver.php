@@ -393,8 +393,8 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             $name = (string)($node->getNamespacedName());
         }
         else if (
-            ($scoped = $node) instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression ||
-            ($scoped = $node->parent) instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression
+            ($scoped = $node) instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression
+            || ($scoped = $node->parent) instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression
             || ($node->parent instanceof Tolerant\Node\Expression\CallExpression && ($scoped = $node->parent->callableExpression) instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression)
         ) {
 //            if ($scoped->memberName instanceof Tolerant\Node\Expression) {
@@ -410,7 +410,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
                 }
                 if ($className === 'parent') {
                     // parent is resolved to the parent class
-                    if (!isset($node->extends)) {
+                    if (!isset($classNode->extends)) {
                         return null;
                     }
                     $className = (string)$classNode->extends->getResolvedName();
@@ -561,6 +561,11 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             // How do we handle this more generally?
             return new Types\Mixed;
         }
+
+        if ($expr instanceof Tolerant\Node\Expression\ParenthesizedExpression) {
+            $expr = $expr->expression;
+        }
+
         if ($expr instanceof Tolerant\Node\Expression\Variable || $expr instanceof Tolerant\Node\UseVariableName) {
             if ($expr instanceof Tolerant\Node\Expression\Variable && $expr->getName() === 'this') {
                 return new Types\This;
@@ -607,44 +612,44 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
                 return $def->type;
             }
         }
-        if (($access = $expr) instanceof Tolerant\Node\Expression\MemberAccessExpression) {
-            if ($access->memberName instanceof Tolerant\Node\Expression) {
-                return new Types\Mixed;
-            }
-            $var = $access->dereferencableExpression;
+       if (($access = $expr) instanceof Tolerant\Node\Expression\MemberAccessExpression) {
+           if ($access->memberName instanceof Tolerant\Node\Expression) {
+               return new Types\Mixed;
+           }
+           $var = $access->dereferencableExpression;
 
 //            var_dump("HERE!!!");
-            // Resolve object
-            $objType = $this->resolveExpressionNodeToType($var);
+           // Resolve object
+           $objType = $this->resolveExpressionNodeToType($var);
 //            var_dump($objType);
-            if (!($objType instanceof Types\Compound)) {
-                $objType = new Types\Compound([$objType]);
-            }
-            for ($i = 0; $t = $objType->get($i); $i++) {
-                if ($t instanceof Types\This) {
-                    $classFqn = self::getContainingClassFqn($expr);
-                    if ($classFqn === null) {
-                        return new Types\Mixed;
-                    }
-                } else if (!($t instanceof Types\Object_) || $t->getFqsen() === null) {
-                    return new Types\Mixed;
-                } else {
-                    $classFqn = substr((string)$t->getFqsen(), 1);
+           if (!($objType instanceof Types\Compound)) {
+               $objType = new Types\Compound([$objType]);
+           }
+           for ($i = 0; $t = $objType->get($i); $i++) {
+               if ($t instanceof Types\This) {
+                   $classFqn = self::getContainingClassFqn($expr);
+                   if ($classFqn === null) {
+                       return new Types\Mixed;
+                   }
+               } else if (!($t instanceof Types\Object_) || $t->getFqsen() === null) {
+                   return new Types\Mixed;
+               } else {
+                   $classFqn = substr((string)$t->getFqsen(), 1);
 //                    var_dump($classFqn);
-                }
-                $fqn = $classFqn . '->' . $access->memberName->getText($expr->getFileContents());
-                if ($expr->parent instanceof Tolerant\Node\Expression\CallExpression) {
-                    $fqn .= '()';
-                }
+               }
+               $fqn = $classFqn . '->' . $access->memberName->getText($expr->getFileContents());
+               if ($expr->parent instanceof Tolerant\Node\Expression\CallExpression) {
+                   $fqn .= '()';
+               }
 //                var_dump($fqn);
 //                var_dump($fqn);
-                $def = $this->index->getDefinition($fqn);
+               $def = $this->index->getDefinition($fqn);
 //                var_dump($def);
-                if ($def !== null) {
-                    return $def->type;
-                }
-            }
-        }
+               if ($def !== null) {
+                   return $def->type;
+               }
+           }
+       }
         if (
             ($scopedAccess = $expr) instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression
         ) {
