@@ -152,9 +152,9 @@ abstract class ServerTestCase extends TestCase
                 0 => new Location($referencesUri, new Range(new Position( 7,  0), new Position( 7, 27)))
             ],
             'TestNamespace\\TestClass::testMethod()' => [
-                0 => new Location($referencesUri, new Range(new Position( 5,  0), new Position( 5, 18))), // $obj->testMethod();
-                1 => new Location($referencesUri, new Range(new Position(38,  0), new Position(38, 32))), // $obj->testProperty->testMethod();
-                2 => new Location($referencesUri, new Range(new Position(42,  5), new Position(42, 25)))  // $child->testMethod();
+                0 => new Location($referencesUri, new Range(new Position( 5,  0), new Position( 5, 16))), // $obj->testMethod();
+                1 => new Location($referencesUri, new Range(new Position(38,  0), new Position(38, 30))), // $obj->testProperty->testMethod();
+                2 => new Location($referencesUri, new Range(new Position(42,  5), new Position(42, 23)))  // $child->testMethod();
             ],
             'TestNamespace\\test_function()' => [
                 0 => new Location($referencesUri, new Range(new Position(10,  0), new Position(10, 13))),
@@ -202,9 +202,9 @@ abstract class ServerTestCase extends TestCase
                 0 => new Location($globalReferencesUri, new Range(new Position( 7,  0), new Position( 7, 27)))
             ],
             'TestClass::testMethod()' => [
-                0 => new Location($globalReferencesUri, new Range(new Position( 5,  0), new Position( 5, 18))), // $obj->testMethod();
-                1 => new Location($globalReferencesUri, new Range(new Position(38,  0), new Position(38, 32))), // $obj->testProperty->testMethod();
-                2 => new Location($globalReferencesUri, new Range(new Position(42,  5), new Position(42, 25)))  // $child->testMethod();
+                0 => new Location($globalReferencesUri, new Range(new Position( 5,  0), new Position( 5, 16))), // $obj->testMethod();
+                1 => new Location($globalReferencesUri, new Range(new Position(38,  0), new Position(38, 30))), // $obj->testProperty->testMethod();
+                2 => new Location($globalReferencesUri, new Range(new Position(42,  5), new Position(42, 23)))  // $child->testMethod();
             ],
             'test_function()' => [
                 0 => new Location($globalReferencesUri, new Range(new Position(10,  0), new Position(10, 13))),
