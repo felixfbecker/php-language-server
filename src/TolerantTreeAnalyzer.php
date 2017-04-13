@@ -95,7 +95,10 @@ class TolerantTreeAnalyzer implements TreeAnalyzerInterface {
 
         $parent = $node->parent;
         if (!(
-            ($node instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression
+            (
+                // $node->parent instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression ||
+                ($node instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression || 
+                $node instanceof Tolerant\Node\Expression\MemberAccessExpression)
                 && !(
                     $node->parent instanceof Tolerant\Node\Expression\CallExpression ||
                     $node->memberName instanceof Tolerant\Token
@@ -127,7 +130,9 @@ class TolerantTreeAnalyzer implements TreeAnalyzerInterface {
                 if (TolerantDefinitionResolver::isConstantFetch($node) ||
                     ($parent instanceof Tolerant\Node\Expression\CallExpression
                         && !(
-                            $node instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression
+                            $parent->callableExpression instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression ||
+                            $node instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression ||
+                            $node instanceof Tolerant\Node\Expression\MemberAccessExpression
                         ))) {
                     $parts = explode('\\', $fqn);
                     if (count($parts) > 1) {
