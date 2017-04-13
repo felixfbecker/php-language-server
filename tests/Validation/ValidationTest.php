@@ -170,7 +170,7 @@ class ValidationTest extends TestCase
                 $this->assertEquals($symbolInfo[$testCaseFile], $symbols, "defn->symbolInformation does not match");
 
 
-                $skipped = ['false', 'true', 'null', 'FALSE', 'TRUE', 'NULL', 'parent', 'PARENT', 'self', 'static'];
+//                $skipped = ['false', 'true', 'null', 'FALSE', 'TRUE', 'NULL', 'parent', 'PARENT', 'self', 'static'];
                 $skipped = [];
                 foreach ($this->getIndex($parserKinds[0], $frameworkName)->references as $key=>$value) {
                     foreach ($skipped as $s) {
