@@ -28,13 +28,15 @@ class ValidationTest extends TestCase
         $testProviderArray = array();
         foreach ($frameworks as $frameworkDir) {
             $frameworkName = basename($frameworkDir);
-//            if ($frameworkName !== "wordpress") {
-//                continue;
-//            }
+            if ($frameworkName !== "broken") {
+                continue;
+            }
             $iterator = new RecursiveDirectoryIterator(__DIR__ . "/../../validation/frameworks/" . $frameworkName);
 
             foreach (new RecursiveIteratorIterator($iterator) as $file) {
-                if (strpos(\strrev((string)$file), \strrev(".php")) === 0) {
+                if (strpos(\strrev((string)$file), \strrev(".php")) === 0
+//                    && strpos((string)$file, "ConsoleIoTest.php")!== false
+                ) {
                     if ($file->getSize() < 100000) {
                         $testProviderArray[$frameworkName . "::" . $file->getBasename()] = [$file->getPathname(), $frameworkName];
                     }
@@ -167,12 +169,16 @@ class ValidationTest extends TestCase
 
                 $this->assertEquals($symbolInfo[$testCaseFile], $symbols, "defn->symbolInformation does not match");
 
-                unset($this->getIndex($parserKinds[0], $frameworkName)->references['false']);
-                unset($this->getIndex($parserKinds[0], $frameworkName)->references['true']);
-                unset($this->getIndex($parserKinds[0], $frameworkName)->references['null']);
-                unset($this->getIndex($parserKinds[0], $frameworkName)->references['FALSE']);
-                unset($this->getIndex($parserKinds[0], $frameworkName)->references['TRUE']);
-                unset($this->getIndex($parserKinds[0], $frameworkName)->references['NULL']);
+
+                $skipped = ['false', 'true', 'null', 'FALSE', 'TRUE', 'NULL', 'parent', 'PARENT', 'self', 'static'];
+                $skipped = [];
+                foreach ($this->getIndex($parserKinds[0], $frameworkName)->references as $key=>$value) {
+                    foreach ($skipped as $s) {
+                        if (strpos($key, $s) !== false) {
+                            unset($this->getIndex($parserKinds[0], $frameworkName)->references[$key]);
+                        }
+                    }
+                }
 
 //                unset($this->getIndex($parserKinds[1])->references['__LINE__']);
 //                unset($this->getIndex($parserKinds[1])->references['__FILE__']);
@@ -183,8 +189,10 @@ class ValidationTest extends TestCase
 
                 try {
                     $this->assertArraySubset($this->getIndex($parserKinds[0], $frameworkName)->references, $this->getIndex($parserKinds[1], $frameworkName)->references);
+                    var_dump(array_keys($this->getIndex($parserKinds[1], $frameworkName)->references));
                 } catch (\Throwable $e) {
-                    $this->assertEquals($this->getIndex($parserKinds[0], $frameworkName)->references, $this->getIndex($parserKinds[1], $frameworkName)->references);
+                    $this->assertEquals($this->getIndex($parserKinds[0], $frameworkName)->references, $this->getIndex($parserKinds[1], $frameworkName)->references,
+                        "references do not match");
                 }
             }
 
