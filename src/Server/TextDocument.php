@@ -65,7 +65,7 @@ class TextDocument
     /**
      * @var ReadableIndex
      */
-    protected $index;
+    public $index;
 
     /**
      * @var \stdClass|null
