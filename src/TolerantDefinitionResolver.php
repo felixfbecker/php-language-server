@@ -501,7 +501,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
         // When a use is passed, start outside the closure to not return immediately
         // Use variable vs variable parsing?
         if ($var instanceof Tolerant\Node\UseVariableName) {
-            $n = $var->getFirstAncestor(Tolerant\Node\Expression\AnonymousFunctionCreationExpression::class);
+            $n = $var->getFirstAncestor(Tolerant\Node\Expression\AnonymousFunctionCreationExpression::class)->parent;
             $name = $var->getName();
         } else if ($var instanceof Tolerant\Node\Expression\Variable || $var instanceof Tolerant\Node\Parameter) {
             $name = $var->getName();
@@ -521,8 +521,11 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
                     }
                 }
                 // If it is a closure, also check use statements
-                if ($n instanceof Tolerant\Node\Expression\AnonymousFunctionCreationExpression && $n->anonymousFunctionUseClause !== null && $n->anonymousFunctionUseClause->useVariableNameList !== null) {
-                    foreach ($n->anonymousFunctionUseClause->useVariableNameList->getElements() as $use) {
+                if ($n instanceof Tolerant\Node\Expression\AnonymousFunctionCreationExpression &&
+                    $n->anonymousFunctionUseClause !== null &&
+                    $n->anonymousFunctionUseClause->useVariableNameList !== null) {
+                    foreach ($n->anonymousFunctionUseClause->useVariableNameList->getElements() as $use
+                    ) {
                         if ($use->getName() === $name) {
                             return $use;
                         }
@@ -587,7 +590,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             }
             // Find variable definition
             $defNode = $this->resolveVariableToNode($expr);
-            if ($defNode instanceof Tolerant\Node\Expression) {
+            if ($defNode instanceof Tolerant\Node\Expression || $defNode instanceof Tolerant\Node\UseVariableName) {
                 return $this->resolveExpressionNodeToType($defNode);
             }
             if ($defNode instanceof Tolerant\Node\Parameter) {
@@ -874,7 +877,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             return new Types\Object_;
         }
         $className = (string)$class->getResolvedName();
-        var_dump($className);
+
         if ($className === 'static') {
             return new Types\Static_;
         }
@@ -1056,7 +1059,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
         // INPUT                   OUTPUT:
         // namespace A\B;           A\B
         else if ($node instanceof Tolerant\Node\Statement\NamespaceDefinition && $node->name instanceof Tolerant\Node\QualifiedName) {
-            return (string) $node->name;
+            return (string) Tolerant\ResolvedName::buildName($node->name->nameParts, $node->getFileContents());
         }
         // INPUT                   OUTPUT:
         // namespace A\B;

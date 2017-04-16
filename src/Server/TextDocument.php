@@ -220,7 +220,6 @@ class TextDocument
                     if ($descendantNode instanceof Tolerant\Node\Expression\Variable &&
                         $descendantNode->getName() === $node->getName()
                     ) {
-                        var_dump($descendantNode->getName());
                         $locations[] = Location::fromNode($descendantNode);
                     }
                 }

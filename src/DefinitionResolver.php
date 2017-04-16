@@ -777,9 +777,6 @@ class DefinitionResolver implements DefinitionResolverInterface
                 && !empty($varTags = $docBlock->getTagsByName('var'))
                 && ($type = $varTags[0]->getType())
             ) {
-                if ((string)$type === "\\TestNamespace\\TestClass") {
-                    var_dump($type);
-                }
                 return $type;
             }
             // Resolve the expression
