@@ -15,7 +15,7 @@ use Microsoft\PhpParser as Tolerant;
 
 trait LoggedDefinitionResolverTrait
 {
-    private static $logger = false;
+    private static $logger = true;
 
     private static $stackLevel = 0;
 
@@ -27,7 +27,7 @@ trait LoggedDefinitionResolverTrait
     public function __construct(ReadableIndex $index)
     {
         parent::__construct($index);
-        self::$logger = false;
+        self::$logger = true;
         self::$maxRecursion = 0;
     }
 
@@ -80,7 +80,11 @@ trait LoggedDefinitionResolverTrait
             } elseif ($result instanceof DocBlock) {
                 $resultText = $result->getDescription();
             } else {
-                $resultText = $result ?? "NULL";
+                try {
+                    $resultText = (string) $result;
+                } catch (\Throwable $e) {
+                    $resultText = "UNKNOWN";
+                }
             }
             echo str_repeat("\t", self::$recursion + 1) . "> RESULT[$callStr]: " . $resultText . "\n";
         }
