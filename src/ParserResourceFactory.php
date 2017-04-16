@@ -6,7 +6,8 @@ use Microsoft\PhpParser as Tolerant;
 use LanguageServer\Index\ReadableIndex;
 
 class ParserResourceFactory {
-    const PARSER_KIND = ParserKind::DIAGNOSTIC_TOLERANT_PHP_PARSER;
+    const PARSER_KIND = ParserKind::TOLERANT_PHP_PARSER;
+
     private static function getParserKind () {
         global $parserKind;
         return isset($parserKind) ? $parserKind : self::PARSER_KIND;

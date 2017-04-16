@@ -29,13 +29,13 @@ class ValidationTest extends TestCase
         foreach ($frameworks as $frameworkDir) {
             $frameworkName = basename($frameworkDir);
             if ($frameworkName !== "broken") {
-                continue;
+//                continue;
             }
             $iterator = new RecursiveDirectoryIterator(__DIR__ . "/../../validation/frameworks/" . $frameworkName);
 
             foreach (new RecursiveIteratorIterator($iterator) as $file) {
                 if (strpos(\strrev((string)$file), \strrev(".php")) === 0
-//                    && strpos((string)$file, "ConsoleIoTest.php")!== false
+//                    && strpos((string)$file, "taxonomy.php")!== false
                 ) {
                     if ($file->getSize() < 100000) {
                         $testProviderArray[$frameworkName . "::" . $file->getBasename()] = [$file->getPathname(), $frameworkName];
@@ -106,14 +106,15 @@ class ValidationTest extends TestCase
         $parserKinds = [ParserKind::PHP_PARSER, ParserKind::TOLERANT_PHP_PARSER];
 
         $maxRecursion = [];
-        $definitions = [];
-        $instantiated = [];
-        $types = [];
-        $symbolInfo = [];
-        $extend = [];
-        $isGlobal = [];
-        $documentation = [];
-        $isStatic = [];
+
+        $definitions = null;
+        $instantiated = null;
+        $types = null;
+        $symbolInfo = null;
+        $extend = null;
+        $isGlobal = null;
+        $documentation = null;
+        $isStatic = null;
 
         foreach ($parserKinds as $kind) {
             echo ("=====================================\n");
@@ -128,8 +129,12 @@ class ValidationTest extends TestCase
 
             try {
                 $document = new PhpDocument($testCaseFile, $fileContents, $index, $parser, $docBlockFactory, $definitionResolver);
-            } catch (\Exception $e) {
-                continue;
+            } catch (Exception $e) {
+                if ($kind === $parserKinds[0]) {
+                    $this->markTestIncomplete("baseline parser failed: " . $e->getTraceAsString());
+                }
+                throw $e;
+
             }
 
             if ($document->getStmts() === null) {
@@ -157,25 +162,37 @@ class ValidationTest extends TestCase
                 $docs[$defn->fqn] = $defn->documentation;
                 $static[$defn->fqn] = $defn->isStatic;
             }
+            if ($definitions !== null) {
 
-            if (isset($definitions[$testCaseFile])) {
-                $this->assertEquals($definitions[$testCaseFile], $fqns, 'defn->fqn does not match');
-//                $this->assertEquals($types[$testCaseFile], $currentTypes, "defn->type does not match");
-                $this->assertEquals($instantiated[$testCaseFile], $canBeInstantiated, "defn->canBeInstantiated does not match");
-                $this->assertEquals($extend[$testCaseFile], $extends, 'defn->extends does not match');
-                $this->assertEquals($isGlobal[$testCaseFile], $global, 'defn->isGlobal does not match');
-                $this->assertEquals($documentation[$testCaseFile], $docs, 'defn->documentation does not match');
-                $this->assertEquals($isStatic[$testCaseFile], $static, 'defn->isStatic does not match');
+                $this->assertEquals($definitions, $fqns, 'defn->fqn does not match');
+//                $this->assertEquals($types, $currentTypes, "defn->type does not match");
+                $this->assertEquals($instantiated, $canBeInstantiated, "defn->canBeInstantiated does not match");
+                $this->assertEquals($extend, $extends, 'defn->extends does not match');
+                $this->assertEquals($isGlobal, $global, 'defn->isGlobal does not match');
+                $this->assertEquals($documentation, $docs, 'defn->documentation does not match');
+                $this->assertEquals($isStatic, $static, 'defn->isStatic does not match');
 
-                $this->assertEquals($symbolInfo[$testCaseFile], $symbols, "defn->symbolInformation does not match");
+                $this->assertEquals($symbolInfo, $symbols, "defn->symbolInformation does not match");
 
 
-//                $skipped = ['false', 'true', 'null', 'FALSE', 'TRUE', 'NULL', 'parent', 'PARENT', 'self', 'static'];
                 $skipped = [];
+                $skipped = [
+                    'false', 'true', 'null', 'FALSE', 'TRUE', 'NULL',
+                    '__', // magic constants are treated as normal constants
+                    'Exception', // catch exception types missing from old definition resolver
+                    'Trait' // use Trait references are missing from old definition resolve
+                ];
                 foreach ($this->getIndex($parserKinds[0], $frameworkName)->references as $key=>$value) {
                     foreach ($skipped as $s) {
                         if (strpos($key, $s) !== false) {
                             unset($this->getIndex($parserKinds[0], $frameworkName)->references[$key]);
+                        }
+                    }
+                }
+                foreach ($this->getIndex($parserKinds[1], $frameworkName)->references as $key=>$value) {
+                    foreach ($skipped as $s) {
+                        if (strpos($key, $s) !== false) {
+                            unset($this->getIndex($parserKinds[1], $frameworkName)->references[$key]);
                         }
                     }
                 }
@@ -188,22 +205,31 @@ class ValidationTest extends TestCase
 //                unset($this->getIndex($parserKinds[1])->references['Requests_Exception']);
 
                 try {
+
+//                    $this->assertEquals($this->getIndex($parserKinds[0], $frameworkName)->references, $this->getIndex($parserKinds[1], $frameworkName)->references,
+//                        "references do not match");
+
                     $this->assertArraySubset($this->getIndex($parserKinds[0], $frameworkName)->references, $this->getIndex($parserKinds[1], $frameworkName)->references);
-                    var_dump(array_keys($this->getIndex($parserKinds[1], $frameworkName)->references));
-                } catch (\Throwable $e) {
+//                    var_dump(array_keys($this->getIndex($parserKinds[1], $frameworkName)->references));
+                }
+                catch (\Throwable $e) {
                     $this->assertEquals($this->getIndex($parserKinds[0], $frameworkName)->references, $this->getIndex($parserKinds[1], $frameworkName)->references,
                         "references do not match");
                 }
+                finally {
+                    unset($this->index[$parserKinds[0]][$frameworkName]);
+                    unset($this->index[$parserKinds[1]][$frameworkName]);
+                }
             }
 
-            $definitions[$testCaseFile] = $fqns;
-            $types[$testCaseFile] = $currentTypes;
-            $instantiated[$testCaseFile] = $canBeInstantiated;
-            $symbolInfo[$testCaseFile] = $symbols;
-            $extend[$testCaseFile] = $extends;
-            $isGlobal[$testCaseFile] = $global;
-            $documentation[$testCaseFile] = $docs;
-            $isStatic[$testCaseFile] = $static;
+            $definitions = $fqns;
+            $types = $currentTypes;
+            $instantiated = $canBeInstantiated;
+            $symbolInfo = $symbols;
+            $extend = $extends;
+            $isGlobal = $global;
+            $documentation = $docs;
+            $isStatic = $static;
 
 //            $maxRecursion[$testCaseFile] = $definitionResolver::$maxRecursion;
         }

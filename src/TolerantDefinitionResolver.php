@@ -280,12 +280,14 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             $name = $node->getResolvedName();
 
             if (($useClause = $node->getFirstAncestor(Tolerant\Node\NamespaceUseGroupClause::class, Tolerant\Node\Statement\NamespaceUseDeclaration::class)) !== null) {
-                $name = (string)($name ?? $node->getText());
+                $name = (string)($name ??  Tolerant\ResolvedName::buildName($node->nameParts, $node->getFileContents()));
                 if ($useClause instanceof Tolerant\Node\NamespaceUseGroupClause) {
                     $prefix = $useClause->parent->parent->namespaceName;
-                    $prefix = $prefix === null ? "" : $prefix->getText();
-
-                    $name = $prefix . "\\" . $name;
+                    if ($prefix === null) {
+                        return null;
+                    }
+                    $prefixName = Tolerant\ResolvedName::buildName($prefix->nameParts, $useClause->getFileContents());
+                    $name = (string)$prefixName . "\\" . $name;
 
                     if ($useClause->functionOrConst === null) {
                         $useClause = $node->getFirstAncestor(Tolerant\Node\Statement\NamespaceUseDeclaration::class);
@@ -449,12 +451,25 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
         return
             (
             $node instanceof Tolerant\Node\QualifiedName &&
-            ($node->parent instanceof Tolerant\Node\Statement\ExpressionStatement || $node->parent instanceof Tolerant\Node\Expression || $node->parent instanceof Tolerant\Node\DelimitedList\ExpressionList) &&
+            (
+//                $node->parent instanceof Tolerant\Node\Statement\ExpressionStatement ||
+                $node->parent instanceof Tolerant\Node\Expression ||
+                $node->parent instanceof Tolerant\Node\DelimitedList\ExpressionList ||
+                $node->parent instanceof Tolerant\Node\ArrayElement ||
+                ($node->parent instanceof Tolerant\Node\Parameter && $node->parent->default === $node) ||
+                $node->parent instanceof Tolerant\Node\StatementNode ||
+                $node->parent instanceof Tolerant\Node\CaseStatementNode
+            ) &&
             !(
-                $node->parent instanceof Tolerant\Node\Expression\MemberAccessExpression || $node->parent instanceof Tolerant\Node\Expression\CallExpression ||
+                $node->parent instanceof Tolerant\Node\Expression\MemberAccessExpression ||
+                $node->parent instanceof Tolerant\Node\Expression\CallExpression ||
                 $node->parent instanceof Tolerant\Node\Expression\ObjectCreationExpression ||
-                $node->parent instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression || $node->parent instanceof Tolerant\Node\Expression\AnonymousFunctionCreationExpression ||
-                ($node->parent instanceof Tolerant\Node\Expression\BinaryExpression && $node->parent->operator->kind === Tolerant\TokenKind::InstanceOfKeyword)
+                $node->parent instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression ||
+                $node->parent instanceof Tolerant\Node\Expression\AnonymousFunctionCreationExpression ||
+                (
+                    $node->parent instanceof Tolerant\Node\Expression\BinaryExpression &&
+                    $node->parent->operator->kind === Tolerant\TokenKind::InstanceOfKeyword
+                )
             ));
     }
 
@@ -859,6 +874,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             return new Types\Object_;
         }
         $className = (string)$class->getResolvedName();
+        var_dump($className);
         if ($className === 'static') {
             return new Types\Static_;
         }

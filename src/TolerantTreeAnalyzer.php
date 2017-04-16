@@ -112,7 +112,7 @@ class TolerantTreeAnalyzer implements TreeAnalyzerInterface {
 
                 if (
                     $node instanceof Tolerant\Node\QualifiedName
-                    && $node->isQualifiedName()
+                    && ($node->isQualifiedName() || $node->parent instanceof Tolerant\Node\NamespaceUseClause)
                     && !($parent instanceof Tolerant\Node\Statement\NamespaceDefinition && $parent->name->getStart() === $node->getStart()
                     )
                 ) {
