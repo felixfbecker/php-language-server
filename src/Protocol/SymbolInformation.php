@@ -99,7 +99,7 @@ class SymbolInformation
         } else if ($node instanceof Node\Expr\ClosureUse) {
             $symbol->name = $node->var;
         } else if (isset($node->name)) {
-            if($setDefaultName) {
+            if ($setDefaultName) {
                 $symbol->name = (string)$node->name;
             }
         } else {
