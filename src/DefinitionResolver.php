@@ -720,11 +720,21 @@ class DefinitionResolver
      * If it is unknown, will be Types\Mixed.
      * Returns null if the node does not have a type.
      *
-     * @param Node $node
+     * @param Node|string $node
      * @return \phpDocumentor\Reflection\Type|null
      */
-    public function getTypeFromNode(Node $node)
+    public function getTypeFromNode($node)
     {
+        if (is_string($node)) {
+            // Resolve a string like "bool" to a type object
+            return $this->typeResolver->resolve($node);
+        }
+        if ($node instanceof Node\Name) {
+            return new Types\Object_(new Fqsen('\\' . (string)$node));
+        }
+        if ($node instanceof Node\NullableType) {
+            return new Types\Compound([new Types\Null_, $this->getTypeFromNode($node->type)]);
+        }
         if ($node instanceof Node\Param) {
             // Parameters
             $docBlock = $node->getAttribute('parentNode')->getAttribute('docBlock');
@@ -742,12 +752,7 @@ class DefinitionResolver
             $type = null;
             if ($node->type !== null) {
                 // Use PHP7 return type hint
-                if (is_string($node->type)) {
-                    // Resolve a string like "bool" to a type object
-                    $type = $this->typeResolver->resolve($node->type);
-                } else {
-                    $type = new Types\Object_(new Fqsen('\\' . (string)$node->type));
-                }
+                return $this->getTypeFromNode($node->type);
             }
             if ($node->default !== null) {
                 $defaultType = $this->resolveExpressionNodeToType($node->default);
@@ -771,12 +776,7 @@ class DefinitionResolver
                 return $returnTags[0]->getType();
             }
             if ($node->returnType !== null) {
-                // Use PHP7 return type hint
-                if (is_string($node->returnType)) {
-                    // Resolve a string like "bool" to a type object
-                    return $this->typeResolver->resolve($node->returnType);
-                }
-                return new Types\Object_(new Fqsen('\\' . (string)$node->returnType));
+                return $this->getTypeFromNode($node->returnType);
             }
             // Unknown return type
             return new Types\Mixed;
