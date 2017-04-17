@@ -72,7 +72,7 @@ abstract class ServerTestCase extends TestCase
         $this->definitionLocations = [
 
             // Global
-            'TEST_PROPERTY'                          => new Location($globalSymbolsUri,    new Range(new Position(104, 0), new Position(104, 30))),
+            'TEST_DEFINE_CONSTANT'                   => new Location($globalSymbolsUri,    new Range(new Position(104, 0), new Position(104, 37))),
             'TEST_CONST'                             => new Location($globalSymbolsUri,    new Range(new Position( 9,  6), new Position( 9,  22))),
             'TestClass'                              => new Location($globalSymbolsUri,    new Range(new Position(20,  0), new Position(61,   1))),
             'ChildClass'                             => new Location($globalSymbolsUri,    new Range(new Position(99,  0), new Position(99,  37))),
@@ -164,8 +164,8 @@ abstract class ServerTestCase extends TestCase
             ],
 
             // Global
-            'TEST_PROPERTY' => [
-                0 => new Location($globalSymbolsUri,    new Range(new Position(106, 6), new Position(106, 19)))
+            'TEST_DEFINE_CONSTANT' => [
+                0 => new Location($globalSymbolsUri,    new Range(new Position(106, 6), new Position(106, 26)))
             ],
             'TEST_CONST' => [
                 0 => new Location($referencesUri,       new Range(new Position(29,  5), new Position(29, 15))),

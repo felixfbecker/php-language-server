@@ -102,6 +102,6 @@ class ChildClass extends TestClass {}
 /**
  * Lorem ipsum dolor sit amet, consectetur.
  */
-define('TEST_PROPERTY', false);
+define('TEST_DEFINE_CONSTANT', false);
 
-print TEST_PROPERTY ? 'true' : 'false';
+print TEST_DEFINE_CONSTANT ? 'true' : 'false';

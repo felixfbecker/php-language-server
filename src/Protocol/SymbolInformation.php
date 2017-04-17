@@ -58,9 +58,8 @@ class SymbolInformation
             && $node->args[0]->value instanceof Node\Scalar\String_
         ) {
             // constants with define() like
-            // define('TEST_PROPERTY', true);
+            // define('TEST_DEFINE_CONSTANT', false);
             $symbol->kind = SymbolKind::CONSTANT;
-            $symbol->name = (string)$node->args[0]->value->value;
         } else if ($node instanceof Node\Stmt\Class_ || $node instanceof Node\Stmt\Trait_) {
             $symbol->kind = SymbolKind::CLASS_;
         } else if ($node instanceof Node\Stmt\Interface_) {
@@ -91,6 +90,14 @@ class SymbolInformation
         }
         if ($node instanceof Node\Name) {
             $symbol->name = (string)$node;
+        } else if(
+            $node instanceof Node\Expr\FuncCall
+            && $node->name instanceof Node\Name
+            && strtolower((string)$node->name) === 'define'
+            && isset($node->args[0])
+            && $node->args[0]->value instanceof Node\Scalar\String_
+        ) {
+            $symbol->name = (string)$node->args[0]->value->value;
         } else if ($node instanceof Node\Expr\Assign || $node instanceof Node\Expr\AssignOp) {
             $symbol->name = $node->var->name;
         } else if ($node instanceof Node\Expr\ClosureUse) {
