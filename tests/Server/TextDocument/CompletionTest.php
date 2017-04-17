@@ -160,7 +160,12 @@ class CompletionTest extends TestCase
                 'TestClass',
                 CompletionItemKind::CLASS_,
                 null,
-                'Pariatur ut laborum tempor voluptate consequat ea deserunt.',
+                'Pariatur ut laborum tempor voluptate consequat ea deserunt.' . "\n\n" .
+                'Deserunt enim minim sunt sint ea nisi. Deserunt excepteur tempor id nostrud' . "\n" .
+                'laboris commodo ad commodo velit mollit qui non officia id. Nulla duis veniam' . "\n" .
+                'veniam officia deserunt et non dolore mollit ea quis eiusmod sit non. Occaecat' . "\n" .
+                'consequat sunt culpa exercitation pariatur id reprehenderit nisi incididunt Lorem' . "\n" .
+                'sint. Officia culpa pariatur laborum nostrud cupidatat consequat mollit.',
                 null,
                 null,
                 '\TestClass'
@@ -179,7 +184,12 @@ class CompletionTest extends TestCase
                 'TestClass',
                 CompletionItemKind::CLASS_,
                 'TestNamespace',
-                'Pariatur ut laborum tempor voluptate consequat ea deserunt.',
+                'Pariatur ut laborum tempor voluptate consequat ea deserunt.' . "\n\n" .
+                'Deserunt enim minim sunt sint ea nisi. Deserunt excepteur tempor id nostrud' . "\n" .
+                'laboris commodo ad commodo velit mollit qui non officia id. Nulla duis veniam' . "\n" .
+                'veniam officia deserunt et non dolore mollit ea quis eiusmod sit non. Occaecat' . "\n" .
+                'consequat sunt culpa exercitation pariatur id reprehenderit nisi incididunt Lorem' . "\n" .
+                'sint. Officia culpa pariatur laborum nostrud cupidatat consequat mollit.',
                 null,
                 null,
                 'TestClass'
@@ -193,6 +203,15 @@ class CompletionTest extends TestCase
                 null,
                 '\TestNamespace\ChildClass'
             ),
+            new CompletionItem(
+                'Example',
+                CompletionItemKind::CLASS_,
+                'TestNamespace',
+                null,
+                null,
+                null,
+                '\TestNamespace\Example'
+            )
         ], true), $items);
     }
 
@@ -209,7 +228,12 @@ class CompletionTest extends TestCase
                 'TestClass',
                 CompletionItemKind::CLASS_,
                 'TestNamespace',
-                'Pariatur ut laborum tempor voluptate consequat ea deserunt.'
+                'Pariatur ut laborum tempor voluptate consequat ea deserunt.' . "\n\n" .
+                'Deserunt enim minim sunt sint ea nisi. Deserunt excepteur tempor id nostrud' . "\n" .
+                'laboris commodo ad commodo velit mollit qui non officia id. Nulla duis veniam' . "\n" .
+                'veniam officia deserunt et non dolore mollit ea quis eiusmod sit non. Occaecat' . "\n" .
+                'consequat sunt culpa exercitation pariatur id reprehenderit nisi incididunt Lorem' . "\n" .
+                'sint. Officia culpa pariatur laborum nostrud cupidatat consequat mollit.'
             )
         ], true), $items);
     }
@@ -347,7 +371,12 @@ class CompletionTest extends TestCase
                 'TestClass',
                 CompletionItemKind::CLASS_,
                 null,
-                'Pariatur ut laborum tempor voluptate consequat ea deserunt.',
+                'Pariatur ut laborum tempor voluptate consequat ea deserunt.' . "\n\n" .
+                'Deserunt enim minim sunt sint ea nisi. Deserunt excepteur tempor id nostrud' . "\n" .
+                'laboris commodo ad commodo velit mollit qui non officia id. Nulla duis veniam' . "\n" .
+                'veniam officia deserunt et non dolore mollit ea quis eiusmod sit non. Occaecat' . "\n" .
+                'consequat sunt culpa exercitation pariatur id reprehenderit nisi incididunt Lorem' . "\n" .
+                'sint. Officia culpa pariatur laborum nostrud cupidatat consequat mollit.',
                 null,
                 null,
                 'TestClass'
@@ -430,6 +459,38 @@ class CompletionTest extends TestCase
                 null,
                 null,
                 'SomeNamespace'
+            )
+        ], true), $items);
+    }
+
+    public function testBarePhp()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/bare_php.php');
+        $this->loader->open($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(4, 8)
+        )->wait();
+        $this->assertEquals(new CompletionList([
+            new CompletionItem(
+                '$abc2',
+                CompletionItemKind::VARIABLE,
+                'int',
+                null,
+                null,
+                null,
+                null,
+                new TextEdit(new Range(new Position(4, 8), new Position(4, 8)), 'c2')
+            ),
+            new CompletionItem(
+                '$abc',
+                CompletionItemKind::VARIABLE,
+                'int',
+                null,
+                null,
+                null,
+                null,
+                new TextEdit(new Range(new Position(4, 8), new Position(4, 8)), 'c')
             )
         ], true), $items);
     }

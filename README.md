@@ -180,7 +180,7 @@ Example:
  - [VS Code PHP IntelliSense](https://github.com/felixfbecker/vscode-php-intellisense)
  - [Eclipse Che](https://eclipse.org/che/)
  - [Eclipse IDE (LSP4E-PHP)](https://github.com/eclipselabs/lsp4e-php)
- - [Neovim (nvim-cm-php-language-server)](https://github.com/roxma/nvim-cm-php-language-server)
+ - NeoVim: [LanguageServer-php-neovim](https://github.com/roxma/LanguageServer-php-neovim) with [LanguageClient neovim](https://github.com/autozimu/LanguageClient-neovim)
 
 ## Contributing
 

@@ -12,7 +12,7 @@ use LanguageServer\Index\ReadableIndex;
 class DefinitionResolver
 {
     /**
-     * @var \LanguageServer\Index
+     * @var \LanguageServer\Index\ReadableIndex
      */
     private $index;
 
@@ -48,6 +48,7 @@ class DefinitionResolver
             // Properties and constants can have multiple declarations
             // Use the parent node (that includes the modifiers), but only render the requested declaration
             $child = $node;
+            /** @var Node */
             $node = $node->getAttribute('parentNode');
             $defLine = clone $node;
             $defLine->props = [$child];
@@ -88,7 +89,14 @@ class DefinitionResolver
         } else {
             $docBlock = $node->getAttribute('docBlock');
             if ($docBlock !== null) {
-                return $docBlock->getSummary();
+                // check wether we have a description, when true, add a new paragraph
+                // with the description
+                $description = $docBlock->getDescription()->render();
+
+                if (empty($description)) {
+                    return $docBlock->getSummary();
+                }
+                return $docBlock->getSummary() . "\n\n" . $description;
             }
         }
     }
@@ -363,7 +371,7 @@ class DefinitionResolver
      * Returns the assignment or parameter node where a variable was defined
      *
      * @param Node\Expr\Variable|Node\Expr\ClosureUse $var The variable access
-     * @return Node\Expr\Assign|Node\Param|Node\Expr\ClosureUse|null
+     * @return Node\Expr\Assign|Node\Expr\AssignOp|Node\Param|Node\Expr\ClosureUse|null
      */
     public static function resolveVariableToNode(Node\Expr $var)
     {
@@ -415,7 +423,7 @@ class DefinitionResolver
      * If the type could not be resolved, returns Types\Mixed.
      *
      * @param \PhpParser\Node\Expr $expr
-     * @return \phpDocumentor\Type
+     * @return \phpDocumentor\Reflection\Type
      */
     public function resolveExpressionNodeToType(Node\Expr $expr): Type
     {
@@ -438,7 +446,7 @@ class DefinitionResolver
                 // Cannot get type for dynamic function call
                 return new Types\Mixed;
             }
-            $fqn = (string)($expr->getAttribute('namespacedName') ?? $expr->name);
+            $fqn = (string)($expr->getAttribute('namespacedName') ?? $expr->name) . '()';
             $def = $this->index->getDefinition($fqn, true);
             if ($def !== null) {
                 return $def->type;
@@ -539,7 +547,7 @@ class DefinitionResolver
             ]);
         }
         if (
-            $expr instanceof Node\Expr\InstanceOf_
+            $expr instanceof Node\Expr\Instanceof_
             || $expr instanceof Node\Expr\Cast\Bool_
             || $expr instanceof Node\Expr\BooleanNot
             || $expr instanceof Node\Expr\Empty_
@@ -559,19 +567,18 @@ class DefinitionResolver
             return new Types\Boolean;
         }
         if (
-            $expr instanceof Node\Expr\Concat
-            || $expr instanceof Node\Expr\Cast\String_
+            $expr instanceof Node\Expr\Cast\String_
             || $expr instanceof Node\Expr\BinaryOp\Concat
             || $expr instanceof Node\Expr\AssignOp\Concat
-            || $expr instanceof Node\Expr\Scalar\String_
-            || $expr instanceof Node\Expr\Scalar\Encapsed
-            || $expr instanceof Node\Expr\Scalar\EncapsedStringPart
-            || $expr instanceof Node\Expr\Scalar\MagicConst\Class_
-            || $expr instanceof Node\Expr\Scalar\MagicConst\Dir
-            || $expr instanceof Node\Expr\Scalar\MagicConst\Function_
-            || $expr instanceof Node\Expr\Scalar\MagicConst\Method
-            || $expr instanceof Node\Expr\Scalar\MagicConst\Namespace_
-            || $expr instanceof Node\Expr\Scalar\MagicConst\Trait_
+            || $expr instanceof Node\Scalar\String_
+            || $expr instanceof Node\Scalar\Encapsed
+            || $expr instanceof Node\Scalar\EncapsedStringPart
+            || $expr instanceof Node\Scalar\MagicConst\Class_
+            || $expr instanceof Node\Scalar\MagicConst\Dir
+            || $expr instanceof Node\Scalar\MagicConst\Function_
+            || $expr instanceof Node\Scalar\MagicConst\Method
+            || $expr instanceof Node\Scalar\MagicConst\Namespace_
+            || $expr instanceof Node\Scalar\MagicConst\Trait_
         ) {
             return new Types\String_;
         }
@@ -580,23 +587,35 @@ class DefinitionResolver
             || $expr instanceof Node\Expr\BinaryOp\Plus
             || $expr instanceof Node\Expr\BinaryOp\Pow
             || $expr instanceof Node\Expr\BinaryOp\Mul
-            || $expr instanceof Node\Expr\AssignOp\Minus
-            || $expr instanceof Node\Expr\AssignOp\Plus
-            || $expr instanceof Node\Expr\AssignOp\Pow
-            || $expr instanceof Node\Expr\AssignOp\Mul
         ) {
             if (
-                $this->resolveExpressionNodeToType($expr->left) instanceof Types\Integer_
-                && $this->resolveExpressionNodeToType($expr->right) instanceof Types\Integer_
+                $this->resolveExpressionNodeToType($expr->left) instanceof Types\Integer
+                && $this->resolveExpressionNodeToType($expr->right) instanceof Types\Integer
             ) {
                 return new Types\Integer;
             }
             return new Types\Float_;
         }
+
+        if (
+            $expr instanceof Node\Expr\AssignOp\Minus
+            || $expr instanceof Node\Expr\AssignOp\Plus
+            || $expr instanceof Node\Expr\AssignOp\Pow
+            || $expr instanceof Node\Expr\AssignOp\Mul
+        ) {
+            if (
+                $this->resolveExpressionNodeToType($expr->var) instanceof Types\Integer
+                && $this->resolveExpressionNodeToType($expr->expr) instanceof Types\Integer
+            ) {
+                return new Types\Integer;
+            }
+            return new Types\Float_;
+        }
+
         if (
             $expr instanceof Node\Scalar\LNumber
             || $expr instanceof Node\Expr\Cast\Int_
-            || $expr instanceof Node\Expr\Scalar\MagicConst\Line
+            || $expr instanceof Node\Scalar\MagicConst\Line
             || $expr instanceof Node\Expr\BinaryOp\Spaceship
             || $expr instanceof Node\Expr\BinaryOp\BitwiseAnd
             || $expr instanceof Node\Expr\BinaryOp\BitwiseOr
@@ -606,7 +625,7 @@ class DefinitionResolver
         }
         if (
             $expr instanceof Node\Expr\BinaryOp\Div
-            || $expr instanceof Node\Expr\DNumber
+            || $expr instanceof Node\Scalar\DNumber
             || $expr instanceof Node\Expr\Cast\Double
         ) {
             return new Types\Float_;
@@ -702,7 +721,7 @@ class DefinitionResolver
      * Returns null if the node does not have a type.
      *
      * @param Node|string $node
-     * @return \phpDocumentor\Type|null
+     * @return \phpDocumentor\Reflection\Type|null
      */
     public function getTypeFromNode($node)
     {
@@ -730,6 +749,7 @@ class DefinitionResolver
                     }
                 }
             }
+            $type = null;
             if ($node->type !== null) {
                 // Use PHP7 return type hint
                 return $this->getTypeFromNode($node->type);
@@ -792,7 +812,7 @@ class DefinitionResolver
                 }
             } else if ($node instanceof Node\Const_) {
                 return $this->resolveExpressionNodeToType($node->value);
-            } else if ($node instanceof Node\Expr\Assign || $node instanceof Node\Expr\AssignOp) {
+            } else {
                 return $this->resolveExpressionNodeToType($node);
             }
             // TODO: read @property tags of class
