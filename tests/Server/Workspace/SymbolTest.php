@@ -59,6 +59,9 @@ class SymbolTest extends ServerTestCase
             new SymbolInformation('test_function',          SymbolKind::FUNCTION,    $this->getDefinitionLocation('test_function()'),                              ''),
             new SymbolInformation('ChildClass',             SymbolKind::CLASS_,      $this->getDefinitionLocation('ChildClass'),                                   ''),
             new SymbolInformation('TEST_DEFINE_CONSTANT',   SymbolKind::CONSTANT,    $this->getDefinitionLocation('TEST_DEFINE_CONSTANT'),                         ''),
+            new SymbolInformation('Something',              SymbolKind::CLASS_,      $this->getDefinitionLocation('Something'),                                    ''),
+            new SymbolInformation('getInstance',            SymbolKind::METHOD,      $this->getDefinitionLocation('Something::getInstance()'),                     'Something'),
+            new SymbolInformation('hello',                  SymbolKind::METHOD,      $this->getDefinitionLocation('Something::hello()'),                           'Something'),
             new SymbolInformation('whatever',               SymbolKind::FUNCTION,    $this->getDefinitionLocation('whatever()'),                                   ''),
 
             new SymbolInformation('SecondTestNamespace',    SymbolKind::NAMESPACE,   $this->getDefinitionLocation('SecondTestNamespace'),                          '')

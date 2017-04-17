@@ -105,3 +105,18 @@ class ChildClass extends TestClass {}
 define('TEST_DEFINE_CONSTANT', false);
 
 print TEST_DEFINE_CONSTANT ? 'true' : 'false';
+
+// resolve self type test
+class Something {
+
+    public static function getInstance(): self {
+        return new self;
+    }
+
+    /**
+     * Does nothing
+     */
+    public function hello() {
+        echo 'Hi!';
+    }
+}
