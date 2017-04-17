@@ -745,7 +745,7 @@ class DefinitionResolver
                 if (is_string($node->type)) {
                     // Resolve a string like "bool" to a type object
                     $type = $this->typeResolver->resolve($node->type);
-                } else if ($node->type instanceof Node\Name && strtolower($node->type) === 'self') {
+                } else if ($node->type instanceof Node\Name && strtolower((string)$node->type) === 'self') {
                     // handle self reference
                     $class = getClosestNode($node, Node\Stmt\Class_::class);
                     if ($class !== null) {
