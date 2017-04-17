@@ -91,7 +91,7 @@ class SymbolInformation
             return null;
         }
         
-        if (!isset($symbol->name)) {   
+        if (!isset($symbol->name)) {
             if ($node instanceof Node\Name) {
                 $symbol->name = (string)$node;
             } else if ($node instanceof Node\Expr\Assign || $node instanceof Node\Expr\AssignOp) {
