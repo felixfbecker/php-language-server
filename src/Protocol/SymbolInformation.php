@@ -50,7 +50,6 @@ class SymbolInformation
     {
         $parent = $node->getAttribute('parentNode');
         $symbol = new self;
-        $setDefaultName = true;
 
         if (
             $node instanceof Node\Expr\FuncCall
@@ -63,7 +62,6 @@ class SymbolInformation
             // define('TEST_DEFINE_CONSTANT', false);
             $symbol->kind = SymbolKind::CONSTANT;
             $symbol->name = (string)$node->args[0]->value->value;
-            $setDefaultName = false;
         } else if ($node instanceof Node\Stmt\Class_ || $node instanceof Node\Stmt\Trait_) {
             $symbol->kind = SymbolKind::CLASS_;
         } else if ($node instanceof Node\Stmt\Interface_) {
@@ -98,10 +96,8 @@ class SymbolInformation
             $symbol->name = $node->var->name;
         } else if ($node instanceof Node\Expr\ClosureUse) {
             $symbol->name = $node->var;
-        } else if (isset($node->name)) {
-            if ($setDefaultName) {
-                $symbol->name = (string)$node->name;
-            }
+        } else if (isset($node->name) && !isset($symbol->name)) {
+            $symbol->name = (string)$node->name;
         } else {
             return null;
         }
