@@ -50,6 +50,8 @@ class SymbolInformation
     {
         $parent = $node->getAttribute('parentNode');
         $symbol = new self;
+        $setDefaultName = true;
+
         if (
             $node instanceof Node\Expr\FuncCall
             && $node->name instanceof Node\Name
@@ -60,6 +62,8 @@ class SymbolInformation
             // constants with define() like
             // define('TEST_DEFINE_CONSTANT', false);
             $symbol->kind = SymbolKind::CONSTANT;
+            $symbol->name = (string)$node->args[0]->value->value;
+            $setDefaultName = false;
         } else if ($node instanceof Node\Stmt\Class_ || $node instanceof Node\Stmt\Trait_) {
             $symbol->kind = SymbolKind::CLASS_;
         } else if ($node instanceof Node\Stmt\Interface_) {
@@ -90,23 +94,18 @@ class SymbolInformation
         }
         if ($node instanceof Node\Name) {
             $symbol->name = (string)$node;
-        } else if (
-            $node instanceof Node\Expr\FuncCall
-            && $node->name instanceof Node\Name
-            && strtolower((string)$node->name) === 'define'
-            && isset($node->args[0])
-            && $node->args[0]->value instanceof Node\Scalar\String_
-        ) {
-            $symbol->name = (string)$node->args[0]->value->value;
         } else if ($node instanceof Node\Expr\Assign || $node instanceof Node\Expr\AssignOp) {
             $symbol->name = $node->var->name;
         } else if ($node instanceof Node\Expr\ClosureUse) {
             $symbol->name = $node->var;
         } else if (isset($node->name)) {
-            $symbol->name = (string)$node->name;
+            if($setDefaultName) {
+                $symbol->name = (string)$node->name;
+            }
         } else {
             return null;
         }
+
         $symbol->location = Location::fromNode($node);
         if ($fqn !== null) {
             $parts = preg_split('/(::|->|\\\\)/', $fqn);
