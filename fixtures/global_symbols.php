@@ -119,4 +119,8 @@ class Something {
     public function hello() {
         echo 'Hi!';
     }
+
+    public function selfParamTest(self $something) {
+        $something->hello();
+    }
 }

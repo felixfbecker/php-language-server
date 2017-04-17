@@ -62,6 +62,7 @@ class SymbolTest extends ServerTestCase
             new SymbolInformation('Something',              SymbolKind::CLASS_,      $this->getDefinitionLocation('Something'),                                    ''),
             new SymbolInformation('getInstance',            SymbolKind::METHOD,      $this->getDefinitionLocation('Something::getInstance()'),                     'Something'),
             new SymbolInformation('hello',                  SymbolKind::METHOD,      $this->getDefinitionLocation('Something::hello()'),                           'Something'),
+            new SymbolInformation('selfParamTest',          SymbolKind::METHOD,      $this->getDefinitionLocation('Something::selfParamTest()'),                     'Something'),
             new SymbolInformation('whatever',               SymbolKind::FUNCTION,    $this->getDefinitionLocation('whatever()'),                                   ''),
 
             new SymbolInformation('SecondTestNamespace',    SymbolKind::NAMESPACE,   $this->getDefinitionLocation('SecondTestNamespace'),                          '')

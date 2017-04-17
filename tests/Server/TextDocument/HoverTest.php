@@ -46,6 +46,20 @@ class HoverTest extends ServerTestCase
         ], $reference->range), $result);
     }
 
+    public function testHoverForSelfParamTypeDefinition()
+    {
+        // class Something
+        // get hover for Something::getInstance() (returns a instance of Something)
+        $reference = $this->getReferenceLocations('Something')[1];
+        $result = $this->textDocument->hover(
+            new TextDocumentIdentifier($reference->uri),
+            $reference->range->end
+        )->wait();
+        $this->assertEquals(new Hover([
+            new MarkedString('php', "<?php\nclass Something")
+        ], $reference->range), $result);
+    }
+
     public function testHoverForClassLikeDefinition()
     {
         // class TestClass implements TestInterface

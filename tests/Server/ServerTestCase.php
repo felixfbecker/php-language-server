@@ -85,9 +85,10 @@ abstract class ServerTestCase extends TestCase
             'TestClass::testMethod()'                => new Location($globalSymbolsUri,    new Range(new Position(57,  4), new Position(60,   5))),
             'test_function()'                        => new Location($globalSymbolsUri,    new Range(new Position(78,  0), new Position(81,   1))),
             'whatever()'                             => new Location($globalReferencesUri, new Range(new Position(21,  0), new Position(23,   1))),
-            'Something'                              => new Location($globalSymbolsUri,    new Range(new Position(109, 0), new Position(121,  1))),
+            'Something'                              => new Location($globalSymbolsUri,    new Range(new Position(109, 0), new Position(125,  1))),
             'Something::getInstance()'               => new Location($globalSymbolsUri,    new Range(new Position(111, 4), new Position(113,  5))),
             'Something::hello()'                     => new Location($globalSymbolsUri,    new Range(new Position(118, 4), new Position(120,  5))),
+            'Something::selfParamTest()'             => new Location($globalSymbolsUri,    new Range(new Position(122, 4), new Position(124,  5))),
 
             // Namespaced
             'TestNamespace'                                => new Location($symbolsUri,    new Range(new Position( 2, 10), new Position( 2,  23))),
@@ -219,7 +220,8 @@ abstract class ServerTestCase extends TestCase
                 1 => new Location($globalReferencesUri, new Range(new Position(31, 13), new Position(31, 40)))
             ],
             'Something' => [
-                0 => new Location($globalReferencesUri, new Range(new Position(45,  0), new Position(56,  9)))  // Something::getInstance()->hello()
+                0 => new Location($globalReferencesUri, new Range(new Position(45,  0), new Position(56,   9))), // Something::getInstance()->hello()
+                1 => new Location($globalSymbolsUri,    new Range(new Position(123, 8), new Position(123, 18)))  // $something->hello();
             ],
             'Something::getInstance()' => [
                 0 => new Location($globalReferencesUri, new Range(new Position(45,  0), new Position(45, 24)))  // Something::getInstance()->hello()
