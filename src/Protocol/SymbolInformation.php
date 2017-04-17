@@ -90,7 +90,7 @@ class SymbolInformation
         }
         if ($node instanceof Node\Name) {
             $symbol->name = (string)$node;
-        } else if(
+        } else if (
             $node instanceof Node\Expr\FuncCall
             && $node->name instanceof Node\Name
             && strtolower((string)$node->name) === 'define'
