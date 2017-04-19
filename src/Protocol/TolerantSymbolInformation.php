@@ -53,9 +53,7 @@ class TolerantSymbolInformation
             return null;
         }
 
-        if ($node instanceof Node\Name) {
-            $symbol->name = (string)$node;
-        } else if ($node instanceof Tolerant\Node\Expression\AssignmentExpression) {
+        if ($node instanceof Tolerant\Node\Expression\AssignmentExpression) {
             if ($node->leftOperand instanceof Tolerant\Node\Expression\Variable) {
                 $symbol->name = $node->leftOperand->getName();
             } elseif ($node->leftOperand instanceof Tolerant\Token) {
@@ -65,7 +63,11 @@ class TolerantSymbolInformation
         } else if ($node instanceof Tolerant\Node\UseVariableName) {
             $symbol->name = $node->getName();
         } else if (isset($node->name)) {
-            $symbol->name = trim((string)$node->name->getText($node->getFileContents()), "$");
+            if ($node->name instanceof Tolerant\Node\QualifiedName) {
+                $symbol->name = (string)Tolerant\ResolvedName::buildName($node->name->nameParts, $node->getFileContents());
+            } else {
+                $symbol->name = ltrim((string)$node->name->getText($node->getFileContents()), "$");
+            }
         } else if (isset($node->variableName)) {
             $symbol->name = $node->variableName->getText($node);
         } else {

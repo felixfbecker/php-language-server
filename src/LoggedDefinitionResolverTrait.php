@@ -12,6 +12,7 @@ use phpDocumentor\Reflection\{
 use LanguageServer\Protocol\SymbolInformation;
 use LanguageServer\Index\ReadableIndex;
 use Microsoft\PhpParser as Tolerant;
+use PhpParser\PrettyPrinterAbstract;
 
 trait LoggedDefinitionResolverTrait
 {
@@ -79,9 +80,14 @@ trait LoggedDefinitionResolverTrait
                 $resultText = $result->fqn;
             } elseif ($result instanceof DocBlock) {
                 $resultText = $result->getDescription();
-            } else {
+            }
+            else {
                 try {
-                    $resultText = (string) $result;
+                    if ($result instanceof Node) {
+                        $resultText = (new PrettyPrinter())->prettyPrint([$result]);
+                    } else {
+                        $resultText = (string) $result;
+                    }
                 } catch (\Throwable $e) {
                     $resultText = "UNKNOWN";
                 }

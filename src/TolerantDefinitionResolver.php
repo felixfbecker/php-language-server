@@ -5,7 +5,6 @@ namespace LanguageServer;
 
 use LanguageServer\Protocol\TolerantSymbolInformation;
 use PhpParser\Node;
-use PhpParser\PrettyPrinter\Standard as PrettyPrinter;
 use phpDocumentor\Reflection\{
     DocBlock, DocBlockFactory, Types, Type, Fqsen, TypeResolver
 };
@@ -16,21 +15,22 @@ use Microsoft\PhpParser as Tolerant;
 class TolerantDefinitionResolver implements DefinitionResolverInterface
 {
     /**
+     * The current project index (for retrieving existing definitions)
+     *
      * @var \LanguageServer\Index\ReadableIndex
      */
     protected $index;
 
     /**
+     * Resolves strings to a type object.
+     *
      * @var \phpDocumentor\Reflection\TypeResolver
      */
     private $typeResolver;
 
     /**
-     * @var \PhpParser\PrettyPrinterAbstract
-     */
-    private $prettyPrinter;
-
-    /**
+     * Parses Doc Block comments given the DocBlock text and import tables at a position.
+     *
      * @var DocBlockFactory
      */
     private $docBlockFactory;
@@ -42,61 +42,42 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
     {
         $this->index = $index;
         $this->typeResolver = new TypeResolver;
-        $this->prettyPrinter = new PrettyPrinter;
         $this->docBlockFactory = DocBlockFactory::createInstance();
     }
 
     /**
-     * Builds the declaration line for a given node.
-     *
+     * Builds the declaration line for a given node. Declarations with multiple lines are trimmed.
      *
      * @param Tolerant\Node $node
      * @return string
      */
     public function getDeclarationLineFromNode($node): string
     {
-        // TODO Tolerant\Node\Statement\FunctionStaticDeclaration::class
-
-        // we should have a better way of determining whether something is a property or constant
-        // If part of a declaration list -> get the parent declaration
+        // If node is part of a declaration list, build a declaration line that discludes other elements in the list
+        //  - [PropertyDeclaration] // public $a, [$b = 3], $c; => public $b = 3;
+        //  - [ConstDeclaration | ClassConstDeclaration] // "const A = 3, [B = 4];" => "const B = 4;"
         if (
-            // PropertyDeclaration // public $a, $b, $c;
-            $node instanceof Tolerant\Node\Expression\Variable &&
-            ($propertyDeclaration = $node->getFirstAncestor(Tolerant\Node\PropertyDeclaration::class)) !== null
+            ($declaration = TolerantParserHelpers::tryGetPropertyDeclaration($node)) && ($elements = $declaration->propertyElements) ||
+            ($declaration = TolerantParserHelpers::tryGetConstOrClassConstDeclaration($node)) && ($elements = $declaration->constElements)
         ) {
-            $defLine = $propertyDeclaration->getText();
-            $defLineStart = $propertyDeclaration->getStart();
+            $defLine = $declaration->getText();
+            $defLineStart = $declaration->getStart();
 
             $defLine = \substr_replace(
                 $defLine,
                 $node->getFullText(),
-                $propertyDeclaration->propertyElements->getFullStart() - $defLineStart,
-                $propertyDeclaration->propertyElements->getFullWidth()
+                $elements->getFullStart() - $defLineStart,
+                $elements->getFullWidth()
             );
-        } elseif (
-            // ClassConstDeclaration or ConstDeclaration // const A = 1, B = 2;
-            $node instanceof Tolerant\Node\ConstElement &&
-            ($constDeclaration = $node->getFirstAncestor(Tolerant\Node\Statement\ConstDeclaration::class, Tolerant\Node\ClassConstDeclaration::class))
-        ) {
-            $defLine = $constDeclaration->getText();
-            $defLineStart = $constDeclaration->getStart();
-
-            $defLine = \substr_replace(
-                $defLine,
-                $node->getFullText(),
-                $constDeclaration->constElements->getFullStart() - $defLineStart,
-                $constDeclaration->constElements->getFullWidth()
-            );
-        }
-
-        // Get the current node
-        else {
+        } else {
             $defLine = $node->getText();
         }
 
-        $defLine = \strtok($defLine, "\n");
-        $defLine = \strtok($defLine, "\r");
+        // Trim string to only include first line
+        $defLine = \rtrim(\strtok($defLine, "\n"), "\r");
 
+        // TODO - pretty print rather than getting text
+        
         return $defLine;
     }
 
@@ -108,54 +89,60 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
      */
     public function getDocumentationFromNode($node)
     {
+        // Any NamespaceDefinition comments likely apply to the file, not the declaration itself.
+        if ($node instanceof Tolerant\Node\Statement\NamespaceDefinition) {
+            return null;
+        }
+        
         // For properties and constants, set the node to the declaration node, rather than the individual property.
         // This is because they get defined as part of a list.
-        $constOrPropertyDeclaration = $node->getFirstAncestor(
-            Tolerant\Node\PropertyDeclaration::class,
-            Tolerant\Node\Statement\ConstDeclaration::class,
-            Tolerant\Node\ClassConstDeclaration::class
-        );
+        $constOrPropertyDeclaration = TolerantParserHelpers::tryGetPropertyDeclaration($node) ?? TolerantParserHelpers::tryGetConstOrClassConstDeclaration($node);
         if ($constOrPropertyDeclaration !== null) {
             $node = $constOrPropertyDeclaration;
         }
 
-        // For parameters, parse the documentation to get the parameter tag.
+        // For parameters, parse the function-like declaration to get documentation for a parameter
         if ($node instanceof Tolerant\Node\Parameter) {
-            $functionLikeDeclaration = $this->getFunctionLikeDeclarationFromParameter($node);
-            $variableName = substr($node->variableName->getText($node->getFileContents()), 1);
+            $variableName = $node->getName();
+
+            $functionLikeDeclaration = TolerantParserHelpers::getFunctionLikeDeclarationFromParameter($node);
             $docBlock = $this->getDocBlock($functionLikeDeclaration);
 
-            if ($docBlock !== null) {
-                $parameterDocBlockTag = $this->getDocBlockTagForParameter($docBlock, $variableName);
-                return $parameterDocBlockTag !== null ? $parameterDocBlockTag->getDescription()->render() : null;
-
-            }
+            $parameterDocBlockTag = $this->tryGetDocBlockTagForParameter($docBlock, $variableName);
+            return $parameterDocBlockTag !== null ? $parameterDocBlockTag->getDescription()->render() : null;
         }
-        // for everything else, get the doc block summary corresponding to the current node.
-        elseif (!($node instanceof Tolerant\Node\Statement\NamespaceDefinition)) {
-            $docBlock = $this->getDocBlock($node);
-            if ($docBlock !== null) {
-                return $docBlock->getSummary();
-            }
+
+        // For everything else, get the doc block summary corresponding to the current node.
+        $docBlock = $this->getDocBlock($node);
+        if ($docBlock !== null) {
+            return $docBlock->getSummary();
         }
         return null;
     }
 
-    function getDocBlock(Tolerant\Node $node) {
-        // TODO make more efficient
-        $namespaceDefinition = $node->getNamespaceDefinition();
-        $context = null;
-        if ($namespaceDefinition !== null && $namespaceDefinition->name !== null) {
-            list($namespaceImportTable,,) = $namespaceDefinition->name->getImportTablesForCurrentScope($namespaceDefinition);
+    /**
+     * Gets Doc Block with resolved names for a Node
+     *
+     * @param Tolerant\Node $node
+     * @return DocBlock | null
+     */
+    private function getDocBlock(Tolerant\Node $node)
+    {
+        // TODO make more efficient (caching, ensure import table is in right format to begin with)
+        $docCommentText = $node->getDocCommentText();
+        if ($docCommentText !== null) {
+            list($namespaceImportTable,,) = $node->getImportTablesForCurrentScope();
             foreach ($namespaceImportTable as $alias=>$name) {
                 $namespaceImportTable[$alias] = (string)$name;
             }
-            $namespaceName = (string)$namespaceDefinition->name->getNamespacedName();
+            $namespaceDefinition = $node->getNamespaceDefinition();
+            if ($namespaceDefinition !== null) {
+                $namespaceName = (string)$namespaceDefinition->name->getNamespacedName();
+            } else {
+                $namespaceName = 'global';
+            }
             $context = new Types\Context($namespaceName, $namespaceImportTable);
-        }
 
-        $docCommentText = $node->getDocCommentText();
-        if ($docCommentText !== null) {
             try {
                 return $this->docBlockFactory->create($docCommentText, $context);
             } catch (\InvalidArgumentException $e) {
@@ -175,52 +162,54 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
     public function createDefinitionFromNode($node, string $fqn = null): Definition
     {
         $def = new Definition;
+        $def->fqn = $fqn;
 
-        // this determines whether the suggestion will show after "new"
-        // TODO name
+        // Determines whether the suggestion will show after "new"
         $def->canBeInstantiated = $node instanceof Tolerant\Node\Statement\ClassDeclaration;
 
+        // Interfaces, classes, traits, namespaces, functions, and global const elements
         $def->isGlobal = (
-            $node instanceof Tolerant\Node\Statement\InterfaceDeclaration
-            || $node instanceof Tolerant\Node\Statement\ClassDeclaration
-            || $node instanceof Tolerant\Node\Statement\TraitDeclaration
+            $node instanceof Tolerant\Node\Statement\InterfaceDeclaration ||
+            $node instanceof Tolerant\Node\Statement\ClassDeclaration ||
+            $node instanceof Tolerant\Node\Statement\TraitDeclaration ||
 
-            // TODO namespaces?
-            || $node instanceof Tolerant\Node\Statement\NamespaceDefinition && $node->name !== null
+            ($node instanceof Tolerant\Node\Statement\NamespaceDefinition && $node->name !== null) ||
 
-            || $node instanceof Tolerant\Node\Statement\FunctionDeclaration
+            $node instanceof Tolerant\Node\Statement\FunctionDeclaration ||
 
-            || $node instanceof Tolerant\Node\Statement\ConstDeclaration
-            || $node instanceof Tolerant\Node\ConstElement && $node->parent->parent instanceof Tolerant\Node\Statement\ConstDeclaration
-            // || $node instanceof Tolerant\Node\ClassConstDeclaration
+            ($node instanceof Tolerant\Node\ConstElement && $node->parent->parent instanceof Tolerant\Node\Statement\ConstDeclaration)
         );
 
+        // Static methods and static property declarations
         $def->isStatic = (
-            ($node instanceof Tolerant\Node\MethodDeclaration && $node->isStatic())
-            || ($node instanceof Tolerant\Node\Expression\Variable &&
-                ($propertyDeclaration = $node->getFirstAncestor(Tolerant\Node\PropertyDeclaration::class)) !== null &&
-                $propertyDeclaration->isStatic())
+            ($node instanceof Tolerant\Node\MethodDeclaration && $node->isStatic()) ||
+
+            (($propertyDeclaration = TolerantParserHelpers::tryGetPropertyDeclaration($node)) !== null
+            && $propertyDeclaration->isStatic())
         );
-        $def->fqn = $fqn;
-        if ($node instanceof Tolerant\Node\Statement\ClassDeclaration) {
-            $def->extends = []; // TODO - don't instantiate array
-            if ($node->classBaseClause !== null && $node->classBaseClause->baseClass !== null) {
-                $def->extends[] = (string)$node->classBaseClause->baseClass->getResolvedName();
-            }
-            // TODO what about class interfaces
-        } else if ($node instanceof Tolerant\Node\Statement\InterfaceDeclaration) {
+
+        if ($node instanceof Tolerant\Node\Statement\ClassDeclaration &&
+            // TODO - this should be bette rrpreented in the parser API
+            $node->classBaseClause !== null && $node->classBaseClause->baseClass !== null)
+        {
+            $def->extends = [(string)$node->classBaseClause->baseClass->getResolvedName()];
+            // TODO - why is this represented as an array?
+            // TODO interface implementations.
+        } elseif (
+            $node instanceof Tolerant\Node\Statement\InterfaceDeclaration && 
+            // TODO - this hould be better represented in the parser API
+            $node->interfaceBaseClause !== null && $node->interfaceBaseClause->interfaceNameList !== null
+        ) {
             $def->extends = [];
-            if ($node->interfaceBaseClause !== null && $node->interfaceBaseClause->interfaceNameList !== null) {
-                foreach ($node->interfaceBaseClause->interfaceNameList->getValues() as $n) {
-                    $def->extends[] = (string)$n->getResolvedName();
-                }
+            foreach ($node->interfaceBaseClause->interfaceNameList->getValues() as $n) {
+                $def->extends[] = (string)$n->getResolvedName();
             }
         }
 
         $def->symbolInformation = TolerantSymbolInformation::fromNode($node, $fqn);
 
         if ($def->symbolInformation !== null) {
-            $def->type = $this->getTypeFromNode($node); //TODO
+            $def->type = $this->getTypeFromNode($node);
             $def->declarationLine = $this->getDeclarationLineFromNode($node);
             $def->documentation = $this->getDocumentationFromNode($node);
         }
@@ -237,13 +226,16 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
     public function resolveReferenceNodeToDefinition($node)
     {
         $parent = $node->parent;
-        // Variables are not indexed globally, as they stay in the file scope anyway
-        if ($node instanceof Tolerant\Node\Expression\Variable && !($parent instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression)) {
-            // Resolve $this
+        // Variables are not indexed globally, as they stay in the file scope anyway.
+        // Ignore variable nodes that are part of ScopedPropertyAccessExpression,
+        // as the scoped property access expression node is handled separately.
+        if ($node instanceof Tolerant\Node\Expression\Variable && 
+            !($parent instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression))
+        {
+            // Resolve $this to the containing class definition.
             if ($node->getName() === 'this' && $fqn = $this->getContainingClassFqn($node)) {
                 return $this->index->getDefinition($fqn, false);
             }
-            // TODO running through thid for class constants or properties
 
             // Resolve the variable to a definition node (assignment, param or closure use)
             $defNode = $this->resolveVariableToNode($node);
@@ -260,7 +252,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
         }
         // If the node is a function or constant, it could be namespaced, but PHP falls back to global
         // http://php.net/manual/en/language.namespaces.fallback.php
-        $globalFallback = $this->isConstantFetch($node) || $node->parent instanceof Tolerant\Node\Expression\CallExpression;
+        $globalFallback = TolerantParserHelpers::isConstantFetch($node) || $parent instanceof Tolerant\Node\Expression\CallExpression;
         // Return the Definition object from the index index
         return $this->index->getDefinition($fqn, $globalFallback);
     }
@@ -272,205 +264,172 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
      * @param Node $node
      * @return string|null
      */
-    public function resolveReferenceNodeToFqn($node) {
-        $parent = $node->parent;
-// TODO all name tokens should be a part of a node
+    public function resolveReferenceNodeToFqn($node) {        
+        // TODO all name tokens should be a part of a node
         if ($node instanceof Tolerant\Node\QualifiedName) {
-            // For extends, implements, type hints and classes of classes of static calls use the name directly
-            $name = $node->getResolvedName();
+            return $this->resolveQualifiedNameNodeToFqn($node);
+        }
 
-            if (($useClause = $node->getFirstAncestor(Tolerant\Node\NamespaceUseGroupClause::class, Tolerant\Node\Statement\NamespaceUseDeclaration::class)) !== null) {
-                $name = (string)($name ??  Tolerant\ResolvedName::buildName($node->nameParts, $node->getFileContents()));
-                if ($useClause instanceof Tolerant\Node\NamespaceUseGroupClause) {
-                    $prefix = $useClause->parent->parent->namespaceName;
-                    if ($prefix === null) {
-                        return null;
-                    }
-                    $prefixName = Tolerant\ResolvedName::buildName($prefix->nameParts, $useClause->getFileContents());
-                    $name = (string)$prefixName . "\\" . $name;
+        else if ($node instanceof Tolerant\Node\Expression\MemberAccessExpression) {
+            return $this->resolveMemberAccessExpressionNodeToFqn($node);
+        }
+        else if (TolerantParserHelpers::isConstantFetch($node)) {
+            return (string)($node->getNamespacedName());
+        }
+        else if (
+            // A\B::C - constant access expression
+            $node instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression 
+            && !($node->memberName instanceof Tolerant\Node\Expression\Variable)
+        ) {
+            return $this->resolveScopedPropertyAccessExpressionNodeToFqn($node);
+        } else if (
+            // A\B::$c - static property access expression
+            $node->parent instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression
+        ) {
+            return $this->resolveScopedPropertyAccessExpressionNodeToFqn($node->parent);
+        }
 
-                    if ($useClause->functionOrConst === null) {
-                        $useClause = $node->getFirstAncestor(Tolerant\Node\Statement\NamespaceUseDeclaration::class);
+        return null;
+    }
+
+    private function resolveQualifiedNameNodeToFqn(Tolerant\Node\QualifiedName $node) {
+        $parent = $node->parent;
+        // Add use clause references
+        if (($useClause = $parent) instanceof Tolerant\Node\NamespaceUseGroupClause 
+            || $useClause instanceof Tolerant\Node\NamespaceUseClause
+        ) {
+            $contents = $node->getFileContents();                
+            if ($useClause instanceof Tolerant\Node\NamespaceUseGroupClause) {
+                $prefix = $useClause->parent->parent->namespaceName;
+                if ($prefix === null) {
+                    return null;
+                }
+                $name = Tolerant\ResolvedName::buildName($prefix->nameParts, $contents);
+                $name->addNameParts($node->nameParts, $contents);
+                $name = (string)$name;
+
+                if ($useClause->functionOrConst === null) {
+                    $useClause = $node->getFirstAncestor(Tolerant\Node\Statement\NamespaceUseDeclaration::class);
+                    if ($useClause->functionOrConst !== null && $useClause->functionOrConst->kind === Tolerant\TokenKind::FunctionKeyword) {
+                        $name .= '()';
                     }
                 }
-
-                if ($useClause->functionOrConst !== null && $useClause->functionOrConst->kind === Tolerant\TokenKind::FunctionKeyword) {
+                return $name;
+            } else {
+                $name = (string) Tolerant\ResolvedName::buildName($node->nameParts, $contents);
+                if ($useClause->groupClauses === null && $useClause->parent->parent->functionOrConst !== null && $useClause->parent->parent->functionOrConst->kind === Tolerant\TokenKind::FunctionKeyword) {
                     $name .= '()';
                 }
             }
-            else {
-                $name = (string)($name ?? (string)$node->getNamespacedName());
-            }
 
-            if ($node->parent instanceof Tolerant\Node\Expression\CallExpression) {
-                $name .= '()';
-            }
-// does this work for function calls?
             return $name;
         }
 
-        else if (
-        (($access = $node) instanceof Tolerant\Node\Expression\MemberAccessExpression)
-        ) {
-            if ($access->memberName instanceof Tolerant\Node\Expression) {
-                // Cannot get definition if right-hand side is expression
-                return null;
-            }
-            // Get the type of the left-hand expression
-            $varType = $this->resolveExpressionNodeToType($access->dereferencableExpression);
+        // For extends, implements, type hints and classes of classes of static calls use the name directly
+        $name = (string) ($node->getResolvedName() ?? $node->getNamespacedName());
 
-            if ($varType instanceof Types\Compound) {
-                // For compound types, use the first FQN we find
-                // (popular use case is ClassName|null)
-                for ($i = 0; $t = $varType->get($i); $i++) {
-                    if (
-                        $t instanceof Types\This
-                        || $t instanceof Types\Object_
-                        || $t instanceof Types\Static_
-                        || $t instanceof Types\Self_
-                    ) {
-                        $varType = $t;
-                        break;
-                    }
-                }
-            }
-            if (
-                $varType instanceof Types\This
-                || $varType instanceof Types\Static_
-                || $varType instanceof Types\Self_
-            ) {
-                // $this/static/self is resolved to the containing class
-                $classFqn = self::getContainingClassFqn($node);
-            } else if (!($varType instanceof Types\Object_) || $varType->getFqsen() === null) {
-                // Left-hand expression could not be resolved to a class
-                return null;
-            } else {
-                $classFqn = substr((string)$varType->getFqsen(), 1);
-
-                // TODO
-//                $classFqn = $node->getNamespaceDefinition()->name->getNamespacedName() . (string)$varType->getFqsen();
-//                var_dump($classFqn);
-            }
-            $memberSuffix = '->' . (string)($access->memberName->getText() ?? $access->memberName->getText($node->getFileContents()));
-            if ($node->parent instanceof Tolerant\Node\Expression\CallExpression) {
-                // TODO - this is redundant
-                $memberSuffix .= '()';
-            }
-            // Find the right class that implements the member
-            $implementorFqns = [$classFqn];
-
-            while ($implementorFqn = array_shift($implementorFqns)) {
-//                    var_dump($implementorFqn . $memberSuffix);
-                // If the member FQN exists, return it
-                if ($this->index->getDefinition($implementorFqn . $memberSuffix)) {
-
-                    return $implementorFqn . $memberSuffix;
-                }
-                // Get Definition of implementor class
-                $implementorDef = $this->index->getDefinition($implementorFqn);
-                // If it doesn't exist, return the initial guess
-                if ($implementorDef === null) {
-                    break;
-                }
-                // Repeat for parent class
-                if ($implementorDef->extends) {
-                    foreach ($implementorDef->extends as $extends) {
-                        $implementorFqns[] = $extends;
-                    }
-                }
-            }
-
-//            var_dump("SUFFIX");
-//            var_dump($classFqn);
-//            var_dump($memberSuffix);
-            return $classFqn . $memberSuffix;
-        }
-        else if ($parent instanceof Tolerant\Node\Expression\CallExpression && $node instanceof Tolerant\Node\QualifiedName) {
-            if ($parent->name instanceof Node\Expr) {
-                return null;
-            }
-            $name = (string)($parent->getNamespacedName());
-        }
-        else if ($this->isConstantFetch($node)) {
-            $name = (string)($node->getNamespacedName());
-        }
-        else if (
-            ($scoped = $node) instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression
-            || ($scoped = $node->parent) instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression
-            || ($node->parent instanceof Tolerant\Node\Expression\CallExpression && ($scoped = $node->parent->callableExpression) instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression)
-        ) {
-//            if ($scoped->memberName instanceof Tolerant\Node\Expression) {
-                // Cannot get definition of dynamic names
-//                return null;
-//            }
-            $className = $scoped->scopeResolutionQualifier->getText();
-            if ($className === 'self' || $className === 'static' || $className === 'parent') {
-                // self and static are resolved to the containing class
-                $classNode = $node->getFirstAncestor(Tolerant\Node\Statement\ClassDeclaration::class);
-                if ($classNode === null) {
-                    return null;
-                }
-                if ($className === 'parent') {
-                    // parent is resolved to the parent class
-                    if (!isset($classNode->extends)) {
-                        return null;
-                    }
-                    $className = (string)$classNode->extends->getResolvedName();
-                } else {
-                    $className = (string)$classNode->getNamespacedName();
-                }
-            } elseif ($scoped->scopeResolutionQualifier instanceof Tolerant\Node\QualifiedName) {
-                $className = $scoped->scopeResolutionQualifier->getResolvedName();
-            }
-            if ($scoped->memberName instanceof Tolerant\Node\Expression\Variable) {
-                $name = (string)$className . '::$' . $scoped->memberName->getName();
-            } else {
-                $name = (string)$className . '::' . $scoped->memberName->getText($node->getFileContents());
-            }
-
-            if ($scoped->parent instanceof Tolerant\Node\Expression\CallExpression) {
-                $name .= '()';
-            }
-            return $name;
-        }
-        else {
-            return null;
-        }
-        if (!isset($name)) {
-            return null;
-        }
-        if (
-            $node instanceof Tolerant\Node\Expression\CallExpression
-        ) {
+        if ($node->parent instanceof Tolerant\Node\Expression\CallExpression) {
             $name .= '()';
         }
         return $name;
     }
 
-    public static function isConstantFetch(Tolerant\Node $node) : bool {
-        return
-            (
-            $node instanceof Tolerant\Node\QualifiedName &&
-            (
-//                $node->parent instanceof Tolerant\Node\Statement\ExpressionStatement ||
-                $node->parent instanceof Tolerant\Node\Expression ||
-                $node->parent instanceof Tolerant\Node\DelimitedList\ExpressionList ||
-                $node->parent instanceof Tolerant\Node\ArrayElement ||
-                ($node->parent instanceof Tolerant\Node\Parameter && $node->parent->default === $node) ||
-                $node->parent instanceof Tolerant\Node\StatementNode ||
-                $node->parent instanceof Tolerant\Node\CaseStatementNode
-            ) &&
-            !(
-                $node->parent instanceof Tolerant\Node\Expression\MemberAccessExpression ||
-                $node->parent instanceof Tolerant\Node\Expression\CallExpression ||
-                $node->parent instanceof Tolerant\Node\Expression\ObjectCreationExpression ||
-                $node->parent instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression ||
-                $node->parent instanceof Tolerant\Node\Expression\AnonymousFunctionCreationExpression ||
-                (
-                    $node->parent instanceof Tolerant\Node\Expression\BinaryExpression &&
-                    $node->parent->operator->kind === Tolerant\TokenKind::InstanceOfKeyword
-                )
-            ));
+    private function resolveMemberAccessExpressionNodeToFqn(Tolerant\Node\Expression\MemberAccessExpression $access) {
+        if ($access->memberName instanceof Tolerant\Node\Expression) {
+            // Cannot get definition if right-hand side is expression
+            return null;
+        }
+        // Get the type of the left-hand expression
+        $varType = $this->resolveExpressionNodeToType($access->dereferencableExpression);
+
+        if ($varType instanceof Types\Compound) {
+            // For compound types, use the first FQN we find
+            // (popular use case is ClassName|null)
+            for ($i = 0; $t = $varType->get($i); $i++) {
+                if (
+                    $t instanceof Types\This
+                    || $t instanceof Types\Object_
+                    || $t instanceof Types\Static_
+                    || $t instanceof Types\Self_
+                ) {
+                    $varType = $t;
+                    break;
+                }
+            }
+        }
+        if (
+            $varType instanceof Types\This
+            || $varType instanceof Types\Static_
+            || $varType instanceof Types\Self_
+        ) {
+            // $this/static/self is resolved to the containing class
+            $classFqn = self::getContainingClassFqn($access);
+        } else if (!($varType instanceof Types\Object_) || $varType->getFqsen() === null) {
+            // Left-hand expression could not be resolved to a class
+            return null;
+        } else {
+            $classFqn = substr((string)$varType->getFqsen(), 1);
+        }
+        $memberSuffix = '->' . (string)($access->memberName->getText() ?? $access->memberName->getText($access->getFileContents()));
+        if ($access->parent instanceof Tolerant\Node\Expression\CallExpression) {
+            $memberSuffix .= '()';
+        }
+
+        // Find the right class that implements the member
+        $implementorFqns = [$classFqn];
+
+        while ($implementorFqn = array_shift($implementorFqns)) {
+            // If the member FQN exists, return it
+            if ($this->index->getDefinition($implementorFqn . $memberSuffix)) {
+
+                return $implementorFqn . $memberSuffix;
+            }
+            // Get Definition of implementor class
+            $implementorDef = $this->index->getDefinition($implementorFqn);
+            // If it doesn't exist, return the initial guess
+            if ($implementorDef === null) {
+                break;
+            }
+            // Repeat for parent class
+            if ($implementorDef->extends) {
+                foreach ($implementorDef->extends as $extends) {
+                    $implementorFqns[] = $extends;
+                }
+            }
+        }
+
+        return $classFqn . $memberSuffix;
+    }
+
+    private function resolveScopedPropertyAccessExpressionNodeToFqn(Tolerant\Node\Expression\ScopedPropertyAccessExpression $scoped) {
+        $className = $scoped->scopeResolutionQualifier->getText();
+        if ($className === 'self' || $className === 'static' || $className === 'parent') {
+            // self and static are resolved to the containing class
+            $classNode = $scoped->getFirstAncestor(Tolerant\Node\Statement\ClassDeclaration::class);
+            if ($classNode === null) {
+                return null;
+            }
+            if ($className === 'parent') {
+                // parent is resolved to the parent class
+                if (!isset($classNode->extends)) {
+                    return null;
+                }
+                $className = (string)$classNode->extends->getResolvedName();
+            } else {
+                $className = (string)$classNode->getNamespacedName();
+            }
+        } elseif ($scoped->scopeResolutionQualifier instanceof Tolerant\Node\QualifiedName) {
+            $className = $scoped->scopeResolutionQualifier->getResolvedName();
+        }
+        if ($scoped->memberName instanceof Tolerant\Node\Expression\Variable) {
+            $name = (string)$className . '::$' . $scoped->memberName->getName();
+        } else {
+            $name = (string)$className . '::' . $scoped->memberName->getText($scoped->getFileContents());
+        }
+        if ($scoped->parent instanceof Tolerant\Node\Expression\CallExpression) {
+            $name .= '()';
+        }
+        return $name;
     }
 
     /**
@@ -511,7 +470,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
         // Traverse the AST up
         do {
             // If a function is met, check the parameters and use statements
-            if (self::isFunctionLike($n)) {
+            if (TolerantParserHelpers::isFunctionLike($n)) {
                 if ($n->parameters !== null) {
 
                     foreach ($n->parameters->getElements() as $param) {
@@ -550,26 +509,11 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
         return null;
     }
 
-    function getFunctionLikeDeclarationFromParameter(Tolerant\Node $node) {
-        return $node->getFirstAncestor(
-            Tolerant\Node\Statement\FunctionDeclaration::class,
-            Tolerant\Node\MethodDeclaration::class,
-            Tolerant\Node\Expression\AnonymousFunctionCreationExpression::class
-        );
-    }
-
-    public static function isFunctionLike(Tolerant\Node $node) {
-        return
-            $node instanceof Tolerant\Node\Statement\FunctionDeclaration ||
-            $node instanceof Tolerant\Node\MethodDeclaration ||
-            $node instanceof Tolerant\Node\Expression\AnonymousFunctionCreationExpression;
-    }
-
     /**
      * Given an expression node, resolves that expression recursively to a type.
      * If the type could not be resolved, returns Types\Mixed.
      *
-     * @param \PhpParser\Node\Expr $expr
+     * @param Tolerant\Node\Expression $expr
      * @return \phpDocumentor\Reflection\Type
      */
     public function resolveExpressionNodeToType($expr): Type
@@ -580,7 +524,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             return new Types\Mixed;
         }
 
-        if ($expr instanceof Tolerant\Node\Expression\ParenthesizedExpression) {
+        while ($expr instanceof Tolerant\Node\Expression\ParenthesizedExpression) {
             $expr = $expr->expression;
         }
 
@@ -622,7 +566,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             return new Types\Boolean;
         }
 
-        if ($this->isConstantFetch($expr)) {
+        if (TolerantParserHelpers::isConstantFetch($expr)) {
             // Resolve constant
             $fqn = (string)$expr->getNamespacedName();
             $def = $this->index->getDefinition($fqn, true);
@@ -636,10 +580,8 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
            }
            $var = $access->dereferencableExpression;
 
-//            var_dump("HERE!!!");
            // Resolve object
            $objType = $this->resolveExpressionNodeToType($var);
-//            var_dump($objType);
            if (!($objType instanceof Types\Compound)) {
                $objType = new Types\Compound([$objType]);
            }
@@ -653,16 +595,12 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
                    return new Types\Mixed;
                } else {
                    $classFqn = substr((string)$t->getFqsen(), 1);
-//                    var_dump($classFqn);
                }
                $fqn = $classFqn . '->' . $access->memberName->getText($expr->getFileContents());
                if ($expr->parent instanceof Tolerant\Node\Expression\CallExpression) {
                    $fqn .= '()';
                }
-//                var_dump($fqn);
-//                var_dump($fqn);
                $def = $this->index->getDefinition($fqn);
-//                var_dump($def);
                if ($def !== null) {
                    return $def->type;
                }
@@ -672,19 +610,16 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             ($scopedAccess = $expr) instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression
         ) {
             $classType = $this->resolveClassNameToType($scopedAccess->scopeResolutionQualifier);
-//            var_dump($classType);
             if (!($classType instanceof Types\Object_) || $classType->getFqsen() === null /*|| $expr->name instanceof Tolerant\Node\Expression*/) {
                 return new Types\Mixed;
             }
             $fqn = substr((string)$classType->getFqsen(), 1) . '::';
-//            if ($expr instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression && $expr->memberName instanceof Tolerant\Node\Expression\Variable) {
-//                $fqn .= '$';
-//            }
+
             $fqn .= $scopedAccess->memberName->getText() ?? $scopedAccess->memberName->getText($expr->getFileContents()); // TODO is there a cleaner way to do this?
             if ($expr->parent instanceof Tolerant\Node\Expression\CallExpression) {
                 $fqn .= '()';
             }
-//            var_dump($fqn);
+            
             $def = $this->index->getDefinition($fqn);
             if ($def === null) {
                 return new Types\Mixed;
@@ -722,7 +657,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             ]);
         }
         if (
-            $this->isBooleanExpression($expr)
+            TolerantParserHelpers::isBooleanExpression($expr)
 
             || ($expr instanceof Tolerant\Node\Expression\CastExpression && $expr->castType->kind === Tolerant\TokenKind::BoolCastToken)
             || ($expr instanceof Tolerant\Node\Expression\UnaryOpExpression && $expr->operator->kind === Tolerant\TokenKind::ExclamationToken)
@@ -819,9 +754,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             return new Types\Array_($valueType, $keyType);
         }
         if ($expr instanceof Tolerant\Node\Expression\SubscriptExpression) {
-//            var_dump("SUBSCRIPT");
             $varType = $this->resolveExpressionNodeToType($expr->postfixExpression);
-//            var_dump($varType);
             if (!($varType instanceof Types\Array_)) {
                 return new Types\Mixed;
             }
@@ -834,31 +767,6 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
         return new Types\Mixed;
     }
 
-    private function isBooleanExpression($expression) : bool {
-        if (!($expression instanceof Tolerant\Node\Expression\BinaryExpression)) {
-            return false;
-        }
-        switch ($expression->operator->kind) {
-            case Tolerant\TokenKind::InstanceOfKeyword:
-            case Tolerant\TokenKind::GreaterThanToken:
-            case Tolerant\TokenKind::GreaterThanEqualsToken:
-            case Tolerant\TokenKind::LessThanToken:
-            case Tolerant\TokenKind::LessThanEqualsToken:
-            case Tolerant\TokenKind::AndKeyword:
-            case Tolerant\TokenKind::AmpersandAmpersandToken:
-            case Tolerant\TokenKind::LessThanEqualsGreaterThanToken:
-            case Tolerant\TokenKind::OrKeyword:
-            case Tolerant\TokenKind::BarBarToken:
-            case Tolerant\TokenKind::XorKeyword:
-            case Tolerant\TokenKind::ExclamationEqualsEqualsToken:
-            case Tolerant\TokenKind::ExclamationEqualsToken:
-            case Tolerant\TokenKind::CaretToken:
-            case Tolerant\TokenKind::EqualsEqualsEqualsToken:
-            case Tolerant\TokenKind::EqualsToken:
-                return true;
-        }
-        return false;
-    }
 
     /**
      * Takes any class name node (from a static method call, or new node) and returns a Type object
@@ -921,15 +829,13 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
         if ($node instanceof Tolerant\Node\Parameter) {
             // Parameters
             // Get the doc block for the the function call
-            $functionLikeDeclaration = $this->getFunctionLikeDeclarationFromParameter($node);
+            $functionLikeDeclaration = TolerantParserHelpers::getFunctionLikeDeclarationFromParameter($node);
             $variableName = $node->variableName->getText($node->getFileContents());
             $docBlock = $this->getDocBlock($functionLikeDeclaration);
 
-            if ($docBlock !== null) {
-                $parameterDocBlockTag = $this->getDocBlockTagForParameter($docBlock, $variableName);
-                if ($parameterDocBlockTag !== null && $parameterDocBlockTag->getType() !== null) {
-                    return $parameterDocBlockTag->getType();
-                }
+            $parameterDocBlockTag = $this->tryGetDocBlockTagForParameter($docBlock, $variableName);
+            if ($parameterDocBlockTag !== null && $parameterDocBlockTag->getType() !== null) {
+                return $parameterDocBlockTag->getType();
             }
 
             if ($node->typeDeclaration !== null) {
@@ -952,7 +858,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             return $type ?? new Types\Mixed;
         }
         // for functions and methods, get the return type [first from doc block, then from return type]
-        if ($this->isFunctionLike($node)) {
+        if (TolerantParserHelpers::isFunctionLike($node)) {
             // Functions/methods
             $docBlock = $this->getDocBlock($node);
             if (
@@ -976,14 +882,14 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
         }
 
         // for variables / assignments, get the documented type the assignment resolves to.
-        if ($node instanceof Tolerant\Node\Expression\Variable) {
+        if ($node->parent instanceof Tolerant\Node\Expression\AssignmentExpression) {
             $node = $node->parent;
         }
         if (
-            ($declarationNode = $node->getFirstAncestor(
-                Tolerant\Node\PropertyDeclaration::class,
-                Tolerant\Node\Statement\ConstDeclaration::class,
-                Tolerant\Node\ClassConstDeclaration::class)) !== null ||
+            ($declarationNode = 
+                TolerantParserHelpers::tryGetPropertyDeclaration($node) ?? 
+                TolerantParserHelpers::tryGetConstOrClassConstDeclaration($node)
+            ) !== null ||
             $node instanceof Tolerant\Node\Expression\AssignmentExpression)
         {
             $declarationNode = $declarationNode ?? $node;
@@ -995,8 +901,6 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
                 && !empty($varTags = $docBlock->getTagsByName('var'))
                 && ($type = $varTags[0]->getType())
             ) {
-//                var_dump("BOOYAH");
-//                var_dump($type);
                 return $type;
             }
             // Resolve the expression
@@ -1016,20 +920,6 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             return new Types\Mixed;
         }
         return null;
-    }
-
-    /**
-     * @param DocBlock $docBlock
-     * @param $variableName
-     * @return DocBlock\Tags\Param | null
-     */
-    private function getDocBlockTagForParameter($docBlock, $variableName) {
-        $tags = $docBlock->getTagsByName('param');
-        foreach ($tags as $tag) {
-            if ($tag->getVariableName() === \ltrim($variableName, "$")) {
-                return $tag;
-            }
-        }
     }
 
     /**
@@ -1059,14 +949,16 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
         // INPUT                   OUTPUT:
         // namespace A\B;           A\B
         else if ($node instanceof Tolerant\Node\Statement\NamespaceDefinition && $node->name instanceof Tolerant\Node\QualifiedName) {
-            return (string) Tolerant\ResolvedName::buildName($node->name->nameParts, $node->getFileContents());
+            $name = (string) Tolerant\ResolvedName::buildName($node->name->nameParts, $node->getFileContents());
+            return \count($name) > 0 ? $name : null;
         }
         // INPUT                   OUTPUT:
         // namespace A\B;
         // function a();           A\B\a();
         else if ($node instanceof Tolerant\Node\Statement\FunctionDeclaration) {
             // Function: use functionName() as the name
-            return (string)$node->getNamespacedName() . '()';
+            $name = (string)$node->getNamespacedName();
+            return \count($name) > 0 ? $name . '()' : null;
         }
         // INPUT                        OUTPUT
         // namespace A\B;
@@ -1100,24 +992,24 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
         //   $a = 4, $b = 4             A\B\C->$a, A\B\C->$b
         // }
         else if (
-            $node instanceof Tolerant\Node\Expression\Variable &&
-            ($propertyDeclaration = $node->getFirstAncestor(Tolerant\Node\PropertyDeclaration::class)) !== null &&
+            ($propertyDeclaration = TolerantParserHelpers::tryGetPropertyDeclaration($node)) !== null &&
             ($classDeclaration =
                 $node->getFirstAncestor(
-                    Tolerant\Node\Statement\ObjectCreationExpression::class,
+                    Tolerant\Node\Expression\ObjectCreationExpression::class,
                     Tolerant\Node\Statement\ClassDeclaration::class,
                     Tolerant\Node\Statement\InterfaceDeclaration::class,
                     Tolerant\Node\Statement\TraitDeclaration::class
                 )
-            ) !== null && !($classDeclaration instanceof Tolerant\Node\Statement\ObjectCreationExpression))
+            ) !== null && isset($classDeclaration->name))
         {
+            $name = $node->getName();
             if ($propertyDeclaration->isStatic()) {
                 // Static Property: use ClassName::$propertyName as name
-                return (string)$classDeclaration->getNamespacedName() . '::$' . (string)$node->getName();
-            } elseif (($name = $node->getName()) !== null) {
-                // Instance Property: use ClassName->propertyName as name
-                return (string)$classDeclaration->getNamespacedName() . '->' . $name;
+                return (string)$classDeclaration->getNamespacedName() . '::$' . $name;
             }
+
+            // Instance Property: use ClassName->propertyName as name
+            return (string)$classDeclaration->getNamespacedName() . '->' . $name;
         }
 
         // INPUT                        OUTPUT
@@ -1126,23 +1018,42 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
         // class C {
         //   const $a, $b = 4           A\B\C::$a(), A\B\C::$b
         // }
-        else if ($node instanceof Tolerant\Node\ConstElement) {
-            $constDeclaration = $node->getFirstAncestor(Tolerant\Node\Statement\ConstDeclaration::class, Tolerant\Node\ClassConstDeclaration::class);
+        else if (($constDeclaration = TolerantParserHelpers::tryGetConstOrClassConstDeclaration($node)) !== null) {
             if ($constDeclaration instanceof Tolerant\Node\Statement\ConstDeclaration) {
                 // Basic constant: use CONSTANT_NAME as name
                 return (string)$node->getNamespacedName();
             }
-            if ($constDeclaration instanceof Tolerant\Node\ClassConstDeclaration) {
-                // Class constant: use ClassName::CONSTANT_NAME as name
-                $classDeclaration = $constDeclaration->getFirstAncestor(
-                    Tolerant\Node\Statement\ClassDeclaration::class,
-                    Tolerant\Node\Statement\InterfaceDeclaration::class,
-                    Tolerant\Node\Statement\TraitDeclaration::class
-                );
-                if (!isset($classDeclaration->name)) {
-                    return null;
-                }
-                return (string)$classDeclaration->getNamespacedName() . '::' . $node->getName();
+
+            // Class constant: use ClassName::CONSTANT_NAME as name
+            $classDeclaration = $constDeclaration->getFirstAncestor(
+                Tolerant\Node\Expression\ObjectCreationExpression::class,
+                Tolerant\Node\Statement\ClassDeclaration::class,
+                Tolerant\Node\Statement\InterfaceDeclaration::class,
+                Tolerant\Node\Statement\TraitDeclaration::class
+            );
+
+            if (!isset($classDeclaration->name)) {
+                return null;
+            }
+            return (string)$classDeclaration->getNamespacedName() . '::' . $node->getName();
+        }
+
+        return null;
+    }
+
+    /**
+     * @param DocBlock | null $docBlock
+     * @param $variableName
+     * @return DocBlock\Tags\Param | null
+     */
+    private function tryGetDocBlockTagForParameter($docBlock, $variableName) {
+        if ($docBlock === null) {
+            return null;
+        }
+        $tags = $docBlock->getTagsByName('param');
+        foreach ($tags as $tag) {
+            if ($tag->getVariableName() === \ltrim($variableName, "$")) {
+                return $tag;
             }
         }
     }

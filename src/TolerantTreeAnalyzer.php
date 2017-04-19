@@ -127,7 +127,7 @@ class TolerantTreeAnalyzer implements TreeAnalyzerInterface {
                 // Namespaced constant access and function calls also need to register a reference
                 // to the global version because PHP falls back to global at runtime
                 // http://php.net/manual/en/language.namespaces.fallback.php
-                if (TolerantDefinitionResolver::isConstantFetch($node) ||
+                if (TolerantParserHelpers::isConstantFetch($node) ||
                     ($parent instanceof Tolerant\Node\Expression\CallExpression
                         && !(
                             $parent->callableExpression instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression ||
