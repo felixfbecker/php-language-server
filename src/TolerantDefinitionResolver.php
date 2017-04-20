@@ -136,7 +136,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
                 $namespaceImportTable[$alias] = (string)$name;
             }
             $namespaceDefinition = $node->getNamespaceDefinition();
-            if ($namespaceDefinition !== null) {
+            if ($namespaceDefinition !== null && $namespaceDefinition->name !== null) {
                 $namespaceName = (string)$namespaceDefinition->name->getNamespacedName();
             } else {
                 $namespaceName = 'global';
@@ -518,7 +518,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
      */
     public function resolveExpressionNodeToType($expr): Type
     {
-        if (!($expr instanceof Tolerant\Node)) {
+        if ($expr == null || $expr instanceof Tolerant\MissingToken || $expr instanceof Tolerant\SkippedToken) {
             // TODO some members are null or Missing/SkippedToken
             // How do we handle this more generally?
             return new Types\Mixed;
@@ -529,18 +529,19 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
         }
 
         if ($expr instanceof Tolerant\Node\Expression\Variable || $expr instanceof Tolerant\Node\UseVariableName) {
-            if ($expr instanceof Tolerant\Node\Expression\Variable && $expr->getName() === 'this') {
+            if ($expr->getName() === 'this') {
                 return new Types\This;
             }
-            // Find variable definition
+            // Find variable definition (parameter or assignment expression)
             $defNode = $this->resolveVariableToNode($expr);
-            if ($defNode instanceof Tolerant\Node\Expression || $defNode instanceof Tolerant\Node\UseVariableName) {
+            if ($defNode instanceof Tolerant\Node\Expression\AssignmentExpression || $defNode instanceof Tolerant\Node\UseVariableName) {
                 return $this->resolveExpressionNodeToType($defNode);
             }
             if ($defNode instanceof Tolerant\Node\Parameter) {
                 return $this->getTypeFromNode($defNode);
             }
         }
+
         if ($expr instanceof Tolerant\Node\Expression\CallExpression &&
             !(
                 $expr->callableExpression instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression ||
@@ -562,7 +563,9 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
                 }
             }
         }
-        if (strtolower((string)$expr->getText()) === 'true' || strtolower((string)$expr->getText()) === 'false') {
+
+        $lowerText = strtolower($expr->getText());
+        if ($lowerText === 'true' || $lowerText === 'false') {
             return new Types\Boolean;
         }
 
@@ -574,7 +577,8 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
                 return $def->type;
             }
         }
-       if (($access = $expr) instanceof Tolerant\Node\Expression\MemberAccessExpression) {
+
+        if (($access = $expr) instanceof Tolerant\Node\Expression\MemberAccessExpression) {
            if ($access->memberName instanceof Tolerant\Node\Expression) {
                return new Types\Mixed;
            }
@@ -606,6 +610,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
                }
            }
        }
+
         if (
             ($scopedAccess = $expr) instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression
         ) {
@@ -626,15 +631,19 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             }
             return $def->type;
         }
+
         if ($expr instanceof Tolerant\Node\Expression\ObjectCreationExpression) {
             return $this->resolveClassNameToType($expr->classTypeDesignator);
         }
+
         if ($expr instanceof Tolerant\Node\Expression\CloneExpression) {
             return $this->resolveExpressionNodeToType($expr->expression);
         }
+
         if ($expr instanceof Tolerant\Node\Expression\AssignmentExpression) {
             return $this->resolveExpressionNodeToType($expr->rightOperand);
         }
+
         if ($expr instanceof Tolerant\Node\Expression\TernaryExpression) {
             // ?:
             if ($expr->ifExpression === null) {
@@ -649,6 +658,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
                 $this->resolveExpressionNodeToType($expr->elseExpression)
             ]);
         }
+
         if ($expr instanceof Tolerant\Node\Expression\BinaryExpression && $expr->operator->kind === Tolerant\TokenKind::QuestionQuestionToken) {
             // ?? operator
             return new Types\Compound([
@@ -656,6 +666,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
                 $this->resolveExpressionNodeToType($expr->rightOperand)
             ]);
         }
+
         if (
             TolerantParserHelpers::isBooleanExpression($expr)
 
@@ -666,6 +677,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
         ) {
             return new Types\Boolean;
         }
+
         if (
             ($expr instanceof Tolerant\Node\Expression\BinaryExpression &&
                 ($expr->operator->kind === Tolerant\TokenKind::DotToken || $expr->operator->kind === Tolerant\TokenKind::DotEqualsToken)) ||
@@ -683,8 +695,10 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
 //            || $expr instanceof Node\Expr\Scalar\MagicConst\Namespace_
 //            || $expr instanceof Node\Expr\Scalar\MagicConst\Trait_
         ) {
+            var_dump("string literal");
             return new Types\String_;
         }
+
         if (
             $expr instanceof Tolerant\Node\Expression\BinaryExpression &&
             ($operator = $expr->operator->kind)
@@ -706,6 +720,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             }
             return new Types\Float_;
         }
+
         if (
             // TODO better naming
             ($expr instanceof Tolerant\Node\NumericLiteral && $expr->children->kind === Tolerant\TokenKind::IntegerLiteralToken) ||
@@ -719,6 +734,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
         ) {
             return new Types\Integer;
         }
+
         if (
             $expr instanceof Tolerant\Node\NumericLiteral && $expr->children->kind === Tolerant\TokenKind::FloatingLiteralToken
             ||
@@ -726,6 +742,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
         ) {
             return new Types\Float_;
         }
+
         if ($expr instanceof Tolerant\Node\Expression\ArrayCreationExpression) {
             $valueTypes = [];
             $keyTypes = [];
@@ -753,6 +770,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             }
             return new Types\Array_($valueType, $keyType);
         }
+
         if ($expr instanceof Tolerant\Node\Expression\SubscriptExpression) {
             $varType = $this->resolveExpressionNodeToType($expr->postfixExpression);
             if (!($varType instanceof Types\Array_)) {
@@ -760,10 +778,12 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             }
             return $varType->getValueType();
         }
+
         if ($expr instanceof Tolerant\Node\Expression\ScriptInclusionExpression) {
             // TODO: resolve path to PhpDocument and find return statement
             return new Types\Mixed;
         }
+
         return new Types\Mixed;
     }
 
@@ -785,14 +805,15 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             return new Types\Object_;
         }
         $className = (string)$class->getResolvedName();
+        $lowerClassName = strtolower($className);
 
-        if ($className === 'static') {
+        if ($lowerClassName === 'static') {
             return new Types\Static_;
         }
-        if ($className === 'self' || $className === 'parent') {
+        if ($lowerClassName === 'self' || $lowerClassName === 'parent') {
             $classNode = $class->getFirstAncestor(Tolerant\Node\Statement\ClassDeclaration::class);
-            if ($className === 'parent') {
-                if ($classNode === null || $classNode->classBaseClause === null || $classNode->classBaseClause->baseClass === null) {
+            if ($lowerClassName === 'parent') {
+                if ($classNode === null || $classNode->classBaseClause === null) {
                     return new Types\Object_;
                 }
                 // parent is resolved to the parent class
@@ -825,19 +846,25 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
      */
     public function getTypeFromNode($node)
     {
-        // For parameters, get the type of the parameter [first from doc block, then from param type]
+        // For parameters, get the type of the parameter [first from doc block, then from combo of param type and default
         if ($node instanceof Tolerant\Node\Parameter) {
             // Parameters
             // Get the doc block for the the function call
+            // /**
+            //  * @param MyClass $myParam
+            //  */
+            //  function foo($a)
             $functionLikeDeclaration = TolerantParserHelpers::getFunctionLikeDeclarationFromParameter($node);
-            $variableName = $node->variableName->getText($node->getFileContents());
+            $variableName = $node->getName();
             $docBlock = $this->getDocBlock($functionLikeDeclaration);
 
             $parameterDocBlockTag = $this->tryGetDocBlockTagForParameter($docBlock, $variableName);
-            if ($parameterDocBlockTag !== null && $parameterDocBlockTag->getType() !== null) {
-                return $parameterDocBlockTag->getType();
+            if ($parameterDocBlockTag !== null && ($type = $parameterDocBlockTag->getType())) {
+                // Doc block comments supercede all other forms of type inference
+                return $type;
             }
 
+            // function foo(MyClass $a)
             if ($node->typeDeclaration !== null) {
                 // Use PHP7 return type hint
                 if ($node->typeDeclaration instanceof Tolerant\Token) {
@@ -847,13 +874,14 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
                     $type = new Types\Object_(new Fqsen('\\' . (string)$node->typeDeclaration->getResolvedName()));
                 }
             }
+            // function foo($a = 3)
             if ($node->default !== null) {
                 $defaultType = $this->resolveExpressionNodeToType($node->default);
                 if (isset($type) && !is_a($type, get_class($defaultType))) {
-                    $type = new Types\Compound([$type, $defaultType]);
-                } else {
-                    $type = $defaultType;
+                    // TODO - verify it is worth creating a compound type
+                    return new Types\Compound([$type, $defaultType]);
                 }
+                $type = $defaultType;
             }
             return $type ?? new Types\Mixed;
         }
@@ -869,7 +897,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
                 // Use @return tag
                 return $returnTags[0]->getType();
             }
-            if ($node->returnType !== null) {
+            if ($node->returnType !== null && !($node->returnType instanceof Tolerant\MissingToken)) {
                 // Use PHP7 return type hint
                 if ($node->returnType instanceof Tolerant\Token) {
                     // Resolve a string like "bool" to a type object
@@ -882,15 +910,12 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
         }
 
         // for variables / assignments, get the documented type the assignment resolves to.
-        if ($node->parent instanceof Tolerant\Node\Expression\AssignmentExpression) {
-            $node = $node->parent;
-        }
         if (
             ($declarationNode = 
                 TolerantParserHelpers::tryGetPropertyDeclaration($node) ?? 
                 TolerantParserHelpers::tryGetConstOrClassConstDeclaration($node)
             ) !== null ||
-            $node instanceof Tolerant\Node\Expression\AssignmentExpression)
+            ($node = $node->parent) instanceof Tolerant\Node\Expression\AssignmentExpression)
         {
             $declarationNode = $declarationNode ?? $node;
 
@@ -903,22 +928,25 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             ) {
                 return $type;
             }
+
             // Resolve the expression
             if ($declarationNode instanceof Tolerant\Node\PropertyDeclaration) {
                 // TODO should have default
-                if (isset($node->rightOperand)) {
-                    return $this->resolveExpressionNodeToType($node->rightOperand);
+                if (isset($node->parent->rightOperand)) {
+                    return $this->resolveExpressionNodeToType($node->parent->rightOperand);
                 }
             } else if ($node instanceof Tolerant\Node\ConstElement) {
                 return $this->resolveExpressionNodeToType($node->assignment);
             } else if ($node instanceof Tolerant\Node\Expression\AssignmentExpression) {
-                return $this->resolveExpressionNodeToType($node);
+                return $this->resolveExpressionNodeToType($node->rightOperand);
             }
             // TODO: read @property tags of class
             // TODO: Try to infer the type from default value / constant value
             // Unknown
             return new Types\Mixed;
         }
+
+        // The node does not have a type
         return null;
     }
 

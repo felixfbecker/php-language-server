@@ -35,7 +35,7 @@ class ValidationTest extends TestCase
 
             foreach (new RecursiveIteratorIterator($iterator) as $file) {
                 if (strpos(\strrev((string)$file), \strrev(".php")) === 0
-//                    && strpos((string)$file, "taxonomy.php")!== false
+//                    && strpos((string)$file, "memberAccess3.php")!== false
                 ) {
                     if ($file->getSize() < 100000) {
                         $testProviderArray[$frameworkName . "::" . $file->getBasename()] = [$file->getPathname(), $frameworkName];
@@ -151,13 +151,18 @@ class ValidationTest extends TestCase
             $static = [];
             foreach ($document->getDefinitions() as $defn) {
                 $fqns[] = $defn->fqn;
+
+                if ($defn->type instanceof \phpDocumentor\Reflection\Types\Null_) {
+                    $defn->type = new \phpDocumentor\Reflection\Types\Mixed;
+                }
                 $currentTypes[$defn->fqn] = $defn->type;
+
                 $canBeInstantiated[$defn->fqn] = $defn->canBeInstantiated;
 
                 $defn->symbolInformation->location = null;
                 $symbols[$defn->fqn] = $defn->symbolInformation;
 
-                $extends[$defn->fqn] = $defn->extends;
+                $extends[$defn->fqn] = $defn->extends ?? [];
                 $global[$defn->fqn] = $defn->isGlobal;
                 $docs[$defn->fqn] = $defn->documentation;
                 $static[$defn->fqn] = $defn->isStatic;
@@ -165,7 +170,7 @@ class ValidationTest extends TestCase
             if ($definitions !== null) {
 
                 $this->assertEquals($definitions, $fqns, 'defn->fqn does not match');
-//                $this->assertEquals($types, $currentTypes, "defn->type does not match");
+                $this->assertEquals($types, $currentTypes, "defn->type does not match");
                 $this->assertEquals($instantiated, $canBeInstantiated, "defn->canBeInstantiated does not match");
                 $this->assertEquals($extend, $extends, 'defn->extends does not match');
                 $this->assertEquals($isGlobal, $global, 'defn->isGlobal does not match');
@@ -180,7 +185,9 @@ class ValidationTest extends TestCase
                     'false', 'true', 'null', 'FALSE', 'TRUE', 'NULL',
                     '__', // magic constants are treated as normal constants
                     'Exception', // catch exception types missing from old definition resolver
-                    'Trait' // use Trait references are missing from old definition resolve
+                    'Trait', // use Trait references are missing from old definition resolve
+                    '->tableAlias', '->realField', '->field', '->first_name', '->last_name', '->quoteMatch', '->idCol', '->timeCol', '->dataCol',
+                    'pathToUri', 'uriToPath' // group function use declarations are broken in old definition resolver
                 ];
                 foreach ($this->getIndex($parserKinds[0], $frameworkName)->references as $key=>$value) {
                     foreach ($skipped as $s) {
