@@ -294,6 +294,10 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
 
     private function resolveQualifiedNameNodeToFqn(Tolerant\Node\QualifiedName $node) {
         $parent = $node->parent;
+
+        if ($parent instanceof Tolerant\Node\TraitSelectOrAliasClause) {
+            return null;
+        }
         // Add use clause references
         if (($useClause = $parent) instanceof Tolerant\Node\NamespaceUseGroupClause 
             || $useClause instanceof Tolerant\Node\NamespaceUseClause
@@ -327,7 +331,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
 
         // For extends, implements, type hints and classes of classes of static calls use the name directly
         $name = (string) ($node->getResolvedName() ?? $node->getNamespacedName());
-
+        
         if ($node->parent instanceof Tolerant\Node\Expression\CallExpression) {
             $name .= '()';
         }
@@ -433,6 +437,9 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             $className = $scoped->scopeResolutionQualifier->getResolvedName();
         }
         if ($scoped->memberName instanceof Tolerant\Node\Expression\Variable) {
+            if ($scoped->parent instanceof Tolerant\Node\Expression\CallExpression) {
+                return null;
+            }
             $memberName = $scoped->memberName->getName();
             if (empty($memberName)) {
                 return null;
