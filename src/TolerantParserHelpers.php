@@ -7,27 +7,28 @@ use Microsoft\PhpParser as Tolerant;
 
 class TolerantParserHelpers {
     public static function isConstantFetch(Tolerant\Node $node) : bool {
+        $parent = $node->parent;
         return
             (
             $node instanceof Tolerant\Node\QualifiedName &&
             (
 //                $node->parent instanceof Tolerant\Node\Statement\ExpressionStatement ||
-                $node->parent instanceof Tolerant\Node\Expression ||
-                $node->parent instanceof Tolerant\Node\DelimitedList\ExpressionList ||
-                $node->parent instanceof Tolerant\Node\ArrayElement ||
-                ($node->parent instanceof Tolerant\Node\Parameter && $node->parent->default === $node) ||
-                $node->parent instanceof Tolerant\Node\StatementNode ||
-                $node->parent instanceof Tolerant\Node\CaseStatementNode
+                $parent instanceof Tolerant\Node\Expression ||
+                $parent instanceof Tolerant\Node\DelimitedList\ExpressionList ||
+                $parent instanceof Tolerant\Node\ArrayElement ||
+                ($parent instanceof Tolerant\Node\Parameter && $node->parent->default === $node) ||
+                $parent instanceof Tolerant\Node\StatementNode ||
+                $parent instanceof Tolerant\Node\CaseStatementNode
             ) &&
             !(
-                $node->parent instanceof Tolerant\Node\Expression\MemberAccessExpression ||
-                $node->parent instanceof Tolerant\Node\Expression\CallExpression ||
-                $node->parent instanceof Tolerant\Node\Expression\ObjectCreationExpression ||
-                $node->parent instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression ||
-                $node->parent instanceof Tolerant\Node\Expression\AnonymousFunctionCreationExpression ||
+                $parent instanceof Tolerant\Node\Expression\MemberAccessExpression ||
+                $parent instanceof Tolerant\Node\Expression\CallExpression ||
+                $parent instanceof Tolerant\Node\Expression\ObjectCreationExpression ||
+                $parent instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression ||
+                self::isFunctionLike($parent) ||
                 (
-                    $node->parent instanceof Tolerant\Node\Expression\BinaryExpression &&
-                    $node->parent->operator->kind === Tolerant\TokenKind::InstanceOfKeyword
+                    $parent instanceof Tolerant\Node\Expression\BinaryExpression &&
+                    $parent->operator->kind === Tolerant\TokenKind::InstanceOfKeyword
                 )
             ));
     }
