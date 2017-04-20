@@ -35,7 +35,7 @@ class ValidationTest extends TestCase
 
             foreach (new RecursiveIteratorIterator($iterator) as $file) {
                 if (strpos(\strrev((string)$file), \strrev(".php")) === 0
-//                    && strpos((string)$file, "memberAccess3.php")!== false
+//                    && strpos((string)$file, "ContainerFactory.php")!== false
                 ) {
                     if ($file->getSize() < 100000) {
                         $testProviderArray[$frameworkName . "::" . $file->getBasename()] = [$file->getPathname(), $frameworkName];
@@ -152,9 +152,6 @@ class ValidationTest extends TestCase
             foreach ($document->getDefinitions() as $defn) {
                 $fqns[] = $defn->fqn;
 
-                if ($defn->type instanceof \phpDocumentor\Reflection\Types\Null_) {
-                    $defn->type = new \phpDocumentor\Reflection\Types\Mixed;
-                }
                 $currentTypes[$defn->fqn] = $defn->type;
 
                 $canBeInstantiated[$defn->fqn] = $defn->canBeInstantiated;

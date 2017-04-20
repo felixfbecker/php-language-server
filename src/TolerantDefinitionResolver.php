@@ -402,7 +402,18 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
     }
 
     private function resolveScopedPropertyAccessExpressionNodeToFqn(Tolerant\Node\Expression\ScopedPropertyAccessExpression $scoped) {
-        $className = $scoped->scopeResolutionQualifier->getText();
+        if ($scoped->scopeResolutionQualifier instanceof Tolerant\Node\Expression\Variable) {
+            $varType = $this->getTypeFromNode($scoped->scopeResolutionQualifier);
+            if ($varType === null) {
+                return null;
+            }
+            $className = substr((string)$varType->getFqsen(), 1);
+        } elseif ($scoped->scopeResolutionQualifier instanceof Tolerant\Node\QualifiedName) {
+            $className = (string)$scoped->scopeResolutionQualifier->getResolvedName();
+        } else {
+            return null;
+        }
+
         if ($className === 'self' || $className === 'static' || $className === 'parent') {
             // self and static are resolved to the containing class
             $classNode = $scoped->getFirstAncestor(Tolerant\Node\Statement\ClassDeclaration::class);
@@ -422,7 +433,11 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             $className = $scoped->scopeResolutionQualifier->getResolvedName();
         }
         if ($scoped->memberName instanceof Tolerant\Node\Expression\Variable) {
-            $name = (string)$className . '::$' . $scoped->memberName->getName();
+            $memberName = $scoped->memberName->getName();
+            if (empty($memberName)) {
+                return null;
+            }
+            $name = (string)$className . '::$' . $memberName;
         } else {
             $name = (string)$className . '::' . $scoped->memberName->getText($scoped->getFileContents());
         }
@@ -524,10 +539,15 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             return new Types\Mixed;
         }
 
+        // PARENTHESIZED EXPRESSION
+        // Retrieve inner expression from parenthesized expression
         while ($expr instanceof Tolerant\Node\Expression\ParenthesizedExpression) {
             $expr = $expr->expression;
         }
 
+        // VARIABLE
+        //   $this -> Type\this
+        //   $myVariable -> type of corresponding assignment expression 
         if ($expr instanceof Tolerant\Node\Expression\Variable || $expr instanceof Tolerant\Node\UseVariableName) {
             if ($expr->getName() === 'this') {
                 return new Types\This;
@@ -542,11 +562,13 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             }
         }
 
+        // FUNCTION CALL
+        // Function calls are resolved to type corresponding to their FQN
         if ($expr instanceof Tolerant\Node\Expression\CallExpression &&
             !(
                 $expr->callableExpression instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression ||
                 $expr->callableExpression instanceof Tolerant\Node\Expression\MemberAccessExpression)
-            ) {
+        ) {
             
             // Find the function definition
             if ($expr->callableExpression instanceof Tolerant\Node\Expression) {
@@ -564,13 +586,22 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             }
         }
 
-        $lowerText = strtolower($expr->getText());
-        if ($lowerText === 'true' || $lowerText === 'false') {
-            return new Types\Boolean;
+        // TRUE / FALSE / NULL
+        // Resolve true and false reserved words to Types\Boolean
+        if ($expr instanceof Tolerant\Node\ReservedWord) {
+            $token = $expr->children->kind;
+            if ($token === Tolerant\TokenKind::TrueReservedWord || $token === Tolerant\TokenKind::FalseReservedWord) {
+                return new Types\Boolean;
+            }
+
+            if ($token === Tolerant\TokenKind::NullReservedWord) {
+                return new Types\Null_;
+            }
         }
 
+        // CONSTANT FETCH
+        // Resolve constants by retrieving corresponding definition type from FQN
         if (TolerantParserHelpers::isConstantFetch($expr)) {
-            // Resolve constant
             $fqn = (string)$expr->getNamespacedName();
             $def = $this->index->getDefinition($fqn, true);
             if ($def !== null) {
@@ -578,11 +609,12 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             }
         }
 
-        if (($access = $expr) instanceof Tolerant\Node\Expression\MemberAccessExpression) {
-           if ($access->memberName instanceof Tolerant\Node\Expression) {
+        // MEMBER ACCESS EXPRESSION
+        if ($expr instanceof Tolerant\Node\Expression\MemberAccessExpression) {
+           if ($expr->memberName instanceof Tolerant\Node\Expression) {
                return new Types\Mixed;
            }
-           $var = $access->dereferencableExpression;
+           $var = $expr->dereferencableExpression;
 
            // Resolve object
            $objType = $this->resolveExpressionNodeToType($var);
@@ -600,7 +632,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
                } else {
                    $classFqn = substr((string)$t->getFqsen(), 1);
                }
-               $fqn = $classFqn . '->' . $access->memberName->getText($expr->getFileContents());
+               $fqn = $classFqn . '->' . $expr->memberName->getText($expr->getFileContents());
                if ($expr->parent instanceof Tolerant\Node\Expression\CallExpression) {
                    $fqn .= '()';
                }
@@ -609,18 +641,18 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
                    return $def->type;
                }
            }
-       }
+        }
 
-        if (
-            ($scopedAccess = $expr) instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression
-        ) {
-            $classType = $this->resolveClassNameToType($scopedAccess->scopeResolutionQualifier);
-            if (!($classType instanceof Types\Object_) || $classType->getFqsen() === null /*|| $expr->name instanceof Tolerant\Node\Expression*/) {
+        // SCOPED PROPERTY ACCESS EXPRESSION
+        if ($expr instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression) {
+            $classType = $this->resolveClassNameToType($expr->scopeResolutionQualifier);
+            if (!($classType instanceof Types\Object_) || $classType->getFqsen() === null) {
                 return new Types\Mixed;
             }
             $fqn = substr((string)$classType->getFqsen(), 1) . '::';
 
-            $fqn .= $scopedAccess->memberName->getText() ?? $scopedAccess->memberName->getText($expr->getFileContents()); // TODO is there a cleaner way to do this?
+            // TODO is there a cleaner way to do this?
+            $fqn .= $expr->memberName->getText() ?? $expr->memberName->getText($expr->getFileContents());
             if ($expr->parent instanceof Tolerant\Node\Expression\CallExpression) {
                 $fqn .= '()';
             }
@@ -632,23 +664,33 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             return $def->type;
         }
 
+        // OBJECT CREATION EXPRESSION
+        //   new A() => resolves to the type of the class type designator (A)
+        //   TODO: new $this->a => resolves to the string represented by "a"
         if ($expr instanceof Tolerant\Node\Expression\ObjectCreationExpression) {
             return $this->resolveClassNameToType($expr->classTypeDesignator);
         }
 
+        // CLONE EXPRESSION
+        //   clone($a) => resolves to the type of $a
         if ($expr instanceof Tolerant\Node\Expression\CloneExpression) {
             return $this->resolveExpressionNodeToType($expr->expression);
         }
 
+        // ASSIGNMENT EXPRESSION
+        //   $a = $myExpression => resolves to the type of the right-hand operand 
         if ($expr instanceof Tolerant\Node\Expression\AssignmentExpression) {
             return $this->resolveExpressionNodeToType($expr->rightOperand);
         }
 
+        // TERNARY EXPRESSION
+        //   $condition ? $ifExpression : $elseExpression => reslves to type of $ifCondition or $elseExpression
+        //   $condition ?: $elseExpression => resolves to type of $condition or $elseExpression 
         if ($expr instanceof Tolerant\Node\Expression\TernaryExpression) {
             // ?:
             if ($expr->ifExpression === null) {
                 return new Types\Compound([
-                    $this->resolveExpressionNodeToType($expr->condition), // why?
+                    $this->resolveExpressionNodeToType($expr->condition), // TODO: why?
                     $this->resolveExpressionNodeToType($expr->elseExpression)
                 ]);
             }
@@ -659,6 +701,8 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             ]);
         }
 
+        // NULL COALLESCE
+        //   $rightOperand ?? $leftOperand => resolves to type of $rightOperand or $leftOperand
         if ($expr instanceof Tolerant\Node\Expression\BinaryExpression && $expr->operator->kind === Tolerant\TokenKind::QuestionQuestionToken) {
             // ?? operator
             return new Types\Compound([
@@ -667,6 +711,12 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             ]);
         }
 
+        // BOOLEAN EXPRESSIONS: resolve to Types\Boolean
+        //   (bool) $expression
+        //   !$expression
+        //   empty($var)
+        //   isset($var)
+        //   >, >=, <, <=, &&, ||, AND, OR, XOR, ==, ===, !=, !==
         if (
             TolerantParserHelpers::isBooleanExpression($expr)
 
@@ -678,27 +728,27 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             return new Types\Boolean;
         }
 
+        // STRING EXPRESSIONS: resolve to Types\String
+        //   [concatenation] .=, .
+        //   [literals] "hello", \b"hello", \B"hello", 'hello', \b'hello', HEREDOC, NOWDOC
+        //   [cast] (string) "hello"
+        //
+        //   TODO: Magic constants (__CLASS__, __DIR__, __FUNCTION__, __METHOD__, __NAMESPACE__, __TRAIT__, __FILE__)
         if (
             ($expr instanceof Tolerant\Node\Expression\BinaryExpression &&
                 ($expr->operator->kind === Tolerant\TokenKind::DotToken || $expr->operator->kind === Tolerant\TokenKind::DotEqualsToken)) ||
             $expr instanceof Tolerant\Node\StringLiteral ||
             ($expr instanceof Tolerant\Node\Expression\CastExpression && $expr->castType->kind === Tolerant\TokenKind::StringCastToken)
-
-            // TODO
-//            || $expr instanceof Node\Expr\Scalar\String_
-//            || $expr instanceof Node\Expr\Scalar\Encapsed
-//            || $expr instanceof Node\Expr\Scalar\EncapsedStringPart
-//            || $expr instanceof Node\Expr\Scalar\MagicConst\Class_
-//            || $expr instanceof Node\Expr\Scalar\MagicConst\Dir
-//            || $expr instanceof Node\Expr\Scalar\MagicConst\Function_
-//            || $expr instanceof Node\Expr\Scalar\MagicConst\Method
-//            || $expr instanceof Node\Expr\Scalar\MagicConst\Namespace_
-//            || $expr instanceof Node\Expr\Scalar\MagicConst\Trait_
         ) {
-            var_dump("string literal");
             return new Types\String_;
         }
 
+        // BINARY EXPRESSIONS: 
+        // Resolve to Types\Integer if both left and right operands are integer types, otherwise Types\Float
+        //   [operator] +, -, *, **
+        //   [assignment] *=, **=, -=, +=
+        // Resolve to Types\Float
+        //   [assignment] /=
         if (
             $expr instanceof Tolerant\Node\Expression\BinaryExpression &&
             ($operator = $expr->operator->kind)
@@ -706,23 +756,34 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
                 $operator === Tolerant\TokenKind::AsteriskAsteriskToken ||
                 $operator === Tolerant\TokenKind::AsteriskToken ||
                 $operator === Tolerant\TokenKind::MinusToken ||
+
+                // Assignment expressions (TODO: consider making this a type of AssignmentExpression rather than kind of BinaryExpression)
                 $operator === Tolerant\TokenKind::AsteriskEqualsToken||
                 $operator === Tolerant\TokenKind::AsteriskAsteriskEqualsToken ||
                 $operator === Tolerant\TokenKind::MinusEqualsToken ||
-                $operator === Tolerant\TokenKind::PlusEqualsToken // TODO - this should be a type of assigment expression
+                $operator === Tolerant\TokenKind::PlusEqualsToken
             )
         ) {
             if (
-                $this->resolveExpressionNodeToType($expr->leftOperand) instanceof Types\Integer_
-                && $this->resolveExpressionNodeToType($expr->rightOperand) instanceof Types\Integer_
+                $this->resolveExpressionNodeToType($expr->leftOperand) instanceof Types\Integer
+                && $this->resolveExpressionNodeToType($expr->rightOperand) instanceof Types\Integer
             ) {
                 return new Types\Integer;
             }
             return new Types\Float_;
+        } else if (
+            $expr instanceof Tolerant\Node\Expression\BinaryExpression &&
+            $expr->operator->kind === Tolerant\TokenKind::SlashEqualsToken
+        ) {
+            return new Types\Float_;
         }
 
+        // INTEGER EXPRESSIONS: resolve to Types\Integer
+        //   [literal] 1
+        //   [operator] <=>, &, ^, |
+        //   TODO: Magic constants (__LINE__)
         if (
-            // TODO better naming
+            // TODO: consider different Node types of float/int, also better property name (not "children")
             ($expr instanceof Tolerant\Node\NumericLiteral && $expr->children->kind === Tolerant\TokenKind::IntegerLiteralToken) ||
             $expr instanceof Tolerant\Node\Expression\BinaryExpression && (
                 ($operator = $expr->operator->kind)
@@ -735,14 +796,22 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             return new Types\Integer;
         }
 
+        // FLOAT EXPRESSIONS: resolve to Types\Float
+        //   [literal] 1.5
+        //   [operator] /
+        //   [cast] (double)
         if (
-            $expr instanceof Tolerant\Node\NumericLiteral && $expr->children->kind === Tolerant\TokenKind::FloatingLiteralToken
-            ||
-            ($expr instanceof Tolerant\Node\Expression\CastExpression && $expr->castType->kind === Tolerant\TokenKind::DoubleCastToken)
+            $expr instanceof Tolerant\Node\NumericLiteral && $expr->children->kind === Tolerant\TokenKind::FloatingLiteralToken ||
+            ($expr instanceof Tolerant\Node\Expression\CastExpression && $expr->castType->kind === Tolerant\TokenKind::DoubleCastToken) ||
+            ($expr instanceof Tolerant\Node\Expression\BinaryExpression && $expr->operator->kind === Tolerant\TokenKind::SlashToken)
         ) {
             return new Types\Float_;
         }
 
+        // ARRAY CREATION EXPRESSION:
+        // Resolve to Types\Array (Types\Compound of value and key types)
+        //  [a, b, c]
+        //  [1=>"hello", "hi"=>1, 4=>[]]s
         if ($expr instanceof Tolerant\Node\Expression\ArrayCreationExpression) {
             $valueTypes = [];
             $keyTypes = [];
@@ -771,6 +840,9 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             return new Types\Array_($valueType, $keyType);
         }
 
+        // SUBSCRIPT EXPRESSION
+        // $myArray[3]
+        // $myArray{"hello"}
         if ($expr instanceof Tolerant\Node\Expression\SubscriptExpression) {
             $varType = $this->resolveExpressionNodeToType($expr->postfixExpression);
             if (!($varType instanceof Types\Array_)) {
@@ -779,6 +851,8 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             return $varType->getValueType();
         }
 
+        // SCRIPT INCLUSION EXPRESSION
+        //   include, require, include_once, require_once
         if ($expr instanceof Tolerant\Node\Expression\ScriptInclusionExpression) {
             // TODO: resolve path to PhpDocument and find return statement
             return new Types\Mixed;
@@ -805,14 +879,13 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             return new Types\Object_;
         }
         $className = (string)$class->getResolvedName();
-        $lowerClassName = strtolower($className);
 
-        if ($lowerClassName === 'static') {
+        if ($className === 'static') {
             return new Types\Static_;
         }
-        if ($lowerClassName === 'self' || $lowerClassName === 'parent') {
+        if ($className === 'self' || $className === 'parent') {
             $classNode = $class->getFirstAncestor(Tolerant\Node\Statement\ClassDeclaration::class);
-            if ($lowerClassName === 'parent') {
+            if ($className === 'parent') {
                 if ($classNode === null || $classNode->classBaseClause === null) {
                     return new Types\Object_;
                 }
@@ -846,7 +919,10 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
      */
     public function getTypeFromNode($node)
     {
-        // For parameters, get the type of the parameter [first from doc block, then from combo of param type and default
+        // PARAMETERS
+        // Get the type of the parameter:
+        //   1. Doc block
+        //   2. Parameter type and default
         if ($node instanceof Tolerant\Node\Parameter) {
             // Parameters
             // Get the doc block for the the function call
@@ -885,7 +961,12 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             }
             return $type ?? new Types\Mixed;
         }
-        // for functions and methods, get the return type [first from doc block, then from return type]
+
+        // FUNCTIONS AND METHODS
+        // Get the return type
+        //   1. doc block
+        //   2. return type hint
+        //   3. TODO: infer from return statements
         if (TolerantParserHelpers::isFunctionLike($node)) {
             // Functions/methods
             $docBlock = $this->getDocBlock($node);
@@ -909,7 +990,8 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             return new Types\Mixed;
         }
 
-        // for variables / assignments, get the documented type the assignment resolves to.
+        // PROPERTIES, CONSTS, CLASS CONSTS, ASSIGNMENT EXPRESSIONS
+        // Get the documented type the assignment resolves to.
         if (
             ($declarationNode = 
                 TolerantParserHelpers::tryGetPropertyDeclaration($node) ?? 

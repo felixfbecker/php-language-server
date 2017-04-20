@@ -91,58 +91,56 @@ class TolerantTreeAnalyzer implements TreeAnalyzerInterface {
         if ($fqn !== null) {
             $this->definitionNodes[$fqn] = $node;
             $this->definitions[$fqn] = $this->definitionResolver->createDefinitionFromNode($node, $fqn);
-        }
+        } else {
+            $parent = $node->parent;
+            if (!(
+                (
+                    // $node->parent instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression ||
+                    ($node instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression || 
+                    $node instanceof Tolerant\Node\Expression\MemberAccessExpression)
+                    && !(
+                        $node->parent instanceof Tolerant\Node\Expression\CallExpression ||
+                        $node->memberName instanceof Tolerant\Token
+                    ))
+                || ($parent instanceof Tolerant\Node\Statement\NamespaceDefinition && $parent->name !== null && $parent->name->getStart() === $node->getStart()))
+            ) {
 
-        $parent = $node->parent;
-        if (!(
-            (
-                // $node->parent instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression ||
-                ($node instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression || 
-                $node instanceof Tolerant\Node\Expression\MemberAccessExpression)
-                && !(
-                    $node->parent instanceof Tolerant\Node\Expression\CallExpression ||
-                    $node->memberName instanceof Tolerant\Token
-                ))
-            || ($parent instanceof Tolerant\Node\Statement\NamespaceDefinition && $parent->name !== null && $parent->name->getStart() === $node->getStart()))
-        ) {
+                $fqn = $this->definitionResolver->resolveReferenceNodeToFqn($node);
+                if ($fqn !== null) {
+                    $this->addReference($fqn, $node);
 
-            $fqn = $this->definitionResolver->resolveReferenceNodeToFqn($node);
-            if ($fqn !== null) {
-                $this->addReference($fqn, $node);
-
-                if (
-                    $node instanceof Tolerant\Node\QualifiedName
-                    && ($node->isQualifiedName() || $node->parent instanceof Tolerant\Node\NamespaceUseClause)
-                    && !($parent instanceof Tolerant\Node\Statement\NamespaceDefinition && $parent->name->getStart() === $node->getStart()
-                    )
-                ) {
-                    // Add references for each referenced namespace
-                    $ns = $fqn;
-                    while (($pos = strrpos($ns, '\\')) !== false) {
-                        $ns = substr($ns, 0, $pos);
-                        $this->addReference($ns, $node);
+                    if (
+                        $node instanceof Tolerant\Node\QualifiedName
+                        && ($node->isQualifiedName() || $node->parent instanceof Tolerant\Node\NamespaceUseClause)
+                        && !($parent instanceof Tolerant\Node\Statement\NamespaceDefinition && $parent->name->getStart() === $node->getStart()
+                        )
+                    ) {
+                        // Add references for each referenced namespace
+                        $ns = $fqn;
+                        while (($pos = strrpos($ns, '\\')) !== false) {
+                            $ns = substr($ns, 0, $pos);
+                            $this->addReference($ns, $node);
+                        }
                     }
-                }
 
-                // Namespaced constant access and function calls also need to register a reference
-                // to the global version because PHP falls back to global at runtime
-                // http://php.net/manual/en/language.namespaces.fallback.php
-                if (TolerantParserHelpers::isConstantFetch($node) ||
-                    ($parent instanceof Tolerant\Node\Expression\CallExpression
-                        && !(
-                            $parent->callableExpression instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression ||
-                            $node instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression ||
-                            $node instanceof Tolerant\Node\Expression\MemberAccessExpression
-                        ))) {
-                    $parts = explode('\\', $fqn);
-                    if (count($parts) > 1) {
-                        $globalFqn = end($parts);
-                        $this->addReference($globalFqn, $node);
+                    // Namespaced constant access and function calls also need to register a reference
+                    // to the global version because PHP falls back to global at runtime
+                    // http://php.net/manual/en/language.namespaces.fallback.php
+                    if (TolerantParserHelpers::isConstantFetch($node) ||
+                        ($parent instanceof Tolerant\Node\Expression\CallExpression
+                            && !(
+                                $node instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression ||
+                                $node instanceof Tolerant\Node\Expression\MemberAccessExpression
+                            ))) {
+                        $parts = explode('\\', $fqn);
+                        if (count($parts) > 1) {
+                            $globalFqn = end($parts);
+                            $this->addReference($globalFqn, $node);
+                        }
                     }
                 }
             }
         }
-
         $this->collectDefinitionsAndReferences($node);
     }
     
