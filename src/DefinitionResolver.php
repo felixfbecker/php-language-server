@@ -725,6 +725,19 @@ class DefinitionResolver
      */
     public function getTypeFromNode(Node $node)
     {
+        if (
+            $node instanceof Node\Expr\FuncCall
+            && $node->name instanceof Node\Name
+            && strtolower((string)$node->name) === 'define'
+            && isset($node->args[0])
+            && $node->args[0]->value instanceof Node\Scalar\String_
+            && isset($node->args[1])
+        ) {
+            // constants with define() like
+            // define('TEST_DEFINE_CONSTANT', false);
+            return $this->resolveExpressionNodeToType($node->args[1]->value);
+        }
+
         if ($node instanceof Node\Param) {
             // Parameters
             $docBlock = $node->getAttribute('parentNode')->getAttribute('docBlock');
@@ -883,7 +896,7 @@ class DefinitionResolver
                 return (string)$class->namespacedName . '::' . $node->name;
             }
         } else if ($node instanceof Node\Expr\FuncCall && $node->name instanceof Node\Name && strtolower((string)$node->name) === 'define') {
-            if (!isset($node->args[0]) || !($node->args[0]->value instanceof Node\Scalar\String_)) {
+            if (!isset($node->args[0]) || !($node->args[0]->value instanceof Node\Scalar\String_) || !isset($node->args[1])) {
                 return null;
             }
             return (string)$node->args[0]->value->value;
