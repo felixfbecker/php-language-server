@@ -448,7 +448,7 @@ class DefinitionResolver
             }
             $fqn = (string)($expr->getAttribute('namespacedName') ?? $expr->name) . '()';
             $def = $this->index->getDefinition($fqn, true);
-            if ($def !== null) {
+            if ($def !== null && $def->type!= null) {
                 return $def->type;
             }
         }
