@@ -57,6 +57,7 @@ class SymbolInformation
             && strtolower((string)$node->name) === 'define'
             && isset($node->args[0])
             && $node->args[0]->value instanceof Node\Scalar\String_
+            && isset($node->args[1])
         ) {
             // constants with define() like
             // define('TEST_DEFINE_CONSTANT', false);
@@ -90,7 +91,7 @@ class SymbolInformation
         } else {
             return null;
         }
-        
+
         if (!isset($symbol->name)) {
             if ($node instanceof Node\Name) {
                 $symbol->name = (string)$node;
