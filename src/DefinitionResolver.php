@@ -448,7 +448,13 @@ class DefinitionResolver
             }
             $fqn = (string)($expr->getAttribute('namespacedName') ?? $expr->name) . '()';
             $def = $this->index->getDefinition($fqn, true);
+            if (strtolower((string)$def) === 'null') {
+                return new Types\Null_;
+            }
             if ($def !== null) {
+                if ( null === $def->type ) {
+                    return new Types\Mixed;
+                }
                 return $def->type;
             }
         }
@@ -463,6 +469,9 @@ class DefinitionResolver
             $fqn = (string)($expr->getAttribute('namespacedName') ?? $expr->name);
             $def = $this->index->getDefinition($fqn, true);
             if ($def !== null) {
+                if ( null === $def->type ) {
+                    return new Types\Mixed;
+                }
                 return $def->type;
             }
         }
