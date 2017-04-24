@@ -41,3 +41,6 @@ TestClass::$staticTestProperty[123]->testProperty;
 
 $child = new ChildClass;
 echo $child->testMethod();
+
+// resolve self expression
+Something::getInstance()->hello();

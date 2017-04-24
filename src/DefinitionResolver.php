@@ -758,8 +758,12 @@ class DefinitionResolver
                 if (is_string($node->type)) {
                     // Resolve a string like "bool" to a type object
                     $type = $this->typeResolver->resolve($node->type);
-                } else {
-                    $type = new Types\Object_(new Fqsen('\\' . (string)$node->type));
+                } else if ($node->type instanceof Node\Name && strtolower((string)$node->type) === 'self') {
+                    // handle self reference
+                    $class = getClosestNode($node->type, Node\Stmt\Class_::class);
+                    if ($class !== null) {
+                        return new Types\Object_(new Fqsen('\\' . $class->name));
+                    }
                 }
             }
             if ($node->default !== null) {
@@ -788,6 +792,14 @@ class DefinitionResolver
                 if (is_string($node->returnType)) {
                     // Resolve a string like "bool" to a type object
                     return $this->typeResolver->resolve($node->returnType);
+                }
+                if ($node->returnType instanceof Node\Name && strtolower((string)$node->returnType) === 'self') {
+                    // handle self reference
+                    $class = getClosestNode($node, Node\Stmt\Class_::class);
+
+                    if ($class !== null) {
+                        return new Types\Object_(new Fqsen('\\' . $class->name));
+                    }
                 }
                 return new Types\Object_(new Fqsen('\\' . (string)$node->returnType));
             }

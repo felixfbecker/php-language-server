@@ -179,6 +179,15 @@ class CompletionTest extends TestCase
                 null,
                 '\ChildClass'
             ),
+            new CompletionItem(
+                'Something',
+                CompletionItemKind::CLASS_,
+                null,
+                null,
+                null,
+                null,
+                '\Something'
+            ),
             // Namespaced, `use`d TestClass definition (inserted as TestClass)
             new CompletionItem(
                 'TestClass',
