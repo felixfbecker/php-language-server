@@ -895,11 +895,16 @@ class DefinitionResolver
                 }
                 return (string)$class->namespacedName . '::' . $node->name;
             }
-        } else if ($node instanceof Node\Expr\FuncCall && $node->name instanceof Node\Name && strtolower((string)$node->name) === 'define') {
-            if (!isset($node->args[0]) || !($node->args[0]->value instanceof Node\Scalar\String_) || !isset($node->args[1])) {
-                return null;
-            }
+        } else if (
+            $node instanceof Node\Expr\FuncCall
+            && $node->name instanceof Node\Name
+            && strtolower((string)$node->name) === 'define'
+            && isset($node->args[0])
+            && $node->args[0]->value instanceof Node\Scalar\String_
+            && isset($node->args[1])
+        ) {
             return (string)$node->args[0]->value->value;
         }
+        return null;
     }
 }
