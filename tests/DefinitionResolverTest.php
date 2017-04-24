@@ -35,7 +35,7 @@ class DefinitionResolverTest extends TestCase
         $this->assertInstanceOf(\phpDocumentor\Reflection\Types\Boolean::class, $type);
     }
 
-    public function testGetDefinedFqn()
+    public function testGetDefinedFqnForIncompleteDefine()
     {
         // define('XXX') (only one argument) must not introduce a new symbol
         $parser = new Parser;
@@ -47,5 +47,18 @@ class DefinitionResolverTest extends TestCase
         $fqn = $definitionResolver->getDefinedFqn($stmts[0]);
 
         $this->assertNull($fqn);
+    }
+
+    public function testGetDefinedFqnForDefine()
+    {
+        $parser = new Parser;
+        $stmts = $parser->parse("<?php\ndefine('TEST_DEFINE', true);");
+        $stmts[0]->setAttribute('ownerDocument', new MockPhpDocument);
+
+        $index = new Index;
+        $definitionResolver = new DefinitionResolver($index);
+        $fqn = $definitionResolver->getDefinedFqn($stmts[0]);
+
+        $this->assertEquals('TEST_DEFINE', $fqn);
     }
 }
