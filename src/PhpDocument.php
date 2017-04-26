@@ -240,7 +240,7 @@ class PhpDocument
      * Returns the node at a specified position
      *
      * @param Position $position
-     * @return Node|null
+     * @return Tolerant\Node|null
      */
     public function getNodeAtPosition(Position $position)
     {

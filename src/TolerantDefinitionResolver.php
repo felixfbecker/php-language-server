@@ -520,6 +520,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
                     $n = $n->expression;
                 }
                 if (
+                    // TODO - clean this up
                     ($n instanceof Tolerant\Node\Expression\AssignmentExpression && $n->operator->kind === Tolerant\TokenKind::EqualsToken)
                     && $n->leftOperand instanceof Tolerant\Node\Expression\Variable && $n->leftOperand->getName() === $name
                 ) {
@@ -863,6 +864,10 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
         if ($expr instanceof Tolerant\Node\Expression\ScriptInclusionExpression) {
             // TODO: resolve path to PhpDocument and find return statement
             return new Types\Mixed;
+        }
+
+        if ($expr instanceof Tolerant\Node\QualifiedName) {
+            return $this->resolveClassNameToType($expr);
         }
 
         return new Types\Mixed;
