@@ -149,10 +149,13 @@ class Indexer
                 $cacheKey = null;
                 $index = null;
                 foreach (array_merge($this->composerLock->packages, $this->composerLock->{'packages-dev'}) as $package) {
+                    if ($package->name !== $packageName) {
+                        continue;
+                    }
                     // Check if package can be cached.
                     $packageVersion = ltrim($package->version, 'v');
                     // If package is anchored to a version
-                    if ($package->name === $packageName && strpos($packageVersion, 'dev') === false) {
+                    if (strpos($packageVersion, 'dev') === false) {
                         $packageKey = $packageName . ':' . $packageVersion;
                         $cacheKey = self::CACHE_VERSION . ':' . $packageKey;
                         // Check cache
@@ -160,7 +163,7 @@ class Indexer
                         break;
 
                     // If package is checked out
-                    } elseif ($package->name === $packageName && isset($package->source->reference)) {
+                    } else if (isset($package->source->reference)) {
                         $packageKey = $packageName . ':' . $package->source->reference;
                         $cacheKey = self::CACHE_VERSION . ':' . $packageKey;
                         // Check cache
