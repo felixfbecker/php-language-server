@@ -53,12 +53,18 @@ class LanguageServerTest extends TestCase
         $promise = new Promise;
         $input = new MockProtocolStream;
         $output = new MockProtocolStream;
-        $output->on('message', function (Message $msg) use ($promise) {
+        $cacheVersionCalled = false;
+        $cacheReferenceCalled = false;
+        $output->on('message', function (Message $msg) use ($promise, &$cacheVersionCalled, &$cacheReferenceCalled) {
             if ($msg->body->method === 'window/logMessage' && $promise->state === Promise::PENDING) {
                 if ($msg->body->params->type === MessageType::ERROR) {
                     $promise->reject(new Exception($msg->body->params->message));
                 } else if (preg_match('/All [0-9]+ PHP files parsed/', $msg->body->params->message)) {
                     $promise->fulfill();
+                } else if (preg_match('#(Storing|Restored) example/example-version:.* (in|from) cache#', $msg->body->params->message)) {
+                    $cacheVersionCalled = true;
+                } else if (preg_match('#(Storing|Restored) example/example-reference:.* (in|from) cache#', $msg->body->params->message)) {
+                    $cacheReferenceCalled = true;
                 }
             }
         });
@@ -66,6 +72,8 @@ class LanguageServerTest extends TestCase
         $capabilities = new ClientCapabilities;
         $server->initialize($capabilities, realpath(__DIR__ . '/../fixtures'), getmypid());
         $promise->wait();
+        $this->assertTrue($cacheVersionCalled);
+        $this->assertTrue($cacheReferenceCalled);
     }
 
     public function testIndexingWithFilesAndContentRequests()
