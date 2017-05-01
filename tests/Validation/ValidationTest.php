@@ -30,7 +30,7 @@ class ValidationTest extends TestCase
         foreach ($frameworks as $frameworkDir) {
             $frameworkName = basename($frameworkDir);
             if ($frameworkName !== "broken") {
-//                continue;
+                continue;
             }
 
             $iterator = new RecursiveDirectoryIterator(__DIR__ . "/../../validation/frameworks/" . $frameworkName);
@@ -55,85 +55,36 @@ class ValidationTest extends TestCase
      * @param $testCaseFile
      * @param $frameworkName
      */
-    public function testFrameworkErrors($testCaseFile, $frameworkName) {
+    public function testDefinitionErrors($testCaseFile, $frameworkName) {
+        echo "Test file: " . realpath($testCaseFile) . PHP_EOL;
+
         $fileContents = file_get_contents($testCaseFile);
+        $expectedValues = $this->getExpectedTestValues($testCaseFile, $frameworkName, $fileContents);
+        $actualValues = $this->getActualTestValues($testCaseFile, $fileContents);
 
-        $parser = ParserResourceFactory::getParser();
-        $docBlockFactory = DocBlockFactory::createInstance();
-        $index = new Index;
-        $definitionResolver = ParserResourceFactory::getDefinitionResolver($index);
-
-        $directory = __DIR__ . "/output/$frameworkName/";
-        $outFile = $directory . basename($testCaseFile);
+        $this->assertEquals($expectedValues['definitions'], $actualValues['definitions']);
 
         try {
-            $document = new PhpDocument($testCaseFile, $fileContents, $index, $parser, $docBlockFactory, $definitionResolver);
-        } catch (\Exception $e) {
-            if (!file_exists($dir = __DIR__ . "/output")) {
-                mkdir($dir);
-            }
-            if (!file_exists($directory)) {
-                mkdir($directory);
-            }
-            file_put_contents($outFile, $fileContents);
-            $this->fail((string)$e);
-        }
-
-        $this->assertNotNull($document->getStmts());
-
-        if (file_exists($outFile)) {
-            unlink($outFile);
-        }
-    }
-
-    /**
-     * @group validation
-     * @dataProvider frameworkErrorProvider
-     * @param $testCaseFile
-     * @param $frameworkName
-     */
-    public function testDefinitionErrors($testCaseFile, $frameworkName) {
-        echo PHP_EOL . realpath($testCaseFile) . PHP_EOL;
-
-        $fileContents = file_get_contents($testCaseFile);
-        [$expectedDefinitions, $expectedReferences] = $this->getExpectedDefinitionsAndReferences($testCaseFile, $frameworkName, $fileContents);
-        [$actualDefinitions, $actualReferences] = $this->getActualDefinitionsAndReferences($testCaseFile, $fileContents);
-
-        $this->filterSkippedReferences($expectedReferences);
-        $this->filterSkippedReferences($actualReferences);
-
-        $expectedValues = $this->getValuesFromDefinitionsAndReferences($expectedDefinitions, $expectedReferences);
-        $actualValues = $this->getValuesFromDefinitionsAndReferences($actualDefinitions, $actualReferences);
-
-        foreach ($expectedValues as $name => $expectedValue) {
-            $actualValue = $actualValues[$name];
-
-            if ($name === 'references') {
-                try {
-                    $this->assertArraySubset($expectedValue, $actualValue, false, 'references don\'t match.');
-                } catch (\Throwable $e) {
-                    $this->assertEquals($expectedValue, $actualValue, 'references don\'t match.');
-                }
-                continue;
-            }
-
-            $this->assertEquals($expectedValue, $actualValue, "$name did not match.");
+            $this->assertArraySubset((array)$expectedValues['references'], (array)$actualValues['references'], false, 'references don\'t match.');
+        } catch (\Throwable $e) {
+            $this->assertEquals((array)$expectedValues['references'], (array)$actualValues['references'], 'references don\'t match.');
         }
     }
 
     /**
      * @param $filename
+     * @param $frameworkName
      * @param $fileContents
-     * @return array<Definition[], string[][]>
+     * @return array
      */
-    private function getExpectedDefinitionsAndReferences($filename, $frameworkName, $fileContents) {
-//        $outputFile = $filename . '.expected';
-//        if (file_exists($outputFile)) {
-//            return json_decode(file_get_contents($outputFile));
-//        }
-
+    private function getExpectedTestValues($filename, $frameworkName, $fileContents) {
         global $parserKind;
         $parserKind = ParserKind::PHP_PARSER;
+
+        $outputFile = $filename . '.expected.json';
+        if (file_exists($outputFile)) {
+            return (array)json_decode(file_get_contents($outputFile));
+        }
 
         $index = new Index();
         $parser = ParserResourceFactory::getParser();
@@ -150,16 +101,23 @@ class ValidationTest extends TestCase
             $this->markTestSkipped('Baseline parser failed: null AST');
         }
 
-        $defsAndRefs = [$document->getDefinitions(), $index->references];
-//        if ($frameworkName === 'broken') {
-//            file_put_contents($outputFile, json_encode($defsAndRefs, JSON_PRETTY_PRINT));
-//        }
-//        }
+        $expectedRefs = $index->references;
+        $this->filterSkippedReferences($expectedRefs);
+        $expectedDefs = $this->getTestValuesFromDefs($document->getDefinitions());
 
-        return $defsAndRefs;
+        $refsAndDefs = array(
+            'references' => json_decode(json_encode($expectedRefs)),
+            'definitions' => json_decode(json_encode($expectedDefs))
+        );
+
+        if ($frameworkName === 'broken') {
+            file_put_contents($outputFile, json_encode($refsAndDefs, JSON_PRETTY_PRINT));
+        }
+
+        return $refsAndDefs;
     }
 
-    private function getActualDefinitionsAndReferences($filename, $fileContents) {
+    private function getActualTestValues($filename, $fileContents): array {
         global $parserKind;
         $parserKind = ParserKind::TOLERANT_PHP_PARSER;
 
@@ -170,40 +128,50 @@ class ValidationTest extends TestCase
 
         $document = new PhpDocument($filename, $fileContents, $index, $parser, $docBlockFactory, $definitionResolver);
 
-        return [$document->getDefinitions(), $index->references];
+        $actualRefs = $index->references;
+        $this->filterSkippedReferences($actualRefs);
+        $actualDefs = $this->getTestValuesFromDefs($document->getDefinitions());
+
+        // TODO - probably a more PHP-typical way to do this. Need to compare the objects parsed from json files
+        // to the real results. json_decode returns stdClass Objects, not arrays.
+        return array(
+            'references' => json_decode(json_encode($actualRefs)),
+            'definitions' => json_decode(json_encode($actualDefs))
+        );
     }
 
     /**
-     * @param $expectedDefinitions
-     * @param $expectedReferences
+     * @param $definitions Definition[]
      * @return array|\array[]
-     * @internal param $propertyNames
      */
-    private function getValuesFromDefinitionsAndReferences($expectedDefinitions, $expectedReferences): array
+    private function getTestValuesFromDefs($definitions): array
     {
         // TODO - use reflection to read these properties
         $propertyNames = ['extends', 'isGlobal', 'isStatic', 'canBeInstantiated', 'symbolInformation', 'type', 'documentation'];
 
-        $expectedValues = [];
-        foreach ($expectedDefinitions as $expectedDefinition) {
-            $fqn = $expectedDefinition->fqn;
-            $expectedValues['$def->fqn'][] = $fqn;
+        $defsForAssert = [];
+        foreach ($definitions as $definition) {
+            $fqn = $definition->fqn;
 
             foreach ($propertyNames as $propertyName) {
                 if ($propertyName === 'symbolInformation') {
-                    unset($expectedDefinition->$propertyName->location->range);
+                    // Range is very often different - don't check it, for now
+                    unset($definition->$propertyName->location->range);
                 } elseif ($propertyName === 'extends') {
-                    $expectedDefinition->$propertyName = $expectedDefinition->$propertyName ?? [];
+                    $definition->$propertyName = $definition->$propertyName ?? [];
+                } elseif ($propertyName === 'type') {
+                    // Class info is not captured by json_encode. It's important for 'type'.
+                    $defsForAssert[$fqn][$propertyName . '__class'] = get_class($definition->$propertyName);
                 }
-                $expectedValues['$def->' . $propertyName][$fqn] = $expectedDefinition->$propertyName;
+
+                $defsForAssert[$fqn][$propertyName] = $definition->$propertyName;
             }
         }
 
-        $expectedValues['references'] = $expectedReferences;
-        return $expectedValues;
+        return $defsForAssert;
     }
 
-    private function filterSkippedReferences(&$references)
+    private function filterSkippedReferences(&$references): void
     {
         $skipped = [
             'false', 'true', 'null', 'FALSE', 'TRUE', 'NULL',
@@ -217,7 +185,7 @@ class ValidationTest extends TestCase
         foreach ($references as $key=>$value) {
             foreach ($skipped as $s) {
                 if (strpos($key, $s) !== false) {
-                    unset($references[$key]);
+                    unset($references->$key);
                 }
             }
         }
