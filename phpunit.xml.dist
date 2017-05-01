@@ -11,4 +11,7 @@
             <directory>./src</directory>
         </whitelist>
     </filter>
+    <php>
+        <ini name="memory_limit" value="1500M"/>
+    </php>
 </phpunit>
