@@ -5,10 +5,12 @@ declare(strict_types = 1);
 namespace LanguageServer\Tests;
 
 use Exception;
+use LanguageServer\Definition;
 use LanguageServer\Index\Index;
 use LanguageServer\ParserKind;
 use LanguageServer\ParserResourceFactory;
 use LanguageServer\PhpDocument;
+use phpDocumentor\Reflection\DocBlock;
 use phpDocumentor\Reflection\DocBlockFactory;
 use PHPUnit\Framework\TestCase;
 use LanguageServer\ClientHandler;
@@ -22,7 +24,6 @@ use Microsoft\PhpParser as Tolerant;
 class ValidationTest extends TestCase
 {
     public function frameworkErrorProvider() {
-        $totalSize = 0;
         $frameworks = glob(__DIR__ . "/../../validation/frameworks/*", GLOB_ONLYDIR);
 
         $testProviderArray = array();
@@ -31,12 +32,11 @@ class ValidationTest extends TestCase
             if ($frameworkName !== "broken") {
 //                continue;
             }
+
             $iterator = new RecursiveDirectoryIterator(__DIR__ . "/../../validation/frameworks/" . $frameworkName);
 
             foreach (new RecursiveIteratorIterator($iterator) as $file) {
-                if (strpos(\strrev((string)$file), \strrev(".php")) === 0
-//                    && strpos((string)$file, "ContainerFactory.php")!== false
-                ) {
+                if (strpos(\strrev((string)$file), \strrev(".php")) === 0) {
                     if ($file->getSize() < 100000) {
                         $testProviderArray[$frameworkName . "::" . $file->getBasename()] = [$file->getPathname(), $frameworkName];
                     }
@@ -52,10 +52,12 @@ class ValidationTest extends TestCase
     /**
      * @group validation
      * @dataProvider frameworkErrorProvider
+     * @param $testCaseFile
+     * @param $frameworkName
      */
-    public function testFramworkErrors($testCaseFile, $frameworkName) {
+    public function testFrameworkErrors($testCaseFile, $frameworkName) {
         $fileContents = file_get_contents($testCaseFile);
-        
+
         $parser = ParserResourceFactory::getParser();
         $docBlockFactory = DocBlockFactory::createInstance();
         $index = new Index;
@@ -82,160 +84,142 @@ class ValidationTest extends TestCase
         if (file_exists($outFile)) {
             unlink($outFile);
         }
-        // echo json_encode($parser->getErrors($sourceFile));
-    }
-
-    private $index = [];
-
-    private function getIndex($kind, $frameworkName) {
-        if (!isset($this->index[$kind][$frameworkName])) {
-            $this->index[$kind][$frameworkName] = new Index();
-        }
-        return $this->index[$kind][$frameworkName];
     }
 
     /**
      * @group validation
      * @dataProvider frameworkErrorProvider
+     * @param $testCaseFile
+     * @param $frameworkName
      */
     public function testDefinitionErrors($testCaseFile, $frameworkName) {
+        echo PHP_EOL . realpath($testCaseFile) . PHP_EOL;
+
         $fileContents = file_get_contents($testCaseFile);
-        echo "$testCaseFile\n";
+        [$expectedDefinitions, $expectedReferences] = $this->getExpectedDefinitionsAndReferences($testCaseFile, $frameworkName, $fileContents);
+        [$actualDefinitions, $actualReferences] = $this->getActualDefinitionsAndReferences($testCaseFile, $fileContents);
 
-        $parserKinds = [ParserKind::DIAGNOSTIC_PHP_PARSER, ParserKind::DIAGNOSTIC_TOLERANT_PHP_PARSER];
-        $parserKinds = [ParserKind::PHP_PARSER, ParserKind::TOLERANT_PHP_PARSER];
+        $this->filterSkippedReferences($expectedReferences);
+        $this->filterSkippedReferences($actualReferences);
 
-        $maxRecursion = [];
+        $expectedValues = $this->getValuesFromDefinitionsAndReferences($expectedDefinitions, $expectedReferences);
+        $actualValues = $this->getValuesFromDefinitionsAndReferences($actualDefinitions, $actualReferences);
 
-        $definitions = null;
-        $instantiated = null;
-        $types = null;
-        $symbolInfo = null;
-        $extend = null;
-        $isGlobal = null;
-        $documentation = null;
-        $isStatic = null;
+        foreach ($expectedValues as $name => $expectedValue) {
+            $actualValue = $actualValues[$name];
 
-        foreach ($parserKinds as $kind) {
-            echo ("=====================================\n");
-            global $parserKind;
-            $parserKind = $kind;
-
-            $index = $this->getIndex($kind, $frameworkName);
-            $docBlockFactory = DocBlockFactory::createInstance();
-
-            $definitionResolver = ParserResourceFactory::getDefinitionResolver($index);
-            $parser = ParserResourceFactory::getParser();
-
-            try {
-                $document = new PhpDocument($testCaseFile, $fileContents, $index, $parser, $docBlockFactory, $definitionResolver);
-            } catch (Exception $e) {
-                if ($kind === $parserKinds[0]) {
-                    $this->markTestIncomplete("baseline parser failed: " . $e->getTraceAsString());
-                }
-                throw $e;
-
-            }
-
-            if ($document->getStmts() === null) {
-                $this->markTestSkipped("null AST");
-            }
-
-            $fqns = [];
-            $currentTypes = [];
-            $canBeInstantiated = [];
-            $symbols = [];
-            $extends = [];
-            $global = [];
-            $docs = [];
-            $static = [];
-            foreach ($document->getDefinitions() as $defn) {
-                $fqns[] = $defn->fqn;
-
-                $currentTypes[$defn->fqn] = $defn->type;
-
-                $canBeInstantiated[$defn->fqn] = $defn->canBeInstantiated;
-
-                $defn->symbolInformation->location = null;
-                $symbols[$defn->fqn] = $defn->symbolInformation;
-
-                $extends[$defn->fqn] = $defn->extends ?? [];
-                $global[$defn->fqn] = $defn->isGlobal;
-                $docs[$defn->fqn] = $defn->documentation;
-                $static[$defn->fqn] = $defn->isStatic;
-            }
-            if ($definitions !== null) {
-
-                $this->assertEquals($definitions, $fqns, 'defn->fqn does not match');
-                $this->assertEquals($types, $currentTypes, "defn->type does not match");
-                $this->assertEquals($instantiated, $canBeInstantiated, "defn->canBeInstantiated does not match");
-                $this->assertEquals($extend, $extends, 'defn->extends does not match');
-                $this->assertEquals($isGlobal, $global, 'defn->isGlobal does not match');
-                $this->assertEquals($documentation, $docs, 'defn->documentation does not match');
-                $this->assertEquals($isStatic, $static, 'defn->isStatic does not match');
-
-                $this->assertEquals($symbolInfo, $symbols, "defn->symbolInformation does not match");
-
-
-                $skipped = [];
-                $skipped = [
-                    'false', 'true', 'null', 'FALSE', 'TRUE', 'NULL',
-                    '__', // magic constants are treated as normal constants
-                    'Exception', // catch exception types missing from old definition resolver
-                    'Trait', // use Trait references are missing from old definition resolve
-                    '->tableAlias', '->realField', '->field', '->first_name', '->last_name', '->quoteMatch', '->idCol', '->timeCol', '->dataCol',
-                    'pathToUri', 'uriToPath' // group function use declarations are broken in old definition resolver
-                ];
-                foreach ($this->getIndex($parserKinds[0], $frameworkName)->references as $key=>$value) {
-                    foreach ($skipped as $s) {
-                        if (strpos($key, $s) !== false) {
-                            unset($this->getIndex($parserKinds[0], $frameworkName)->references[$key]);
-                        }
-                    }
-                }
-                foreach ($this->getIndex($parserKinds[1], $frameworkName)->references as $key=>$value) {
-                    foreach ($skipped as $s) {
-                        if (strpos($key, $s) !== false) {
-                            unset($this->getIndex($parserKinds[1], $frameworkName)->references[$key]);
-                        }
-                    }
-                }
-
-//                unset($this->getIndex($parserKinds[1])->references['__LINE__']);
-//                unset($this->getIndex($parserKinds[1])->references['__FILE__']);
-//                unset($this->getIndex($parserKinds[1])->references['Exception']);
-//                unset($this->getIndex($parserKinds[1])->references['__METHOD__']);
-//                unset($this->getIndex($parserKinds[1])->references['__FUNCTION__']);
-//                unset($this->getIndex($parserKinds[1])->references['Requests_Exception']);
-
+            if ($name === 'references') {
                 try {
-
-//                    $this->assertEquals($this->getIndex($parserKinds[0], $frameworkName)->references, $this->getIndex($parserKinds[1], $frameworkName)->references,
-//                        "references do not match");
-
-                    $this->assertArraySubset($this->getIndex($parserKinds[0], $frameworkName)->references, $this->getIndex($parserKinds[1], $frameworkName)->references);
-//                    var_dump(array_keys($this->getIndex($parserKinds[1], $frameworkName)->references));
+                    $this->assertArraySubset($expectedValue, $actualValue, false, 'references don\'t match.');
+                } catch (\Throwable $e) {
+                    $this->assertEquals($expectedValue, $actualValue, 'references don\'t match.');
                 }
-                catch (\Throwable $e) {
-                    $this->assertEquals($this->getIndex($parserKinds[0], $frameworkName)->references, $this->getIndex($parserKinds[1], $frameworkName)->references,
-                        "references do not match");
-                }
-                finally {
-                    unset($this->index[$parserKinds[0]][$frameworkName]);
-                    unset($this->index[$parserKinds[1]][$frameworkName]);
-                }
+                continue;
             }
 
-            $definitions = $fqns;
-            $types = $currentTypes;
-            $instantiated = $canBeInstantiated;
-            $symbolInfo = $symbols;
-            $extend = $extends;
-            $isGlobal = $global;
-            $documentation = $docs;
-            $isStatic = $static;
+            $this->assertEquals($expectedValue, $actualValue, "$name did not match.");
+        }
+    }
 
-//            $maxRecursion[$testCaseFile] = $definitionResolver::$maxRecursion;
+    /**
+     * @param $filename
+     * @param $fileContents
+     * @return array<Definition[], string[][]>
+     */
+    private function getExpectedDefinitionsAndReferences($filename, $frameworkName, $fileContents) {
+//        $outputFile = $filename . '.expected';
+//        if (file_exists($outputFile)) {
+//            return json_decode(file_get_contents($outputFile));
+//        }
+
+        global $parserKind;
+        $parserKind = ParserKind::PHP_PARSER;
+
+        $index = new Index();
+        $parser = ParserResourceFactory::getParser();
+        $docBlockFactory = DocBlockFactory::createInstance();
+        $definitionResolver = ParserResourceFactory::getDefinitionResolver($index);
+
+        try {
+            $document = new PhpDocument($filename, $fileContents, $index, $parser, $docBlockFactory, $definitionResolver);
+        } catch (\Throwable $e) {
+            $this->markTestSkipped('Baseline parser failed: '. $e->getTraceAsString());
+        }
+
+        if ($document->getStmts() === null) {
+            $this->markTestSkipped('Baseline parser failed: null AST');
+        }
+
+        $defsAndRefs = [$document->getDefinitions(), $index->references];
+//        if ($frameworkName === 'broken') {
+//            file_put_contents($outputFile, json_encode($defsAndRefs, JSON_PRETTY_PRINT));
+//        }
+//        }
+
+        return $defsAndRefs;
+    }
+
+    private function getActualDefinitionsAndReferences($filename, $fileContents) {
+        global $parserKind;
+        $parserKind = ParserKind::TOLERANT_PHP_PARSER;
+
+        $index = new Index();
+        $parser = ParserResourceFactory::getParser();
+        $docBlockFactory = DocBlockFactory::createInstance();
+        $definitionResolver = ParserResourceFactory::getDefinitionResolver($index);
+
+        $document = new PhpDocument($filename, $fileContents, $index, $parser, $docBlockFactory, $definitionResolver);
+
+        return [$document->getDefinitions(), $index->references];
+    }
+
+    /**
+     * @param $expectedDefinitions
+     * @param $expectedReferences
+     * @return array|\array[]
+     * @internal param $propertyNames
+     */
+    private function getValuesFromDefinitionsAndReferences($expectedDefinitions, $expectedReferences): array
+    {
+        // TODO - use reflection to read these properties
+        $propertyNames = ['extends', 'isGlobal', 'isStatic', 'canBeInstantiated', 'symbolInformation', 'type', 'documentation'];
+
+        $expectedValues = [];
+        foreach ($expectedDefinitions as $expectedDefinition) {
+            $fqn = $expectedDefinition->fqn;
+            $expectedValues['$def->fqn'][] = $fqn;
+
+            foreach ($propertyNames as $propertyName) {
+                if ($propertyName === 'symbolInformation') {
+                    unset($expectedDefinition->$propertyName->location->range);
+                } elseif ($propertyName === 'extends') {
+                    $expectedDefinition->$propertyName = $expectedDefinition->$propertyName ?? [];
+                }
+                $expectedValues['$def->' . $propertyName][$fqn] = $expectedDefinition->$propertyName;
+            }
+        }
+
+        $expectedValues['references'] = $expectedReferences;
+        return $expectedValues;
+    }
+
+    private function filterSkippedReferences(&$references)
+    {
+        $skipped = [
+            'false', 'true', 'null', 'FALSE', 'TRUE', 'NULL',
+            '__', // magic constants are treated as normal constants
+            'Exception', 'Error', // catch exception types missing from old definition resolver
+            'Trait', // use Trait references are missing from old definition resolve
+            '->tableAlias', '->realField', '->field', '->first_name', '->last_name', '->quoteMatch', '->idCol', '->timeCol', '->dataCol',
+            'pathToUri', 'uriToPath' // group function use declarations are broken in old definition resolver
+        ];
+
+        foreach ($references as $key=>$value) {
+            foreach ($skipped as $s) {
+                if (strpos($key, $s) !== false) {
+                    unset($references[$key]);
+                }
+            }
         }
     }
 }
