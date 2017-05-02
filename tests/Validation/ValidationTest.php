@@ -185,7 +185,7 @@ class ValidationTest extends TestCase
         foreach ($references as $key=>$value) {
             foreach ($skipped as $s) {
                 if (strpos($key, $s) !== false) {
-                    unset($references->$key);
+                    unset($references[$key]);
                 }
             }
         }
