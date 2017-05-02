@@ -1,0 +1,63 @@
+{
+    "references": {
+        "MyNamespace\\a": [
+            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/memberAccess1.php"
+        ],
+        "MyNamespace\\a->a()": [
+            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/memberAccess1.php"
+        ]
+    },
+    "definitions": {
+        "MyNamespace": {
+            "extends": [],
+            "isGlobal": true,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "MyNamespace",
+                "kind": 3,
+                "location": {
+                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/memberAccess1.php"
+                },
+                "containerName": ""
+            },
+            "type__class": "LanguageServer\\Tests\\ValidationTest",
+            "type": null,
+            "documentation": null
+        },
+        "MyNamespace\\A": {
+            "extends": [],
+            "isGlobal": true,
+            "isStatic": false,
+            "canBeInstantiated": true,
+            "symbolInformation": {
+                "name": "A",
+                "kind": 5,
+                "location": {
+                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/memberAccess1.php"
+                },
+                "containerName": "MyNamespace"
+            },
+            "type__class": "LanguageServer\\Tests\\ValidationTest",
+            "type": null,
+            "documentation": null
+        },
+        "MyNamespace\\A::a()": {
+            "extends": [],
+            "isGlobal": false,
+            "isStatic": true,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "a",
+                "kind": 6,
+                "location": {
+                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/memberAccess1.php"
+                },
+                "containerName": "MyNamespace\\A"
+            },
+            "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
+            "type": {},
+            "documentation": null
+        }
+    }
+}

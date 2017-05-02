@@ -1,0 +1,63 @@
+{
+    "references": {
+        "TestNamespace\\A": [
+            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/classDefinition1.php"
+        ],
+        "TestNamespace\\A->a": [
+            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/classDefinition1.php"
+        ]
+    },
+    "definitions": {
+        "TestNamespace": {
+            "extends": [],
+            "isGlobal": true,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "TestNamespace",
+                "kind": 3,
+                "location": {
+                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/classDefinition1.php"
+                },
+                "containerName": ""
+            },
+            "type__class": "LanguageServer\\Tests\\ValidationTest",
+            "type": null,
+            "documentation": null
+        },
+        "TestNamespace\\A": {
+            "extends": [],
+            "isGlobal": true,
+            "isStatic": false,
+            "canBeInstantiated": true,
+            "symbolInformation": {
+                "name": "A",
+                "kind": 5,
+                "location": {
+                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/classDefinition1.php"
+                },
+                "containerName": "TestNamespace"
+            },
+            "type__class": "LanguageServer\\Tests\\ValidationTest",
+            "type": null,
+            "documentation": null
+        },
+        "TestNamespace\\A->a": {
+            "extends": [],
+            "isGlobal": false,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "a",
+                "kind": 7,
+                "location": {
+                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/classDefinition1.php"
+                },
+                "containerName": "TestNamespace\\A"
+            },
+            "type__class": "phpDocumentor\\Reflection\\Types\\Integer",
+            "type": {},
+            "documentation": null
+        }
+    }
+}

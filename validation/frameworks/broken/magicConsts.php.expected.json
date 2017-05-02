@@ -1,0 +1,39 @@
+{
+    "references": [],
+    "definitions": {
+        "A": {
+            "extends": [],
+            "isGlobal": true,
+            "isStatic": false,
+            "canBeInstantiated": true,
+            "symbolInformation": {
+                "name": "A",
+                "kind": 5,
+                "location": {
+                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/magicConsts.php"
+                },
+                "containerName": ""
+            },
+            "type__class": "LanguageServer\\Tests\\ValidationTest",
+            "type": null,
+            "documentation": null
+        },
+        "A::$deprecationsTriggered": {
+            "extends": [],
+            "isGlobal": false,
+            "isStatic": true,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "deprecationsTriggered",
+                "kind": 7,
+                "location": {
+                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/magicConsts.php"
+                },
+                "containerName": "A"
+            },
+            "type__class": "phpDocumentor\\Reflection\\Types\\Array_",
+            "type": {},
+            "documentation": null
+        }
+    }
+}

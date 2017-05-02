@@ -1,0 +1,11 @@
+{
+    "references": {
+        "A": [
+            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/functionUse.php"
+        ],
+        "A->b()": [
+            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/functionUse.php"
+        ]
+    },
+    "definitions": []
+}

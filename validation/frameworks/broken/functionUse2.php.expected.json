@@ -1,0 +1,11 @@
+{
+    "references": {
+        "LanguageServer": [
+            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/functionUse2.php"
+        ],
+        "LanguageServer\\timeout": [
+            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/functionUse2.php"
+        ]
+    },
+    "definitions": []
+}

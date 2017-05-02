@@ -1,0 +1,43 @@
+{
+    "references": {
+        "MyNamespace\\Hi": [
+            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/param1.php"
+        ]
+    },
+    "definitions": {
+        "MyNamespace": {
+            "extends": [],
+            "isGlobal": true,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "MyNamespace",
+                "kind": 3,
+                "location": {
+                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/param1.php"
+                },
+                "containerName": ""
+            },
+            "type__class": "LanguageServer\\Tests\\ValidationTest",
+            "type": null,
+            "documentation": null
+        },
+        "MyNamespace\\init()": {
+            "extends": [],
+            "isGlobal": true,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "init",
+                "kind": 12,
+                "location": {
+                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/param1.php"
+                },
+                "containerName": "MyNamespace"
+            },
+            "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
+            "type": {},
+            "documentation": null
+        }
+    }
+}

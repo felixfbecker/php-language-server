@@ -1,0 +1,102 @@
+{
+    "references": {
+        "Fixtures\\Prophecy\\EmptyClass": [
+            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/WithReturnTypehints.php"
+        ],
+        "self": [
+            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/WithReturnTypehints.php"
+        ],
+        "parent": [
+            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/WithReturnTypehints.php"
+        ]
+    },
+    "definitions": {
+        "Fixtures\\Prophecy": {
+            "extends": [],
+            "isGlobal": true,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "Fixtures\\Prophecy",
+                "kind": 3,
+                "location": {
+                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/WithReturnTypehints.php"
+                },
+                "containerName": "Fixtures"
+            },
+            "type__class": "LanguageServer\\Tests\\ValidationTest",
+            "type": null,
+            "documentation": null
+        },
+        "Fixtures\\Prophecy\\WithReturnTypehints": {
+            "extends": [
+                "Fixtures\\Prophecy\\EmptyClass"
+            ],
+            "isGlobal": true,
+            "isStatic": false,
+            "canBeInstantiated": true,
+            "symbolInformation": {
+                "name": "WithReturnTypehints",
+                "kind": 5,
+                "location": {
+                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/WithReturnTypehints.php"
+                },
+                "containerName": "Fixtures\\Prophecy"
+            },
+            "type__class": "LanguageServer\\Tests\\ValidationTest",
+            "type": null,
+            "documentation": null
+        },
+        "Fixtures\\Prophecy\\WithReturnTypehints->getSelf()": {
+            "extends": [],
+            "isGlobal": false,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "getSelf",
+                "kind": 6,
+                "location": {
+                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/WithReturnTypehints.php"
+                },
+                "containerName": "Fixtures\\Prophecy\\WithReturnTypehints"
+            },
+            "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
+            "type": {},
+            "documentation": null
+        },
+        "Fixtures\\Prophecy\\WithReturnTypehints->getName()": {
+            "extends": [],
+            "isGlobal": false,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "getName",
+                "kind": 6,
+                "location": {
+                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/WithReturnTypehints.php"
+                },
+                "containerName": "Fixtures\\Prophecy\\WithReturnTypehints"
+            },
+            "type__class": "phpDocumentor\\Reflection\\Types\\String_",
+            "type": {},
+            "documentation": null
+        },
+        "Fixtures\\Prophecy\\WithReturnTypehints->getParent()": {
+            "extends": [],
+            "isGlobal": false,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "getParent",
+                "kind": 6,
+                "location": {
+                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/WithReturnTypehints.php"
+                },
+                "containerName": "Fixtures\\Prophecy\\WithReturnTypehints"
+            },
+            "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
+            "type": {},
+            "documentation": null
+        }
+    }
+}

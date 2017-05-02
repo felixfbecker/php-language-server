@@ -1,0 +1,29 @@
+{
+    "references": {
+        "SomeNamespace\\NameOutsideOfNamespace": [
+            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/testQualifiedNameOutsideOfNamespace.php"
+        ],
+        "NameOutsideOfNamespace": [
+            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/testQualifiedNameOutsideOfNamespace.php"
+        ]
+    },
+    "definitions": {
+        "SomeNamespace": {
+            "extends": [],
+            "isGlobal": true,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "SomeNamespace",
+                "kind": 3,
+                "location": {
+                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/testQualifiedNameOutsideOfNamespace.php"
+                },
+                "containerName": ""
+            },
+            "type__class": "LanguageServer\\Tests\\ValidationTest",
+            "type": null,
+            "documentation": null
+        }
+    }
+}

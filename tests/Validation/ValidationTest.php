@@ -34,9 +34,10 @@ class ValidationTest extends TestCase
             }
 
             $iterator = new RecursiveDirectoryIterator(__DIR__ . "/../../validation/frameworks/" . $frameworkName);
+            $skipped = json_decode(file_get_contents(__DIR__ . '/skipped.json'));
 
             foreach (new RecursiveIteratorIterator($iterator) as $file) {
-                if (strpos(\strrev((string)$file), \strrev(".php")) === 0) {
+                if (strpos(\strrev((string)$file), \strrev(".php")) === 0 && !\in_array(basename((string)$file), $skipped)) {
                     if ($file->getSize() < 100000) {
                         $testProviderArray[$frameworkName . "::" . $file->getBasename()] = [$file->getPathname(), $frameworkName];
                     }

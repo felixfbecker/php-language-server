@@ -1,0 +1,46 @@
+{
+    "references": {
+        "A::$a": [
+            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/scopedPropertyAccess3.php"
+        ],
+        "A": [
+            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/scopedPropertyAccess3.php"
+        ]
+    },
+    "definitions": {
+        "A": {
+            "extends": [],
+            "isGlobal": true,
+            "isStatic": false,
+            "canBeInstantiated": true,
+            "symbolInformation": {
+                "name": "A",
+                "kind": 5,
+                "location": {
+                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/scopedPropertyAccess3.php"
+                },
+                "containerName": ""
+            },
+            "type__class": "LanguageServer\\Tests\\ValidationTest",
+            "type": null,
+            "documentation": null
+        },
+        "A::$a": {
+            "extends": [],
+            "isGlobal": false,
+            "isStatic": true,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "a",
+                "kind": 7,
+                "location": {
+                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/scopedPropertyAccess3.php"
+                },
+                "containerName": "A"
+            },
+            "type__class": "phpDocumentor\\Reflection\\Types\\String_",
+            "type": {},
+            "documentation": null
+        }
+    }
+}

@@ -1,0 +1,66 @@
+{
+    "references": {
+        "MyNamespace\\AccountInterface": [
+            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/memberCall1.php"
+        ],
+        "MyNamespace\\A": [
+            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/memberCall1.php"
+        ],
+        "MyNamespace\\AccountInterface->getAccount()": [
+            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/memberCall1.php"
+        ]
+    },
+    "definitions": {
+        "MyNamespace": {
+            "extends": [],
+            "isGlobal": true,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "MyNamespace",
+                "kind": 3,
+                "location": {
+                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/memberCall1.php"
+                },
+                "containerName": ""
+            },
+            "type__class": "LanguageServer\\Tests\\ValidationTest",
+            "type": null,
+            "documentation": null
+        },
+        "MyNamespace\\ParseErrorsTest": {
+            "extends": [],
+            "isGlobal": true,
+            "isStatic": false,
+            "canBeInstantiated": true,
+            "symbolInformation": {
+                "name": "ParseErrorsTest",
+                "kind": 5,
+                "location": {
+                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/memberCall1.php"
+                },
+                "containerName": "MyNamespace"
+            },
+            "type__class": "LanguageServer\\Tests\\ValidationTest",
+            "type": null,
+            "documentation": null
+        },
+        "MyNamespace\\ParseErrorsTest->setAccount()": {
+            "extends": [],
+            "isGlobal": false,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "setAccount",
+                "kind": 6,
+                "location": {
+                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/memberCall1.php"
+                },
+                "containerName": "MyNamespace\\ParseErrorsTest"
+            },
+            "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
+            "type": {},
+            "documentation": null
+        }
+    }
+}
