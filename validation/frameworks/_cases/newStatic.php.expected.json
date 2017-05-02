@@ -1,5 +1,12 @@
 {
-    "references": [],
+    "references": {
+        "static": [
+            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/newStatic.php"
+        ],
+        "NewStatic->foo()": [
+            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/newStatic.php"
+        ]
+    },
     "definitions": {
         "NewStatic": {
             "extends": [],
