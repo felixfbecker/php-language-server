@@ -6,18 +6,15 @@ namespace LanguageServer\Tests\Server\TextDocument;
 use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\{
-    ParserResourceFactory, Server, Client, LanguageClient, PhpDocumentLoader, DefinitionResolver
+    Server, LanguageClient, PhpDocumentLoader, TolerantDefinitionResolver
 };
 use LanguageServer\ContentRetriever\FileSystemContentRetriever;
 use LanguageServer\Index\{Index, ProjectIndex, DependenciesIndex};
 use LanguageServer\Protocol\{
-    TextDocumentIdentifier,
-    TextDocumentItem,
     VersionedTextDocumentIdentifier,
     TextDocumentContentChangeEvent,
     Range,
-    Position,
-    ClientCapabilities
+    Position
 };
 
 class DidChangeTest extends TestCase
@@ -26,7 +23,7 @@ class DidChangeTest extends TestCase
     {
         $projectIndex = new ProjectIndex(new Index, new DependenciesIndex);
         $client = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
-        $definitionResolver = ParserResourceFactory::getDefinitionResolver($projectIndex);
+        $definitionResolver = new TolerantDefinitionResolver($projectIndex);
         $loader = new PhpDocumentLoader(new FileSystemContentRetriever, $projectIndex, $definitionResolver);
         $textDocument = new Server\TextDocument($loader, $definitionResolver, $client, $projectIndex);
         $phpDocument = $loader->open('whatever', "<?php\necho 'Hello, World'\n");

@@ -8,10 +8,7 @@ use LanguageServer\Protocol\{
     ClientCapabilities,
     TextDocumentSyncKind,
     Message,
-    MessageType,
     InitializeResult,
-    SymbolInformation,
-    TextDocumentIdentifier,
     CompletionOptions
 };
 use LanguageServer\FilesFinder\{FilesFinder, ClientFilesFinder, FileSystemFilesFinder};
@@ -19,12 +16,10 @@ use LanguageServer\ContentRetriever\{ContentRetriever, ClientContentRetriever, F
 use LanguageServer\Index\{DependenciesIndex, GlobalIndex, Index, ProjectIndex, StubsIndex};
 use LanguageServer\Cache\{FileSystemCache, ClientCache};
 use AdvancedJsonRpc;
-use Sabre\Event\{Loop, Promise};
+use Sabre\Event\{Promise};
 use function Sabre\Event\coroutine;
-use Exception;
 use Throwable;
 use Webmozart\PathUtil\Path;
-use Sabre\Uri;
 
 class LanguageServer extends AdvancedJsonRpc\Dispatcher
 {
@@ -106,7 +101,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     protected $projectIndex;
 
     /**
-     * @var DefinitionResolverInterface
+     * @var TolerantDefinitionResolver
      */
     protected $definitionResolver;
 
@@ -192,7 +187,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
             $this->globalIndex = new GlobalIndex($stubsIndex, $this->projectIndex);
 
             // The DefinitionResolver should look in stubs, the project source and dependencies
-            $this->definitionResolver = ParserResourceFactory::getDefinitionResolver($this->globalIndex);
+            $this->definitionResolver = new TolerantDefinitionResolver($this->globalIndex);
 
             $this->documentLoader = new PhpDocumentLoader(
                 $this->contentRetriever,

@@ -3,22 +3,14 @@ declare(strict_types = 1);
 
 namespace LanguageServer\Tests\Server;
 
-use PHPUnit\Framework\TestCase;
-use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\{
-    ParserResourceFactory, Server, Client, LanguageClient, Project, PhpDocument, PhpDocumentLoader, DefinitionResolver
+    PhpDocument, PhpDocumentLoader, Project, TolerantDefinitionResolver
 };
 use LanguageServer\ContentRetriever\FileSystemContentRetriever;
-use LanguageServer\Index\{Index, ProjectIndex, DependenciesIndex};
-use LanguageServer\Protocol\{
-    TextDocumentItem,
-    TextDocumentIdentifier,
-    SymbolKind,
-    DiagnosticSeverity,
-    FormattingOptions,
-    ClientCapabilities
+use LanguageServer\Index\{
+    DependenciesIndex, Index, ProjectIndex
 };
-use AdvancedJsonRpc\{Request as RequestBody, Response as ResponseBody};
+use PHPUnit\Framework\TestCase;
 use function LanguageServer\pathToUri;
 
 class PhpDocumentLoaderTest extends TestCase
@@ -34,7 +26,7 @@ class PhpDocumentLoaderTest extends TestCase
         $this->loader = new PhpDocumentLoader(
             new FileSystemContentRetriever,
             $projectIndex,
-            ParserResourceFactory::getDefinitionResolver($projectIndex)
+            new TolerantDefinitionResolver($projectIndex)
         );
     }
 

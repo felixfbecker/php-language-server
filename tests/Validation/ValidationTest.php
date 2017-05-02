@@ -8,8 +8,8 @@ use Exception;
 use LanguageServer\Definition;
 use LanguageServer\Index\Index;
 use LanguageServer\ParserKind;
-use LanguageServer\ParserResourceFactory;
 use LanguageServer\PhpDocument;
+use LanguageServer\TolerantDefinitionResolver;
 use phpDocumentor\Reflection\DocBlock;
 use phpDocumentor\Reflection\DocBlockFactory;
 use PHPUnit\Framework\TestCase;
@@ -60,8 +60,14 @@ class ValidationTest extends TestCase
         echo "Test file: " . realpath($testCaseFile) . PHP_EOL;
 
         $fileContents = file_get_contents($testCaseFile);
-        $expectedValues = $this->getExpectedTestValues($testCaseFile, $frameworkName, $fileContents);
-        $actualValues = $this->getActualTestValues($testCaseFile, $frameworkName, $fileContents);
+        $actualValues = $this->getActualTestValues($testCaseFile, $fileContents);
+
+        $outputFile = getExpectedValuesFile($testCaseFile);
+        if (!file_exists($outputFile)) {
+            file_put_contents(json_encode($actualValues, JSON_PRETTY_PRINT));
+        }
+
+        $expectedValues = (array)json_decode(file_get_contents($outputFile));
 
         try {
             $this->assertEquals($expectedValues['definitions'], $actualValues['definitions']);
@@ -81,56 +87,11 @@ class ValidationTest extends TestCase
         }
     }
 
-    /**
-     * @param $filename
-     * @param $frameworkName
-     * @param $fileContents
-     * @return array
-     */
-    private function getExpectedTestValues($filename, $frameworkName, $fileContents) {
-        global $parserKind;
-        $parserKind = ParserKind::PHP_PARSER;
-
-        $outputFile = getExpectedValuesFile($filename);
-        if (file_exists($outputFile)) {
-            return (array)json_decode(file_get_contents($outputFile));
-        }
-
+    private function getActualTestValues($filename, $fileContents): array {
         $index = new Index();
-        $parser = ParserResourceFactory::getParser();
+        $parser = new Tolerant\Parser();
         $docBlockFactory = DocBlockFactory::createInstance();
-        $definitionResolver = ParserResourceFactory::getDefinitionResolver($index);
-
-        try {
-            $document = new PhpDocument($filename, $fileContents, $index, $parser, $docBlockFactory, $definitionResolver);
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('Baseline parser failed: '. $e->getTraceAsString());
-        }
-
-        if ($document->getStmts() === null) {
-            $this->markTestSkipped('Baseline parser failed: null AST');
-        }
-
-        $expectedRefs = $index->references;
-        $this->filterSkippedReferences($expectedRefs);
-        $expectedDefs = $this->getTestValuesFromDefs($document->getDefinitions());
-
-        $refsAndDefs = array(
-            'references' => json_decode(json_encode($expectedRefs)),
-            'definitions' => json_decode(json_encode($expectedDefs))
-        );
-
-        return $refsAndDefs;
-    }
-
-    private function getActualTestValues($filename, $frameworkName, $fileContents): array {
-        global $parserKind;
-        $parserKind = ParserKind::TOLERANT_PHP_PARSER;
-
-        $index = new Index();
-        $parser = ParserResourceFactory::getParser();
-        $docBlockFactory = DocBlockFactory::createInstance();
-        $definitionResolver = ParserResourceFactory::getDefinitionResolver($index);
+        $definitionResolver = new TolerantDefinitionResolver($index);
 
         $document = new PhpDocument($filename, $fileContents, $index, $parser, $docBlockFactory, $definitionResolver);
 

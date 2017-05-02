@@ -7,7 +7,7 @@ use PHPUnit\Framework\TestCase;
 use PhpParser\{Node};
 use phpDocumentor\Reflection\DocBlockFactory;
 use LanguageServer\{
-    ParserResourceFactory
+    TolerantDefinitionResolver, TolerantTreeAnalyzer
 };
 use LanguageServer\Index\{Index};
 use function LanguageServer\pathToUri;
@@ -67,14 +67,14 @@ class DefinitionCollectorTest extends TestCase
     private function collectDefinitions($path):array
     {
         $uri = pathToUri($path);
-        $parser = ParserResourceFactory::getParser();
+        $parser = new Tolerant\Parser();
 
         $docBlockFactory = DocBlockFactory::createInstance();
         $index = new Index;
-        $definitionResolver = ParserResourceFactory::getDefinitionResolver($index);
+        $definitionResolver = new TolerantDefinitionResolver($index);
         $content = file_get_contents($path);
 
-        $treeAnalyzer = ParserResourceFactory::getTreeAnalyzer($parser, $content, $docBlockFactory, $definitionResolver, $uri);
+        $treeAnalyzer = new TolerantTreeAnalyzer($parser, $content, $docBlockFactory, $definitionResolver, $uri);
         return $treeAnalyzer->getDefinitionNodes();
     }
 }

@@ -6,12 +6,11 @@ namespace LanguageServer\Tests\Server\TextDocument\Definition;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\Tests\Server\ServerTestCase;
 use LanguageServer\{
-    ParserResourceFactory, Server, LanguageClient, PhpDocumentLoader, DefinitionResolver
+    Server, LanguageClient, PhpDocumentLoader, TolerantDefinitionResolver
 };
 use LanguageServer\Index\{Index, ProjectIndex, DependenciesIndex};
 use LanguageServer\ContentRetriever\FileSystemContentRetriever;
-use LanguageServer\Protocol\{TextDocumentIdentifier, Position, Range, Location, ClientCapabilities};
-use Sabre\Event\Promise;
+use LanguageServer\Protocol\{TextDocumentIdentifier, Position, Range, Location};
 
 class GlobalFallbackTest extends ServerTestCase
 {
@@ -20,7 +19,7 @@ class GlobalFallbackTest extends ServerTestCase
         $projectIndex = new ProjectIndex(new Index, new DependenciesIndex);
         $projectIndex->setComplete();
         $client = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
-        $definitionResolver = ParserResourceFactory::getDefinitionResolver($projectIndex);
+        $definitionResolver = new TolerantDefinitionResolver($projectIndex);
         $contentRetriever = new FileSystemContentRetriever;
         $loader = new PhpDocumentLoader($contentRetriever, $projectIndex, $definitionResolver);
         $this->textDocument = new Server\TextDocument($loader, $definitionResolver, $client, $projectIndex);

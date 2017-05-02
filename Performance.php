@@ -6,16 +6,12 @@ require __DIR__ . '/vendor/autoload.php';
 use Exception;
 use LanguageServer\Index\Index;
 use LanguageServer\ParserKind;
-use LanguageServer\ParserResourceFactory;
 use LanguageServer\PhpDocument;
+use LanguageServer\TolerantDefinitionResolver;
+use Microsoft\PhpParser as Tolerant;
 use phpDocumentor\Reflection\DocBlockFactory;
-use PHPUnit\Framework\TestCase;
-use LanguageServer\ClientHandler;
-use LanguageServer\Protocol\Message;
-use AdvancedJsonRpc;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
-use Sabre\Event\Loop;
 
 $totalSize = 0;
 
@@ -60,11 +56,9 @@ foreach($frameworks as $framework) {
             $index = new Index;
             $maxRecursion = [];
             $definitions = [];
-            global $parserKind;
-            $parserKind = $kind;
 
-            $definitionResolver = ParserResourceFactory::getDefinitionResolver($index);
-            $parser = ParserResourceFactory::getParser();
+            $definitionResolver = new TolerantDefinitionResolver($index);
+            $parser = new Tolerant\Parser();
 
             try {
                 $document = new PhpDocument($testCaseFile, $fileContents, $index, $parser, $docBlockFactory, $definitionResolver);

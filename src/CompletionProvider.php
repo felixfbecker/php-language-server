@@ -89,7 +89,7 @@ class CompletionProvider
     ];
 
     /**
-     * @var DefinitionResolverInterface
+     * @var TolerantDefinitionResolver
      */
     private $definitionResolver;
 
@@ -104,10 +104,10 @@ class CompletionProvider
     private $index;
 
     /**
-     * @param DefinitionResolverInterface $definitionResolver
+     * @param TolerantDefinitionResolver $definitionResolver
      * @param ReadableIndex $index
      */
-    public function __construct(DefinitionResolverInterface $definitionResolver, ReadableIndex $index)
+    public function __construct(TolerantDefinitionResolver $definitionResolver, ReadableIndex $index)
     {
         $this->definitionResolver = $definitionResolver;
         $this->index = $index;
@@ -124,7 +124,7 @@ class CompletionProvider
     {
         // This can be made much more performant if the tree follows specific invariants.
         $node = $doc->getNodeAtPosition($pos);
-    
+
 
         if($node !== null && ($offset = $pos->toOffset($node->getFileContents())) > $node->getEndPosition() &&
         $node->parent->getLastChild() instanceof Tolerant\MissingToken) {

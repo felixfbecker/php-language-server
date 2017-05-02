@@ -3,14 +3,17 @@ declare(strict_types = 1);
 
 namespace LanguageServer\Tests\Server\TextDocument\References;
 
-use PHPUnit\Framework\TestCase;
-use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\{
-    ParserResourceFactory, Server, LanguageClient, PhpDocumentLoader, DefinitionResolver
+    LanguageClient, PhpDocumentLoader, Server, TolerantDefinitionResolver
 };
-use LanguageServer\Index\{Index, ProjectIndex, DependenciesIndex};
 use LanguageServer\ContentRetriever\FileSystemContentRetriever;
-use LanguageServer\Protocol\{TextDocumentIdentifier, Position, ReferenceContext, Location, Range, ClientCapabilities};
+use LanguageServer\Index\{
+    DependenciesIndex, Index, ProjectIndex
+};
+use LanguageServer\Protocol\{
+    Location, Position, Range, ReferenceContext, TextDocumentIdentifier
+};
+use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\Tests\Server\ServerTestCase;
 
 class GlobalFallbackTest extends ServerTestCase
@@ -19,7 +22,7 @@ class GlobalFallbackTest extends ServerTestCase
     {
         $projectIndex         = new ProjectIndex(new Index, new DependenciesIndex);
         $projectIndex->setComplete();
-        $definitionResolver   = ParserResourceFactory::getDefinitionResolver($projectIndex);
+        $definitionResolver   = new TolerantDefinitionResolver($projectIndex);
         $client               = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
         $this->documentLoader = new PhpDocumentLoader(new FileSystemContentRetriever, $projectIndex, $definitionResolver);
         $this->textDocument   = new Server\TextDocument($this->documentLoader, $definitionResolver, $client, $projectIndex);

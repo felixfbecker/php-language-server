@@ -48,24 +48,25 @@ class PhpDocumentLoader
     private $docBlockFactory;
 
     /**
-     * @var DefinitionResolverInterface
+     * @var TolerantDefinitionResolver
      */
     private $definitionResolver;
 
     /**
      * @param ContentRetriever $contentRetriever
-     * @param ProjectIndex $project
-     * @param DefinitionResolverInterface $definitionResolver
+     * @param ProjectIndex $projectIndex
+     * @param TolerantDefinitionResolver $definitionResolver
+     * @internal param ProjectIndex $project
      */
     public function __construct(
         ContentRetriever $contentRetriever,
         ProjectIndex $projectIndex,
-        DefinitionResolverInterface $definitionResolver
+        TolerantDefinitionResolver $definitionResolver
     ) {
         $this->contentRetriever = $contentRetriever;
         $this->projectIndex = $projectIndex;
         $this->definitionResolver = $definitionResolver;
-        $this->parser = ParserResourceFactory::getParser();
+        $this->parser = new Tolerant\Parser();
         $this->docBlockFactory = DocBlockFactory::createInstance();
     }
 

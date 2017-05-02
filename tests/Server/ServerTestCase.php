@@ -6,13 +6,12 @@ namespace LanguageServer\Tests\Server;
 use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\{
-    ParserResourceFactory, Server, LanguageClient, PhpDocumentLoader, DefinitionResolver
+    Server, LanguageClient, PhpDocumentLoader, TolerantDefinitionResolver
 };
-use LanguageServer\Index\{ProjectIndex, StubsIndex, GlobalIndex, DependenciesIndex, Index};
+use LanguageServer\Index\{ProjectIndex, DependenciesIndex, Index};
 use LanguageServer\ContentRetriever\FileSystemContentRetriever;
-use LanguageServer\Protocol\{Position, Location, Range, ClientCapabilities};
+use LanguageServer\Protocol\{Position, Location, Range};
 use function LanguageServer\pathToUri;
-use Sabre\Event\Promise;
 
 abstract class ServerTestCase extends TestCase
 {
@@ -52,7 +51,7 @@ abstract class ServerTestCase extends TestCase
         $projectIndex      = new ProjectIndex($sourceIndex, $dependenciesIndex);
         $projectIndex->setComplete();
 
-        $definitionResolver   = ParserResourceFactory::getDefinitionResolver($projectIndex);
+        $definitionResolver   = new TolerantDefinitionResolver($projectIndex);
         $client               = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
         $this->documentLoader = new PhpDocumentLoader(new FileSystemContentRetriever, $projectIndex, $definitionResolver);
         $this->textDocument   = new Server\TextDocument($this->documentLoader, $definitionResolver, $client, $projectIndex);

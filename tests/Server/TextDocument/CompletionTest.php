@@ -6,16 +6,15 @@ namespace LanguageServer\Tests\Server\TextDocument;
 use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\{
-    ParserResourceFactory, Server, LanguageClient, PhpDocumentLoader, CompletionProvider, DefinitionResolver
+    Server, LanguageClient, PhpDocumentLoader, TolerantDefinitionResolver
 };
-use LanguageServer\Index\{Index, ProjectIndex, DependenciesIndex, GlobalIndex, StubsIndex};
+use LanguageServer\Index\{Index, ProjectIndex, DependenciesIndex};
 use LanguageServer\ContentRetriever\FileSystemContentRetriever;
 use LanguageServer\Protocol\{
     TextDocumentIdentifier,
     TextEdit,
     Range,
     Position,
-    ClientCapabilities,
     CompletionList,
     CompletionItem,
     CompletionItemKind
@@ -38,7 +37,7 @@ class CompletionTest extends TestCase
     {
         $client = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
         $projectIndex = new ProjectIndex(new Index, new DependenciesIndex);
-        $definitionResolver = ParserResourceFactory::getDefinitionResolver($projectIndex);
+        $definitionResolver = new TolerantDefinitionResolver($projectIndex);
         $contentRetriever = new FileSystemContentRetriever;
         $this->loader = new PhpDocumentLoader($contentRetriever, $projectIndex, $definitionResolver);
         $this->loader->load(pathToUri(__DIR__ . '/../../../fixtures/global_symbols.php'))->wait();

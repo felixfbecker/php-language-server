@@ -3,21 +3,18 @@ declare(strict_types = 1);
 
 namespace LanguageServer;
 
-use LanguageServer\Protocol\{Diagnostic, DiagnosticSeverity, Range, Position, TextEdit};
-use LanguageServer\NodeVisitor\{
-    NodeAtPositionFinder,
-    ReferencesAdder,
-    DocBlockParser,
-    DefinitionCollector,
-    ColumnCalculator,
-    ReferencesCollector
-};
 use LanguageServer\Index\Index;
-use PhpParser\{Error, ErrorHandler, Node, NodeTraverser};
-use PhpParser\NodeVisitor\NameResolver;
-use phpDocumentor\Reflection\DocBlockFactory;
-use Sabre\Uri;
+use LanguageServer\NodeVisitor\{
+    NodeAtPositionFinder
+};
+use LanguageServer\Protocol\{
+    Diagnostic, Position, Range
+};
 use Microsoft\PhpParser as Tolerant;
+use phpDocumentor\Reflection\DocBlockFactory;
+use PhpParser\{
+    Node, NodeTraverser
+};
 
 class PhpDocument
 {
@@ -38,7 +35,7 @@ class PhpDocument
     /**
      * The DefinitionResolver instance to resolve reference nodes to definitions
      *
-     * @var DefinitionResolverInterface
+     * @var TolerantDefinitionResolver
      */
     private $definitionResolver;
 
@@ -102,7 +99,7 @@ class PhpDocument
      * @param Index $index The Index to register definitions and references to
      * @param Parser $parser The PHPParser instance
      * @param DocBlockFactory $docBlockFactory The DocBlockFactory instance to parse docblocks
-     * @param DefinitionResolverInterface $definitionResolver The DefinitionResolver to resolve definitions to symbols in the workspace
+     * @param TolerantDefinitionResolver $definitionResolver The DefinitionResolver to resolve definitions to symbols in the workspace
      */
     public function __construct(
         string $uri,
@@ -110,7 +107,7 @@ class PhpDocument
         Index $index,
         $parser,
         DocBlockFactory $docBlockFactory,
-        DefinitionResolverInterface $definitionResolver
+        TolerantDefinitionResolver $definitionResolver
     ) {
         $this->uri = $uri;
         $this->index = $index;
@@ -161,7 +158,7 @@ class PhpDocument
         $this->definitions = null;
         $this->definitionNodes = null;
 
-        $treeAnalyzer = ParserResourceFactory::getTreeAnalyzer($this->parser, $content, $this->docBlockFactory, $this->definitionResolver, $this->uri);
+        $treeAnalyzer = new TolerantTreeAnalyzer($this->parser, $content, $this->docBlockFactory, $this->definitionResolver, $this->uri);
 
         $this->diagnostics = $treeAnalyzer->getDiagnostics();
 
@@ -170,7 +167,7 @@ class PhpDocument
         $this->definitionNodes = $treeAnalyzer->getDefinitionNodes();
 
         $this->referenceNodes = $treeAnalyzer->getReferenceNodes();
-        
+
         foreach ($this->definitions as $fqn => $definition) {
             $this->index->setDefinition($fqn, $definition);
         }
@@ -179,7 +176,7 @@ class PhpDocument
         foreach ($this->referenceNodes as $fqn => $nodes) {
             $this->index->addReferenceUri($fqn, $this->uri);
         }
-        
+
         $this->stmts = $treeAnalyzer->getStmts();
     }
 

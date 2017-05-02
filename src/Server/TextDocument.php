@@ -3,37 +3,20 @@ declare(strict_types = 1);
 
 namespace LanguageServer\Server;
 
-use Microsoft\PhpParser as Tolerant;
-use phpDocumentor\Reflection\DocBlock\Tags\Param;
-use PhpParser\{Node, NodeTraverser};
 use LanguageServer\{
-    DefinitionResolverInterface, FqnUtilities, LanguageClient, PhpDocumentLoader, PhpDocument, DefinitionResolver, CompletionProvider, TolerantDefinitionResolver, TolerantTreeAnalyzer
-};
-use LanguageServer\NodeVisitor\VariableReferencesCollector;
-use LanguageServer\Protocol\{
-    SymbolLocationInformation,
-    SymbolDescriptor,
-    TextDocumentItem,
-    TextDocumentIdentifier,
-    VersionedTextDocumentIdentifier,
-    Position,
-    Range,
-    FormattingOptions,
-    TextEdit,
-    Location,
-    SymbolInformation,
-    ReferenceContext,
-    Hover,
-    MarkedString,
-    SymbolKind,
-    CompletionItem,
-    CompletionItemKind
+    CompletionProvider, FqnUtilities, LanguageClient, PhpDocument, PhpDocumentLoader, TolerantDefinitionResolver
 };
 use LanguageServer\Index\ReadableIndex;
+use LanguageServer\Protocol\{
+    FormattingOptions, Hover, Location, MarkedString, Position, Range, ReferenceContext, SymbolDescriptor, SymbolLocationInformation, TextDocumentIdentifier, TextDocumentItem, VersionedTextDocumentIdentifier
+};
+use Microsoft\PhpParser as Tolerant;
 use Sabre\Event\Promise;
 use Sabre\Uri;
+use function LanguageServer\{
+    isVendored, waitForEvent
+};
 use function Sabre\Event\coroutine;
-use function LanguageServer\{waitForEvent, isVendored};
 
 /**
  * Provides method handlers for all textDocument/* methods
@@ -53,7 +36,7 @@ class TextDocument
     protected $project;
 
     /**
-     * @var DefinitionResolverInterface
+     * @var TolerantDefinitionResolver
      */
     protected $definitionResolver;
 
@@ -79,7 +62,7 @@ class TextDocument
 
     /**
      * @param PhpDocumentLoader $documentLoader
-     * @param DefinitionResolverInterface $definitionResolver
+     * @param TolerantDefinitionResolver $definitionResolver
      * @param LanguageClient $client
      * @param ReadableIndex $index
      * @param \stdClass $composerJson
@@ -87,7 +70,7 @@ class TextDocument
      */
     public function __construct(
         PhpDocumentLoader $documentLoader,
-        DefinitionResolverInterface $definitionResolver,
+        TolerantDefinitionResolver $definitionResolver,
         LanguageClient $client,
         ReadableIndex $index,
         \stdClass $composerJson = null,

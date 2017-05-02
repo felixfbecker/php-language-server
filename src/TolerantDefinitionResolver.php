@@ -3,16 +3,15 @@ declare(strict_types = 1);
 
 namespace LanguageServer;
 
-use LanguageServer\Protocol\TolerantSymbolInformation;
-use PhpParser\Node;
-use phpDocumentor\Reflection\{
-    DocBlock, DocBlockFactory, Types, Type, Fqsen, TypeResolver
-};
-use LanguageServer\Protocol\SymbolInformation;
 use LanguageServer\Index\ReadableIndex;
+use LanguageServer\Protocol\TolerantSymbolInformation;
 use Microsoft\PhpParser as Tolerant;
+use phpDocumentor\Reflection\{
+    DocBlock, DocBlockFactory, Fqsen, Type, TypeResolver, Types
+};
+use PhpParser\Node;
 
-class TolerantDefinitionResolver implements DefinitionResolverInterface
+class TolerantDefinitionResolver
 {
     /**
      * The current project index (for retrieving existing definitions)
@@ -77,7 +76,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
         $defLine = \rtrim(\strtok($defLine, "\n"), "\r");
 
         // TODO - pretty print rather than getting text
-        
+
         return $defLine;
     }
 
@@ -93,7 +92,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
         if ($node instanceof Tolerant\Node\Statement\NamespaceDefinition) {
             return null;
         }
-        
+
         // For properties and constants, set the node to the declaration node, rather than the individual property.
         // This is because they get defined as part of a list.
         $constOrPropertyDeclaration = TolerantParserHelpers::tryGetPropertyDeclaration($node) ?? TolerantParserHelpers::tryGetConstOrClassConstDeclaration($node);
@@ -196,8 +195,8 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             // TODO - why is this represented as an array?
             // TODO interface implementations.
         } elseif (
-            $node instanceof Tolerant\Node\Statement\InterfaceDeclaration && 
-            // TODO - this hould be better represented in the parser API
+            $node instanceof Tolerant\Node\Statement\InterfaceDeclaration &&
+            // TODO - this should be better represented in the parser API
             $node->interfaceBaseClause !== null && $node->interfaceBaseClause->interfaceNameList !== null
         ) {
             $def->extends = [];
@@ -229,7 +228,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
         // Variables are not indexed globally, as they stay in the file scope anyway.
         // Ignore variable nodes that are part of ScopedPropertyAccessExpression,
         // as the scoped property access expression node is handled separately.
-        if ($node instanceof Tolerant\Node\Expression\Variable && 
+        if ($node instanceof Tolerant\Node\Expression\Variable &&
             !($parent instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression))
         {
             // Resolve $this to the containing class definition.
@@ -252,6 +251,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
         }
         // If the node is a function or constant, it could be namespaced, but PHP falls back to global
         // http://php.net/manual/en/language.namespaces.fallback.php
+        // TODO - verify that this is not a method
         $globalFallback = TolerantParserHelpers::isConstantFetch($node) || $parent instanceof Tolerant\Node\Expression\CallExpression;
         // Return the Definition object from the index index
         return $this->index->getDefinition($fqn, $globalFallback);
@@ -264,7 +264,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
      * @param Node $node
      * @return string|null
      */
-    public function resolveReferenceNodeToFqn($node) {        
+    public function resolveReferenceNodeToFqn($node) {
         // TODO all name tokens should be a part of a node
         if ($node instanceof Tolerant\Node\QualifiedName) {
             return $this->resolveQualifiedNameNodeToFqn($node);
@@ -278,7 +278,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
         }
         else if (
             // A\B::C - constant access expression
-            $node instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression 
+            $node instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression
             && !($node->memberName instanceof Tolerant\Node\Expression\Variable)
         ) {
             return $this->resolveScopedPropertyAccessExpressionNodeToFqn($node);
@@ -299,10 +299,10 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             return null;
         }
         // Add use clause references
-        if (($useClause = $parent) instanceof Tolerant\Node\NamespaceUseGroupClause 
+        if (($useClause = $parent) instanceof Tolerant\Node\NamespaceUseGroupClause
             || $useClause instanceof Tolerant\Node\NamespaceUseClause
         ) {
-            $contents = $node->getFileContents();                
+            $contents = $node->getFileContents();
             if ($useClause instanceof Tolerant\Node\NamespaceUseGroupClause) {
                 $prefix = $useClause->parent->parent->namespaceName;
                 if ($prefix === null) {
@@ -331,7 +331,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
 
         // For extends, implements, type hints and classes of classes of static calls use the name directly
         $name = (string) ($node->getResolvedName() ?? $node->getNamespacedName());
-        
+
         if ($node->parent instanceof Tolerant\Node\Expression\CallExpression) {
             $name .= '()';
         }
@@ -555,7 +555,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
 
         // VARIABLE
         //   $this -> Type\this
-        //   $myVariable -> type of corresponding assignment expression 
+        //   $myVariable -> type of corresponding assignment expression
         if ($expr instanceof Tolerant\Node\Expression\Variable || $expr instanceof Tolerant\Node\UseVariableName) {
             if ($expr->getName() === 'this') {
                 return new Types\This;
@@ -577,7 +577,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
                 $expr->callableExpression instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression ||
                 $expr->callableExpression instanceof Tolerant\Node\Expression\MemberAccessExpression)
         ) {
-            
+
             // Find the function definition
             if ($expr->callableExpression instanceof Tolerant\Node\Expression) {
                 // Cannot get type for dynamic function call
@@ -664,7 +664,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             if ($expr->parent instanceof Tolerant\Node\Expression\CallExpression) {
                 $fqn .= '()';
             }
-            
+
             $def = $this->index->getDefinition($fqn);
             if ($def === null) {
                 return new Types\Mixed;
@@ -686,14 +686,14 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
         }
 
         // ASSIGNMENT EXPRESSION
-        //   $a = $myExpression => resolves to the type of the right-hand operand 
+        //   $a = $myExpression => resolves to the type of the right-hand operand
         if ($expr instanceof Tolerant\Node\Expression\AssignmentExpression) {
             return $this->resolveExpressionNodeToType($expr->rightOperand);
         }
 
         // TERNARY EXPRESSION
         //   $condition ? $ifExpression : $elseExpression => reslves to type of $ifCondition or $elseExpression
-        //   $condition ?: $elseExpression => resolves to type of $condition or $elseExpression 
+        //   $condition ?: $elseExpression => resolves to type of $condition or $elseExpression
         if ($expr instanceof Tolerant\Node\Expression\TernaryExpression) {
             // ?:
             if ($expr->ifExpression === null) {
@@ -751,7 +751,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
             return new Types\String_;
         }
 
-        // BINARY EXPRESSIONS: 
+        // BINARY EXPRESSIONS:
         // Resolve to Types\Integer if both left and right operands are integer types, otherwise Types\Float
         //   [operator] +, -, *, **
         //   [assignment] *=, **=, -=, +=
@@ -1005,8 +1005,8 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
         // PROPERTIES, CONSTS, CLASS CONSTS, ASSIGNMENT EXPRESSIONS
         // Get the documented type the assignment resolves to.
         if (
-            ($declarationNode = 
-                TolerantParserHelpers::tryGetPropertyDeclaration($node) ?? 
+            ($declarationNode =
+                TolerantParserHelpers::tryGetPropertyDeclaration($node) ??
                 TolerantParserHelpers::tryGetConstOrClassConstDeclaration($node)
             ) !== null ||
             ($node = $node->parent) instanceof Tolerant\Node\Expression\AssignmentExpression)
@@ -1085,8 +1085,8 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
         // INPUT                        OUTPUT
         // namespace A\B;
         // class C {
-        //   function a () {}           A\B\C::a()
-        //   static function b() {}     A\B\C->b()
+        //   function a () {}           A\B\C->a()
+        //   static function b() {}     A\B\C::b()
         // }
         else if ($node instanceof Tolerant\Node\MethodDeclaration) {
             // Class method: use ClassName->methodName() as name
@@ -1111,7 +1111,7 @@ class TolerantDefinitionResolver implements DefinitionResolverInterface
         // namespace A\B;
         // class C {
         //   static $a = 4, $b = 4      A\B\C::$a, A\B\C::$b
-        //   $a = 4, $b = 4             A\B\C->$a, A\B\C->$b
+        //   $a = 4, $b = 4             A\B\C->$a, A\B\C->$b // TODO verify variable name
         // }
         else if (
             ($propertyDeclaration = TolerantParserHelpers::tryGetPropertyDeclaration($node)) !== null &&

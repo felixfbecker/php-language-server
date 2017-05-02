@@ -3,28 +3,29 @@ declare(strict_types = 1);
 
 namespace LanguageServer\Tests\Server;
 
-use PHPUnit\Framework\TestCase;
-use phpDocumentor\Reflection\DocBlockFactory;
-use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\{
-    ParserResourceFactory, LanguageClient, PhpDocument, DefinitionResolver, Parser
+    PhpDocument, TolerantDefinitionResolver
 };
-use LanguageServer\NodeVisitor\NodeAtPositionFinder;
-use LanguageServer\ContentRetriever\FileSystemContentRetriever;
-use LanguageServer\Protocol\{SymbolKind, Position, ClientCapabilities};
-use LanguageServer\Index\{Index, ProjectIndex, DependenciesIndex};
-use PhpParser\Node;
-use function LanguageServer\isVendored;
+use LanguageServer\Index\{
+    Index
+};
+use LanguageServer\Protocol\{
+    Position
+};
 use Microsoft\PhpParser as Tolerant;
+use phpDocumentor\Reflection\DocBlockFactory;
+use PhpParser\Node;
+use PHPUnit\Framework\TestCase;
+use function LanguageServer\isVendored;
 
 class PhpDocumentTest extends TestCase
 {
     public function createDocument(string $uri, string $content)
     {
-        $parser = ParserResourceFactory::getParser();
+        $parser = new Tolerant\Parser();
         $docBlockFactory = DocBlockFactory::createInstance();
         $index = new Index;
-        $definitionResolver = ParserResourceFactory::getDefinitionResolver($index);
+        $definitionResolver = new TolerantDefinitionResolver($index);
         return new PhpDocument($uri, $content, $index, $parser, $docBlockFactory, $definitionResolver);
     }
 
