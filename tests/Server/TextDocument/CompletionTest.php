@@ -210,7 +210,10 @@ class CompletionTest extends TestCase
                 'TestClass',
                 CompletionItemKind::CLASS_,
                 'TestNamespace',
-                'Pariatur ut laborum tempor voluptate consequat ea deserunt.'
+                'Pariatur ut laborum tempor voluptate consequat ea deserunt.',
+                null,
+                null,
+                'TestClass'
             )
         ], true), $items);
     }
