@@ -1,0 +1,11 @@
+{
+    "references": {
+        "a\\b": [
+            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/namespaces4.php"
+        ],
+        "a": [
+            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/namespaces4.php"
+        ]
+    },
+    "definitions": []
+}

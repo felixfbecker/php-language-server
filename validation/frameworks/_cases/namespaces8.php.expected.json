@@ -1,0 +1,26 @@
+{
+    "references": {
+        "LanguageServer": [
+            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/namespaces8.php"
+        ]
+    },
+    "definitions": {
+        "LanguageServer\\Tests\\Utils": {
+            "extends": [],
+            "isGlobal": true,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "LanguageServer\\Tests\\Utils",
+                "kind": 3,
+                "location": {
+                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/namespaces8.php"
+                },
+                "containerName": "LanguageServer\\Tests"
+            },
+            "type__class": "LanguageServer\\Tests\\ValidationTest",
+            "type": null,
+            "documentation": null
+        }
+    }
+}

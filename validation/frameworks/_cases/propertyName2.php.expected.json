@@ -1,0 +1,39 @@
+{
+    "references": [],
+    "definitions": {
+        "MyClass": {
+            "extends": [],
+            "isGlobal": true,
+            "isStatic": false,
+            "canBeInstantiated": true,
+            "symbolInformation": {
+                "name": "MyClass",
+                "kind": 5,
+                "location": {
+                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/propertyName2.php"
+                },
+                "containerName": ""
+            },
+            "type__class": "LanguageServer\\Tests\\ValidationTest",
+            "type": null,
+            "documentation": null
+        },
+        "MyClass->mainPropertyName": {
+            "extends": [],
+            "isGlobal": false,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "mainPropertyName",
+                "kind": 7,
+                "location": {
+                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/propertyName2.php"
+                },
+                "containerName": "MyClass"
+            },
+            "type__class": "phpDocumentor\\Reflection\\Types\\String_",
+            "type": {},
+            "documentation": "The name of the main property, or NULL if there is none."
+        }
+    }
+}

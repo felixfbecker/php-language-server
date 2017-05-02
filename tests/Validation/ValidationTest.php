@@ -29,7 +29,7 @@ class ValidationTest extends TestCase
         $testProviderArray = array();
         foreach ($frameworks as $frameworkDir) {
             $frameworkName = basename($frameworkDir);
-            if ($frameworkName !== "broken") {
+            if ($frameworkName !== '_cases') {
                 continue;
             }
 
@@ -63,12 +63,21 @@ class ValidationTest extends TestCase
         $expectedValues = $this->getExpectedTestValues($testCaseFile, $frameworkName, $fileContents);
         $actualValues = $this->getActualTestValues($testCaseFile, $frameworkName, $fileContents);
 
-        $this->assertEquals($expectedValues['definitions'], $actualValues['definitions']);
-
         try {
-            $this->assertArraySubset((array)$expectedValues['references'], (array)$actualValues['references'], false, 'references don\'t match.');
+            $this->assertEquals($expectedValues['definitions'], $actualValues['definitions']);
+
+            try {
+                $this->assertArraySubset((array)$expectedValues['references'], (array)$actualValues['references'], false, 'references don\'t match.');
+            } catch (\Throwable $e) {
+                $this->assertEquals((array)$expectedValues['references'], (array)$actualValues['references'], 'references don\'t match.');
+            }
         } catch (\Throwable $e) {
-            $this->assertEquals((array)$expectedValues['references'], (array)$actualValues['references'], 'references don\'t match.');
+            $outputFile = getExpectedValuesFile($testCaseFile);
+            if ($frameworkName === '_cases') {
+                file_put_contents($outputFile, json_encode($actualValues, JSON_PRETTY_PRINT));
+            }
+
+            throw $e;
         }
     }
 
@@ -82,7 +91,7 @@ class ValidationTest extends TestCase
         global $parserKind;
         $parserKind = ParserKind::PHP_PARSER;
 
-        $outputFile = $filename . '.expected.json';
+        $outputFile = getExpectedValuesFile($filename);
         if (file_exists($outputFile)) {
             return (array)json_decode(file_get_contents($outputFile));
         }
@@ -135,11 +144,6 @@ class ValidationTest extends TestCase
             'references' => json_decode(json_encode($actualRefs)),
             'definitions' => json_decode(json_encode($actualDefs))
         );
-
-        $outputFile = $filename . '.expected.json';
-        if ($frameworkName === 'broken') {
-            file_put_contents($outputFile, json_encode($refsAndDefs, JSON_PRETTY_PRINT));
-        }
 
         return $refsAndDefs;
     }
@@ -194,4 +198,8 @@ class ValidationTest extends TestCase
             }
         }
     }
+}
+
+function getExpectedValuesFile($testCaseFile): string {
+    return $testCaseFile . '.expected.json';
 }

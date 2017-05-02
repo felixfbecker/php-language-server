@@ -1,8 +1,0 @@
-{
-    "references": {
-        "A": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/scopedPropertyAccess4.php"
-        ]
-    },
-    "definitions": []
-}
