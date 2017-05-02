@@ -12,10 +12,10 @@
         "MyNamespace\\ClassLoader->prefixesPsr0": [
             "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/memberAccess3.php"
         ],
-        "MyNamespace\\ComposerStaticInitIncludePath::$prefixesPsr0": [
+        "MyNamespace\\ComposerStaticInitIncludePath": [
             "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/memberAccess3.php"
         ],
-        "MyNamespace\\ComposerStaticInitIncludePath": [
+        "MyNamespace\\ComposerStaticInitIncludePath::$prefixesPsr0": [
             "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/memberAccess3.php"
         ],
         "MyNamespace\\ClassLoader::class": [

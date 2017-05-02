@@ -3,10 +3,10 @@
         "TestInterface": [
             "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/scopedPropertyAccess5.php"
         ],
-        "TestClass::$testProperty": [
+        "TestClass": [
             "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/scopedPropertyAccess5.php"
         ],
-        "TestClass": [
+        "TestClass::$testProperty": [
             "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/scopedPropertyAccess5.php"
         ],
         "TestClass::$staticTestProperty": [

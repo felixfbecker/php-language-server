@@ -3,10 +3,10 @@
         "MyNamespace\\B": [
             "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/static2.php"
         ],
-        "STATIC::b()": [
+        "MyNamespace\\A::b()": [
             "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/static2.php"
         ],
-        "STATIC": [
+        "static": [
             "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/static2.php"
         ]
     },

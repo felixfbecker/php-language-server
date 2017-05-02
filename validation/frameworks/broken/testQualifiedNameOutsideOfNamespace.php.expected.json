@@ -1,8 +1,5 @@
 {
     "references": {
-        "SomeNamespace\\NameOutsideOfNamespace": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/testQualifiedNameOutsideOfNamespace.php"
-        ],
         "NameOutsideOfNamespace": [
             "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/testQualifiedNameOutsideOfNamespace.php"
         ]

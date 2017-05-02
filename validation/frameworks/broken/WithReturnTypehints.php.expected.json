@@ -60,7 +60,7 @@
                 },
                 "containerName": "Fixtures\\Prophecy\\WithReturnTypehints"
             },
-            "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
+            "type__class": "phpDocumentor\\Reflection\\Types\\Object_",
             "type": {},
             "documentation": null
         },
@@ -94,7 +94,7 @@
                 },
                 "containerName": "Fixtures\\Prophecy\\WithReturnTypehints"
             },
-            "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
+            "type__class": "phpDocumentor\\Reflection\\Types\\Object_",
             "type": {},
             "documentation": null
         }

@@ -3,16 +3,10 @@
         "MyNamespace\\B": [
             "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/parent3.php"
         ],
-        "MyNamespace\\parent": [
+        "MyNamespace\\B->b()": [
             "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/parent3.php"
         ],
         "parent": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/parent3.php"
-        ],
-        "MyNamespace\\b()": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/parent3.php"
-        ],
-        "b()": [
             "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/parent3.php"
         ]
     },

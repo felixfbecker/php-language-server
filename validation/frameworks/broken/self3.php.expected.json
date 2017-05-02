@@ -3,16 +3,10 @@
         "MyNamespace\\B": [
             "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/self3.php"
         ],
-        "MyNamespace\\self": [
+        "MyNamespace\\A->b()": [
             "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/self3.php"
         ],
         "self": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/self3.php"
-        ],
-        "MyNamespace\\b()": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/self3.php"
-        ],
-        "b()": [
             "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/self3.php"
         ]
     },

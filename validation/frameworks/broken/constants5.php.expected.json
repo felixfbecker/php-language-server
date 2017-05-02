@@ -2,9 +2,6 @@
     "references": {
         "MyNamespace\\PHP_INT_MAX": [
             "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/constants5.php"
-        ],
-        "PHP_INT_MAX": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/constants5.php"
         ]
     },
     "definitions": {
@@ -55,7 +52,7 @@
                 },
                 "containerName": "MyNamespace\\Mbstring"
             },
-            "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
+            "type__class": "phpDocumentor\\Reflection\\Types\\Object_",
             "type": {},
             "documentation": null
         }

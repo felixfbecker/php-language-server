@@ -3,6 +3,12 @@
         "MyNamespace2\\MyNamespace1\\B": [
             "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/multipleNamespaces.php"
         ],
+        "MyNamespace2\\MyNamespace1": [
+            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/multipleNamespaces.php"
+        ],
+        "MyNamespace2": [
+            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/multipleNamespaces.php"
+        ],
         "MyNamespace2\\A->b()": [
             "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/multipleNamespaces.php"
         ]

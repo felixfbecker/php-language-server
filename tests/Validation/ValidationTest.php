@@ -61,7 +61,7 @@ class ValidationTest extends TestCase
 
         $fileContents = file_get_contents($testCaseFile);
         $expectedValues = $this->getExpectedTestValues($testCaseFile, $frameworkName, $fileContents);
-        $actualValues = $this->getActualTestValues($testCaseFile, $fileContents);
+        $actualValues = $this->getActualTestValues($testCaseFile, $frameworkName, $fileContents);
 
         $this->assertEquals($expectedValues['definitions'], $actualValues['definitions']);
 
@@ -111,14 +111,10 @@ class ValidationTest extends TestCase
             'definitions' => json_decode(json_encode($expectedDefs))
         );
 
-        if ($frameworkName === 'broken') {
-            file_put_contents($outputFile, json_encode($refsAndDefs, JSON_PRETTY_PRINT));
-        }
-
         return $refsAndDefs;
     }
 
-    private function getActualTestValues($filename, $fileContents): array {
+    private function getActualTestValues($filename, $frameworkName, $fileContents): array {
         global $parserKind;
         $parserKind = ParserKind::TOLERANT_PHP_PARSER;
 
@@ -133,12 +129,19 @@ class ValidationTest extends TestCase
         $this->filterSkippedReferences($actualRefs);
         $actualDefs = $this->getTestValuesFromDefs($document->getDefinitions());
 
-        // TODO - probably a more PHP-typical way to do this. Need to compare the objects parsed from json files
+        // TODO - there's probably a more PHP-typical way to do this. Need to compare the objects parsed from json files
         // to the real results. json_decode returns stdClass Objects, not arrays.
-        return array(
+        $refsAndDefs = array(
             'references' => json_decode(json_encode($actualRefs)),
             'definitions' => json_decode(json_encode($actualDefs))
         );
+
+        $outputFile = $filename . '.expected.json';
+        if ($frameworkName === 'broken') {
+            file_put_contents($outputFile, json_encode($refsAndDefs, JSON_PRETTY_PRINT));
+        }
+
+        return $refsAndDefs;
     }
 
     /**

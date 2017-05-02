@@ -31,9 +31,9 @@
                 },
                 "containerName": "Foo"
             },
-            "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
+            "type__class": "phpDocumentor\\Reflection\\Types\\Object_",
             "type": {},
-            "documentation": null
+            "documentation": "Foo"
         }
     }
 }

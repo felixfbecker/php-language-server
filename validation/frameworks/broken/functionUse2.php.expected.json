@@ -3,7 +3,7 @@
         "LanguageServer": [
             "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/functionUse2.php"
         ],
-        "LanguageServer\\timeout": [
+        "LanguageServer\\timeout()": [
             "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/functionUse2.php"
         ]
     },

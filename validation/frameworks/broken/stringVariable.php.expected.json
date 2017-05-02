@@ -1,9 +1,5 @@
 {
-    "references": {
-        "B->hi": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/stringVariable.php"
-        ]
-    },
+    "references": [],
     "definitions": {
         "B": {
             "extends": [],

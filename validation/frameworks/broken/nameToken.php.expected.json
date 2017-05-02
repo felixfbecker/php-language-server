@@ -1,9 +1,5 @@
 {
-    "references": {
-        "static": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/nameToken.php"
-        ]
-    },
+    "references": [],
     "definitions": {
         "A": {
             "extends": [],
