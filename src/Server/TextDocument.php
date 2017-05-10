@@ -265,7 +265,15 @@ class TextDocument
     public function definition(TextDocumentIdentifier $textDocument, Position $position): Promise
     {
         return coroutine(function () use ($textDocument, $position) {
-            $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
+            $documentLoader = $this->documentLoader;//->getOrLoad($textDocument->uri);
+            $document = null;
+            if (isset($documentLoader->documents[$textDocument->uri])) {
+              $document = $documentLoader->documents[$textDocument->uri];
+            } else {
+              $document = yield $documentLoader->load($textDocument->uri);
+              $documentLoader->documents[$textDocument->uri] = $document; 
+            }
+
             $node = $document->getNodeAtPosition($position);
             if ($node === null) {
                 return [];
