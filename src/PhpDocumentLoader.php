@@ -19,7 +19,7 @@ class PhpDocumentLoader
      *
      * @var PhpDocument
      */
-    private $documents = [];
+    public $documents = [];
 
     /**
      * @var ContentRetriever
