@@ -79,7 +79,10 @@ class TolerantTreeAnalyzer implements TreeAnalyzerInterface {
                     new Range(
                         new Position($range->start->line, $range->start->character),
                         new Position($range->end->line, $range->start->character)
-                    )
+                    ),
+                    null,
+                    DiagnosticSeverity::ERROR,
+                    'php'
                 );
             }
         }
@@ -96,7 +99,7 @@ class TolerantTreeAnalyzer implements TreeAnalyzerInterface {
             if (!(
                 (
                     // $node->parent instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression ||
-                    ($node instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression || 
+                    ($node instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression ||
                     $node instanceof Tolerant\Node\Expression\MemberAccessExpression)
                     && !(
                         $node->parent instanceof Tolerant\Node\Expression\CallExpression ||
@@ -143,7 +146,7 @@ class TolerantTreeAnalyzer implements TreeAnalyzerInterface {
         }
         $this->collectDefinitionsAndReferences($node);
     }
-    
+
     public function getDiagnostics() {
         return $this->diagnostics ?? [];
     }
