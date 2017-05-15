@@ -1,13 +1,13 @@
 {
     "references": {
         "a\\b": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/namespaces3.php"
+            "./_cases/namespaces3.php"
         ],
         "b": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/namespaces3.php"
+            "./_cases/namespaces3.php"
         ],
         "c": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/broken\/namespaces3.php"
+            "./_cases/namespaces3.php"
         ]
     },
     "definitions": []
