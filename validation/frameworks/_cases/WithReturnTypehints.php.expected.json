@@ -24,7 +24,6 @@
                 },
                 "containerName": "Fixtures"
             },
-            "type__class": "LanguageServer\\Tests\\ValidationTest",
             "type": null,
             "documentation": null
         },
@@ -43,7 +42,6 @@
                 },
                 "containerName": "Fixtures\\Prophecy"
             },
-            "type__class": "LanguageServer\\Tests\\ValidationTest",
             "type": null,
             "documentation": null
         },

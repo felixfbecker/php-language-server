@@ -21,7 +21,6 @@
                 },
                 "containerName": ""
             },
-            "type__class": "LanguageServer\\Tests\\ValidationTest",
             "type": null,
             "documentation": null
         },
@@ -38,7 +37,6 @@
                 },
                 "containerName": "MyNamespace"
             },
-            "type__class": "LanguageServer\\Tests\\ValidationTest",
             "type": null,
             "documentation": null
         },
@@ -74,7 +72,6 @@
                 },
                 "containerName": "MyNamespace"
             },
-            "type__class": "LanguageServer\\Tests\\ValidationTest",
             "type": null,
             "documentation": null
         },

@@ -69,7 +69,7 @@ class ValidationTest extends TestCase
 
         $outputFile = getExpectedValuesFile($testCaseFile);
         if (!file_exists($outputFile)) {
-            file_put_contents(json_encode($actualValues, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));
+            file_put_contents($outputFile, json_encode($actualValues, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));
         }
 
         $expectedValues = (array)json_decode(file_get_contents($outputFile));
@@ -153,9 +153,9 @@ class ValidationTest extends TestCase
                     unset($definition->$propertyName->location->range);
                 } elseif ($propertyName === 'extends') {
                     $definition->$propertyName = $definition->$propertyName ?? [];
-                } elseif ($propertyName === 'type') {
+                } elseif ($propertyName === 'type' && $definition->type !== null) {
                     // Class info is not captured by json_encode. It's important for 'type'.
-                    $defsForAssert[$fqn][$propertyName . '__class'] = get_class($definition->$propertyName);
+                    $defsForAssert[$fqn]['type__class'] = get_class($definition->type);
                 }
 
                 $defsForAssert[$fqn][$propertyName] = $definition->$propertyName;
