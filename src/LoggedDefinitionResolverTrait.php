@@ -156,7 +156,6 @@ trait LoggedDefinitionResolverTrait
     public function resolveReferenceNodeToDefinition($node)
     {
 //        var_dump(array_keys(self::$instance->index->getDefinitions()));
-        self::$logger = false;
         return $this->logMethod('resolveReferenceNodeToDefinition', $node);
     }
 
