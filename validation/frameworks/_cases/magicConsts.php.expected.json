@@ -10,7 +10,7 @@
                 "name": "A",
                 "kind": 5,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/magicConsts.php"
+                    "uri": "./_cases/magicConsts.php"
                 },
                 "containerName": ""
             },
@@ -27,7 +27,7 @@
                 "name": "deprecationsTriggered",
                 "kind": 7,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/magicConsts.php"
+                    "uri": "./_cases/magicConsts.php"
                 },
                 "containerName": "A"
             },

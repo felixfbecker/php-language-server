@@ -1,13 +1,13 @@
 {
     "references": {
         "Fixtures\\Prophecy\\EmptyClass": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/WithReturnTypehints.php"
+            "./_cases/WithReturnTypehints.php"
         ],
         "self": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/WithReturnTypehints.php"
+            "./_cases/WithReturnTypehints.php"
         ],
         "parent": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/WithReturnTypehints.php"
+            "./_cases/WithReturnTypehints.php"
         ]
     },
     "definitions": {
@@ -20,7 +20,7 @@
                 "name": "Fixtures\\Prophecy",
                 "kind": 3,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/WithReturnTypehints.php"
+                    "uri": "./_cases/WithReturnTypehints.php"
                 },
                 "containerName": "Fixtures"
             },
@@ -39,7 +39,7 @@
                 "name": "WithReturnTypehints",
                 "kind": 5,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/WithReturnTypehints.php"
+                    "uri": "./_cases/WithReturnTypehints.php"
                 },
                 "containerName": "Fixtures\\Prophecy"
             },
@@ -56,7 +56,7 @@
                 "name": "getSelf",
                 "kind": 6,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/WithReturnTypehints.php"
+                    "uri": "./_cases/WithReturnTypehints.php"
                 },
                 "containerName": "Fixtures\\Prophecy\\WithReturnTypehints"
             },
@@ -73,7 +73,7 @@
                 "name": "getName",
                 "kind": 6,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/WithReturnTypehints.php"
+                    "uri": "./_cases/WithReturnTypehints.php"
                 },
                 "containerName": "Fixtures\\Prophecy\\WithReturnTypehints"
             },
@@ -90,7 +90,7 @@
                 "name": "getParent",
                 "kind": 6,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/WithReturnTypehints.php"
+                    "uri": "./_cases/WithReturnTypehints.php"
                 },
                 "containerName": "Fixtures\\Prophecy\\WithReturnTypehints"
             },

@@ -1,16 +1,16 @@
 {
     "references": {
         "TestInterface": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/scopedPropertyAccess5.php"
+            "./_cases/scopedPropertyAccess5.php"
         ],
         "TestClass": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/scopedPropertyAccess5.php"
+            "./_cases/scopedPropertyAccess5.php"
         ],
         "TestClass::$testProperty": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/scopedPropertyAccess5.php"
+            "./_cases/scopedPropertyAccess5.php"
         ],
         "TestClass::$staticTestProperty": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/scopedPropertyAccess5.php"
+            "./_cases/scopedPropertyAccess5.php"
         ]
     },
     "definitions": {
@@ -23,7 +23,7 @@
                 "name": "TestClass",
                 "kind": 5,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/scopedPropertyAccess5.php"
+                    "uri": "./_cases/scopedPropertyAccess5.php"
                 },
                 "containerName": ""
             },
@@ -40,7 +40,7 @@
                 "name": "testProperty",
                 "kind": 7,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/scopedPropertyAccess5.php"
+                    "uri": "./_cases/scopedPropertyAccess5.php"
                 },
                 "containerName": "TestClass"
             },

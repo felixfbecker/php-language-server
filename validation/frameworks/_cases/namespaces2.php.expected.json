@@ -1,16 +1,16 @@
 {
     "references": {
         "NS1\\C": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/namespaces2.php"
+            "./_cases/namespaces2.php"
         ],
         "NS1": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/namespaces2.php"
+            "./_cases/namespaces2.php"
         ],
         "NS1\\I": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/namespaces2.php"
+            "./_cases/namespaces2.php"
         ],
         "NS1\\T": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/namespaces2.php"
+            "./_cases/namespaces2.php"
         ]
     },
     "definitions": {
@@ -23,7 +23,7 @@
                 "name": "MyNamespace1",
                 "kind": 3,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/namespaces2.php"
+                    "uri": "./_cases/namespaces2.php"
                 },
                 "containerName": ""
             },

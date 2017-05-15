@@ -10,7 +10,7 @@
                 "name": "A",
                 "kind": 11,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/interfaceProperty.php"
+                    "uri": "./_cases/interfaceProperty.php"
                 },
                 "containerName": ""
             },

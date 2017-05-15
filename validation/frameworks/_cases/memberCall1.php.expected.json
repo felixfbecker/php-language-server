@@ -1,13 +1,13 @@
 {
     "references": {
         "MyNamespace\\AccountInterface": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/memberCall1.php"
+            "./_cases/memberCall1.php"
         ],
         "MyNamespace\\A": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/memberCall1.php"
+            "./_cases/memberCall1.php"
         ],
         "MyNamespace\\AccountInterface->getAccount()": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/memberCall1.php"
+            "./_cases/memberCall1.php"
         ]
     },
     "definitions": {
@@ -20,7 +20,7 @@
                 "name": "MyNamespace",
                 "kind": 3,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/memberCall1.php"
+                    "uri": "./_cases/memberCall1.php"
                 },
                 "containerName": ""
             },
@@ -37,7 +37,7 @@
                 "name": "ParseErrorsTest",
                 "kind": 5,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/memberCall1.php"
+                    "uri": "./_cases/memberCall1.php"
                 },
                 "containerName": "MyNamespace"
             },
@@ -54,7 +54,7 @@
                 "name": "setAccount",
                 "kind": 6,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/memberCall1.php"
+                    "uri": "./_cases/memberCall1.php"
                 },
                 "containerName": "MyNamespace\\ParseErrorsTest"
             },

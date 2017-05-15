@@ -1,16 +1,16 @@
 {
     "references": {
         "MyNamespace2\\MyNamespace1\\B": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/multipleNamespaces.php"
+            "./_cases/multipleNamespaces.php"
         ],
         "MyNamespace2\\MyNamespace1": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/multipleNamespaces.php"
+            "./_cases/multipleNamespaces.php"
         ],
         "MyNamespace2": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/multipleNamespaces.php"
+            "./_cases/multipleNamespaces.php"
         ],
         "MyNamespace2\\A->b()": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/multipleNamespaces.php"
+            "./_cases/multipleNamespaces.php"
         ]
     },
     "definitions": {
@@ -23,7 +23,7 @@
                 "name": "MyNamespace1",
                 "kind": 3,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/multipleNamespaces.php"
+                    "uri": "./_cases/multipleNamespaces.php"
                 },
                 "containerName": ""
             },
@@ -40,7 +40,7 @@
                 "name": "B",
                 "kind": 5,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/multipleNamespaces.php"
+                    "uri": "./_cases/multipleNamespaces.php"
                 },
                 "containerName": "MyNamespace1"
             },
@@ -57,7 +57,7 @@
                 "name": "b",
                 "kind": 6,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/multipleNamespaces.php"
+                    "uri": "./_cases/multipleNamespaces.php"
                 },
                 "containerName": "MyNamespace1\\B"
             },
@@ -74,7 +74,7 @@
                 "name": "MyNamespace2",
                 "kind": 3,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/multipleNamespaces.php"
+                    "uri": "./_cases/multipleNamespaces.php"
                 },
                 "containerName": ""
             },
@@ -93,7 +93,7 @@
                 "name": "A",
                 "kind": 5,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/multipleNamespaces.php"
+                    "uri": "./_cases/multipleNamespaces.php"
                 },
                 "containerName": "MyNamespace2"
             },
@@ -110,7 +110,7 @@
                 "name": "a",
                 "kind": 6,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/multipleNamespaces.php"
+                    "uri": "./_cases/multipleNamespaces.php"
                 },
                 "containerName": "MyNamespace2\\A"
             },

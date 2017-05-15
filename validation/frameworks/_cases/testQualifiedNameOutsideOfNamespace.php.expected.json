@@ -1,7 +1,7 @@
 {
     "references": {
         "NameOutsideOfNamespace": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/testQualifiedNameOutsideOfNamespace.php"
+            "./_cases/testQualifiedNameOutsideOfNamespace.php"
         ]
     },
     "definitions": {
@@ -14,7 +14,7 @@
                 "name": "SomeNamespace",
                 "kind": 3,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/testQualifiedNameOutsideOfNamespace.php"
+                    "uri": "./_cases/testQualifiedNameOutsideOfNamespace.php"
                 },
                 "containerName": ""
             },

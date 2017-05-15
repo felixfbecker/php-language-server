@@ -1,7 +1,7 @@
 {
     "references": {
         "MyNamespace\\PHP_INT_MAX": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/constants5.php"
+            "./_cases/constants5.php"
         ]
     },
     "definitions": {
@@ -14,7 +14,7 @@
                 "name": "MyNamespace",
                 "kind": 3,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/constants5.php"
+                    "uri": "./_cases/constants5.php"
                 },
                 "containerName": ""
             },
@@ -31,7 +31,7 @@
                 "name": "Mbstring",
                 "kind": 5,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/constants5.php"
+                    "uri": "./_cases/constants5.php"
                 },
                 "containerName": "MyNamespace"
             },
@@ -48,7 +48,7 @@
                 "name": "MB_CASE_FOLD",
                 "kind": 14,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/constants5.php"
+                    "uri": "./_cases/constants5.php"
                 },
                 "containerName": "MyNamespace\\Mbstring"
             },

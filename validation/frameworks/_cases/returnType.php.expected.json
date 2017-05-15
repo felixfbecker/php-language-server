@@ -1,10 +1,10 @@
 {
     "references": {
         "TestNamespace\\TestClass": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/returnType.php"
+            "./_cases/returnType.php"
         ],
         "TestNamespace\\TestClass2": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/returnType.php"
+            "./_cases/returnType.php"
         ]
     },
     "definitions": {
@@ -17,7 +17,7 @@
                 "name": "TestNamespace",
                 "kind": 3,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/returnType.php"
+                    "uri": "./_cases/returnType.php"
                 },
                 "containerName": ""
             },
@@ -34,7 +34,7 @@
                 "name": "whatever",
                 "kind": 12,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/returnType.php"
+                    "uri": "./_cases/returnType.php"
                 },
                 "containerName": "TestNamespace"
             },

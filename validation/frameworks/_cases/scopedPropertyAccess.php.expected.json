@@ -1,10 +1,10 @@
 {
     "references": {
         "MyNamespace\\A::a()": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/scopedPropertyAccess.php"
+            "./_cases/scopedPropertyAccess.php"
         ],
         "MyNamespace\\A": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/scopedPropertyAccess.php"
+            "./_cases/scopedPropertyAccess.php"
         ]
     },
     "definitions": {
@@ -17,7 +17,7 @@
                 "name": "MyNamespace",
                 "kind": 3,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/scopedPropertyAccess.php"
+                    "uri": "./_cases/scopedPropertyAccess.php"
                 },
                 "containerName": ""
             },
@@ -34,7 +34,7 @@
                 "name": "A",
                 "kind": 5,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/scopedPropertyAccess.php"
+                    "uri": "./_cases/scopedPropertyAccess.php"
                 },
                 "containerName": "MyNamespace"
             },
@@ -51,7 +51,7 @@
                 "name": "a",
                 "kind": 6,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/scopedPropertyAccess.php"
+                    "uri": "./_cases/scopedPropertyAccess.php"
                 },
                 "containerName": "MyNamespace\\A"
             },

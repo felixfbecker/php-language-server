@@ -10,7 +10,7 @@
                 "name": "A\\B",
                 "kind": 3,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/namespaces6.php"
+                    "uri": "./_cases/namespaces6.php"
                 },
                 "containerName": "A"
             },

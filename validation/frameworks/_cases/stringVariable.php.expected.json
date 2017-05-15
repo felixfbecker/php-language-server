@@ -10,7 +10,7 @@
                 "name": "B",
                 "kind": 5,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/stringVariable.php"
+                    "uri": "./_cases/stringVariable.php"
                 },
                 "containerName": ""
             },
@@ -27,7 +27,7 @@
                 "name": "hi",
                 "kind": 7,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/stringVariable.php"
+                    "uri": "./_cases/stringVariable.php"
                 },
                 "containerName": "B"
             },
@@ -44,7 +44,7 @@
                 "name": "a",
                 "kind": 6,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/stringVariable.php"
+                    "uri": "./_cases/stringVariable.php"
                 },
                 "containerName": "B"
             },

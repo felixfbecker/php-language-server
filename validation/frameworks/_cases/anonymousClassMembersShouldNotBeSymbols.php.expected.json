@@ -10,7 +10,7 @@
                 "name": "MyNamespace",
                 "kind": 3,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/anonymousClassMembersShouldNotBeSymbols.php"
+                    "uri": "./_cases/anonymousClassMembersShouldNotBeSymbols.php"
                 },
                 "containerName": ""
             },

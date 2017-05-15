@@ -1,10 +1,10 @@
 {
     "references": {
         "MyNamespace\\BYE": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/constants.php"
+            "./_cases/constants.php"
         ],
         "BYE": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/constants.php"
+            "./_cases/constants.php"
         ]
     },
     "definitions": {
@@ -17,7 +17,7 @@
                 "name": "MyNamespace",
                 "kind": 3,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/constants.php"
+                    "uri": "./_cases/constants.php"
                 },
                 "containerName": ""
             },
@@ -34,7 +34,7 @@
                 "name": "A",
                 "kind": 5,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/constants.php"
+                    "uri": "./_cases/constants.php"
                 },
                 "containerName": "MyNamespace"
             },
@@ -51,7 +51,7 @@
                 "name": "suite",
                 "kind": 6,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/constants.php"
+                    "uri": "./_cases/constants.php"
                 },
                 "containerName": "MyNamespace\\A"
             },

@@ -1,10 +1,10 @@
 {
     "references": {
         "A": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/functionUse.php"
+            "./_cases/functionUse.php"
         ],
         "A->b()": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/functionUse.php"
+            "./_cases/functionUse.php"
         ]
     },
     "definitions": []

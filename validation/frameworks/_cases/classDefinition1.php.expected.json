@@ -1,10 +1,10 @@
 {
     "references": {
         "TestNamespace\\A": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/classDefinition1.php"
+            "./_cases/classDefinition1.php"
         ],
         "TestNamespace\\A->a": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/classDefinition1.php"
+            "./_cases/classDefinition1.php"
         ]
     },
     "definitions": {
@@ -17,7 +17,7 @@
                 "name": "TestNamespace",
                 "kind": 3,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/classDefinition1.php"
+                    "uri": "./_cases/classDefinition1.php"
                 },
                 "containerName": ""
             },
@@ -34,7 +34,7 @@
                 "name": "A",
                 "kind": 5,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/classDefinition1.php"
+                    "uri": "./_cases/classDefinition1.php"
                 },
                 "containerName": "TestNamespace"
             },
@@ -51,7 +51,7 @@
                 "name": "a",
                 "kind": 7,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/classDefinition1.php"
+                    "uri": "./_cases/classDefinition1.php"
                 },
                 "containerName": "TestNamespace\\A"
             },

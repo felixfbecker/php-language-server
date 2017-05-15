@@ -1,10 +1,10 @@
 {
     "references": {
         "LanguageServer": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/functionUse2.php"
+            "./_cases/functionUse2.php"
         ],
         "LanguageServer\\timeout()": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/functionUse2.php"
+            "./_cases/functionUse2.php"
         ]
     },
     "definitions": []

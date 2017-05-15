@@ -10,7 +10,7 @@
                 "name": "Foo",
                 "kind": 5,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/multiplePreceedingComments.php"
+                    "uri": "./_cases/multiplePreceedingComments.php"
                 },
                 "containerName": ""
             },
@@ -27,7 +27,7 @@
                 "name": "fn",
                 "kind": 6,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/multiplePreceedingComments.php"
+                    "uri": "./_cases/multiplePreceedingComments.php"
                 },
                 "containerName": "Foo"
             },

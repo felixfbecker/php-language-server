@@ -1,25 +1,25 @@
 {
     "references": {
         "LanguageServer\\Protocol": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/namespaces5.php"
+            "./_cases/namespaces5.php"
         ],
         "LanguageServer": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/namespaces5.php"
+            "./_cases/namespaces5.php"
         ],
         "LanguageServer\\Protocol\\TextDocumentIdentifier": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/namespaces5.php"
+            "./_cases/namespaces5.php"
         ],
         "LanguageServer\\Protocol\\Position": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/namespaces5.php"
+            "./_cases/namespaces5.php"
         ],
         "LanguageServer\\Protocol\\ReferenceContext": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/namespaces5.php"
+            "./_cases/namespaces5.php"
         ],
         "LanguageServer\\Protocol\\Location": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/namespaces5.php"
+            "./_cases/namespaces5.php"
         ],
         "LanguageServer\\Protocol\\Range": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/namespaces5.php"
+            "./_cases/namespaces5.php"
         ]
     },
     "definitions": {
@@ -32,7 +32,7 @@
                 "name": "B",
                 "kind": 3,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/namespaces5.php"
+                    "uri": "./_cases/namespaces5.php"
                 },
                 "containerName": ""
             },

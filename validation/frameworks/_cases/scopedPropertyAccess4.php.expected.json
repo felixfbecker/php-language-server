@@ -1,7 +1,7 @@
 {
     "references": {
         "A": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/scopedPropertyAccess4.php"
+            "./_cases/scopedPropertyAccess4.php"
         ]
     },
     "definitions": []

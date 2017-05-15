@@ -1,13 +1,13 @@
 {
     "references": {
         "MyNamespace\\B": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/self3.php"
+            "./_cases/self3.php"
         ],
         "MyNamespace\\A->b()": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/self3.php"
+            "./_cases/self3.php"
         ],
         "self": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/self3.php"
+            "./_cases/self3.php"
         ]
     },
     "definitions": {
@@ -20,7 +20,7 @@
                 "name": "MyNamespace",
                 "kind": 3,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/self3.php"
+                    "uri": "./_cases/self3.php"
                 },
                 "containerName": ""
             },
@@ -37,7 +37,7 @@
                 "name": "B",
                 "kind": 5,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/self3.php"
+                    "uri": "./_cases/self3.php"
                 },
                 "containerName": "MyNamespace"
             },
@@ -54,7 +54,7 @@
                 "name": "b",
                 "kind": 6,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/self3.php"
+                    "uri": "./_cases/self3.php"
                 },
                 "containerName": "MyNamespace\\B"
             },
@@ -73,7 +73,7 @@
                 "name": "A",
                 "kind": 5,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/self3.php"
+                    "uri": "./_cases/self3.php"
                 },
                 "containerName": "MyNamespace"
             },
@@ -90,7 +90,7 @@
                 "name": "a",
                 "kind": 6,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/self3.php"
+                    "uri": "./_cases/self3.php"
                 },
                 "containerName": "MyNamespace\\A"
             },

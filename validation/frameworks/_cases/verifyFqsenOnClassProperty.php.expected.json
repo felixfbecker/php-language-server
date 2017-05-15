@@ -1,10 +1,10 @@
 {
     "references": {
         "CURLAUTH_BASIC": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/verifyFqsenOnClassProperty.php"
+            "./_cases/verifyFqsenOnClassProperty.php"
         ],
         "Foo->bar": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/verifyFqsenOnClassProperty.php"
+            "./_cases/verifyFqsenOnClassProperty.php"
         ]
     },
     "definitions": {
@@ -17,7 +17,7 @@
                 "name": "Foo",
                 "kind": 5,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/verifyFqsenOnClassProperty.php"
+                    "uri": "./_cases/verifyFqsenOnClassProperty.php"
                 },
                 "containerName": ""
             },
@@ -34,7 +34,7 @@
                 "name": "bar",
                 "kind": 7,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/verifyFqsenOnClassProperty.php"
+                    "uri": "./_cases/verifyFqsenOnClassProperty.php"
                 },
                 "containerName": "Foo"
             },
@@ -51,7 +51,7 @@
                 "name": "foo",
                 "kind": 6,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/verifyFqsenOnClassProperty.php"
+                    "uri": "./_cases/verifyFqsenOnClassProperty.php"
                 },
                 "containerName": "Foo"
             },

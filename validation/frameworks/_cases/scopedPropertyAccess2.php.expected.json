@@ -1,7 +1,7 @@
 {
     "references": {
         "MyNamespace\\A": [
-            "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/scopedPropertyAccess2.php"
+            "./_cases/scopedPropertyAccess2.php"
         ]
     },
     "definitions": {
@@ -14,7 +14,7 @@
                 "name": "MyNamespace",
                 "kind": 3,
                 "location": {
-                    "uri": "\/Users\/roblou\/code\/php-language-server\/tests\/Validation\/..\/..\/validation\/frameworks\/_cases\/scopedPropertyAccess2.php"
+                    "uri": "./_cases/scopedPropertyAccess2.php"
                 },
                 "containerName": ""
             },

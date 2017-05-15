@@ -21,10 +21,13 @@ use RecursiveIteratorIterator;
 use Sabre\Event\Loop;
 use Microsoft\PhpParser as Tolerant;
 
+$frameworksDir = realpath(__DIR__ . '/../../validation/frameworks');
+
 class ValidationTest extends TestCase
 {
     public function frameworkErrorProvider() {
-        $frameworks = glob(__DIR__ . "/../../validation/frameworks/*", GLOB_ONLYDIR);
+        global $frameworksDir;
+        $frameworks = glob($frameworksDir . '/*', GLOB_ONLYDIR);
 
         $testProviderArray = array();
         foreach ($frameworks as $frameworkDir) {
@@ -33,7 +36,7 @@ class ValidationTest extends TestCase
                 continue;
             }
 
-            $iterator = new RecursiveDirectoryIterator(__DIR__ . "/../../validation/frameworks/" . $frameworkName);
+            $iterator = new RecursiveDirectoryIterator($frameworkDir);
             $skipped = json_decode(file_get_contents(__DIR__ . '/skipped.json'));
 
             foreach (new RecursiveIteratorIterator($iterator) as $file) {
@@ -44,9 +47,11 @@ class ValidationTest extends TestCase
                 }
             }
         }
+
         if (count($testProviderArray) === 0) {
             throw new Exception("ERROR: Validation testsuite frameworks not found - run `git submodule update --init --recursive` to download.");
         }
+
         return $testProviderArray;
     }
 
@@ -64,7 +69,7 @@ class ValidationTest extends TestCase
 
         $outputFile = getExpectedValuesFile($testCaseFile);
         if (!file_exists($outputFile)) {
-            file_put_contents(json_encode($actualValues, JSON_PRETTY_PRINT));
+            file_put_contents(json_encode($actualValues, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));
         }
 
         $expectedValues = (array)json_decode(file_get_contents($outputFile));
@@ -80,7 +85,7 @@ class ValidationTest extends TestCase
         } catch (\Throwable $e) {
             $outputFile = getExpectedValuesFile($testCaseFile);
             if ($frameworkName === '_cases') {
-                file_put_contents($outputFile, json_encode($actualValues, JSON_PRETTY_PRINT));
+                file_put_contents($outputFile, json_encode($actualValues, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));
             }
 
             throw $e;
@@ -88,6 +93,8 @@ class ValidationTest extends TestCase
     }
 
     private function getActualTestValues($filename, $fileContents): array {
+        global $frameworksDir;
+
         $index = new Index();
         $parser = new Tolerant\Parser();
         $docBlockFactory = DocBlockFactory::createInstance();
@@ -105,6 +112,24 @@ class ValidationTest extends TestCase
             'references' => json_decode(json_encode($actualRefs)),
             'definitions' => json_decode(json_encode($actualDefs))
         );
+
+        // Turn references into relative paths
+        foreach ($refsAndDefs['references'] as $key => $list) {
+            $fixedPathRefs = array_map(function($ref) {
+                global $frameworksDir;
+                return str_replace($frameworksDir, '.', $ref);
+            }, $list);
+
+            $refsAndDefs['references']->$key = $fixedPathRefs;
+        }
+
+        // Turn def locations into relative paths
+        foreach ($refsAndDefs['definitions'] as $key => $def) {
+            if ($def !== null && $def->symbolInformation !== null &&
+                $def->symbolInformation->location !== null && $def->symbolInformation->location->uri !== null) {
+                $def->symbolInformation->location->uri = str_replace($frameworksDir, '.', $def->symbolInformation->location->uri);
+            }
+        }
 
         return $refsAndDefs;
     }
@@ -151,7 +176,7 @@ class ValidationTest extends TestCase
             'pathToUri', 'uriToPath' // group function use declarations are broken in old definition resolver
         ];
 
-        foreach ($references as $key=>$value) {
+        foreach ($references as $key => $value) {
             foreach ($skipped as $s) {
                 if (strpos($key, $s) !== false) {
                     unset($references[$key]);
