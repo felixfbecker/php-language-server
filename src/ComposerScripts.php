@@ -30,7 +30,7 @@ class ComposerScripts
             $finder = new FileSystemFilesFinder;
             $contentRetriever = new FileSystemContentRetriever;
             $docBlockFactory = DocBlockFactory::createInstance();
-            $parser = Tolerant\Parser();
+            $parser = new Tolerant\Parser();
             $definitionResolver = new TolerantDefinitionResolver($index);
 
             $stubsLocation = null;

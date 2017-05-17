@@ -45,7 +45,7 @@
     "repositories": [
         {
             "type": "git",
-            "url": "https://github.com/mousetraps/tolerant-php-parser.git"
+            "url": "https://github.com/Microsoft/tolerant-php-parser.git"
         }
     ],
     "prefer-stable": true,
