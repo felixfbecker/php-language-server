@@ -29,10 +29,10 @@ class FqnUtilities
     /**
      * Returns all possible FQNs in a type
      *
-     * @param Type $type
+     * @param Type|null $type
      * @return string[]
      */
-    public static function getFqnsFromType(Type $type): array
+    public static function getFqnsFromType($type): array
     {
         $fqns = [];
         if ($type instanceof Types\Object_) {

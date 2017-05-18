@@ -537,9 +537,9 @@ class TolerantDefinitionResolver
      * If the type could not be resolved, returns Types\Mixed.
      *
      * @param Tolerant\Node\Expression $expr
-     * @return \phpDocumentor\Reflection\Type
+     * @return \phpDocumentor\Reflection\Type|null
      */
-    public function resolveExpressionNodeToType($expr): Type
+    public function resolveExpressionNodeToType($expr)
     {
         if ($expr == null || $expr instanceof Tolerant\MissingToken || $expr instanceof Tolerant\SkippedToken) {
             // TODO some members are null or Missing/SkippedToken
