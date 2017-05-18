@@ -184,8 +184,9 @@ class CompletionProvider
 
             foreach ($prefixes as &$prefix) {
                 $prefix .= '->';
-                if ($node->memberName !== null && $node->memberName instanceof Tolerant\Token) {
-                    $prefix .= $node->memberName->getText($node->getFileContents());
+                if ($node->memberName !== null && $node->memberName instanceof Tolerant\Token && $offset > $node->memberName->start) {
+                    $memberNameText = $node->memberName->getText($node->getFileContents());
+                    $prefix .= substr($memberNameText, 0, $offset - $node->memberName->start);
                 }
             }
 
