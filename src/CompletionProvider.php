@@ -125,9 +125,10 @@ class CompletionProvider
         // This can be made much more performant if the tree follows specific invariants.
         $node = $doc->getNodeAtPosition($pos);
 
-
-        if($node !== null && ($offset = $pos->toOffset($node->getFileContents())) > $node->getEndPosition() &&
-        $node->parent->getLastChild() instanceof Tolerant\MissingToken) {
+        $offset = $node === null ? -1 : $pos->toOffset($node->getFileContents());
+        if ($node !== null && $offset > $node->getEndPosition() &&
+            $node->parent->getLastChild() instanceof Tolerant\MissingToken
+        ) {
             $node = $node->parent;
         }
 
@@ -184,10 +185,6 @@ class CompletionProvider
 
             foreach ($prefixes as &$prefix) {
                 $prefix .= '->';
-                if ($node->memberName !== null && $node->memberName instanceof Tolerant\Token && $offset > $node->memberName->start) {
-                    $memberNameText = $node->memberName->getText($node->getFileContents());
-                    $prefix .= substr($memberNameText, 0, $offset - $node->memberName->start);
-                }
             }
 
             unset($prefix);
@@ -223,14 +220,10 @@ class CompletionProvider
 
             unset($prefix);
 
-            $memberName = $scoped->memberName->getText($scoped->getFileContents());
-
             foreach ($this->index->getDefinitions() as $fqn => $def) {
                 foreach ($prefixes as $prefix) {
                     if (substr(strtolower($fqn), 0, strlen($prefix)) === strtolower($prefix) && !$def->isGlobal) {
-                        if (empty($memberName) || strpos(substr(strtolower($fqn), 0), strtolower($memberName)) !== false) {
-                            $list->items[] = CompletionItem::fromDefinition($def);
-                        }
+                        $list->items[] = CompletionItem::fromDefinition($def);
                     }
                 }
             }
