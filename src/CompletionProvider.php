@@ -13,6 +13,7 @@ use LanguageServer\Protocol\{
     CompletionItem,
     CompletionItemKind
 };
+use function LanguageServer\{strStartsWith};
 use Microsoft\PhpParser as Tolerant;
 
 class CompletionProvider
@@ -245,10 +246,8 @@ class CompletionProvider
             }
 
             foreach ($this->index->getDefinitions() as $fqn => $def) {
-                if (
-                ($def->canBeInstantiated || ($def->isGlobal && !isset($creation))) && (empty($prefix) || strpos($fqn, $prefix) !== false)
-
-                ) {
+                $fqnStartsWithPrefix = strStartsWith($fqn, $prefix);
+                if (($def->canBeInstantiated || ($def->isGlobal && !isset($creation))) && strStartsWith($fqn, $prefix)) {
                     if ($namespaceDefinition !== null && $namespaceDefinition->name !== null) {
                         $namespacePrefix = (string)Tolerant\ResolvedName::buildName($namespaceDefinition->name->nameParts, $node->getFileContents());
 
@@ -257,7 +256,7 @@ class CompletionProvider
                         $isNotFullyQualified = !($class instanceof Tolerant\Node\QualifiedName) || !$class->isFullyQualifiedName();
                         if ($isNotFullyQualified) {
                             foreach ($namespaceImportTable as $alias => $name) {
-                                if (strpos($fqn, $name) === 0) {
+                                if (strStartsWith($fqn, $name)) {
                                     $fqn = $alias;
                                     $isAliased = true;
                                     break;
@@ -266,13 +265,13 @@ class CompletionProvider
                         }
 
 
-                        if (!$isNotFullyQualified && ((strpos($fqn, $prefix) === 0) || strpos($fqn, $namespacePrefix . "\\" . $prefix) === 0)) {
-                            $fqn = $fqn;
+                        if (!$isNotFullyQualified && ($fqnStartsWithPrefix || strStartsWith($fqn, $namespacePrefix . "\\" . $prefix))) {
+                            // $fqn = $fqn;
                         }
                         elseif (!$isAliased && !array_search($fqn, array_values($namespaceImportTable))) {
                             if (empty($prefix)) {
                                 $fqn = '\\' . $fqn;
-                            } elseif (strpos($fqn, $namespacePrefix . "\\" . $prefix) === 0) {
+                            } elseif (strStartsWith($fqn, $namespacePrefix . "\\" . $prefix)) {
                                 $fqn = substr($fqn, strlen($namespacePrefix) + 1);
                             } else {
                                 continue;
@@ -280,7 +279,7 @@ class CompletionProvider
                         } elseif (!$isAliased) {
                             continue;
                         }
-                    } elseif (strpos($fqn, $prefix) === 0 && $class->isFullyQualifiedName()) {
+                    } elseif ($fqnStartsWithPrefix && $class->isFullyQualifiedName()) {
                         $fqn = '\\' . $fqn;
                     }
 
@@ -293,21 +292,17 @@ class CompletionProvider
 
             if (!isset($creation)) {
                 foreach (self::KEYWORDS as $keyword) {
-                    if (strpos($keyword, $prefix) === 0) {
-                        $item = new CompletionItem($keyword, CompletionItemKind::KEYWORD);
-                        $item->insertText = $keyword . ' ';
-                        $list->items[] = $item;
-                    }
+                    $item = new CompletionItem($keyword, CompletionItemKind::KEYWORD);
+                    $item->insertText = $keyword . ' ';
+                    $list->items[] = $item;
                 }
             }
         } elseif (TolerantParserHelpers::isConstantFetch($node)) {
             $prefix = (string) ($node->getResolvedName() ?? Tolerant\ResolvedName::buildName($node->nameParts, $node->getFileContents()));
             foreach (self::KEYWORDS as $keyword) {
-                if (strpos($keyword, $prefix) === 0) {
-                    $item = new CompletionItem($keyword, CompletionItemKind::KEYWORD);
-                    $item->insertText = $keyword . ' ';
-                    $list->items[] = $item;
-                }
+                $item = new CompletionItem($keyword, CompletionItemKind::KEYWORD);
+                $item->insertText = $keyword . ' ';
+                $list->items[] = $item;
             }
         }
 
