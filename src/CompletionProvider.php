@@ -247,7 +247,8 @@ class CompletionProvider
 
             foreach ($this->index->getDefinitions() as $fqn => $def) {
                 $fqnStartsWithPrefix = strStartsWith($fqn, $prefix);
-                if (($def->canBeInstantiated || ($def->isGlobal && !isset($creation))) && strStartsWith($fqn, $prefix)) {
+                $fqnContainsPrefix = empty($prefix) || strpos($fqn, $prefix) !== false;
+                if (($def->canBeInstantiated || ($def->isGlobal && !isset($creation))) && $fqnContainsPrefix) {
                     if ($namespaceDefinition !== null && $namespaceDefinition->name !== null) {
                         $namespacePrefix = (string)Tolerant\ResolvedName::buildName($namespaceDefinition->name->nameParts, $node->getFileContents());
 
@@ -306,7 +307,7 @@ class CompletionProvider
             }
         }
 
-       return $list;
+        return $list;
     }
 
     /**
