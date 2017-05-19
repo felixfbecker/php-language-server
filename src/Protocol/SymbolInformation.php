@@ -2,7 +2,6 @@
 
 namespace LanguageServer\Protocol;
 
-use PhpParser\Node;
 use Microsoft\PhpParser as Tolerant;
 use Exception;
 

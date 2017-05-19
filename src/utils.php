@@ -5,7 +5,6 @@ namespace LanguageServer;
 
 use Throwable;
 use InvalidArgumentException;
-use PhpParser\Node;
 use Sabre\Event\{Loop, Promise, EmitterInterface};
 use Sabre\Uri;
 

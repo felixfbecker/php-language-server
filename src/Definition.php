@@ -3,7 +3,6 @@ declare(strict_types = 1);
 
 namespace LanguageServer;
 
-use PhpParser\Node;
 use phpDocumentor\Reflection\{Types, Type, Fqsen, TypeResolver};
 use LanguageServer\Protocol\SymbolInformation;
 use Exception;

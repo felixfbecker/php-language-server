@@ -9,7 +9,6 @@ use Microsoft\PhpParser as Tolerant;
 use phpDocumentor\Reflection\{
     DocBlock, DocBlockFactory, Fqsen, Type, TypeResolver, Types
 };
-use PhpParser\Node;
 
 class DefinitionResolver
 {

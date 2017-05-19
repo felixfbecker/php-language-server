@@ -3,7 +3,6 @@ declare(strict_types = 1);
 
 namespace LanguageServer;
 
-use PhpParser\Node;
 use LanguageServer\Index\ReadableIndex;
 use LanguageServer\Protocol\{
     TextEdit,

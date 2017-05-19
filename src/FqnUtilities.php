@@ -3,7 +3,6 @@
 namespace LanguageServer;
 
 use phpDocumentor\Reflection\{Type, Types};
-use PhpParser\Node;
 use Microsoft\PhpParser as Tolerant;
 
 class FqnUtilities

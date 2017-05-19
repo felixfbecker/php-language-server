@@ -14,7 +14,6 @@ use LanguageServer\Protocol\{
 };
 use Microsoft\PhpParser as Tolerant;
 use phpDocumentor\Reflection\DocBlockFactory;
-use PhpParser\Node;
 use PHPUnit\Framework\TestCase;
 use function LanguageServer\isVendored;
 
