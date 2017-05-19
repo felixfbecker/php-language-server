@@ -8,24 +8,6 @@ use Microsoft\PhpParser as Tolerant;
 class FqnUtilities
 {
     /**
-     * Returns the fully qualified name (FQN) that is defined by a node
-     * Returns null if the node does not declare any symbol that can be referenced by an FQN
-     *
-     * @param Node | Tolerant\Node $node
-     * @return string|null
-     */
-    public static function getDefinedFqn($node)
-    {
-        if ($node instanceof Node) {
-            return DefinitionResolver::getDefinedFqn($node);
-        } elseif ($node instanceof Tolerant\Node) {
-            return DefinitionResolver::getDefinedFqn($node);
-        }
-
-        throw new \TypeError("Unspported Node class");
-    }
-
-    /**
      * Returns all possible FQNs in a type
      *
      * @param Type|null $type

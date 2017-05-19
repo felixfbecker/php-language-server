@@ -94,23 +94,6 @@ function waitForEvent(EmitterInterface $emitter, string $event): Promise
 }
 
 /**
- * Returns the closest node of a specific type
- *
- * @param Node $node
- * @param string $type The node class name
- * @return Node|null $type
- */
-function getClosestNode(Node $node, string $type)
-{
-    $n = $node;
-    while ($n = $n->getAttribute('parentNode')) {
-        if ($n instanceof $type) {
-            return $n;
-        }
-    }
-}
-
-/**
  * Returns the part of $b that is not overlapped by $a
  * Example:
  *

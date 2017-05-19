@@ -22,20 +22,16 @@ class Location
     /**
      * Returns the location of the node
      *
-     * @param Node | Tolerant\Node $node
+     * @param Tolerant\Node $node
      * @return self
      */
     public static function fromNode($node)
     {
-        if ($node instanceof Node) {
-            return new self($node->getAttribute('ownerDocument')->getUri(), Range::fromNode($node));
-        } else {
-            $range = Tolerant\PositionUtilities::getRangeFromPosition($node->getStart(), $node->getWidth(), $node->getFileContents());
-            return new self($node->getUri(), new Range(
-                new Position($range->start->line, $range->start->character),
-                new Position($range->end->line, $range->end->character)
-            ));
-        }
+        $range = Tolerant\PositionUtilities::getRangeFromPosition($node->getStart(), $node->getWidth(), $node->getFileContents());
+        return new self($node->getUri(), new Range(
+            new Position($range->start->line, $range->start->character),
+            new Position($range->end->line, $range->end->character)
+        ));
     }
 
     public function __construct(string $uri = null, Range $range = null)

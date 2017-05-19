@@ -158,7 +158,6 @@ class CompletionProvider
                 $node->parent->memberName === $node)
          ) {
             // Find variables, parameters and use statements in the scope
-            // If there was only a $ typed, $node will be instanceof Node\Error
             $namePrefix = $node->getName() ?? '';
             foreach ($this->suggestVariablesAtNode($node, $namePrefix) as $var) {
                 $item = new CompletionItem;
@@ -334,9 +333,9 @@ class CompletionProvider
      * and at each level walk all previous siblings and their children to search for definitions
      * of that variable
      *
-     * @param Node $node
+     * @param Tolerant\Node $node
      * @param string $namePrefix Prefix to filter
-     * @return array <Node\Expr\Variable|Node\Param|Node\Expr\ClosureUse>
+     * @return array <Tolerant\Node\Expr\Variable|Tolerant\Node\Param|Tolerant\Node\Expr\ClosureUse>
      */
     private function suggestVariablesAtNode(Tolerant\Node $node, string $namePrefix = ''): array
     {
@@ -394,7 +393,7 @@ class CompletionProvider
      *
      * @param Node $node
      * @param string $namePrefix Prefix to filter
-     * @return Node\Expr\Variable[]
+     * @return Tolerant\Node\Expression\Variable[]
      */
     private function findVariableDefinitionsInNode(Tolerant\Node $node, string $namePrefix = ''): array
     {

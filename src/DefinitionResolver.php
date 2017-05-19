@@ -472,8 +472,8 @@ class DefinitionResolver
     /**
      * Returns the assignment or parameter node where a variable was defined
      *
-     * @param Node\Expr\Variable|Node\Expr\ClosureUse $var The variable access
-     * @return Node\Expr\Assign|Node\Expr\AssignOp|Node\Param|Node\Expr\ClosureUse|null
+     * @param Tolerant\Node\Expression\Variable | Tolerant\Node\Expression\ClosureUse $var The variable access
+     * @return Tolerant\Node\Expression\Assign | Tolerant\Node\Expression\AssignOp|Node\Param | Tolerant\Node\Expression\ClosureUse|null
      */
     public function resolveVariableToNode($var)
     {

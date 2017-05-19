@@ -44,11 +44,7 @@ class PhpDocumentTest extends TestCase
     }
 
     private function assertQualifiedName($node) {
-        if ($node instanceof Node) {
-            $this->assertInstanceOf(Node\Name\FullyQualified::class, $node);
-        } else {
-            $this->assertInstanceOf(Tolerant\Node\QualifiedName::class, $node);
-        }
+        $this->assertInstanceOf(Tolerant\Node\QualifiedName::class, $node);
     }
 
     public function testIsVendored()
