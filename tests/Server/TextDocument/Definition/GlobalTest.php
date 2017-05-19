@@ -26,7 +26,6 @@ class GlobalTest extends ServerTestCase
             new TextDocumentIdentifier(pathToUri(realpath(__DIR__ . '/../../../../fixtures/references.php'))),
             new Position(1, 0)
         )->wait();
-        var_dump($result);
         $this->assertEquals([], $result);
     }
 

@@ -62,8 +62,6 @@ class ValidationTest extends TestCase
      * @param $frameworkName
      */
     public function testDefinitionErrors($testCaseFile, $frameworkName) {
-        echo "Test file: " . realpath($testCaseFile) . PHP_EOL;
-
         $fileContents = file_get_contents($testCaseFile);
         $actualValues = $this->getActualTestValues($testCaseFile, $fileContents);
 
