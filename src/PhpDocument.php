@@ -4,17 +4,11 @@ declare(strict_types = 1);
 namespace LanguageServer;
 
 use LanguageServer\Index\Index;
-use LanguageServer\NodeVisitor\{
-    NodeAtPositionFinder
-};
 use LanguageServer\Protocol\{
     Diagnostic, Position, Range
 };
 use Microsoft\PhpParser as Tolerant;
 use phpDocumentor\Reflection\DocBlockFactory;
-use PhpParser\{
-    Node, NodeTraverser
-};
 
 class PhpDocument
 {
@@ -61,7 +55,7 @@ class PhpDocument
     /**
      * The AST of the document
      *
-     * @var Node[] | Tolerant\Node
+     * @var Tolerant\Node
      */
     private $stmts;
 
@@ -75,14 +69,14 @@ class PhpDocument
     /**
      * Map from fully qualified name (FQN) to Node
      *
-     * @var Node[]
+     * @var Tolerant\Node
      */
     private $definitionNodes;
 
     /**
      * Map from fully qualified name (FQN) to array of nodes that reference the symbol
      *
-     * @var Node[][]
+     * @var Tolerant\Node[][]
      */
     private $referenceNodes;
 
@@ -121,7 +115,7 @@ class PhpDocument
      * Get all references of a fully qualified name
      *
      * @param string $fqn The fully qualified name of the symbol
-     * @return Node[]
+     * @return Tolerant\Node[]
      */
     public function getReferenceNodesByFqn(string $fqn)
     {
@@ -226,7 +220,7 @@ class PhpDocument
     /**
      * Returns the AST of the document
      *
-     * @return Node[] | Tolerant\Node | null
+     * @return Tolerant\Node | null
      */
     public function getStmts()
     {
@@ -245,20 +239,12 @@ class PhpDocument
             return null;
         }
 
-        if (\is_array($this->stmts)) {
-            $traverser = new NodeTraverser;
-            $finder = new NodeAtPositionFinder($position);
-            $traverser->addVisitor($finder);
-            $traverser->traverse($this->stmts);
-            return $finder->node;
-        } else {
-            $offset = $position->toOffset($this->stmts->getFileContents());
-            $node = $this->stmts->getDescendantNodeAtPosition($offset);
-            if ($node !== null && $node->getStart() > $offset) {
-                return null;
-            }
-            return $node;
+        $offset = $position->toOffset($this->stmts->getFileContents());
+        $node = $this->stmts->getDescendantNodeAtPosition($offset);
+        if ($node !== null && $node->getStart() > $offset) {
+            return null;
         }
+        return $node;
     }
 
     /**
@@ -281,7 +267,7 @@ class PhpDocument
      * Returns the definition node for a fully qualified name
      *
      * @param string $fqn
-     * @return Node|null
+     * @return Tolerant\Node|null
      */
     public function getDefinitionNodeByFqn(string $fqn)
     {
@@ -291,7 +277,7 @@ class PhpDocument
     /**
      * Returns a map from fully qualified name (FQN) to Nodes defined in this document
      *
-     * @return Node[]
+     * @return Tolerant\Node[]
      */
     public function getDefinitionNodes()
     {

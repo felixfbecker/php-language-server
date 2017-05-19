@@ -4,14 +4,6 @@ declare(strict_types = 1);
 namespace LanguageServer;
 
 use LanguageServer\Protocol\{Diagnostic, DiagnosticSeverity, Range, Position, TextEdit};
-use LanguageServer\NodeVisitor\{
-    NodeAtPositionFinder,
-    ReferencesAdder,
-    DocBlockParser,
-    DefinitionCollector,
-    ColumnCalculator,
-    ReferencesCollector
-};
 use LanguageServer\Index\Index;
 use PhpParser\{Error, ErrorHandler, Node, NodeTraverser, Parser};
 use PhpParser\NodeVisitor\NameResolver;
