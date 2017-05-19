@@ -4,7 +4,6 @@ declare(strict_types = 1);
 namespace LanguageServer\Tests\Server\TextDocument;
 
 use PHPUnit\Framework\TestCase;
-use PhpParser\{Node};
 use phpDocumentor\Reflection\DocBlockFactory;
 use LanguageServer\{
     DefinitionResolver, TreeAnalyzer
@@ -62,9 +61,8 @@ class DefinitionCollectorTest extends TestCase
 
     /**
      * @param $path
-     * @return Node
      */
-    private function collectDefinitions($path):array
+    private function collectDefinitions($path): array
     {
         $uri = pathToUri($path);
         $parser = new Tolerant\Parser();

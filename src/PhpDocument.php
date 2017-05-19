@@ -15,7 +15,7 @@ class PhpDocument
     /**
      * The PHPParser instance
      *
-     * @var Parser
+     * @var Tolerant\Parser
      */
     private $parser;
 
@@ -91,7 +91,7 @@ class PhpDocument
      * @param string $uri The URI of the document
      * @param string $content The content of the document
      * @param Index $index The Index to register definitions and references to
-     * @param Parser $parser The PHPParser instance
+     * @param Tolerant\Parser $parser The PhpParser instance
      * @param DocBlockFactory $docBlockFactory The DocBlockFactory instance to parse docblocks
      * @param DefinitionResolver $definitionResolver The DefinitionResolver to resolve definitions to symbols in the workspace
      */

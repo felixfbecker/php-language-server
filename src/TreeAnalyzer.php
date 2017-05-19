@@ -5,8 +5,6 @@ namespace LanguageServer;
 
 use LanguageServer\Protocol\{Diagnostic, DiagnosticSeverity, Range, Position, TextEdit};
 use LanguageServer\Index\Index;
-use PhpParser\{Error, ErrorHandler, Node, NodeTraverser, Parser};
-use PhpParser\NodeVisitor\NameResolver;
 use phpDocumentor\Reflection\DocBlockFactory;
 use Sabre\Uri;
 use Microsoft\PhpParser as Tolerant;
