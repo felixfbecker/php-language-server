@@ -19,83 +19,144 @@ use phpDocumentor\Reflection\DocBlockFactory;
 use Sabre\Uri;
 use Microsoft\PhpParser as Tolerant;
 
-class TreeAnalyzer implements TreeAnalyzerInterface {
+class TreeAnalyzer {
     private $parser;
 
+    /** @var Tolerant\Node */
     private $stmts;
-
-    private $errorHandler;
 
     private $diagnostics;
 
+    private $content;
+
+    /**
+     * TreeAnalyzer constructor.
+     * @param Tolerant\Parser $parser
+     * @param $content
+     * @param $docBlockFactory
+     * @param DefinitionResolver $definitionResolver
+     * @param $uri
+     */
     public function __construct($parser, $content, $docBlockFactory, $definitionResolver, $uri) {
         $this->uri = $uri;
         $this->parser = $parser;
         $this->docBlockFactory = $docBlockFactory;
         $this->definitionResolver = $definitionResolver;
         $this->content = $content;
-        $errorHandler = new ErrorHandler\Collecting;
-        $stmts = $this->parser->parse($content, $errorHandler);
+        $this->stmts = $this->parser->parseSourceFile($content, $uri);
 
-        $this->diagnostics = [];
-        foreach ($errorHandler->getErrors() as $error) {
-            $this->diagnostics[] = Diagnostic::fromError($error, $this->content, DiagnosticSeverity::ERROR, 'php');
-        }
+        // TODO - docblock errors
 
-        // $stmts can be null in case of a fatal parsing error <- Interesting. When do fatal parsing errors occur?
-        if ($stmts) {
-            $traverser = new NodeTraverser;
+        $this->collectDefinitionsAndReferences($this->stmts);
+    }
 
-            // Resolve aliased names to FQNs
-            $traverser->addVisitor(new NameResolver($errorHandler));
+    public function collectDefinitionsAndReferences(Tolerant\Node $stmts) {
+        foreach ($stmts::CHILD_NAMES as $name) {
+            $node = $stmts->$name;
 
-            // Add parentNode, previousSibling, nextSibling attributes
-            $traverser->addVisitor(new ReferencesAdder($this));
-
-            // Add column attributes to nodes
-            $traverser->addVisitor(new ColumnCalculator($content));
-
-            // Parse docblocks and add docBlock attributes to nodes
-            $docBlockParser = new DocBlockParser($this->docBlockFactory);
-            $traverser->addVisitor($docBlockParser);
-
-            $traverser->traverse($stmts);
-
-            // Report errors from parsing docblocks
-            foreach ($docBlockParser->errors as $error) {
-                $this->diagnostics[] = Diagnostic::fromError($error, $this->content, DiagnosticSeverity::WARNING, 'php');
+            if ($node === null) {
+                continue;
             }
 
-            $traverser = new NodeTraverser;
-
-            // Collect all definitions
-            $definitionCollector = new DefinitionCollector($this->definitionResolver);
-            $traverser->addVisitor($definitionCollector);
-
-            // Collect all references
-            $referencesCollector = new ReferencesCollector($this->definitionResolver);
-            $traverser->addVisitor($referencesCollector);
-
-            $traverser->traverse($stmts);
-
-            // Register this document on the project for all the symbols defined in it
-            $this->definitions = $definitionCollector->definitions;
-            $this->definitionNodes = $definitionCollector->nodes;
-            foreach ($definitionCollector->definitions as $fqn => $definition) {
-                // $this->index->setDefinition($fqn, $definition);
-            }
-            // Register this document on the project for references
-            $this->referenceNodes = $referencesCollector->nodes;
-            foreach ($referencesCollector->nodes as $fqn => $nodes) {
-                // $this->index->addReferenceUri($fqn, $this->uri);
+            if (\is_array($node)) {
+                foreach ($node as $child) {
+                    if ($child instanceof Tolerant\Node) {
+                        $this->update($child);
+                    }
+                }
+                continue;
             }
 
-            $this->stmts = $stmts;
+            if ($node instanceof Tolerant\Node) {
+                $this->update($node);
+            }
+
+            if (($_error = Tolerant\DiagnosticsProvider::checkDiagnostics($node)) !== null) {
+                $range = Tolerant\PositionUtilities::getRangeFromPosition($_error->start, $_error->length, $this->content);
+
+                $this->diagnostics[] = new Diagnostic(
+                    $_error->message,
+                    new Range(
+                        new Position($range->start->line, $range->start->character),
+                        new Position($range->end->line, $range->start->character)
+                    ),
+                    null,
+                    DiagnosticSeverity::ERROR,
+                    'php'
+                );
+            }
         }
     }
 
+    public function update($node) {
+        $fqn = ($this->definitionResolver)::getDefinedFqn($node);
+        // Only index definitions with an FQN (no variables)
+        if ($fqn !== null) {
+            $this->definitionNodes[$fqn] = $node;
+            $this->definitions[$fqn] = $this->definitionResolver->createDefinitionFromNode($node, $fqn);
+        } else {
+            $parent = $node->parent;
+            if (!(
+                (
+                    // $node->parent instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression ||
+                    ($node instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression ||
+                    $node instanceof Tolerant\Node\Expression\MemberAccessExpression)
+                    && !(
+                        $node->parent instanceof Tolerant\Node\Expression\CallExpression ||
+                        $node->memberName instanceof Tolerant\Token
+                    ))
+                || ($parent instanceof Tolerant\Node\Statement\NamespaceDefinition && $parent->name !== null && $parent->name->getStart() === $node->getStart()))
+            ) {
+
+                $fqn = $this->definitionResolver->resolveReferenceNodeToFqn($node);
+                if ($fqn !== null) {
+                    $this->addReference($fqn, $node);
+
+                    if (
+                        $node instanceof Tolerant\Node\QualifiedName
+                        && ($node->isQualifiedName() || $node->parent instanceof Tolerant\Node\NamespaceUseClause)
+                        && !($parent instanceof Tolerant\Node\Statement\NamespaceDefinition && $parent->name->getStart() === $node->getStart()
+                        )
+                    ) {
+                        // Add references for each referenced namespace
+                        $ns = $fqn;
+                        while (($pos = strrpos($ns, '\\')) !== false) {
+                            $ns = substr($ns, 0, $pos);
+                            $this->addReference($ns, $node);
+                        }
+                    }
+
+                    // Namespaced constant access and function calls also need to register a reference
+                    // to the global version because PHP falls back to global at runtime
+                    // http://php.net/manual/en/language.namespaces.fallback.php
+                    if (ParserHelpers::isConstantFetch($node) ||
+                        ($parent instanceof Tolerant\Node\Expression\CallExpression
+                            && !(
+                                $node instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression ||
+                                $node instanceof Tolerant\Node\Expression\MemberAccessExpression
+                            ))) {
+                        $parts = explode('\\', $fqn);
+                        if (count($parts) > 1) {
+                            $globalFqn = end($parts);
+                            $this->addReference($globalFqn, $node);
+                        }
+                    }
+                }
+            }
+        }
+        $this->collectDefinitionsAndReferences($node);
+    }
+
     public function getDiagnostics() {
-        return $this->diagnostics;
+        return $this->diagnostics ?? [];
+    }
+
+    private function addReference(string $fqn, Tolerant\Node $node)
+    {
+        if (!isset($this->referenceNodes[$fqn])) {
+            $this->referenceNodes[$fqn] = [];
+        }
+        $this->referenceNodes[$fqn][] = $node;
     }
 
     public function getDefinitions() {

@@ -4,7 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer\Server;
 
 use LanguageServer\{
-    CompletionProvider, FqnUtilities, LanguageClient, PhpDocument, PhpDocumentLoader, TolerantDefinitionResolver
+    CompletionProvider, FqnUtilities, LanguageClient, PhpDocument, PhpDocumentLoader, DefinitionResolver
 };
 use LanguageServer\Index\ReadableIndex;
 use LanguageServer\Protocol\{
@@ -36,7 +36,7 @@ class TextDocument
     protected $project;
 
     /**
-     * @var TolerantDefinitionResolver
+     * @var DefinitionResolver
      */
     protected $definitionResolver;
 
@@ -62,7 +62,7 @@ class TextDocument
 
     /**
      * @param PhpDocumentLoader $documentLoader
-     * @param TolerantDefinitionResolver $definitionResolver
+     * @param DefinitionResolver $definitionResolver
      * @param LanguageClient $client
      * @param ReadableIndex $index
      * @param \stdClass $composerJson
@@ -70,7 +70,7 @@ class TextDocument
      */
     public function __construct(
         PhpDocumentLoader $documentLoader,
-        TolerantDefinitionResolver $definitionResolver,
+        DefinitionResolver $definitionResolver,
         LanguageClient $client,
         ReadableIndex $index,
         \stdClass $composerJson = null,

@@ -6,7 +6,7 @@ namespace LanguageServer\Tests\Server\TextDocument\Definition;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\Tests\Server\ServerTestCase;
 use LanguageServer\{
-    Server, LanguageClient, PhpDocumentLoader, TolerantDefinitionResolver
+    Server, LanguageClient, PhpDocumentLoader, DefinitionResolver
 };
 use LanguageServer\Index\{Index, ProjectIndex, DependenciesIndex};
 use LanguageServer\ContentRetriever\FileSystemContentRetriever;
@@ -19,7 +19,7 @@ class GlobalFallbackTest extends ServerTestCase
         $projectIndex = new ProjectIndex(new Index, new DependenciesIndex);
         $projectIndex->setComplete();
         $client = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
-        $definitionResolver = new TolerantDefinitionResolver($projectIndex);
+        $definitionResolver = new DefinitionResolver($projectIndex);
         $contentRetriever = new FileSystemContentRetriever;
         $loader = new PhpDocumentLoader($contentRetriever, $projectIndex, $definitionResolver);
         $this->textDocument = new Server\TextDocument($loader, $definitionResolver, $client, $projectIndex);

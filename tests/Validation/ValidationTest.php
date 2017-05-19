@@ -9,7 +9,7 @@ use LanguageServer\Definition;
 use LanguageServer\Index\Index;
 use LanguageServer\ParserKind;
 use LanguageServer\PhpDocument;
-use LanguageServer\TolerantDefinitionResolver;
+use LanguageServer\DefinitionResolver;
 use phpDocumentor\Reflection\DocBlock;
 use phpDocumentor\Reflection\DocBlockFactory;
 use PHPUnit\Framework\TestCase;
@@ -96,7 +96,7 @@ class ValidationTest extends TestCase
         $index = new Index();
         $parser = new Tolerant\Parser();
         $docBlockFactory = DocBlockFactory::createInstance();
-        $definitionResolver = new TolerantDefinitionResolver($index);
+        $definitionResolver = new DefinitionResolver($index);
 
         $document = new PhpDocument($filename, $fileContents, $index, $parser, $docBlockFactory, $definitionResolver);
 

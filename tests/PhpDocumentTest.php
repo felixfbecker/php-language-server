@@ -4,7 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer\Tests\Server;
 
 use LanguageServer\{
-    PhpDocument, TolerantDefinitionResolver
+    PhpDocument, DefinitionResolver
 };
 use LanguageServer\Index\{
     Index
@@ -25,7 +25,7 @@ class PhpDocumentTest extends TestCase
         $parser = new Tolerant\Parser();
         $docBlockFactory = DocBlockFactory::createInstance();
         $index = new Index;
-        $definitionResolver = new TolerantDefinitionResolver($index);
+        $definitionResolver = new DefinitionResolver($index);
         return new PhpDocument($uri, $content, $index, $parser, $docBlockFactory, $definitionResolver);
     }
 

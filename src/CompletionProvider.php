@@ -90,7 +90,7 @@ class CompletionProvider
     ];
 
     /**
-     * @var TolerantDefinitionResolver
+     * @var DefinitionResolver
      */
     private $definitionResolver;
 
@@ -105,10 +105,10 @@ class CompletionProvider
     private $index;
 
     /**
-     * @param TolerantDefinitionResolver $definitionResolver
+     * @param DefinitionResolver $definitionResolver
      * @param ReadableIndex $index
      */
-    public function __construct(TolerantDefinitionResolver $definitionResolver, ReadableIndex $index)
+    public function __construct(DefinitionResolver $definitionResolver, ReadableIndex $index)
     {
         $this->definitionResolver = $definitionResolver;
         $this->index = $index;
@@ -228,7 +228,7 @@ class CompletionProvider
                     }
                 }
             }
-        } elseif (TolerantParserHelpers::isConstantFetch($node) ||
+        } elseif (ParserHelpers::isConstantFetch($node) ||
             ($creation = $node->parent) instanceof Tolerant\Node\Expression\ObjectCreationExpression ||
             (($creation = $node) instanceof Tolerant\Node\Expression\ObjectCreationExpression)) {
 
@@ -298,7 +298,7 @@ class CompletionProvider
                     $list->items[] = $item;
                 }
             }
-        } elseif (TolerantParserHelpers::isConstantFetch($node)) {
+        } elseif (ParserHelpers::isConstantFetch($node)) {
             $prefix = (string) ($node->getResolvedName() ?? Tolerant\ResolvedName::buildName($node->nameParts, $node->getFileContents()));
             foreach (self::KEYWORDS as $keyword) {
                 $item = new CompletionItem($keyword, CompletionItemKind::KEYWORD);
@@ -355,7 +355,7 @@ class CompletionProvider
 
         // Walk the AST upwards until a scope boundary is met
         $level = $node;
-        while ($level && !TolerantParserHelpers::isFunctionLike($level)) {
+        while ($level && !ParserHelpers::isFunctionLike($level)) {
             // Walk siblings before the node
             $sibling = $level;
             while ($sibling = $sibling->getPreviousSibling()) {
@@ -369,7 +369,7 @@ class CompletionProvider
 
         // If the traversal ended because a function was met,
         // also add its parameters and closure uses to the result list
-        if ($level && TolerantParserHelpers::isFunctionLike($level) && $level->parameters !== null) {
+        if ($level && ParserHelpers::isFunctionLike($level) && $level->parameters !== null) {
             foreach ($level->parameters->getValues() as $param) {
                 $paramName = $param->getName();
                 if (empty($namePrefix) || strpos($paramName, $namePrefix) !== false) {
@@ -409,7 +409,7 @@ class CompletionProvider
         };
         $isNotFunctionLike = function($node) {
             return !(
-                TolerantParserHelpers::isFunctionLike($node) ||
+                ParserHelpers::isFunctionLike($node) ||
                 $node instanceof Tolerant\Node\Statement\ClassDeclaration ||
                 $node instanceof Tolerant\Node\Statement\InterfaceDeclaration ||
                 $node instanceof Tolerant\Node\Statement\TraitDeclaration

@@ -22,14 +22,14 @@ class ReferencesCollector extends NodeVisitorAbstract
     public $nodes = [];
 
     /**
-     * @var TolerantDefinitionResolver
+     * @var DefinitionResolver
      */
     private $definitionResolver;
 
     /**
-     * @param TolerantDefinitionResolver $definitionResolver The definition resolver to resolve reference nodes to definitions
+     * @param DefinitionResolver $definitionResolver The definition resolver to resolve reference nodes to definitions
      */
-    public function __construct(TolerantDefinitionResolver $definitionResolver)
+    public function __construct(DefinitionResolver $definitionResolver)
     {
         $this->definitionResolver = $definitionResolver;
     }

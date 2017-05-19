@@ -4,7 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer\Tests\Server;
 
 use LanguageServer\{
-    PhpDocument, PhpDocumentLoader, Project, TolerantDefinitionResolver
+    PhpDocument, PhpDocumentLoader, Project, DefinitionResolver
 };
 use LanguageServer\ContentRetriever\FileSystemContentRetriever;
 use LanguageServer\Index\{
@@ -26,7 +26,7 @@ class PhpDocumentLoaderTest extends TestCase
         $this->loader = new PhpDocumentLoader(
             new FileSystemContentRetriever,
             $projectIndex,
-            new TolerantDefinitionResolver($projectIndex)
+            new DefinitionResolver($projectIndex)
         );
     }
 

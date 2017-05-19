@@ -5,7 +5,7 @@ namespace LanguageServer\NodeVisitor;
 
 use PhpParser\{NodeVisitorAbstract, Node};
 use LanguageServer\{
-    Definition, FqnUtilities, TolerantDefinitionResolver
+    Definition, FqnUtilities, DefinitionResolver
 };
 
 /**
@@ -30,7 +30,7 @@ class DefinitionCollector extends NodeVisitorAbstract
 
     private $definitionResolver;
 
-    public function __construct(TolerantDefinitionResolver $definitionResolver)
+    public function __construct(DefinitionResolver $definitionResolver)
     {
         $this->definitionResolver = $definitionResolver;
     }

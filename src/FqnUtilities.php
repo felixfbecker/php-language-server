@@ -20,7 +20,7 @@ class FqnUtilities
         if ($node instanceof Node) {
             return DefinitionResolver::getDefinedFqn($node);
         } elseif ($node instanceof Tolerant\Node) {
-            return TolerantDefinitionResolver::getDefinedFqn($node);
+            return DefinitionResolver::getDefinedFqn($node);
         }
 
         throw new \TypeError("Unspported Node class");

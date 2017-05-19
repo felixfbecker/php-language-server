@@ -4,7 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer\Tests\Server\TextDocument\References;
 
 use LanguageServer\{
-    LanguageClient, PhpDocumentLoader, Server, TolerantDefinitionResolver
+    LanguageClient, PhpDocumentLoader, Server, DefinitionResolver
 };
 use LanguageServer\ContentRetriever\FileSystemContentRetriever;
 use LanguageServer\Index\{
@@ -22,7 +22,7 @@ class GlobalFallbackTest extends ServerTestCase
     {
         $projectIndex         = new ProjectIndex(new Index, new DependenciesIndex);
         $projectIndex->setComplete();
-        $definitionResolver   = new TolerantDefinitionResolver($projectIndex);
+        $definitionResolver   = new DefinitionResolver($projectIndex);
         $client               = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
         $this->documentLoader = new PhpDocumentLoader(new FileSystemContentRetriever, $projectIndex, $definitionResolver);
         $this->textDocument   = new Server\TextDocument($this->documentLoader, $definitionResolver, $client, $projectIndex);

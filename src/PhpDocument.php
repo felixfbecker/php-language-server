@@ -35,7 +35,7 @@ class PhpDocument
     /**
      * The DefinitionResolver instance to resolve reference nodes to definitions
      *
-     * @var TolerantDefinitionResolver
+     * @var DefinitionResolver
      */
     private $definitionResolver;
 
@@ -99,7 +99,7 @@ class PhpDocument
      * @param Index $index The Index to register definitions and references to
      * @param Parser $parser The PHPParser instance
      * @param DocBlockFactory $docBlockFactory The DocBlockFactory instance to parse docblocks
-     * @param TolerantDefinitionResolver $definitionResolver The DefinitionResolver to resolve definitions to symbols in the workspace
+     * @param DefinitionResolver $definitionResolver The DefinitionResolver to resolve definitions to symbols in the workspace
      */
     public function __construct(
         string $uri,
@@ -107,7 +107,7 @@ class PhpDocument
         Index $index,
         $parser,
         DocBlockFactory $docBlockFactory,
-        TolerantDefinitionResolver $definitionResolver
+        DefinitionResolver $definitionResolver
     ) {
         $this->uri = $uri;
         $this->index = $index;
@@ -158,7 +158,7 @@ class PhpDocument
         $this->definitions = null;
         $this->definitionNodes = null;
 
-        $treeAnalyzer = new TolerantTreeAnalyzer($this->parser, $content, $this->docBlockFactory, $this->definitionResolver, $this->uri);
+        $treeAnalyzer = new TreeAnalyzer($this->parser, $content, $this->docBlockFactory, $this->definitionResolver, $this->uri);
 
         $this->diagnostics = $treeAnalyzer->getDiagnostics();
 

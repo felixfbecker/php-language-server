@@ -5,7 +5,7 @@ namespace LanguageServer;
 
 use Microsoft\PhpParser as Tolerant;
 
-class TolerantParserHelpers {
+class ParserHelpers {
     public static function isConstantFetch(Tolerant\Node $node) : bool {
         $parent = $node->parent;
         return
@@ -70,7 +70,7 @@ class TolerantParserHelpers {
         return false;
     }
 
-    
+
     /**
      * Tries to get the parent property declaration given a Node
      * @param Tolerant\Node $node

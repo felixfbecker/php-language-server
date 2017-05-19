@@ -7,7 +7,7 @@ use PHPUnit\Framework\TestCase;
 use PhpParser\{Node};
 use phpDocumentor\Reflection\DocBlockFactory;
 use LanguageServer\{
-    TolerantDefinitionResolver, TolerantTreeAnalyzer
+    DefinitionResolver, TreeAnalyzer
 };
 use LanguageServer\Index\{Index};
 use function LanguageServer\pathToUri;
@@ -71,10 +71,10 @@ class DefinitionCollectorTest extends TestCase
 
         $docBlockFactory = DocBlockFactory::createInstance();
         $index = new Index;
-        $definitionResolver = new TolerantDefinitionResolver($index);
+        $definitionResolver = new DefinitionResolver($index);
         $content = file_get_contents($path);
 
-        $treeAnalyzer = new TolerantTreeAnalyzer($parser, $content, $docBlockFactory, $definitionResolver, $uri);
+        $treeAnalyzer = new TreeAnalyzer($parser, $content, $docBlockFactory, $definitionResolver, $uri);
         return $treeAnalyzer->getDefinitionNodes();
     }
 }

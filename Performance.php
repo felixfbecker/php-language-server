@@ -7,7 +7,7 @@ use Exception;
 use LanguageServer\Index\Index;
 use LanguageServer\ParserKind;
 use LanguageServer\PhpDocument;
-use LanguageServer\TolerantDefinitionResolver;
+use LanguageServer\DefinitionResolver;
 use Microsoft\PhpParser as Tolerant;
 use phpDocumentor\Reflection\DocBlockFactory;
 use RecursiveDirectoryIterator;
@@ -57,7 +57,7 @@ foreach($frameworks as $framework) {
             $maxRecursion = [];
             $definitions = [];
 
-            $definitionResolver = new TolerantDefinitionResolver($index);
+            $definitionResolver = new DefinitionResolver($index);
             $parser = new Tolerant\Parser();
 
             try {

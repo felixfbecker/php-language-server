@@ -6,7 +6,7 @@ namespace LanguageServer\Tests\Server\TextDocument;
 use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\{
-    Server, LanguageClient, PhpDocumentLoader, TolerantDefinitionResolver
+    Server, LanguageClient, PhpDocumentLoader, DefinitionResolver
 };
 use LanguageServer\Index\{Index, ProjectIndex, DependenciesIndex};
 use LanguageServer\ContentRetriever\FileSystemContentRetriever;
@@ -26,7 +26,7 @@ class FormattingTest extends TestCase
     {
         $projectIndex = new ProjectIndex(new Index, new DependenciesIndex);
         $client = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
-        $definitionResolver = new TolerantDefinitionResolver($projectIndex);
+        $definitionResolver = new DefinitionResolver($projectIndex);
         $loader = new PhpDocumentLoader(new FileSystemContentRetriever, $projectIndex, $definitionResolver);
         $textDocument = new Server\TextDocument($loader, $definitionResolver, $client, $projectIndex);
 
