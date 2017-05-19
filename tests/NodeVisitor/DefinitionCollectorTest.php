@@ -32,9 +32,11 @@ class DefinitionCollectorTest extends TestCase
             'TestNamespace\\TestTrait',
             'TestNamespace\\TestInterface',
             'TestNamespace\\test_function()',
-            'TestNamespace\\ChildClass'
+            'TestNamespace\\ChildClass',
+            'TestNamespace\\Example',
+            'TestNamespace\\Example->__construct()',
+            'TestNamespace\\Example->__destruct()'
         ], array_keys($defNodes));
-
 
         $this->assertInstanceOf(Tolerant\Node\ConstElement::class, $defNodes['TestNamespace\\TEST_CONST']);
         $this->assertInstanceOf(Tolerant\Node\Statement\ClassDeclaration::class, $defNodes['TestNamespace\\TestClass']);
@@ -48,6 +50,9 @@ class DefinitionCollectorTest extends TestCase
         $this->assertInstanceOf(Tolerant\Node\Statement\InterfaceDeclaration::class, $defNodes['TestNamespace\\TestInterface']);
         $this->assertInstanceOf(Tolerant\Node\Statement\FunctionDeclaration::class, $defNodes['TestNamespace\\test_function()']);
         $this->assertInstanceOf(Tolerant\Node\Statement\ClassDeclaration::class, $defNodes['TestNamespace\\ChildClass']);
+        $this->assertInstanceOf(Tolerant\Node\Statement\Class_::class, $defNodes['TestNamespace\\Example']);
+        $this->assertInstanceOf(Tolerant\Node\Statement\ClassMethod::class, $defNodes['TestNamespace\\Example->__construct()']);
+        $this->assertInstanceOf(Tolerant\Node\Statement\ClassMethod::class, $defNodes['TestNamespace\\Example->__destruct()']);
     }
 
     public function testDoesNotCollectReferences()

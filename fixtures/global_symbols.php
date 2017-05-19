@@ -98,3 +98,10 @@ new class {
 };
 
 class ChildClass extends TestClass {}
+
+/**
+ * Lorem ipsum dolor sit amet, consectetur.
+ */
+define('TEST_DEFINE_CONSTANT', false);
+
+print TEST_DEFINE_CONSTANT ? 'true' : 'false';

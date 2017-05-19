@@ -89,7 +89,14 @@ class DefinitionResolver
         } else {
             $docBlock = $node->getAttribute('docBlock');
             if ($docBlock !== null) {
-                return $docBlock->getSummary();
+                // check wether we have a description, when true, add a new paragraph
+                // with the description
+                $description = $docBlock->getDescription()->render();
+
+                if (empty($description)) {
+                    return $docBlock->getSummary();
+                }
+                return $docBlock->getSummary() . "\n\n" . $description;
             }
         }
     }
@@ -416,7 +423,7 @@ class DefinitionResolver
                 // Cannot get type for dynamic function call
                 return new Types\Mixed;
             }
-            $fqn = (string)($expr->getAttribute('namespacedName') ?? $expr->name);
+            $fqn = (string)($expr->getAttribute('namespacedName') ?? $expr->name) . '()';
             $def = $this->index->getDefinition($fqn, true);
             if ($def !== null) {
                 return $def->type;
@@ -698,6 +705,19 @@ class DefinitionResolver
      */
     public function getTypeFromNode($node)
     {
+        if (
+            $node instanceof Node\Expr\FuncCall
+            && $node->name instanceof Node\Name
+            && strtolower((string)$node->name) === 'define'
+            && isset($node->args[0])
+            && $node->args[0]->value instanceof Node\Scalar\String_
+            && isset($node->args[1])
+        ) {
+            // constants with define() like
+            // define('TEST_DEFINE_CONSTANT', false);
+            return $this->resolveExpressionNodeToType($node->args[1]->value);
+        }
+
         if ($node instanceof Node\Param) {
             // Parameters
             $docBlock = $node->getAttribute('parentNode')->getAttribute('docBlock');
@@ -856,6 +876,16 @@ class DefinitionResolver
                 }
                 return (string)$class->namespacedName . '::' . $node->name;
             }
+        } else if (
+            $node instanceof Node\Expr\FuncCall
+            && $node->name instanceof Node\Name
+            && strtolower((string)$node->name) === 'define'
+            && isset($node->args[0])
+            && $node->args[0]->value instanceof Node\Scalar\String_
+            && isset($node->args[1])
+        ) {
+            return (string)$node->args[0]->value->value;
         }
+        return null;
     }
 }
