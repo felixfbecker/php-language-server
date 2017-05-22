@@ -117,7 +117,7 @@ class Index implements ReadableIndex, \Serializable
      * Registers a definition
      *
      * @param string $fqn The fully qualified name of the symbol
-     * @param string $definition The Definition object
+     * @param Definition $definition The Definition object
      * @return void
      */
     public function setDefinition(string $fqn, Definition $definition)

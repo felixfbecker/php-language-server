@@ -101,4 +101,19 @@ class ParserHelpers {
         }
         return null;
     }
+
+    /**
+     * Returns true if the node is a usage of `define`.
+     * e.g. define('TEST_DEFINE_CONSTANT', false);
+     * @param Tolerant\Node $node
+     * @return bool
+     */
+    public static function isConstDefineExpression(Tolerant\Node $node): bool {
+        return $node instanceof Tolerant\Node\Expression\CallExpression
+            && $node->callableExpression instanceof Tolerant\Node\QualifiedName
+            && strtolower($node->callableExpression->getText()) === 'define'
+            && isset($node->argumentExpressionList->children[0])
+            && $node->argumentExpressionList->children[0]->expression instanceof Tolerant\Node\StringLiteral
+            && isset($node->argumentExpressionList->children[2]);
+    }
 }

@@ -113,7 +113,15 @@ class DefinitionResolver
         // For everything else, get the doc block summary corresponding to the current node.
         $docBlock = $this->getDocBlock($node);
         if ($docBlock !== null) {
-            return $docBlock->getSummary();
+            // check wether we have a description, when true, add a new paragraph
+            // with the description
+            $description = $docBlock->getDescription()->render();
+
+            if (empty($description)) {
+                return $docBlock->getSummary();
+            }
+
+            return $docBlock->getSummary() . "\n\n" . $description;
         }
         return null;
     }
@@ -930,6 +938,12 @@ class DefinitionResolver
      */
     public function getTypeFromNode($node)
     {
+        if (ParserHelpers::isConstDefineExpression($node)) {
+            // constants with define() like
+            // define('TEST_DEFINE_CONSTANT', false);
+            return $this->resolveExpressionNodeToType($node->argumentExpressionList->children[2]->expression);
+        }
+
         // PARAMETERS
         // Get the type of the parameter:
         //   1. Doc block
@@ -1159,6 +1173,10 @@ class DefinitionResolver
             return (string)$classDeclaration->getNamespacedName() . '::' . $node->getName();
         }
 
+        else if (ParserHelpers::isConstDefineExpression($node)) {
+            return $node->argumentExpressionList->children[0]->expression->getStringContentsText();
+        }
+
         return null;
     }
 
@@ -1177,5 +1195,6 @@ class DefinitionResolver
                 return $tag;
             }
         }
+        return null;
     }
 }

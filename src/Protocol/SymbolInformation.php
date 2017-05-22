@@ -53,6 +53,13 @@ class SymbolInformation
             $symbol->kind = SymbolKind::CLASS_;
         } else if ($node instanceof Tolerant\Node\Statement\TraitDeclaration) {
             $symbol->kind = SymbolKind::CLASS_;
+        }
+        // TODO 'define'
+        else if (\LanguageServer\ParserHelpers::isConstDefineExpression($node)) {
+            // constants with define() like
+            // define('TEST_DEFINE_CONSTANT', false);
+            $symbol->kind = SymbolKind::CONSTANT;
+            $symbol->name = $node->argumentExpressionList->children[0]->expression->getStringContentsText();
         } else if ($node instanceof Tolerant\Node\Statement\InterfaceDeclaration) {
             $symbol->kind = SymbolKind::INTERFACE;
         } else if ($node instanceof Tolerant\Node\Statement\NamespaceDefinition) {
@@ -60,7 +67,12 @@ class SymbolInformation
         } else if ($node instanceof Tolerant\Node\Statement\FunctionDeclaration) {
             $symbol->kind = SymbolKind::FUNCTION;
         } else if ($node instanceof Tolerant\Node\MethodDeclaration) {
-            $symbol->kind = SymbolKind::METHOD;
+            $nameText = $node->getName();
+            if ($nameText  === '__construct' || $nameText === '__destruct') {
+                $symbol->kind = SymbolKind::CONSTRUCTOR;
+            } else {
+                $symbol->kind = SymbolKind::METHOD;
+            }
         } else if ($node instanceof Tolerant\Node\Expression\Variable && $node->getFirstAncestor(Tolerant\Node\PropertyDeclaration::class) !== null) {
             $symbol->kind = SymbolKind::PROPERTY;
         } else if ($node instanceof Tolerant\Node\ConstElement) {
@@ -86,7 +98,6 @@ class SymbolInformation
             } elseif ($node->leftOperand instanceof Tolerant\Token) {
                 $symbol->name = trim($node->leftOperand->getText($node->getFileContents()), "$");
             }
-
         } else if ($node instanceof Tolerant\Node\UseVariableName) {
             $symbol->name = $node->getName();
         } else if (isset($node->name)) {
@@ -97,8 +108,20 @@ class SymbolInformation
             }
         } else if (isset($node->variableName)) {
             $symbol->name = $node->variableName->getText($node);
-        } else {
+        } else if (!isset($symbol->name)) {
             return null;
+        // if (!isset($symbol->name)) {
+        //     if ($node instanceof Node\Name) {
+        //         $symbol->name = (string)$node;
+        //     } else if ($node instanceof Node\Expr\Assign || $node instanceof Node\Expr\AssignOp) {
+        //         $symbol->name = $node->var->name;
+        //     } else if ($node instanceof Node\Expr\ClosureUse) {
+        //         $symbol->name = $node->var;
+        //     } else if (isset($node->name)) {
+        //         $symbol->name = (string)$node->name;
+        //     } else {
+        //         return null;
+        //     }
         }
 
         $symbol->location = Location::fromNode($node);
