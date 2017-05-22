@@ -165,8 +165,9 @@ class HoverTest extends ServerTestCase
             new TextDocumentIdentifier($reference->uri),
             $reference->range->end
         )->wait();
+        // TODO - should pretty print with fqns, like \define, \false. Not yet supported by tolerant-php-parser
         $this->assertEquals(new Hover([
-            new MarkedString('php', "<?php\n\\define('TEST_DEFINE_CONSTANT', \\false);"),
+            new MarkedString('php', "<?php\ndefine('TEST_DEFINE_CONSTANT', false)"),
             'Lorem ipsum dolor sit amet, consectetur.'
         ], $reference->range), $result);
     }
