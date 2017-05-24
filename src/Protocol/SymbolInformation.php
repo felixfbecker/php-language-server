@@ -54,7 +54,6 @@ class SymbolInformation
         } else if ($node instanceof Tolerant\Node\Statement\TraitDeclaration) {
             $symbol->kind = SymbolKind::CLASS_;
         }
-        // TODO 'define'
         else if (\LanguageServer\ParserHelpers::isConstDefineExpression($node)) {
             // constants with define() like
             // define('TEST_DEFINE_CONSTANT', false);

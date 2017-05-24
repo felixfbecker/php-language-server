@@ -209,7 +209,7 @@ class TextDocument
             } else {
                 // Definition with a global FQN
                 $fqn = DefinitionResolver::getDefinedFqn($node);
-                // var_dump($fqn);
+
                 // Wait until indexing finished
                 if (!$this->index->isComplete()) {
                     yield waitForEvent($this->index, 'complete');
@@ -228,7 +228,6 @@ class TextDocument
                     $refs = $document->getReferenceNodesByFqn($fqn);
                     if ($refs !== null) {
                         foreach ($refs as $ref) {
-                            // var_dump($ref->getNodeKindName());
                             $locations[] = Location::fromNode($ref);
                         }
                     }
