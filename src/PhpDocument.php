@@ -7,7 +7,8 @@ use LanguageServer\Index\Index;
 use LanguageServer\Protocol\{
     Diagnostic, Position, Range
 };
-use Microsoft\PhpParser as Tolerant;
+use Microsoft\PhpParser;
+use Microsoft\PhpParser\Node;
 use phpDocumentor\Reflection\DocBlockFactory;
 
 class PhpDocument
@@ -15,7 +16,7 @@ class PhpDocument
     /**
      * The PHPParser instance
      *
-     * @var Tolerant\Parser
+     * @var PhpParser\Parser
      */
     private $parser;
 
@@ -55,7 +56,7 @@ class PhpDocument
     /**
      * The AST of the document
      *
-     * @var Tolerant\Node
+     * @var Node
      */
     private $stmts;
 
@@ -69,14 +70,14 @@ class PhpDocument
     /**
      * Map from fully qualified name (FQN) to Node
      *
-     * @var Tolerant\Node
+     * @var Node
      */
     private $definitionNodes;
 
     /**
      * Map from fully qualified name (FQN) to array of nodes that reference the symbol
      *
-     * @var Tolerant\Node[][]
+     * @var Node[][]
      */
     private $referenceNodes;
 
@@ -91,7 +92,7 @@ class PhpDocument
      * @param string $uri The URI of the document
      * @param string $content The content of the document
      * @param Index $index The Index to register definitions and references to
-     * @param Tolerant\Parser $parser The PhpParser instance
+     * @param PhpParser\Parser $parser The PhpParser instance
      * @param DocBlockFactory $docBlockFactory The DocBlockFactory instance to parse docblocks
      * @param DefinitionResolver $definitionResolver The DefinitionResolver to resolve definitions to symbols in the workspace
      */
@@ -115,7 +116,7 @@ class PhpDocument
      * Get all references of a fully qualified name
      *
      * @param string $fqn The fully qualified name of the symbol
-     * @return Tolerant\Node[]
+     * @return Node[]
      */
     public function getReferenceNodesByFqn(string $fqn)
     {
@@ -220,7 +221,7 @@ class PhpDocument
     /**
      * Returns the AST of the document
      *
-     * @return Tolerant\Node | null
+     * @return Node | null
      */
     public function getStmts()
     {
@@ -231,7 +232,7 @@ class PhpDocument
      * Returns the node at a specified position
      *
      * @param Position $position
-     * @return Tolerant\Node|null
+     * @return Node|null
      */
     public function getNodeAtPosition(Position $position)
     {
@@ -267,7 +268,7 @@ class PhpDocument
      * Returns the definition node for a fully qualified name
      *
      * @param string $fqn
-     * @return Tolerant\Node|null
+     * @return Node|null
      */
     public function getDefinitionNodeByFqn(string $fqn)
     {
@@ -277,7 +278,7 @@ class PhpDocument
     /**
      * Returns a map from fully qualified name (FQN) to Nodes defined in this document
      *
-     * @return Tolerant\Node[]
+     * @return Node[]
      */
     public function getDefinitionNodes()
     {

@@ -19,7 +19,7 @@ use AdvancedJsonRpc;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use Sabre\Event\Loop;
-use Microsoft\PhpParser as Tolerant;
+use Microsoft\PhpParser;
 
 $frameworksDir = realpath(__DIR__ . '/../../validation/frameworks');
 
@@ -94,7 +94,7 @@ class ValidationTest extends TestCase
         global $frameworksDir;
 
         $index = new Index();
-        $parser = new Tolerant\Parser();
+        $parser = new PhpParser\Parser();
         $docBlockFactory = DocBlockFactory::createInstance();
         $definitionResolver = new DefinitionResolver($index);
 

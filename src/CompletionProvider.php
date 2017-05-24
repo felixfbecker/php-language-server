@@ -13,7 +13,8 @@ use LanguageServer\Protocol\{
     CompletionItemKind
 };
 use function LanguageServer\{strStartsWith};
-use Microsoft\PhpParser as Tolerant;
+use Microsoft\PhpParser;
+use Microsoft\PhpParser\Node;
 
 class CompletionProvider
 {
@@ -127,7 +128,7 @@ class CompletionProvider
 
         $offset = $node === null ? -1 : $pos->toOffset($node->getFileContents());
         if ($node !== null && $offset > $node->getEndPosition() &&
-            $node->parent->getLastChild() instanceof Tolerant\MissingToken
+            $node->parent->getLastChild() instanceof PhpParser\MissingToken
         ) {
             $node = $node->parent;
         }
@@ -135,14 +136,14 @@ class CompletionProvider
         $list = new CompletionList;
         $list->isIncomplete = true;
 
-        if ($node instanceof Tolerant\Node\Expression\Variable &&
-            $node->parent instanceof Tolerant\Node\Expression\ObjectCreationExpression &&
-            $node->name instanceof Tolerant\MissingToken
+        if ($node instanceof Node\Expression\Variable &&
+            $node->parent instanceof Node\Expression\ObjectCreationExpression &&
+            $node->name instanceof PhpParser\MissingToken
         ) {
             $node = $node->parent;
         }
 
-        if ($node === null || $node instanceof Tolerant\Node\Statement\InlineHtml || $pos == new Position(0, 0)) {
+        if ($node === null || $node instanceof Node\Statement\InlineHtml || $pos == new Position(0, 0)) {
             $item = new CompletionItem('<?php', CompletionItemKind::KEYWORD);
             $item->textEdit = new TextEdit(
                 new Range($pos, $pos),
@@ -152,9 +153,9 @@ class CompletionProvider
         }
         // VARIABLES
         elseif (
-            $node instanceof Tolerant\Node\Expression\Variable &&
+            $node instanceof Node\Expression\Variable &&
             !(
-                $node->parent instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression &&
+                $node->parent instanceof Node\Expression\ScopedPropertyAccessExpression &&
                 $node->parent->memberName === $node)
          ) {
             // Find variables, parameters and use statements in the scope
@@ -176,7 +177,7 @@ class CompletionProvider
         // MEMBER ACCESS EXPRESSIONS
         //   $a->c#
         //   $a->#
-        elseif ($node instanceof Tolerant\Node\Expression\MemberAccessExpression) {
+        elseif ($node instanceof Node\Expression\MemberAccessExpression) {
             $prefixes = FqnUtilities::getFqnsFromType(
                 $this->definitionResolver->resolveExpressionNodeToType($node->dereferencableExpression)
             );
@@ -204,8 +205,8 @@ class CompletionProvider
         //   A\B\C::foo#
         //   TODO: $a::#
         elseif (
-            ($scoped = $node->parent) instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression ||
-            ($scoped = $node) instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression
+            ($scoped = $node->parent) instanceof Node\Expression\ScopedPropertyAccessExpression ||
+            ($scoped = $node) instanceof Node\Expression\ScopedPropertyAccessExpression
         ) {
             $prefixes = FqnUtilities::getFqnsFromType(
                 $classType = $this->definitionResolver->resolveExpressionNodeToType($scoped->scopeResolutionQualifier)
@@ -227,13 +228,13 @@ class CompletionProvider
                 }
             }
         } elseif (ParserHelpers::isConstantFetch($node) ||
-            ($creation = $node->parent) instanceof Tolerant\Node\Expression\ObjectCreationExpression ||
-            (($creation = $node) instanceof Tolerant\Node\Expression\ObjectCreationExpression)) {
+            ($creation = $node->parent) instanceof Node\Expression\ObjectCreationExpression ||
+            (($creation = $node) instanceof Node\Expression\ObjectCreationExpression)) {
 
             $class = isset($creation) ? $creation->classTypeDesignator : $node;
 
-            $prefix = $class instanceof Tolerant\Node\QualifiedName
-                ? (string)Tolerant\ResolvedName::buildName($class->nameParts, $class->getFileContents())
+            $prefix = $class instanceof Node\QualifiedName
+                ? (string)PhpParser\ResolvedName::buildName($class->nameParts, $class->getFileContents())
                 : $class->getText($node->getFileContents());
 
             $namespaceDefinition = $node->getNamespaceDefinition();
@@ -248,11 +249,11 @@ class CompletionProvider
                 $fqnContainsPrefix = empty($prefix) || strpos($fqn, $prefix) !== false;
                 if (($def->canBeInstantiated || ($def->isGlobal && !isset($creation))) && $fqnContainsPrefix) {
                     if ($namespaceDefinition !== null && $namespaceDefinition->name !== null) {
-                        $namespacePrefix = (string)Tolerant\ResolvedName::buildName($namespaceDefinition->name->nameParts, $node->getFileContents());
+                        $namespacePrefix = (string)PhpParser\ResolvedName::buildName($namespaceDefinition->name->nameParts, $node->getFileContents());
 
                         $isAliased = false;
 
-                        $isNotFullyQualified = !($class instanceof Tolerant\Node\QualifiedName) || !$class->isFullyQualifiedName();
+                        $isNotFullyQualified = !($class instanceof Node\QualifiedName) || !$class->isFullyQualifiedName();
                         if ($isNotFullyQualified) {
                             foreach ($namespaceImportTable as $alias => $name) {
                                 if (strStartsWith($fqn, $name)) {
@@ -297,7 +298,7 @@ class CompletionProvider
                 }
             }
         } elseif (ParserHelpers::isConstantFetch($node)) {
-            $prefix = (string) ($node->getResolvedName() ?? Tolerant\ResolvedName::buildName($node->nameParts, $node->getFileContents()));
+            $prefix = (string) ($node->getResolvedName() ?? PhpParser\ResolvedName::buildName($node->nameParts, $node->getFileContents()));
             foreach (self::KEYWORDS as $keyword) {
                 $item = new CompletionItem($keyword, CompletionItemKind::KEYWORD);
                 $item->insertText = $keyword . ' ';
@@ -333,11 +334,11 @@ class CompletionProvider
      * and at each level walk all previous siblings and their children to search for definitions
      * of that variable
      *
-     * @param Tolerant\Node $node
+     * @param Node $node
      * @param string $namePrefix Prefix to filter
-     * @return array <Tolerant\Node\Expr\Variable|Tolerant\Node\Param|Tolerant\Node\Expr\ClosureUse>
+     * @return array <Node\Expr\Variable|Node\Param|Node\Expr\ClosureUse>
      */
-    private function suggestVariablesAtNode(Tolerant\Node $node, string $namePrefix = ''): array
+    private function suggestVariablesAtNode(Node $node, string $namePrefix = ''): array
     {
         $vars = [];
 
@@ -375,7 +376,7 @@ class CompletionProvider
                 }
             }
 
-            if ($level instanceof Tolerant\Node\Expression\AnonymousFunctionCreationExpression && $level->anonymousFunctionUseClause !== null) {
+            if ($level instanceof Node\Expression\AnonymousFunctionCreationExpression && $level->anonymousFunctionUseClause !== null) {
                 foreach ($level->anonymousFunctionUseClause->useVariableNameList->getValues() as $use) {
                     $useName = $use->getName();
                     if (empty($namePrefix) || strpos($useName, $namePrefix) !== false) {
@@ -393,24 +394,24 @@ class CompletionProvider
      *
      * @param Node $node
      * @param string $namePrefix Prefix to filter
-     * @return Tolerant\Node\Expression\Variable[]
+     * @return Node\Expression\Variable[]
      */
-    private function findVariableDefinitionsInNode(Tolerant\Node $node, string $namePrefix = ''): array
+    private function findVariableDefinitionsInNode(Node $node, string $namePrefix = ''): array
     {
         $vars = [];
         // If the child node is a variable assignment, save it
 
         $isAssignmentToVariable = function ($node) use ($namePrefix) {
-            return $node instanceof Tolerant\Node\Expression\AssignmentExpression
-                && $node->leftOperand instanceof Tolerant\Node\Expression\Variable
+            return $node instanceof Node\Expression\AssignmentExpression
+                && $node->leftOperand instanceof Node\Expression\Variable
                 && (empty($namePrefix) || strpos($node->leftOperand->getName(), $namePrefix) !== false);
         };
         $isNotFunctionLike = function($node) {
             return !(
                 ParserHelpers::isFunctionLike($node) ||
-                $node instanceof Tolerant\Node\Statement\ClassDeclaration ||
-                $node instanceof Tolerant\Node\Statement\InterfaceDeclaration ||
-                $node instanceof Tolerant\Node\Statement\TraitDeclaration
+                $node instanceof Node\Statement\ClassDeclaration ||
+                $node instanceof Node\Statement\InterfaceDeclaration ||
+                $node instanceof Node\Statement\TraitDeclaration
             );
         };
 

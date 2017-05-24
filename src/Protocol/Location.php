@@ -2,7 +2,8 @@
 
 namespace LanguageServer\Protocol;
 
-use Microsoft\PhpParser as Tolerant;
+use Microsoft\PhpParser;
+use Microsoft\PhpParser\Node;
 
 /**
  * Represents a location inside a resource, such as a line inside a text file.
@@ -22,12 +23,12 @@ class Location
     /**
      * Returns the location of the node
      *
-     * @param Tolerant\Node $node
+     * @param Node $node
      * @return self
      */
     public static function fromNode($node)
     {
-        $range = Tolerant\PositionUtilities::getRangeFromPosition($node->getStart(), $node->getWidth(), $node->getFileContents());
+        $range = PhpParser\PositionUtilities::getRangeFromPosition($node->getStart(), $node->getWidth(), $node->getFileContents());
         return new self($node->getUri(), new Range(
             new Position($range->start->line, $range->start->character),
             new Position($range->end->line, $range->end->character)

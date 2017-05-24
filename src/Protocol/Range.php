@@ -2,7 +2,8 @@
 
 namespace LanguageServer\Protocol;
 
-use Microsoft\PhpParser as Tolerant;
+use Microsoft\PhpParser;
+use Microsoft\PhpParser\Node;
 
 /**
  * A range in a text document expressed as (zero-based) start and end positions.
@@ -26,12 +27,12 @@ class Range
     /**
      * Returns the range the node spans
      *
-     * @param Tolerant\Node $node
+     * @param Node $node
      * @return self
      */
     public static function fromNode($node)
     {
-        $range = Tolerant\PositionUtilities::getRangeFromPosition($node->getStart(), $node->getWidth(), $node->getFileContents());
+        $range = PhpParser\PositionUtilities::getRangeFromPosition($node->getStart(), $node->getWidth(), $node->getFileContents());
 
         return new self(
             new Position($range->start->line, $range->start->character),

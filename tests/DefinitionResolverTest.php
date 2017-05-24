@@ -6,13 +6,13 @@ namespace LanguageServer\Tests;
 use PHPUnit\Framework\TestCase;
 use LanguageServer\Index\Index;
 use LanguageServer\DefinitionResolver;
-use Microsoft\PhpParser as Tolerant;
+use Microsoft\PhpParser;
 
 class DefinitionResolverTest extends TestCase
 {
     public function testCreateDefinitionFromNode()
     {
-        $parser = new Tolerant\Parser;
+        $parser = new PhpParser\Parser;
         $doc = new MockPhpDocument;
         $stmts = $parser->parseSourceFile("<?php\ndefine('TEST_DEFINE', true);", $doc->getUri());
 
@@ -25,7 +25,7 @@ class DefinitionResolverTest extends TestCase
 
     public function testGetTypeFromNode()
     {
-        $parser = new Tolerant\Parser;
+        $parser = new PhpParser\Parser;
         $doc = new MockPhpDocument;
         $stmts = $parser->parseSourceFile("<?php\ndefine('TEST_DEFINE', true);", $doc->getUri());
 
@@ -39,7 +39,7 @@ class DefinitionResolverTest extends TestCase
     public function testGetDefinedFqnForIncompleteDefine()
     {
         // define('XXX') (only one argument) must not introduce a new symbol
-        $parser = new Tolerant\Parser;
+        $parser = new PhpParser\Parser;
         $doc = new MockPhpDocument;
         $stmts = $parser->parseSourceFile("<?php\ndefine('TEST_DEFINE');", $doc->getUri());
 
@@ -52,7 +52,7 @@ class DefinitionResolverTest extends TestCase
 
     public function testGetDefinedFqnForDefine()
     {
-        $parser = new Tolerant\Parser;
+        $parser = new PhpParser\Parser;
         $doc = new MockPhpDocument;
         $stmts = $parser->parseSourceFile("<?php\ndefine('TEST_DEFINE', true);", $doc->getUri());
 

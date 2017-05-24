@@ -10,7 +10,8 @@ use LanguageServer\{
 };
 use LanguageServer\Index\{Index};
 use function LanguageServer\pathToUri;
-use Microsoft\PhpParser as Tolerant;
+use Microsoft\PhpParser;
+use Microsoft\PhpParser\Node;
 
 class DefinitionCollectorTest extends TestCase
 {
@@ -37,21 +38,21 @@ class DefinitionCollectorTest extends TestCase
             'TestNamespace\\Example->__destruct()'
         ], array_keys($defNodes));
 
-        $this->assertInstanceOf(Tolerant\Node\ConstElement::class, $defNodes['TestNamespace\\TEST_CONST']);
-        $this->assertInstanceOf(Tolerant\Node\Statement\ClassDeclaration::class, $defNodes['TestNamespace\\TestClass']);
-        $this->assertInstanceOf(Tolerant\Node\ConstElement::class, $defNodes['TestNamespace\\TestClass::TEST_CLASS_CONST']);
+        $this->assertInstanceOf(Node\ConstElement::class, $defNodes['TestNamespace\\TEST_CONST']);
+        $this->assertInstanceOf(Node\Statement\ClassDeclaration::class, $defNodes['TestNamespace\\TestClass']);
+        $this->assertInstanceOf(Node\ConstElement::class, $defNodes['TestNamespace\\TestClass::TEST_CLASS_CONST']);
         // TODO - should we parse properties more strictly?
-        $this->assertInstanceOf(Tolerant\Node\Expression\Variable::class, $defNodes['TestNamespace\\TestClass::$staticTestProperty']);
-        $this->assertInstanceOf(Tolerant\Node\Expression\Variable::class, $defNodes['TestNamespace\\TestClass->testProperty']);
-        $this->assertInstanceOf(Tolerant\Node\MethodDeclaration::class, $defNodes['TestNamespace\\TestClass::staticTestMethod()']);
-        $this->assertInstanceOf(Tolerant\Node\MethodDeclaration::class, $defNodes['TestNamespace\\TestClass->testMethod()']);
-        $this->assertInstanceOf(Tolerant\Node\Statement\TraitDeclaration::class, $defNodes['TestNamespace\\TestTrait']);
-        $this->assertInstanceOf(Tolerant\Node\Statement\InterfaceDeclaration::class, $defNodes['TestNamespace\\TestInterface']);
-        $this->assertInstanceOf(Tolerant\Node\Statement\FunctionDeclaration::class, $defNodes['TestNamespace\\test_function()']);
-        $this->assertInstanceOf(Tolerant\Node\Statement\ClassDeclaration::class, $defNodes['TestNamespace\\ChildClass']);
-        $this->assertInstanceOf(Tolerant\Node\Statement\ClassDeclaration::class, $defNodes['TestNamespace\\Example']);
-        $this->assertInstanceOf(Tolerant\Node\MethodDeclaration::class, $defNodes['TestNamespace\\Example->__construct()']);
-        $this->assertInstanceOf(Tolerant\Node\MethodDeclaration::class, $defNodes['TestNamespace\\Example->__destruct()']);
+        $this->assertInstanceOf(Node\Expression\Variable::class, $defNodes['TestNamespace\\TestClass::$staticTestProperty']);
+        $this->assertInstanceOf(Node\Expression\Variable::class, $defNodes['TestNamespace\\TestClass->testProperty']);
+        $this->assertInstanceOf(Node\MethodDeclaration::class, $defNodes['TestNamespace\\TestClass::staticTestMethod()']);
+        $this->assertInstanceOf(Node\MethodDeclaration::class, $defNodes['TestNamespace\\TestClass->testMethod()']);
+        $this->assertInstanceOf(Node\Statement\TraitDeclaration::class, $defNodes['TestNamespace\\TestTrait']);
+        $this->assertInstanceOf(Node\Statement\InterfaceDeclaration::class, $defNodes['TestNamespace\\TestInterface']);
+        $this->assertInstanceOf(Node\Statement\FunctionDeclaration::class, $defNodes['TestNamespace\\test_function()']);
+        $this->assertInstanceOf(Node\Statement\ClassDeclaration::class, $defNodes['TestNamespace\\ChildClass']);
+        $this->assertInstanceOf(Node\Statement\ClassDeclaration::class, $defNodes['TestNamespace\\Example']);
+        $this->assertInstanceOf(Node\MethodDeclaration::class, $defNodes['TestNamespace\\Example->__construct()']);
+        $this->assertInstanceOf(Node\MethodDeclaration::class, $defNodes['TestNamespace\\Example->__destruct()']);
     }
 
     public function testDoesNotCollectReferences()
@@ -60,8 +61,8 @@ class DefinitionCollectorTest extends TestCase
         $defNodes = $this->collectDefinitions($path);
 
         $this->assertEquals(['TestNamespace', 'TestNamespace\\whatever()'], array_keys($defNodes));
-        $this->assertInstanceOf(Tolerant\Node\Statement\NamespaceDefinition::class, $defNodes['TestNamespace']);
-        $this->assertInstanceOf(Tolerant\Node\Statement\FunctionDeclaration::class, $defNodes['TestNamespace\\whatever()']);
+        $this->assertInstanceOf(Node\Statement\NamespaceDefinition::class, $defNodes['TestNamespace']);
+        $this->assertInstanceOf(Node\Statement\FunctionDeclaration::class, $defNodes['TestNamespace\\whatever()']);
     }
 
     /**
@@ -70,7 +71,7 @@ class DefinitionCollectorTest extends TestCase
     private function collectDefinitions($path): array
     {
         $uri = pathToUri($path);
-        $parser = new Tolerant\Parser();
+        $parser = new PhpParser\Parser();
 
         $docBlockFactory = DocBlockFactory::createInstance();
         $index = new Index;

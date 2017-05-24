@@ -2,7 +2,8 @@
 
 namespace LanguageServer\Protocol;
 
-use Microsoft\PhpParser as Tolerant;
+use Microsoft\PhpParser;
+use Microsoft\PhpParser\Node;
 use Exception;
 
 /**
@@ -42,16 +43,16 @@ class SymbolInformation
     /**
      * Converts a Node to a SymbolInformation
      *
-     * @param Tolerant\Node $node
+     * @param Node $node
      * @param string $fqn If given, $containerName will be extracted from it
      * @return SymbolInformation|null
      */
     public static function fromNode($node, string $fqn = null)
     {
         $symbol = new self;
-        if ($node instanceof Tolerant\Node\Statement\ClassDeclaration) {
+        if ($node instanceof Node\Statement\ClassDeclaration) {
             $symbol->kind = SymbolKind::CLASS_;
-        } else if ($node instanceof Tolerant\Node\Statement\TraitDeclaration) {
+        } else if ($node instanceof Node\Statement\TraitDeclaration) {
             $symbol->kind = SymbolKind::CLASS_;
         }
         else if (\LanguageServer\ParserHelpers::isConstDefineExpression($node)) {
@@ -59,49 +60,49 @@ class SymbolInformation
             // define('TEST_DEFINE_CONSTANT', false);
             $symbol->kind = SymbolKind::CONSTANT;
             $symbol->name = $node->argumentExpressionList->children[0]->expression->getStringContentsText();
-        } else if ($node instanceof Tolerant\Node\Statement\InterfaceDeclaration) {
+        } else if ($node instanceof Node\Statement\InterfaceDeclaration) {
             $symbol->kind = SymbolKind::INTERFACE;
-        } else if ($node instanceof Tolerant\Node\Statement\NamespaceDefinition) {
+        } else if ($node instanceof Node\Statement\NamespaceDefinition) {
             $symbol->kind = SymbolKind::NAMESPACE;
-        } else if ($node instanceof Tolerant\Node\Statement\FunctionDeclaration) {
+        } else if ($node instanceof Node\Statement\FunctionDeclaration) {
             $symbol->kind = SymbolKind::FUNCTION;
-        } else if ($node instanceof Tolerant\Node\MethodDeclaration) {
+        } else if ($node instanceof Node\MethodDeclaration) {
             $nameText = $node->getName();
             if ($nameText  === '__construct' || $nameText === '__destruct') {
                 $symbol->kind = SymbolKind::CONSTRUCTOR;
             } else {
                 $symbol->kind = SymbolKind::METHOD;
             }
-        } else if ($node instanceof Tolerant\Node\Expression\Variable && $node->getFirstAncestor(Tolerant\Node\PropertyDeclaration::class) !== null) {
+        } else if ($node instanceof Node\Expression\Variable && $node->getFirstAncestor(Node\PropertyDeclaration::class) !== null) {
             $symbol->kind = SymbolKind::PROPERTY;
-        } else if ($node instanceof Tolerant\Node\ConstElement) {
+        } else if ($node instanceof Node\ConstElement) {
             $symbol->kind = SymbolKind::CONSTANT;
         }
 
         else if (
             (
-                ($node instanceof Tolerant\Node\Expression\AssignmentExpression)
-                && $node->leftOperand instanceof Tolerant\Node\Expression\Variable
+                ($node instanceof Node\Expression\AssignmentExpression)
+                && $node->leftOperand instanceof Node\Expression\Variable
             )
-            || $node instanceof Tolerant\Node\UseVariableName
-            || $node instanceof Tolerant\Node\Parameter
+            || $node instanceof Node\UseVariableName
+            || $node instanceof Node\Parameter
         ) {
             $symbol->kind = SymbolKind::VARIABLE;
         } else {
             return null;
         }
 
-        if ($node instanceof Tolerant\Node\Expression\AssignmentExpression) {
-            if ($node->leftOperand instanceof Tolerant\Node\Expression\Variable) {
+        if ($node instanceof Node\Expression\AssignmentExpression) {
+            if ($node->leftOperand instanceof Node\Expression\Variable) {
                 $symbol->name = $node->leftOperand->getName();
-            } elseif ($node->leftOperand instanceof Tolerant\Token) {
+            } elseif ($node->leftOperand instanceof PhpParser\Token) {
                 $symbol->name = trim($node->leftOperand->getText($node->getFileContents()), "$");
             }
-        } else if ($node instanceof Tolerant\Node\UseVariableName) {
+        } else if ($node instanceof Node\UseVariableName) {
             $symbol->name = $node->getName();
         } else if (isset($node->name)) {
-            if ($node->name instanceof Tolerant\Node\QualifiedName) {
-                $symbol->name = (string)Tolerant\ResolvedName::buildName($node->name->nameParts, $node->getFileContents());
+            if ($node->name instanceof Node\QualifiedName) {
+                $symbol->name = (string)PhpParser\ResolvedName::buildName($node->name->nameParts, $node->getFileContents());
             } else {
                 $symbol->name = ltrim((string)$node->name->getText($node->getFileContents()), "$");
             }

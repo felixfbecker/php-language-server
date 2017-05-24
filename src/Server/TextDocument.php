@@ -10,7 +10,8 @@ use LanguageServer\Index\ReadableIndex;
 use LanguageServer\Protocol\{
     FormattingOptions, Hover, Location, MarkedString, Position, Range, ReferenceContext, SymbolDescriptor, SymbolLocationInformation, TextDocumentIdentifier, TextDocumentItem, VersionedTextDocumentIdentifier
 };
-use Microsoft\PhpParser as Tolerant;
+use Microsoft\PhpParser;
+use Microsoft\PhpParser\Node;
 use Sabre\Event\Promise;
 use Sabre\Uri;
 use function LanguageServer\{
@@ -183,24 +184,24 @@ class TextDocument
             // by traversing the AST
             if (
 
-            ($node instanceof Tolerant\Node\Expression\Variable && !($node->getParent()->getParent() instanceof Tolerant\Node\PropertyDeclaration))
-                || $node instanceof Tolerant\Node\Parameter
-                || $node instanceof Tolerant\Node\UseVariableName
+            ($node instanceof Node\Expression\Variable && !($node->getParent()->getParent() instanceof Node\PropertyDeclaration))
+                || $node instanceof Node\Parameter
+                || $node instanceof Node\UseVariableName
             ) {
-                if (isset($node->name) && $node->name instanceof Tolerant\Node\Expression) {
+                if (isset($node->name) && $node->name instanceof Node\Expression) {
                     return null;
                 }
                 // Find function/method/closure scope
                 $n = $node;
 
-                $n = $n->getFirstAncestor(Tolerant\Node\Statement\FunctionDeclaration::class, Tolerant\Node\MethodDeclaration::class, Tolerant\Node\Expression\AnonymousFunctionCreationExpression::class, Tolerant\Node\SourceFileNode::class);
+                $n = $n->getFirstAncestor(Node\Statement\FunctionDeclaration::class, Node\MethodDeclaration::class, Node\Expression\AnonymousFunctionCreationExpression::class, Node\SourceFileNode::class);
 
                 if ($n === null) {
-                    $n = $node->getFirstAncestor(Tolerant\Node\Statement\ExpressionStatement::class)->getParent();
+                    $n = $node->getFirstAncestor(Node\Statement\ExpressionStatement::class)->getParent();
                 }
 
                 foreach ($n->getDescendantNodes() as $descendantNode) {
-                    if ($descendantNode instanceof Tolerant\Node\Expression\Variable &&
+                    if ($descendantNode instanceof Node\Expression\Variable &&
                         $descendantNode->getName() === $node->getName()
                     ) {
                         $locations[] = Location::fromNode($descendantNode);

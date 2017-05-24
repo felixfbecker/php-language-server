@@ -7,12 +7,13 @@ use LanguageServer\Protocol\{Diagnostic, DiagnosticSeverity, Range, Position, Te
 use LanguageServer\Index\Index;
 use phpDocumentor\Reflection\DocBlockFactory;
 use Sabre\Uri;
-use Microsoft\PhpParser as Tolerant;
+use Microsoft\PhpParser;
+use Microsoft\PhpParser\Node;
 
 class TreeAnalyzer {
     private $parser;
 
-    /** @var Tolerant\Node */
+    /** @var Node */
     private $stmts;
 
     private $diagnostics;
@@ -21,7 +22,7 @@ class TreeAnalyzer {
 
     /**
      * TreeAnalyzer constructor.
-     * @param Tolerant\Parser $parser
+     * @param PhpParser\Parser $parser
      * @param $content
      * @param $docBlockFactory
      * @param DefinitionResolver $definitionResolver
@@ -40,7 +41,7 @@ class TreeAnalyzer {
         $this->collectDefinitionsAndReferences($this->stmts);
     }
 
-    public function collectDefinitionsAndReferences(Tolerant\Node $stmts) {
+    public function collectDefinitionsAndReferences(Node $stmts) {
         foreach ($stmts::CHILD_NAMES as $name) {
             $node = $stmts->$name;
 
@@ -50,19 +51,19 @@ class TreeAnalyzer {
 
             if (\is_array($node)) {
                 foreach ($node as $child) {
-                    if ($child instanceof Tolerant\Node) {
+                    if ($child instanceof Node) {
                         $this->update($child);
                     }
                 }
                 continue;
             }
 
-            if ($node instanceof Tolerant\Node) {
+            if ($node instanceof Node) {
                 $this->update($node);
             }
 
-            if (($_error = Tolerant\DiagnosticsProvider::checkDiagnostics($node)) !== null) {
-                $range = Tolerant\PositionUtilities::getRangeFromPosition($_error->start, $_error->length, $this->content);
+            if (($_error = PhpParser\DiagnosticsProvider::checkDiagnostics($node)) !== null) {
+                $range = PhpParser\PositionUtilities::getRangeFromPosition($_error->start, $_error->length, $this->content);
 
                 $this->diagnostics[] = new Diagnostic(
                     $_error->message,
@@ -88,14 +89,14 @@ class TreeAnalyzer {
             $parent = $node->parent;
             if (!(
                 (
-                    // $node->parent instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression ||
-                    ($node instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression ||
-                    $node instanceof Tolerant\Node\Expression\MemberAccessExpression)
+                    // $node->parent instanceof Node\Expression\ScopedPropertyAccessExpression ||
+                    ($node instanceof Node\Expression\ScopedPropertyAccessExpression ||
+                    $node instanceof Node\Expression\MemberAccessExpression)
                     && !(
-                        $node->parent instanceof Tolerant\Node\Expression\CallExpression ||
-                        $node->memberName instanceof Tolerant\Token
+                        $node->parent instanceof Node\Expression\CallExpression ||
+                        $node->memberName instanceof PhpParser\Token
                     ))
-                || ($parent instanceof Tolerant\Node\Statement\NamespaceDefinition && $parent->name !== null && $parent->name->getStart() === $node->getStart()))
+                || ($parent instanceof Node\Statement\NamespaceDefinition && $parent->name !== null && $parent->name->getStart() === $node->getStart()))
             ) {
 
                 $fqn = $this->definitionResolver->resolveReferenceNodeToFqn($node);
@@ -103,9 +104,9 @@ class TreeAnalyzer {
                     $this->addReference($fqn, $node);
 
                     if (
-                        $node instanceof Tolerant\Node\QualifiedName
-                        && ($node->isQualifiedName() || $node->parent instanceof Tolerant\Node\NamespaceUseClause)
-                        && !($parent instanceof Tolerant\Node\Statement\NamespaceDefinition && $parent->name->getStart() === $node->getStart()
+                        $node instanceof Node\QualifiedName
+                        && ($node->isQualifiedName() || $node->parent instanceof Node\NamespaceUseClause)
+                        && !($parent instanceof Node\Statement\NamespaceDefinition && $parent->name->getStart() === $node->getStart()
                         )
                     ) {
                         // Add references for each referenced namespace
@@ -120,10 +121,10 @@ class TreeAnalyzer {
                     // to the global version because PHP falls back to global at runtime
                     // http://php.net/manual/en/language.namespaces.fallback.php
                     if (ParserHelpers::isConstantFetch($node) ||
-                        ($parent instanceof Tolerant\Node\Expression\CallExpression
+                        ($parent instanceof Node\Expression\CallExpression
                             && !(
-                                $node instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression ||
-                                $node instanceof Tolerant\Node\Expression\MemberAccessExpression
+                                $node instanceof Node\Expression\ScopedPropertyAccessExpression ||
+                                $node instanceof Node\Expression\MemberAccessExpression
                             ))) {
                         $parts = explode('\\', $fqn);
                         if (count($parts) > 1) {
@@ -141,7 +142,7 @@ class TreeAnalyzer {
         return $this->diagnostics ?? [];
     }
 
-    private function addReference(string $fqn, Tolerant\Node $node)
+    private function addReference(string $fqn, Node $node)
     {
         if (!isset($this->referenceNodes[$fqn])) {
             $this->referenceNodes[$fqn] = [];

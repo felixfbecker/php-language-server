@@ -8,7 +8,7 @@ use LanguageServer\Index\Index;
 use LanguageServer\ParserKind;
 use LanguageServer\PhpDocument;
 use LanguageServer\DefinitionResolver;
-use Microsoft\PhpParser as Tolerant;
+use Microsoft\PhpParser;
 use phpDocumentor\Reflection\DocBlockFactory;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -58,7 +58,7 @@ foreach($frameworks as $framework) {
             $definitions = [];
 
             $definitionResolver = new DefinitionResolver($index);
-            $parser = new Tolerant\Parser();
+            $parser = new PhpParser\Parser();
 
             try {
                 $document = new PhpDocument($testCaseFile, $fileContents, $index, $parser, $docBlockFactory, $definitionResolver);

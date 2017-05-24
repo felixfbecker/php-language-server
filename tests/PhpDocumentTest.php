@@ -12,7 +12,8 @@ use LanguageServer\Index\{
 use LanguageServer\Protocol\{
     Position
 };
-use Microsoft\PhpParser as Tolerant;
+use Microsoft\PhpParser;
+use Microsoft\PhpParser\Node;
 use phpDocumentor\Reflection\DocBlockFactory;
 use PHPUnit\Framework\TestCase;
 use function LanguageServer\isVendored;
@@ -21,7 +22,7 @@ class PhpDocumentTest extends TestCase
 {
     public function createDocument(string $uri, string $content)
     {
-        $parser = new Tolerant\Parser();
+        $parser = new PhpParser\Parser();
         $docBlockFactory = DocBlockFactory::createInstance();
         $index = new Index;
         $definitionResolver = new DefinitionResolver($index);
@@ -44,7 +45,7 @@ class PhpDocumentTest extends TestCase
     }
 
     private function assertQualifiedName($node) {
-        $this->assertInstanceOf(Tolerant\Node\QualifiedName::class, $node);
+        $this->assertInstanceOf(Node\QualifiedName::class, $node);
     }
 
     public function testIsVendored()

@@ -3,68 +3,69 @@ declare(strict_types=1);
 
 namespace LanguageServer;
 
-use Microsoft\PhpParser as Tolerant;
+use Microsoft\PhpParser;
+use Microsoft\PhpParser\Node;
 
 class ParserHelpers {
-    public static function isConstantFetch(Tolerant\Node $node) : bool {
+    public static function isConstantFetch(Node $node) : bool {
         $parent = $node->parent;
         return
             (
-            $node instanceof Tolerant\Node\QualifiedName &&
+            $node instanceof Node\QualifiedName &&
             (
-//                $node->parent instanceof Tolerant\Node\Statement\ExpressionStatement ||
-                $parent instanceof Tolerant\Node\Expression ||
-                $parent instanceof Tolerant\Node\DelimitedList\ExpressionList ||
-                $parent instanceof Tolerant\Node\ArrayElement ||
-                ($parent instanceof Tolerant\Node\Parameter && $node->parent->default === $node) ||
-                $parent instanceof Tolerant\Node\StatementNode ||
-                $parent instanceof Tolerant\Node\CaseStatementNode
+//                $node->parent instanceof Node\Statement\ExpressionStatement ||
+                $parent instanceof Node\Expression ||
+                $parent instanceof Node\DelimitedList\ExpressionList ||
+                $parent instanceof Node\ArrayElement ||
+                ($parent instanceof Node\Parameter && $node->parent->default === $node) ||
+                $parent instanceof Node\StatementNode ||
+                $parent instanceof Node\CaseStatementNode
             ) &&
             !(
-                $parent instanceof Tolerant\Node\Expression\MemberAccessExpression ||
-                $parent instanceof Tolerant\Node\Expression\CallExpression ||
-                $parent instanceof Tolerant\Node\Expression\ObjectCreationExpression ||
-                $parent instanceof Tolerant\Node\Expression\ScopedPropertyAccessExpression ||
+                $parent instanceof Node\Expression\MemberAccessExpression ||
+                $parent instanceof Node\Expression\CallExpression ||
+                $parent instanceof Node\Expression\ObjectCreationExpression ||
+                $parent instanceof Node\Expression\ScopedPropertyAccessExpression ||
                 self::isFunctionLike($parent) ||
                 (
-                    $parent instanceof Tolerant\Node\Expression\BinaryExpression &&
-                    $parent->operator->kind === Tolerant\TokenKind::InstanceOfKeyword
+                    $parent instanceof Node\Expression\BinaryExpression &&
+                    $parent->operator->kind === PhpParser\TokenKind::InstanceOfKeyword
                 )
             ));
     }
 
-     public static function getFunctionLikeDeclarationFromParameter(Tolerant\Node\Parameter $node) {
+     public static function getFunctionLikeDeclarationFromParameter(Node\Parameter $node) {
         return $node->parent->parent;
     }
 
-    public static function isFunctionLike(Tolerant\Node $node) {
+    public static function isFunctionLike(Node $node) {
         return
-            $node instanceof Tolerant\Node\Statement\FunctionDeclaration ||
-            $node instanceof Tolerant\Node\MethodDeclaration ||
-            $node instanceof Tolerant\Node\Expression\AnonymousFunctionCreationExpression;
+            $node instanceof Node\Statement\FunctionDeclaration ||
+            $node instanceof Node\MethodDeclaration ||
+            $node instanceof Node\Expression\AnonymousFunctionCreationExpression;
     }
 
     public static function isBooleanExpression($expression) : bool {
-        if (!($expression instanceof Tolerant\Node\Expression\BinaryExpression)) {
+        if (!($expression instanceof Node\Expression\BinaryExpression)) {
             return false;
         }
         switch ($expression->operator->kind) {
-            case Tolerant\TokenKind::InstanceOfKeyword:
-            case Tolerant\TokenKind::GreaterThanToken:
-            case Tolerant\TokenKind::GreaterThanEqualsToken:
-            case Tolerant\TokenKind::LessThanToken:
-            case Tolerant\TokenKind::LessThanEqualsToken:
-            case Tolerant\TokenKind::AndKeyword:
-            case Tolerant\TokenKind::AmpersandAmpersandToken:
-            case Tolerant\TokenKind::LessThanEqualsGreaterThanToken:
-            case Tolerant\TokenKind::OrKeyword:
-            case Tolerant\TokenKind::BarBarToken:
-            case Tolerant\TokenKind::XorKeyword:
-            case Tolerant\TokenKind::ExclamationEqualsEqualsToken:
-            case Tolerant\TokenKind::ExclamationEqualsToken:
-            case Tolerant\TokenKind::CaretToken:
-            case Tolerant\TokenKind::EqualsEqualsEqualsToken:
-            case Tolerant\TokenKind::EqualsToken:
+            case PhpParser\TokenKind::InstanceOfKeyword:
+            case PhpParser\TokenKind::GreaterThanToken:
+            case PhpParser\TokenKind::GreaterThanEqualsToken:
+            case PhpParser\TokenKind::LessThanToken:
+            case PhpParser\TokenKind::LessThanEqualsToken:
+            case PhpParser\TokenKind::AndKeyword:
+            case PhpParser\TokenKind::AmpersandAmpersandToken:
+            case PhpParser\TokenKind::LessThanEqualsGreaterThanToken:
+            case PhpParser\TokenKind::OrKeyword:
+            case PhpParser\TokenKind::BarBarToken:
+            case PhpParser\TokenKind::XorKeyword:
+            case PhpParser\TokenKind::ExclamationEqualsEqualsToken:
+            case PhpParser\TokenKind::ExclamationEqualsToken:
+            case PhpParser\TokenKind::CaretToken:
+            case PhpParser\TokenKind::EqualsEqualsEqualsToken:
+            case PhpParser\TokenKind::EqualsToken:
                 return true;
         }
         return false;
@@ -73,13 +74,13 @@ class ParserHelpers {
 
     /**
      * Tries to get the parent property declaration given a Node
-     * @param Tolerant\Node $node
-     * @return Tolerant\Node\PropertyDeclaration | null $node
+     * @param Node $node
+     * @return Node\PropertyDeclaration | null $node
      */
-    public static function tryGetPropertyDeclaration(Tolerant\Node $node) {
-        if ($node instanceof Tolerant\Node\Expression\Variable &&
-            (($propertyDeclaration = $node->parent->parent) instanceof Tolerant\Node\PropertyDeclaration ||
-                ($propertyDeclaration = $propertyDeclaration->parent) instanceof Tolerant\Node\PropertyDeclaration)
+    public static function tryGetPropertyDeclaration(Node $node) {
+        if ($node instanceof Node\Expression\Variable &&
+            (($propertyDeclaration = $node->parent->parent) instanceof Node\PropertyDeclaration ||
+                ($propertyDeclaration = $propertyDeclaration->parent) instanceof Node\PropertyDeclaration)
         ) {
             return $propertyDeclaration;
         }
@@ -88,14 +89,14 @@ class ParserHelpers {
 
     /**
      * Tries to get the parent ConstDeclaration or ClassConstDeclaration given a Node
-     * @param Tolerant\Node $node
-     * @return Tolerant\Node\Statement\ConstDeclaration | Tolerant\Node\ClassConstDeclaration | null $node
+     * @param Node $node
+     * @return Node\Statement\ConstDeclaration | Node\ClassConstDeclaration | null $node
      */
-    public static function tryGetConstOrClassConstDeclaration(Tolerant\Node $node) {
+    public static function tryGetConstOrClassConstDeclaration(Node $node) {
         if (
-            $node instanceof Tolerant\Node\ConstElement && (
-                ($constDeclaration = $node->parent->parent) instanceof Tolerant\Node\ClassConstDeclaration ||
-                $constDeclaration instanceof Tolerant\Node\Statement\ConstDeclaration )
+            $node instanceof Node\ConstElement && (
+                ($constDeclaration = $node->parent->parent) instanceof Node\ClassConstDeclaration ||
+                $constDeclaration instanceof Node\Statement\ConstDeclaration )
             ) {
             return $constDeclaration;
         }
@@ -105,15 +106,15 @@ class ParserHelpers {
     /**
      * Returns true if the node is a usage of `define`.
      * e.g. define('TEST_DEFINE_CONSTANT', false);
-     * @param Tolerant\Node $node
+     * @param Node $node
      * @return bool
      */
-    public static function isConstDefineExpression(Tolerant\Node $node): bool {
-        return $node instanceof Tolerant\Node\Expression\CallExpression
-            && $node->callableExpression instanceof Tolerant\Node\QualifiedName
+    public static function isConstDefineExpression(Node $node): bool {
+        return $node instanceof Node\Expression\CallExpression
+            && $node->callableExpression instanceof Node\QualifiedName
             && strtolower($node->callableExpression->getText()) === 'define'
             && isset($node->argumentExpressionList->children[0])
-            && $node->argumentExpressionList->children[0]->expression instanceof Tolerant\Node\StringLiteral
+            && $node->argumentExpressionList->children[0]->expression instanceof Node\StringLiteral
             && isset($node->argumentExpressionList->children[2]);
     }
 }
