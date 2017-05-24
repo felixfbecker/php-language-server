@@ -61,7 +61,7 @@ class HoverTest extends ServerTestCase
             $reference->range->end
         )->wait();
         $this->assertEquals(new Hover([
-            new MarkedString('php', "<?php\npublic function testMethod(\$testParameter) : TestInterface"),
+            new MarkedString('php', "<?php\npublic function testMethod(\$testParameter): TestInterface"),
             'Non culpa nostrud mollit esse sunt laboris in irure ullamco cupidatat amet.'
         ], $reference->range), $result);
     }
