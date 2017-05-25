@@ -193,18 +193,10 @@ class Indexer
             $mem = (int)(memory_get_usage(true) / (1024 * 1024));
             $this->client->window->logMessage(
                 MessageType::INFO,
-                "All $count PHP files parsed in $duration seconds. $mem MiB allocated. " . \count($this->nullDocs) . " null docs"
+                "All $count PHP files parsed in $duration seconds. $mem MiB allocated."
             );
-            foreach ($this->nullDocs as $nullDoc) {
-                $this->client->window->logMessage(
-                    MessageType::INFO,
-                    $nullDoc
-                );
-            }
         });
     }
-
-    private $nullDocs = [];
 
     /**
      * @param array $files
@@ -224,9 +216,6 @@ class Indexer
                 $this->client->window->logMessage(MessageType::LOG, "Parsing $uri");
                 try {
                     $document = yield $this->documentLoader->load($uri);
-                    if ($document->getStmts() === null) {
-                        $this->nullDocs[] = $document->getUri();
-                    }
                     if (!isVendored($document, $this->composerJson)) {
                         $this->client->textDocument->publishDiagnostics($uri, $document->getDiagnostics());
                     }
