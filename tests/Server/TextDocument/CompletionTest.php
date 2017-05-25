@@ -499,7 +499,8 @@ class CompletionTest extends TestCase
         ], true), $items);
     }
 
-    private function assertCompletionsListSubset(CompletionList $subsetList, CompletionList $list) {
+    private function assertCompletionsListSubset(CompletionList $subsetList, CompletionList $list)
+    {
         foreach ($subsetList->items as $expectedItem) {
             $this->assertContains($expectedItem, $list->items, null, null, false);
         }

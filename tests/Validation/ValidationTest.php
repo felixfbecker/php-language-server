@@ -25,7 +25,8 @@ $frameworksDir = realpath(__DIR__ . '/../../validation/frameworks');
 
 class ValidationTest extends TestCase
 {
-    public function frameworkErrorProvider() {
+    public function frameworkErrorProvider()
+    {
         global $frameworksDir;
         $frameworks = glob($frameworksDir . '/*', GLOB_ONLYDIR);
 
@@ -61,7 +62,8 @@ class ValidationTest extends TestCase
      * @param $testCaseFile
      * @param $frameworkName
      */
-    public function testDefinitionErrors($testCaseFile, $frameworkName) {
+    public function testDefinitionErrors($testCaseFile, $frameworkName)
+    {
         $fileContents = file_get_contents($testCaseFile);
         $actualValues = $this->getActualTestValues($testCaseFile, $fileContents);
 
@@ -90,7 +92,8 @@ class ValidationTest extends TestCase
         }
     }
 
-    private function getActualTestValues($filename, $fileContents): array {
+    private function getActualTestValues($filename, $fileContents): array
+    {
         global $frameworksDir;
 
         $index = new Index();
@@ -113,7 +116,7 @@ class ValidationTest extends TestCase
 
         // Turn references into relative paths
         foreach ($refsAndDefs['references'] as $key => $list) {
-            $fixedPathRefs = array_map(function($ref) {
+            $fixedPathRefs = array_map(function ($ref) {
                 global $frameworksDir;
                 return str_replace($frameworksDir, '.', $ref);
             }, $list);
@@ -184,6 +187,7 @@ class ValidationTest extends TestCase
     }
 }
 
-function getExpectedValuesFile($testCaseFile): string {
+function getExpectedValuesFile($testCaseFile): string
+{
     return $testCaseFile . '.expected.json';
 }

@@ -2,7 +2,6 @@
 
 namespace LanguageServer;
 
-
 class ParserKind
 {
     const PHP_PARSER = 1;

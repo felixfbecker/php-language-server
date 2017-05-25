@@ -54,8 +54,7 @@ class SymbolInformation
             $symbol->kind = SymbolKind::CLASS_;
         } else if ($node instanceof Node\Statement\TraitDeclaration) {
             $symbol->kind = SymbolKind::CLASS_;
-        }
-        else if (\LanguageServer\ParserHelpers::isConstDefineExpression($node)) {
+        } else if (\LanguageServer\ParserHelpers::isConstDefineExpression($node)) {
             // constants with define() like
             // define('TEST_DEFINE_CONSTANT', false);
             $symbol->kind = SymbolKind::CONSTANT;
@@ -77,9 +76,7 @@ class SymbolInformation
             $symbol->kind = SymbolKind::PROPERTY;
         } else if ($node instanceof Node\ConstElement) {
             $symbol->kind = SymbolKind::CONSTANT;
-        }
-
-        else if (
+        } else if (
             (
                 ($node instanceof Node\Expression\AssignmentExpression)
                 && $node->leftOperand instanceof Node\Expression\Variable

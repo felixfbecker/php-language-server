@@ -8,7 +8,8 @@ use function LanguageServer\{strStartsWith};
 
 class UtilsTest extends TestCase
 {
-    public function testStrStartsWithDataProvider(): array {
+    public function testStrStartsWithDataProvider(): array
+    {
         return [
             ['a', 'b', false],
             ['', 'a', false],

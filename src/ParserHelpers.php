@@ -6,8 +6,10 @@ namespace LanguageServer;
 use Microsoft\PhpParser;
 use Microsoft\PhpParser\Node;
 
-class ParserHelpers {
-    public static function isConstantFetch(Node $node) : bool {
+class ParserHelpers
+{
+    public static function isConstantFetch(Node $node) : bool
+    {
         $parent = $node->parent;
         return
             (
@@ -34,18 +36,21 @@ class ParserHelpers {
             ));
     }
 
-     public static function getFunctionLikeDeclarationFromParameter(Node\Parameter $node) {
+    public static function getFunctionLikeDeclarationFromParameter(Node\Parameter $node)
+    {
         return $node->parent->parent;
     }
 
-    public static function isFunctionLike(Node $node) {
+    public static function isFunctionLike(Node $node)
+    {
         return
             $node instanceof Node\Statement\FunctionDeclaration ||
             $node instanceof Node\MethodDeclaration ||
             $node instanceof Node\Expression\AnonymousFunctionCreationExpression;
     }
 
-    public static function isBooleanExpression($expression) : bool {
+    public static function isBooleanExpression($expression) : bool
+    {
         if (!($expression instanceof Node\Expression\BinaryExpression)) {
             return false;
         }
@@ -77,7 +82,8 @@ class ParserHelpers {
      * @param Node $node
      * @return Node\PropertyDeclaration | null $node
      */
-    public static function tryGetPropertyDeclaration(Node $node) {
+    public static function tryGetPropertyDeclaration(Node $node)
+    {
         if ($node instanceof Node\Expression\Variable &&
             (($propertyDeclaration = $node->parent->parent) instanceof Node\PropertyDeclaration ||
                 ($propertyDeclaration = $propertyDeclaration->parent) instanceof Node\PropertyDeclaration)
@@ -92,7 +98,8 @@ class ParserHelpers {
      * @param Node $node
      * @return Node\Statement\ConstDeclaration | Node\ClassConstDeclaration | null $node
      */
-    public static function tryGetConstOrClassConstDeclaration(Node $node) {
+    public static function tryGetConstOrClassConstDeclaration(Node $node)
+    {
         if (
             $node instanceof Node\ConstElement && (
                 ($constDeclaration = $node->parent->parent) instanceof Node\ClassConstDeclaration ||
@@ -109,7 +116,8 @@ class ParserHelpers {
      * @param Node $node
      * @return bool
      */
-    public static function isConstDefineExpression(Node $node): bool {
+    public static function isConstDefineExpression(Node $node): bool
+    {
         return $node instanceof Node\Expression\CallExpression
             && $node->callableExpression instanceof Node\QualifiedName
             && strtolower($node->callableExpression->getText()) === 'define'

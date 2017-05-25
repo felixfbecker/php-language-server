@@ -150,8 +150,9 @@ class CompletionProvider
                 stripStringOverlap($doc->getRange(new Range(new Position(0, 0), $pos)), '<?php')
             );
             $list->items[] = $item;
-        }
-        // VARIABLES
+        } /*
+
+        VARIABLES */
         elseif (
             $node instanceof Node\Expression\Variable &&
             !(
@@ -172,11 +173,11 @@ class CompletionProvider
                 );
                 $list->items[] = $item;
             }
-        }
+        } /*
 
-        // MEMBER ACCESS EXPRESSIONS
-        //   $a->c#
-        //   $a->#
+        MEMBER ACCESS EXPRESSIONS
+           $a->c#
+           $a-># */
         elseif ($node instanceof Node\Expression\MemberAccessExpression) {
             $prefixes = FqnUtilities::getFqnsFromType(
                 $this->definitionResolver->resolveExpressionNodeToType($node->dereferencableExpression)
@@ -196,14 +197,14 @@ class CompletionProvider
                     }
                 }
             }
-        }
+        } /*
 
-        // SCOPED PROPERTY ACCESS EXPRESSIONS
-        //   A\B\C::$a#
-        //   A\B\C::#
-        //   A\B\C::$#
-        //   A\B\C::foo#
-        //   TODO: $a::#
+        SCOPED PROPERTY ACCESS EXPRESSIONS
+            A\B\C::$a#
+            A\B\C::#
+            A\B\C::$#
+            A\B\C::foo#
+            TODO: $a::# */
         elseif (
             ($scoped = $node->parent) instanceof Node\Expression\ScopedPropertyAccessExpression ||
             ($scoped = $node) instanceof Node\Expression\ScopedPropertyAccessExpression
@@ -230,7 +231,6 @@ class CompletionProvider
         } elseif (ParserHelpers::isConstantFetch($node) ||
             ($creation = $node->parent) instanceof Node\Expression\ObjectCreationExpression ||
             (($creation = $node) instanceof Node\Expression\ObjectCreationExpression)) {
-
             $class = isset($creation) ? $creation->classTypeDesignator : $node;
 
             $prefix = $class instanceof Node\QualifiedName
@@ -240,7 +240,7 @@ class CompletionProvider
             $namespaceDefinition = $node->getNamespaceDefinition();
 
             list($namespaceImportTable,,) = $node->getImportTablesForCurrentScope();
-            foreach ($namespaceImportTable as $alias=>$name) {
+            foreach ($namespaceImportTable as $alias => $name) {
                 $namespaceImportTable[$alias] = (string)$name;
             }
 
@@ -267,8 +267,7 @@ class CompletionProvider
 
                         if (!$isNotFullyQualified && ($fqnStartsWithPrefix || strStartsWith($fqn, $namespacePrefix . "\\" . $prefix))) {
                             // $fqn = $fqn;
-                        }
-                        elseif (!$isAliased && !array_search($fqn, array_values($namespaceImportTable))) {
+                        } elseif (!$isAliased && !array_search($fqn, array_values($namespaceImportTable))) {
                             if (empty($prefix)) {
                                 $fqn = '\\' . $fqn;
                             } elseif (strStartsWith($fqn, $namespacePrefix . "\\" . $prefix)) {
@@ -406,7 +405,7 @@ class CompletionProvider
                 && $node->leftOperand instanceof Node\Expression\Variable
                 && (empty($namePrefix) || strpos($node->leftOperand->getName(), $namePrefix) !== false);
         };
-        $isNotFunctionLike = function($node) {
+        $isNotFunctionLike = function ($node) {
             return !(
                 ParserHelpers::isFunctionLike($node) ||
                 $node instanceof Node\Statement\ClassDeclaration ||

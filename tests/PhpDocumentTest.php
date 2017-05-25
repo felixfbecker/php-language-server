@@ -44,7 +44,8 @@ class PhpDocumentTest extends TestCase
         $this->assertEquals('SomeClass', (string)$node);
     }
 
-    private function assertQualifiedName($node) {
+    private function assertQualifiedName($node)
+    {
         $this->assertInstanceOf(Node\QualifiedName::class, $node);
     }
 

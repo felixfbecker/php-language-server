@@ -10,7 +10,8 @@ use Sabre\Uri;
 use Microsoft\PhpParser;
 use Microsoft\PhpParser\Node;
 
-class TreeAnalyzer {
+class TreeAnalyzer
+{
     private $parser;
 
     /** @var Node */
@@ -28,7 +29,8 @@ class TreeAnalyzer {
      * @param DefinitionResolver $definitionResolver
      * @param $uri
      */
-    public function __construct($parser, $content, $docBlockFactory, $definitionResolver, $uri) {
+    public function __construct($parser, $content, $docBlockFactory, $definitionResolver, $uri)
+    {
         $this->uri = $uri;
         $this->parser = $parser;
         $this->docBlockFactory = $docBlockFactory;
@@ -41,7 +43,8 @@ class TreeAnalyzer {
         $this->collectDefinitionsAndReferences($this->stmts);
     }
 
-    public function collectDefinitionsAndReferences(Node $stmts) {
+    public function collectDefinitionsAndReferences(Node $stmts)
+    {
         foreach ($stmts::CHILD_NAMES as $name) {
             $node = $stmts->$name;
 
@@ -79,7 +82,8 @@ class TreeAnalyzer {
         }
     }
 
-    public function update($node) {
+    public function update($node)
+    {
         $fqn = ($this->definitionResolver)::getDefinedFqn($node);
         // Only index definitions with an FQN (no variables)
         if ($fqn !== null) {
@@ -98,7 +102,6 @@ class TreeAnalyzer {
                     ))
                 || ($parent instanceof Node\Statement\NamespaceDefinition && $parent->name !== null && $parent->name->getStart() === $node->getStart()))
             ) {
-
                 $fqn = $this->definitionResolver->resolveReferenceNodeToFqn($node);
                 if ($fqn !== null) {
                     $this->addReference($fqn, $node);
@@ -138,7 +141,8 @@ class TreeAnalyzer {
         $this->collectDefinitionsAndReferences($node);
     }
 
-    public function getDiagnostics() {
+    public function getDiagnostics()
+    {
         return $this->diagnostics ?? [];
     }
 
@@ -150,19 +154,23 @@ class TreeAnalyzer {
         $this->referenceNodes[$fqn][] = $node;
     }
 
-    public function getDefinitions() {
+    public function getDefinitions()
+    {
         return $this->definitions ?? [];
     }
 
-    public function getDefinitionNodes() {
+    public function getDefinitionNodes()
+    {
         return $this->definitionNodes ?? [];
     }
 
-    public function getReferenceNodes() {
+    public function getReferenceNodes()
+    {
         return $this->referenceNodes ?? [];
     }
 
-    public function getStmts() {
+    public function getStmts()
+    {
         return $this->stmts;
     }
     /**

@@ -139,7 +139,7 @@ class DefinitionResolver
         $docCommentText = $node->getDocCommentText();
         if ($docCommentText !== null) {
             list($namespaceImportTable,,) = $node->getImportTablesForCurrentScope();
-            foreach ($namespaceImportTable as $alias=>$name) {
+            foreach ($namespaceImportTable as $alias => $name) {
                 $namespaceImportTable[$alias] = (string)$name;
             }
             $namespaceDefinition = $node->getNamespaceDefinition();
@@ -197,8 +197,7 @@ class DefinitionResolver
 
         if ($node instanceof Node\Statement\ClassDeclaration &&
             // TODO - this should be bette rrpreented in the parser API
-            $node->classBaseClause !== null && $node->classBaseClause->baseClass !== null)
-        {
+            $node->classBaseClause !== null && $node->classBaseClause->baseClass !== null) {
             $def->extends = [(string)$node->classBaseClause->baseClass->getResolvedName()];
             // TODO - why is this represented as an array?
             // TODO interface implementations.
@@ -237,8 +236,7 @@ class DefinitionResolver
         // Ignore variable nodes that are part of ScopedPropertyAccessExpression,
         // as the scoped property access expression node is handled separately.
         if ($node instanceof Node\Expression\Variable &&
-            !($parent instanceof Node\Expression\ScopedPropertyAccessExpression))
-        {
+            !($parent instanceof Node\Expression\ScopedPropertyAccessExpression)) {
             // Resolve $this to the containing class definition.
             if ($node->getName() === 'this' && $fqn = $this->getContainingClassFqn($node)) {
                 return $this->index->getDefinition($fqn, false);
@@ -272,19 +270,16 @@ class DefinitionResolver
      * @param Node $node
      * @return string|null
      */
-    public function resolveReferenceNodeToFqn($node) {
+    public function resolveReferenceNodeToFqn($node)
+    {
         // TODO all name tokens should be a part of a node
         if ($node instanceof Node\QualifiedName) {
             return $this->resolveQualifiedNameNodeToFqn($node);
-        }
-
-        else if ($node instanceof Node\Expression\MemberAccessExpression) {
+        } else if ($node instanceof Node\Expression\MemberAccessExpression) {
             return $this->resolveMemberAccessExpressionNodeToFqn($node);
-        }
-        else if (ParserHelpers::isConstantFetch($node)) {
+        } else if (ParserHelpers::isConstantFetch($node)) {
             return (string)($node->getNamespacedName());
-        }
-        else if (
+        } else if (
             // A\B::C - constant access expression
             $node instanceof Node\Expression\ScopedPropertyAccessExpression
             && !($node->memberName instanceof Node\Expression\Variable)
@@ -300,7 +295,8 @@ class DefinitionResolver
         return null;
     }
 
-    private function resolveQualifiedNameNodeToFqn(Node\QualifiedName $node) {
+    private function resolveQualifiedNameNodeToFqn(Node\QualifiedName $node)
+    {
         $parent = $node->parent;
 
         if ($parent instanceof Node\TraitSelectOrAliasClause) {
@@ -346,7 +342,8 @@ class DefinitionResolver
         return $name;
     }
 
-    private function resolveMemberAccessExpressionNodeToFqn(Node\Expression\MemberAccessExpression $access) {
+    private function resolveMemberAccessExpressionNodeToFqn(Node\Expression\MemberAccessExpression $access)
+    {
         if ($access->memberName instanceof Node\Expression) {
             // Cannot get definition if right-hand side is expression
             return null;
@@ -393,7 +390,6 @@ class DefinitionResolver
         while ($implementorFqn = array_shift($implementorFqns)) {
             // If the member FQN exists, return it
             if ($this->index->getDefinition($implementorFqn . $memberSuffix)) {
-
                 return $implementorFqn . $memberSuffix;
             }
             // Get Definition of implementor class
@@ -413,7 +409,8 @@ class DefinitionResolver
         return $classFqn . $memberSuffix;
     }
 
-    private function resolveScopedPropertyAccessExpressionNodeToFqn(Node\Expression\ScopedPropertyAccessExpression $scoped) {
+    private function resolveScopedPropertyAccessExpressionNodeToFqn(Node\Expression\ScopedPropertyAccessExpression $scoped)
+    {
         if ($scoped->scopeResolutionQualifier instanceof Node\Expression\Variable) {
             $varType = $this->getTypeFromNode($scoped->scopeResolutionQualifier);
             if ($varType === null) {
@@ -502,7 +499,6 @@ class DefinitionResolver
             // If a function is met, check the parameters and use statements
             if (ParserHelpers::isFunctionLike($n)) {
                 if ($n->parameters !== null) {
-
                     foreach ($n->parameters->getElements() as $param) {
                         if ($param->getName() === $name) {
                             return $param;
@@ -513,8 +509,7 @@ class DefinitionResolver
                 if ($n instanceof Node\Expression\AnonymousFunctionCreationExpression &&
                     $n->anonymousFunctionUseClause !== null &&
                     $n->anonymousFunctionUseClause->useVariableNameList !== null) {
-                    foreach ($n->anonymousFunctionUseClause->useVariableNameList->getElements() as $use
-                    ) {
+                    foreach ($n->anonymousFunctionUseClause->useVariableNameList->getElements() as $use) {
                         if ($use->getName() === $name) {
                             return $use;
                         }
@@ -585,7 +580,6 @@ class DefinitionResolver
                 $expr->callableExpression instanceof Node\Expression\ScopedPropertyAccessExpression ||
                 $expr->callableExpression instanceof Node\Expression\MemberAccessExpression)
         ) {
-
             // Find the function definition
             if ($expr->callableExpression instanceof Node\Expression) {
                 // Cannot get type for dynamic function call
@@ -627,36 +621,36 @@ class DefinitionResolver
 
         // MEMBER ACCESS EXPRESSION
         if ($expr instanceof Node\Expression\MemberAccessExpression) {
-           if ($expr->memberName instanceof Node\Expression) {
-               return new Types\Mixed;
-           }
-           $var = $expr->dereferencableExpression;
+            if ($expr->memberName instanceof Node\Expression) {
+                return new Types\Mixed;
+            }
+            $var = $expr->dereferencableExpression;
 
            // Resolve object
-           $objType = $this->resolveExpressionNodeToType($var);
-           if (!($objType instanceof Types\Compound)) {
-               $objType = new Types\Compound([$objType]);
-           }
-           for ($i = 0; $t = $objType->get($i); $i++) {
-               if ($t instanceof Types\This) {
-                   $classFqn = self::getContainingClassFqn($expr);
-                   if ($classFqn === null) {
-                       return new Types\Mixed;
-                   }
-               } else if (!($t instanceof Types\Object_) || $t->getFqsen() === null) {
-                   return new Types\Mixed;
-               } else {
-                   $classFqn = substr((string)$t->getFqsen(), 1);
-               }
-               $fqn = $classFqn . '->' . $expr->memberName->getText($expr->getFileContents());
-               if ($expr->parent instanceof Node\Expression\CallExpression) {
-                   $fqn .= '()';
-               }
-               $def = $this->index->getDefinition($fqn);
-               if ($def !== null) {
-                   return $def->type;
-               }
-           }
+            $objType = $this->resolveExpressionNodeToType($var);
+            if (!($objType instanceof Types\Compound)) {
+                $objType = new Types\Compound([$objType]);
+            }
+            for ($i = 0; $t = $objType->get($i); $i++) {
+                if ($t instanceof Types\This) {
+                    $classFqn = self::getContainingClassFqn($expr);
+                    if ($classFqn === null) {
+                        return new Types\Mixed;
+                    }
+                } else if (!($t instanceof Types\Object_) || $t->getFqsen() === null) {
+                    return new Types\Mixed;
+                } else {
+                    $classFqn = substr((string)$t->getFqsen(), 1);
+                }
+                 $fqn = $classFqn . '->' . $expr->memberName->getText($expr->getFileContents());
+                if ($expr->parent instanceof Node\Expression\CallExpression) {
+                    $fqn .= '()';
+                }
+                 $def = $this->index->getDefinition($fqn);
+                if ($def !== null) {
+                    return $def->type;
+                }
+            }
         }
 
         // SCOPED PROPERTY ACCESS EXPRESSION
@@ -1023,8 +1017,7 @@ class DefinitionResolver
                 ParserHelpers::tryGetPropertyDeclaration($node) ??
                 ParserHelpers::tryGetConstOrClassConstDeclaration($node)
             ) !== null ||
-            ($node = $node->parent) instanceof Node\Expression\AssignmentExpression)
-        {
+            ($node = $node->parent) instanceof Node\Expression\AssignmentExpression) {
             $declarationNode = $declarationNode ?? $node;
 
             // Property, constant or variable
@@ -1084,25 +1077,27 @@ class DefinitionResolver
 
         // INPUT                   OUTPUT:
         // namespace A\B;           A\B
-        else if ($node instanceof Node\Statement\NamespaceDefinition && $node->name instanceof Node\QualifiedName) {
+        if ($node instanceof Node\Statement\NamespaceDefinition && $node->name instanceof Node\QualifiedName) {
             $name = (string) PhpParser\ResolvedName::buildName($node->name->nameParts, $node->getFileContents());
             return \count($name) > 0 ? $name : null;
         }
+
         // INPUT                   OUTPUT:
         // namespace A\B;
         // function a();           A\B\a();
-        else if ($node instanceof Node\Statement\FunctionDeclaration) {
+        if ($node instanceof Node\Statement\FunctionDeclaration) {
             // Function: use functionName() as the name
             $name = (string)$node->getNamespacedName();
             return \count($name) > 0 ? $name . '()' : null;
         }
+
         // INPUT                        OUTPUT
         // namespace A\B;
         // class C {
         //   function a () {}           A\B\C->a()
         //   static function b() {}     A\B\C::b()
         // }
-        else if ($node instanceof Node\MethodDeclaration) {
+        if ($node instanceof Node\MethodDeclaration) {
             // Class method: use ClassName->methodName() as name
             $class = $node->getFirstAncestor(
                 Node\Expression\ObjectCreationExpression::class,
@@ -1127,7 +1122,7 @@ class DefinitionResolver
         //   static $a = 4, $b = 4      A\B\C::$a, A\B\C::$b
         //   $a = 4, $b = 4             A\B\C->$a, A\B\C->$b // TODO verify variable name
         // }
-        else if (
+        if (
             ($propertyDeclaration = ParserHelpers::tryGetPropertyDeclaration($node)) !== null &&
             ($classDeclaration =
                 $node->getFirstAncestor(
@@ -1136,8 +1131,7 @@ class DefinitionResolver
                     Node\Statement\InterfaceDeclaration::class,
                     Node\Statement\TraitDeclaration::class
                 )
-            ) !== null && isset($classDeclaration->name))
-        {
+            ) !== null && isset($classDeclaration->name)) {
             $name = $node->getName();
             if ($propertyDeclaration->isStatic()) {
                 // Static Property: use ClassName::$propertyName as name
@@ -1154,7 +1148,7 @@ class DefinitionResolver
         // class C {
         //   const $a, $b = 4           A\B\C::$a(), A\B\C::$b
         // }
-        else if (($constDeclaration = ParserHelpers::tryGetConstOrClassConstDeclaration($node)) !== null) {
+        if (($constDeclaration = ParserHelpers::tryGetConstOrClassConstDeclaration($node)) !== null) {
             if ($constDeclaration instanceof Node\Statement\ConstDeclaration) {
                 // Basic constant: use CONSTANT_NAME as name
                 return (string)$node->getNamespacedName();
@@ -1174,7 +1168,7 @@ class DefinitionResolver
             return (string)$classDeclaration->getNamespacedName() . '::' . $node->getName();
         }
 
-        else if (ParserHelpers::isConstDefineExpression($node)) {
+        if (ParserHelpers::isConstDefineExpression($node)) {
             return $node->argumentExpressionList->children[0]->expression->getStringContentsText();
         }
 
@@ -1186,7 +1180,8 @@ class DefinitionResolver
      * @param $variableName
      * @return DocBlock\Tags\Param | null
      */
-    private function tryGetDocBlockTagForParameter($docBlock, $variableName) {
+    private function tryGetDocBlockTagForParameter($docBlock, $variableName)
+    {
         if ($docBlock === null) {
             return null;
         }
