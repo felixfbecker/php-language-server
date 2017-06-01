@@ -166,7 +166,10 @@ class ValidationTest extends TestCase
         return $defsForAssert;
     }
 
-    private function filterSkippedReferences(&$references): void
+    /**
+     * @return void
+     */
+    private function filterSkippedReferences(&$references)
     {
         $skipped = [
             'false', 'true', 'null', 'FALSE', 'TRUE', 'NULL',
