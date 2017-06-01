@@ -278,7 +278,7 @@ class CompletionProvider
                         } elseif (!$isAliased) {
                             continue;
                         }
-                    } elseif ($fqnStartsWithPrefix && $class->isFullyQualifiedName()) {
+                    } elseif ($fqnStartsWithPrefix && $class instanceof Node\QualifiedName && $class->isFullyQualifiedName()) {
                         $fqn = '\\' . $fqn;
                     }
 
