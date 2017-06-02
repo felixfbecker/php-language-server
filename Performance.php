@@ -38,17 +38,12 @@ foreach($frameworks as $framework) {
         $start = microtime(true);
 
         foreach ($testProviderArray as $idx => $testCaseFile) {
-            // if ($idx < 20) {
-            //     continue;
-            // }
             if (filesize($testCaseFile) > 10000) {
                 continue;
             }
             if ($idx % 1000 === 0) {
                 echo "$idx\n";
             }
-
-//        echo "$idx=>$testCaseFile\n";
 
             $fileContents = file_get_contents($testCaseFile);
 
