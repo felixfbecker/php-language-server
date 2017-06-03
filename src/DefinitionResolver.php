@@ -18,7 +18,7 @@ class DefinitionResolver
      *
      * @var \LanguageServer\Index\ReadableIndex
      */
-    protected $index;
+    private $index;
 
     /**
      * Resolves strings to a type object.
