@@ -400,30 +400,29 @@ class CompletionProvider
         $vars = [];
         // If the child node is a variable assignment, save it
 
-        $isAssignmentToVariable = function ($node) use ($namePrefix) {
-            return $node instanceof Node\Expression\AssignmentExpression
-                && $node->leftOperand instanceof Node\Expression\Variable
-                && (empty($namePrefix) || strpos($node->leftOperand->getName(), $namePrefix) !== false);
-        };
-        $isNotFunctionLike = function ($node) {
-            return !(
-                ParserHelpers::isFunctionLike($node) ||
-                $node instanceof Node\Statement\ClassDeclaration ||
-                $node instanceof Node\Statement\InterfaceDeclaration ||
-                $node instanceof Node\Statement\TraitDeclaration
-            );
+        $isAssignmentToVariable = function ($node) {
+            return $node instanceof Node\Expression\AssignmentExpression;
         };
 
-        if ($isAssignmentToVariable($node)) {
+        if ($this->isAssignmentToVariableWithPrefix($node, $namePrefix)) {
             $vars[] = $node->leftOperand;
         } else {
-            foreach ($node->getDescendantNodes($isNotFunctionLike) as $descendantNode) {
-                if ($isAssignmentToVariable($descendantNode)) {
+            // Get all descendent variables, then filter to ones that start with $namePrefix.
+            // Avoiding closure usage in tight loop
+            foreach ($node->getDescendantNodes($isAssignmentToVariable) as $descendantNode) {
+                if ($this->isAssignmentToVariableWithPrefix($descendantNode, $namePrefix)) {
                     $vars[] = $descendantNode->leftOperand;
                 }
             }
         }
 
         return $vars;
+    }
+
+    private function isAssignmentToVariableWithPrefix($node, $namePrefix)
+    {
+        return $node instanceof Node\Expression\AssignmentExpression
+            && $node->leftOperand instanceof Node\Expression\Variable
+            && (empty($namePrefix) || strpos($node->leftOperand->getName(), $namePrefix) !== false);
     }
 }
