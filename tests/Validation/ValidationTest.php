@@ -103,7 +103,7 @@ class ValidationTest extends TestCase
 
         $document = new PhpDocument($filename, $fileContents, $index, $parser, $docBlockFactory, $definitionResolver);
 
-        $actualRefs = $index->references;
+        $actualRefs = $index->getReferences();
         $this->filterSkippedReferences($actualRefs);
         $actualDefs = $this->getTestValuesFromDefs($document->getDefinitions());
 

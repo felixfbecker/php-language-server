@@ -26,7 +26,7 @@ class Index implements ReadableIndex, \Serializable
      *
      * @var string[][]
      */
-    public $references = [];
+    private $references = [];
 
     /**
      * @var bool
@@ -148,6 +148,17 @@ class Index implements ReadableIndex, \Serializable
     public function getReferenceUris(string $fqn): array
     {
         return $this->references[$fqn] ?? [];
+    }
+
+    /**
+     * For test use.
+     * Returns all references, keyed by fqn.
+     *
+     * @return string[][]
+     */
+    public function getReferences(): array
+    {
+        return $this->references;
     }
 
     /**
