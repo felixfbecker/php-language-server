@@ -158,7 +158,7 @@ class CompletionProvider
             !(
                 $node->parent instanceof Node\Expression\ScopedPropertyAccessExpression &&
                 $node->parent->memberName === $node)
-         ) {
+        ) {
             // Find variables, parameters and use statements in the scope
             $namePrefix = $node->getName() ?? '';
             foreach ($this->suggestVariablesAtNode($node, $namePrefix) as $var) {

@@ -642,11 +642,11 @@ class DefinitionResolver
                 } else {
                     $classFqn = substr((string)$t->getFqsen(), 1);
                 }
-                 $fqn = $classFqn . '->' . $expr->memberName->getText($expr->getFileContents());
+                $fqn = $classFqn . '->' . $expr->memberName->getText($expr->getFileContents());
                 if ($expr->parent instanceof Node\Expression\CallExpression) {
                     $fqn .= '()';
                 }
-                 $def = $this->index->getDefinition($fqn);
+                $def = $this->index->getDefinition($fqn);
                 if ($def !== null) {
                     return $def->type;
                 }
