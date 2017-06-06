@@ -16,7 +16,7 @@ use LanguageServer\ContentRetriever\{ContentRetriever, ClientContentRetriever, F
 use LanguageServer\Index\{DependenciesIndex, GlobalIndex, Index, ProjectIndex, StubsIndex};
 use LanguageServer\Cache\{FileSystemCache, ClientCache};
 use AdvancedJsonRpc;
-use Sabre\Event\{Promise};
+use Sabre\Event\Promise;
 use function Sabre\Event\coroutine;
 use Throwable;
 use Webmozart\PathUtil\Path;
