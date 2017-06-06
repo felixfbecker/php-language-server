@@ -544,16 +544,16 @@ class DefinitionResolver
      */
     public function resolveExpressionNodeToType($expr)
     {
-        if ($expr == null || $expr instanceof PhpParser\MissingToken || $expr instanceof PhpParser\SkippedToken) {
-            // TODO some members are null or Missing/SkippedToken
-            // How do we handle this more generally?
-            return new Types\Mixed;
-        }
-
         // PARENTHESIZED EXPRESSION
         // Retrieve inner expression from parenthesized expression
         while ($expr instanceof Node\Expression\ParenthesizedExpression) {
             $expr = $expr->expression;
+        }
+
+        if ($expr == null || $expr instanceof PhpParser\MissingToken || $expr instanceof PhpParser\SkippedToken) {
+            // TODO some members are null or Missing/SkippedToken
+            // How do we handle this more generally?
+            return new Types\Mixed;
         }
 
         // VARIABLE
