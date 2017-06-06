@@ -229,7 +229,7 @@ class DefinitionResolver
      * @param Node $node Any reference node
      * @return Definition|null
      */
-    public function resolveReferenceNodeToDefinition($node)
+    public function resolveReferenceNodeToDefinition(Node $node)
     {
         $parent = $node->parent;
         // Variables are not indexed globally, as they stay in the file scope anyway.
@@ -270,7 +270,7 @@ class DefinitionResolver
      * @param Node $node
      * @return string|null
      */
-    public function resolveReferenceNodeToFqn($node)
+    public function resolveReferenceNodeToFqn(Node $node)
     {
         // TODO all name tokens should be a part of a node
         if ($node instanceof Node\QualifiedName) {
