@@ -168,7 +168,7 @@ class DefinitionResolver
      * @param string $fqn
      * @return Definition
      */
-    public function createDefinitionFromNode($node, string $fqn = null): Definition
+    public function createDefinitionFromNode(Node $node, string $fqn = null): Definition
     {
         $def = new Definition;
         $def->fqn = $fqn;
