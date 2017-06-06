@@ -198,11 +198,9 @@ class DefinitionResolver
         );
 
         if ($node instanceof Node\Statement\ClassDeclaration &&
-            // TODO - this should be bette rrpreented in the parser API
+            // TODO - this should be better represented in the parser API
             $node->classBaseClause !== null && $node->classBaseClause->baseClass !== null) {
             $def->extends = [(string)$node->classBaseClause->baseClass->getResolvedName()];
-            // TODO - why is this represented as an array?
-            // TODO interface implementations.
         } elseif (
             $node instanceof Node\Statement\InterfaceDeclaration &&
             // TODO - this should be better represented in the parser API
