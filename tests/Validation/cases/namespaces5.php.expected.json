@@ -24,6 +24,7 @@
     },
     "definitions": {
         "B": {
+            "fqn": "B",
             "extends": [],
             "isGlobal": true,
             "isStatic": false,
@@ -37,6 +38,7 @@
                 "containerName": ""
             },
             "type": null,
+            "declarationLine": "namespace B;",
             "documentation": null
         }
     }

@@ -6,6 +6,7 @@
     },
     "definitions": {
         "A": {
+            "fqn": "A",
             "extends": [],
             "isGlobal": true,
             "isStatic": false,
@@ -19,9 +20,11 @@
                 "containerName": ""
             },
             "type": null,
+            "declarationLine": "class A {",
             "documentation": null
         },
         "A->a()": {
+            "fqn": "A->a()",
             "extends": [],
             "isGlobal": false,
             "isStatic": false,
@@ -36,6 +39,7 @@
             },
             "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
             "type": {},
+            "declarationLine": "function a () {",
             "documentation": null
         }
     }

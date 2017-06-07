@@ -9,6 +9,7 @@
     },
     "definitions": {
         "Foo": {
+            "fqn": "Foo",
             "extends": [],
             "isGlobal": true,
             "isStatic": false,
@@ -22,9 +23,11 @@
                 "containerName": ""
             },
             "type": null,
+            "declarationLine": "class Foo {",
             "documentation": null
         },
         "Foo->bar": {
+            "fqn": "Foo->bar",
             "extends": [],
             "isGlobal": false,
             "isStatic": false,
@@ -39,9 +42,11 @@
             },
             "type__class": "phpDocumentor\\Reflection\\Types\\Object_",
             "type": {},
+            "declarationLine": "protected $bar;",
             "documentation": null
         },
         "Foo->foo()": {
+            "fqn": "Foo->foo()",
             "extends": [],
             "isGlobal": false,
             "isStatic": false,
@@ -56,6 +61,7 @@
             },
             "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
             "type": {},
+            "declarationLine": "public function foo () {",
             "documentation": null
         }
     }

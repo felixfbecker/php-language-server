@@ -2,6 +2,7 @@
     "references": [],
     "definitions": {
         "B": {
+            "fqn": "B",
             "extends": [],
             "isGlobal": true,
             "isStatic": false,
@@ -15,9 +16,11 @@
                 "containerName": ""
             },
             "type": null,
+            "declarationLine": "class B",
             "documentation": null
         },
         "B->hi": {
+            "fqn": "B->hi",
             "extends": [],
             "isGlobal": false,
             "isStatic": false,
@@ -32,9 +35,11 @@
             },
             "type__class": "phpDocumentor\\Reflection\\Types\\Integer",
             "type": {},
+            "declarationLine": "public $hi;",
             "documentation": null
         },
         "B->a()": {
+            "fqn": "B->a()",
             "extends": [],
             "isGlobal": false,
             "isStatic": false,
@@ -49,6 +54,7 @@
             },
             "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
             "type": {},
+            "declarationLine": "function a () {",
             "documentation": null
         }
     }

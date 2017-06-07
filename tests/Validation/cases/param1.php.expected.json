@@ -6,6 +6,7 @@
     },
     "definitions": {
         "MyNamespace": {
+            "fqn": "MyNamespace",
             "extends": [],
             "isGlobal": true,
             "isStatic": false,
@@ -19,9 +20,11 @@
                 "containerName": ""
             },
             "type": null,
+            "declarationLine": "namespace MyNamespace;",
             "documentation": null
         },
         "MyNamespace\\init()": {
+            "fqn": "MyNamespace\\init()",
             "extends": [],
             "isGlobal": true,
             "isStatic": false,
@@ -36,6 +39,7 @@
             },
             "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
             "type": {},
+            "declarationLine": "function init(Hi $view)",
             "documentation": null
         }
     }

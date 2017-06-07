@@ -15,6 +15,7 @@
     },
     "definitions": {
         "MyNamespace1": {
+            "fqn": "MyNamespace1",
             "extends": [],
             "isGlobal": true,
             "isStatic": false,
@@ -28,9 +29,11 @@
                 "containerName": ""
             },
             "type": null,
+            "declarationLine": "namespace MyNamespace1;",
             "documentation": null
         },
         "MyNamespace1\\B": {
+            "fqn": "MyNamespace1\\B",
             "extends": [],
             "isGlobal": true,
             "isStatic": false,
@@ -44,9 +47,11 @@
                 "containerName": "MyNamespace1"
             },
             "type": null,
+            "declarationLine": "class B {",
             "documentation": null
         },
         "MyNamespace1\\B->b()": {
+            "fqn": "MyNamespace1\\B->b()",
             "extends": [],
             "isGlobal": false,
             "isStatic": false,
@@ -61,9 +66,11 @@
             },
             "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
             "type": {},
+            "declarationLine": "function b() {",
             "documentation": null
         },
         "MyNamespace2": {
+            "fqn": "MyNamespace2",
             "extends": [],
             "isGlobal": true,
             "isStatic": false,
@@ -77,9 +84,11 @@
                 "containerName": ""
             },
             "type": null,
+            "declarationLine": "namespace MyNamespace2;",
             "documentation": null
         },
         "MyNamespace2\\A": {
+            "fqn": "MyNamespace2\\A",
             "extends": [
                 "MyNamespace2\\MyNamespace1\\B"
             ],
@@ -95,9 +104,11 @@
                 "containerName": "MyNamespace2"
             },
             "type": null,
+            "declarationLine": "class A extends MyNamespace1\\B {",
             "documentation": null
         },
         "MyNamespace2\\A->a()": {
+            "fqn": "MyNamespace2\\A->a()",
             "extends": [],
             "isGlobal": false,
             "isStatic": false,
@@ -112,6 +123,7 @@
             },
             "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
             "type": {},
+            "declarationLine": "function a () {",
             "documentation": null
         }
     }

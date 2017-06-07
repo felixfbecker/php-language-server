@@ -2,6 +2,7 @@
     "references": [],
     "definitions": {
         "A": {
+            "fqn": "A",
             "extends": [],
             "isGlobal": true,
             "isStatic": false,
@@ -15,9 +16,11 @@
                 "containerName": ""
             },
             "type": null,
+            "declarationLine": "class A {",
             "documentation": null
         },
         "A->foo": {
+            "fqn": "A->foo",
             "extends": [],
             "isGlobal": false,
             "isStatic": false,
@@ -32,6 +35,7 @@
             },
             "type__class": "phpDocumentor\\Reflection\\Types\\Array_",
             "type": {},
+            "declarationLine": "protected $foo;",
             "documentation": null
         }
     }

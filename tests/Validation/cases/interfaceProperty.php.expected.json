@@ -2,6 +2,7 @@
     "references": [],
     "definitions": {
         "A": {
+            "fqn": "A",
             "extends": [],
             "isGlobal": true,
             "isStatic": false,
@@ -15,6 +16,7 @@
                 "containerName": ""
             },
             "type": null,
+            "declarationLine": "interface A  {",
             "documentation": null
         }
     }

@@ -2,6 +2,7 @@
     "references": [],
     "definitions": {
         "MyClass": {
+            "fqn": "MyClass",
             "extends": [],
             "isGlobal": true,
             "isStatic": false,
@@ -15,9 +16,11 @@
                 "containerName": ""
             },
             "type": null,
+            "declarationLine": "class MyClass",
             "documentation": null
         },
         "MyClass->mainPropertyName": {
+            "fqn": "MyClass->mainPropertyName",
             "extends": [],
             "isGlobal": false,
             "isStatic": false,
@@ -32,6 +35,7 @@
             },
             "type__class": "phpDocumentor\\Reflection\\Types\\String_",
             "type": {},
+            "declarationLine": "protected $mainPropertyName;",
             "documentation": "The name of the main property, or NULL if there is none."
         }
     }

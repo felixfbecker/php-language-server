@@ -9,6 +9,7 @@
     },
     "definitions": {
         "MyNamespace": {
+            "fqn": "MyNamespace",
             "extends": [],
             "isGlobal": true,
             "isStatic": false,
@@ -22,9 +23,11 @@
                 "containerName": ""
             },
             "type": null,
+            "declarationLine": "namespace MyNamespace;",
             "documentation": null
         },
         "MyNamespace\\A": {
+            "fqn": "MyNamespace\\A",
             "extends": [
                 "MyNamespace\\B"
             ],
@@ -40,9 +43,11 @@
                 "containerName": "MyNamespace"
             },
             "type": null,
+            "declarationLine": "class A extends B {",
             "documentation": null
         },
         "MyNamespace\\A->a()": {
+            "fqn": "MyNamespace\\A->a()",
             "extends": [],
             "isGlobal": false,
             "isStatic": false,
@@ -57,6 +62,7 @@
             },
             "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
             "type": {},
+            "declarationLine": "function a () {",
             "documentation": null
         }
     }

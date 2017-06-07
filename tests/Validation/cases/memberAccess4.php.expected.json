@@ -15,6 +15,7 @@
     },
     "definitions": {
         "MyNamespace": {
+            "fqn": "MyNamespace",
             "extends": [],
             "isGlobal": true,
             "isStatic": false,
@@ -28,9 +29,11 @@
                 "containerName": ""
             },
             "type": null,
+            "declarationLine": "namespace MyNamespace;",
             "documentation": null
         },
         "MyNamespace\\A": {
+            "fqn": "MyNamespace\\A",
             "extends": [],
             "isGlobal": true,
             "isStatic": false,
@@ -44,9 +47,11 @@
                 "containerName": "MyNamespace"
             },
             "type": null,
+            "declarationLine": "class A {",
             "documentation": null
         },
         "MyNamespace\\A->testRequest()": {
+            "fqn": "MyNamespace\\A->testRequest()",
             "extends": [],
             "isGlobal": false,
             "isStatic": false,
@@ -61,6 +66,7 @@
             },
             "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
             "type": {},
+            "declarationLine": "public function testRequest()",
             "documentation": null
         }
     }

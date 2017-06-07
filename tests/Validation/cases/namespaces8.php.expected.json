@@ -6,6 +6,7 @@
     },
     "definitions": {
         "LanguageServer\\Tests\\Utils": {
+            "fqn": "LanguageServer\\Tests\\Utils",
             "extends": [],
             "isGlobal": true,
             "isStatic": false,
@@ -19,6 +20,7 @@
                 "containerName": "LanguageServer\\Tests"
             },
             "type": null,
+            "declarationLine": "namespace LanguageServer\\Tests\\Utils;",
             "documentation": null
         }
     }

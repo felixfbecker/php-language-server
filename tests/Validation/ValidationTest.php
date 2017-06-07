@@ -92,8 +92,8 @@ class ValidationTest extends TestCase
         $this->filterSkippedReferences($actualRefs);
         $actualDefs = $this->getTestValuesFromDefs($document->getDefinitions());
 
-        // TODO - there's probably a more PHP-typical way to do this. Need to compare the objects parsed from json files
-        // to the real results. json_decode returns stdClass Objects, not arrays.
+        // There's probably a more PHP-typical way to do this. Need to compare the objects parsed from json files
+        // to the real objects.
         $refsAndDefs = array(
             'references' => json_decode(json_encode($actualRefs)),
             'definitions' => json_decode(json_encode($actualDefs))
@@ -126,14 +126,13 @@ class ValidationTest extends TestCase
      */
     private function getTestValuesFromDefs($definitions): array
     {
-        // TODO - use reflection to read these properties
-        $propertyNames = ['extends', 'isGlobal', 'isStatic', 'canBeInstantiated', 'symbolInformation', 'type', 'documentation'];
+        $propertyNames = get_class_vars(Definition::class);
 
         $defsForAssert = [];
         foreach ($definitions as $definition) {
             $fqn = $definition->fqn;
 
-            foreach ($propertyNames as $propertyName) {
+            foreach ($propertyNames as $propertyName => $value) {
                 if ($propertyName === 'symbolInformation') {
                     // Range is very often different - don't check it, for now
                     unset($definition->$propertyName->location->range);

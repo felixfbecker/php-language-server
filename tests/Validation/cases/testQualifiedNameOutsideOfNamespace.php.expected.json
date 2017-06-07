@@ -6,6 +6,7 @@
     },
     "definitions": {
         "SomeNamespace": {
+            "fqn": "SomeNamespace",
             "extends": [],
             "isGlobal": true,
             "isStatic": false,
@@ -19,6 +20,7 @@
                 "containerName": ""
             },
             "type": null,
+            "declarationLine": "namespace SomeNamespace { }",
             "documentation": null
         }
     }

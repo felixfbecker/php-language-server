@@ -9,6 +9,7 @@
     },
     "definitions": {
         "TestNamespace": {
+            "fqn": "TestNamespace",
             "extends": [],
             "isGlobal": true,
             "isStatic": false,
@@ -22,9 +23,11 @@
                 "containerName": ""
             },
             "type": null,
+            "declarationLine": "namespace TestNamespace;",
             "documentation": null
         },
         "TestNamespace\\TestClass": {
+            "fqn": "TestNamespace\\TestClass",
             "extends": [],
             "isGlobal": true,
             "isStatic": false,
@@ -38,9 +41,11 @@
                 "containerName": "TestNamespace"
             },
             "type": null,
+            "declarationLine": "class TestClass",
             "documentation": null
         },
         "TestNamespace\\TestClass->testProperty": {
+            "fqn": "TestNamespace\\TestClass->testProperty",
             "extends": [],
             "isGlobal": false,
             "isStatic": false,
@@ -55,9 +60,11 @@
             },
             "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
             "type": {},
+            "declarationLine": "public $testProperty;",
             "documentation": null
         },
         "TestNamespace\\TestClass->testMethod()": {
+            "fqn": "TestNamespace\\TestClass->testMethod()",
             "extends": [],
             "isGlobal": false,
             "isStatic": false,
@@ -72,6 +79,7 @@
             },
             "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
             "type": {},
+            "declarationLine": "public function testMethod($testParameter)",
             "documentation": null
         }
     }

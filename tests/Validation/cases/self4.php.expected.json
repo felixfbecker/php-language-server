@@ -15,6 +15,7 @@
     },
     "definitions": {
         "MyNamespace": {
+            "fqn": "MyNamespace",
             "extends": [],
             "isGlobal": true,
             "isStatic": false,
@@ -28,9 +29,11 @@
                 "containerName": ""
             },
             "type": null,
+            "declarationLine": "namespace MyNamespace;",
             "documentation": null
         },
         "MyNamespace\\A": {
+            "fqn": "MyNamespace\\A",
             "extends": [],
             "isGlobal": true,
             "isStatic": false,
@@ -44,9 +47,11 @@
                 "containerName": "MyNamespace"
             },
             "type": null,
+            "declarationLine": "class A",
             "documentation": null
         },
         "MyNamespace\\A::suite()": {
+            "fqn": "MyNamespace\\A::suite()",
             "extends": [],
             "isGlobal": false,
             "isStatic": true,
@@ -61,6 +66,7 @@
             },
             "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
             "type": {},
+            "declarationLine": "public static function suite()",
             "documentation": null
         }
     }

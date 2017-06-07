@@ -2,6 +2,7 @@
     "references": [],
     "definitions": {
         "MyNamespace": {
+            "fqn": "MyNamespace",
             "extends": [],
             "isGlobal": true,
             "isStatic": false,
@@ -15,9 +16,11 @@
                 "containerName": ""
             },
             "type": null,
+            "declarationLine": "namespace MyNamespace;",
             "documentation": null
         },
         "MyNamespace\\ParseErrorsTest": {
+            "fqn": "MyNamespace\\ParseErrorsTest",
             "extends": [],
             "isGlobal": true,
             "isStatic": false,
@@ -31,9 +34,11 @@
                 "containerName": "MyNamespace"
             },
             "type": null,
+            "declarationLine": "class ParseErrorsTest {",
             "documentation": null
         },
         "MyNamespace\\ParseErrorsTest->setUp()": {
+            "fqn": "MyNamespace\\ParseErrorsTest->setUp()",
             "extends": [],
             "isGlobal": false,
             "isStatic": false,
@@ -48,6 +53,7 @@
             },
             "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
             "type": {},
+            "declarationLine": "public function setUp()",
             "documentation": null
         }
     }

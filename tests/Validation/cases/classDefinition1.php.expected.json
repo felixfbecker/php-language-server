@@ -9,6 +9,7 @@
     },
     "definitions": {
         "TestNamespace": {
+            "fqn": "TestNamespace",
             "extends": [],
             "isGlobal": true,
             "isStatic": false,
@@ -22,9 +23,11 @@
                 "containerName": ""
             },
             "type": null,
+            "declarationLine": "namespace TestNamespace;",
             "documentation": null
         },
         "TestNamespace\\A": {
+            "fqn": "TestNamespace\\A",
             "extends": [],
             "isGlobal": true,
             "isStatic": false,
@@ -38,9 +41,11 @@
                 "containerName": "TestNamespace"
             },
             "type": null,
+            "declarationLine": "class A {",
             "documentation": null
         },
         "TestNamespace\\A->a": {
+            "fqn": "TestNamespace\\A->a",
             "extends": [],
             "isGlobal": false,
             "isStatic": false,
@@ -55,6 +60,7 @@
             },
             "type__class": "phpDocumentor\\Reflection\\Types\\Integer",
             "type": {},
+            "declarationLine": "public $a;",
             "documentation": null
         }
     }

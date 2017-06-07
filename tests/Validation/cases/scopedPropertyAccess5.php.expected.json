@@ -15,6 +15,7 @@
     },
     "definitions": {
         "TestClass": {
+            "fqn": "TestClass",
             "extends": [],
             "isGlobal": true,
             "isStatic": false,
@@ -28,9 +29,11 @@
                 "containerName": ""
             },
             "type": null,
+            "declarationLine": "class TestClass implements TestInterface {",
             "documentation": null
         },
         "TestClass::$testProperty": {
+            "fqn": "TestClass::$testProperty",
             "extends": [],
             "isGlobal": false,
             "isStatic": true,
@@ -45,6 +48,7 @@
             },
             "type__class": "phpDocumentor\\Reflection\\Types\\Array_",
             "type": {},
+            "declarationLine": "public static $testProperty;",
             "documentation": "Lorem excepteur officia sit anim velit veniam enim."
         }
     }

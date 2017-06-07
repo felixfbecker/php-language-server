@@ -9,6 +9,7 @@
     },
     "definitions": {
         "A": {
+            "fqn": "A",
             "extends": [],
             "isGlobal": true,
             "isStatic": false,
@@ -22,9 +23,11 @@
                 "containerName": ""
             },
             "type": null,
+            "declarationLine": "class A {",
             "documentation": null
         },
         "A::$a": {
+            "fqn": "A::$a",
             "extends": [],
             "isGlobal": false,
             "isStatic": true,
@@ -39,6 +42,7 @@
             },
             "type__class": "phpDocumentor\\Reflection\\Types\\String_",
             "type": {},
+            "declarationLine": "static $a;",
             "documentation": null
         }
     }

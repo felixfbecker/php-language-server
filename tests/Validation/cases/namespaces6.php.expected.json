@@ -2,6 +2,7 @@
     "references": [],
     "definitions": {
         "A\\B": {
+            "fqn": "A\\B",
             "extends": [],
             "isGlobal": true,
             "isStatic": false,
@@ -15,6 +16,7 @@
                 "containerName": "A"
             },
             "type": null,
+            "declarationLine": "namespace A \\ B;",
             "documentation": null
         }
     }
