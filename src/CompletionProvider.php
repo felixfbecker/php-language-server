@@ -179,7 +179,7 @@ class CompletionProvider
            $a->c#
            $a-># */
         elseif ($node instanceof Node\Expression\MemberAccessExpression) {
-            $prefixes = FqnUtilities::getFqnsFromType(
+            $prefixes = FqnUtilities\getFqnsFromType(
                 $this->definitionResolver->resolveExpressionNodeToType($node->dereferencableExpression)
             );
             $prefixes = $this->expandParentFqns($prefixes);
@@ -209,7 +209,7 @@ class CompletionProvider
             ($scoped = $node->parent) instanceof Node\Expression\ScopedPropertyAccessExpression ||
             ($scoped = $node) instanceof Node\Expression\ScopedPropertyAccessExpression
         ) {
-            $prefixes = FqnUtilities::getFqnsFromType(
+            $prefixes = FqnUtilities\getFqnsFromType(
                 $classType = $this->definitionResolver->resolveExpressionNodeToType($scoped->scopeResolutionQualifier)
             );
 

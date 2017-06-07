@@ -4,7 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer\Server;
 
 use LanguageServer\{
-    CompletionProvider, FqnUtilities, LanguageClient, PhpDocument, PhpDocumentLoader, DefinitionResolver
+    CompletionProvider, LanguageClient, PhpDocument, PhpDocumentLoader, DefinitionResolver
 };
 use LanguageServer\Index\ReadableIndex;
 use LanguageServer\Protocol\{
