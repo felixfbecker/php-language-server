@@ -375,7 +375,8 @@ class CompletionProvider
                 }
             }
 
-            if ($level instanceof Node\Expression\AnonymousFunctionCreationExpression && $level->anonymousFunctionUseClause !== null) {
+            if ($level instanceof Node\Expression\AnonymousFunctionCreationExpression && $level->anonymousFunctionUseClause !== null &&
+                $level->anonymousFunctionUseClause->useVariableNameList !== null) {
                 foreach ($level->anonymousFunctionUseClause->useVariableNameList->getValues() as $use) {
                     $useName = $use->getName();
                     if (empty($namePrefix) || strpos($useName, $namePrefix) !== false) {
