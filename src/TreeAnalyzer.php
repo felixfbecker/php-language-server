@@ -84,7 +84,11 @@ class TreeAnalyzer
         }
     }
 
-    public function update($node)
+    /**
+     * Collect definitions and references for the given node
+     * @param Node $node
+     */
+    private function update(Node $node)
     {
         $fqn = ($this->definitionResolver)::getDefinedFqn($node);
         // Only index definitions with an FQN (no variables)
