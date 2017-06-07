@@ -26,7 +26,7 @@ class ValidationTest extends TestCase
     public function validationTestProvider()
     {
         $testProviderArray = array();
-        $testCasesDir = realpath(__DIR__ . '/../../validation/frameworks/_cases');
+        $testCasesDir = realpath(__DIR__ . '/cases');
 
         $iterator = new RecursiveDirectoryIterator($testCasesDir);
         $disabled = json_decode(file_get_contents(__DIR__ . '/disabled.json'));
@@ -100,7 +100,7 @@ class ValidationTest extends TestCase
         );
 
         // Turn references into relative paths
-        $testCasesDir = realpath(__DIR__ . '/../../validation/frameworks/_cases');
+        $testCasesDir = realpath(__DIR__ . '/cases');
         foreach ($refsAndDefs['references'] as $key => $list) {
             $fixedPathRefs = array_map(function ($ref) use ($testCasesDir) {
                 return str_replace($testCasesDir, '.', $ref);
