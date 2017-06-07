@@ -1,13 +1,13 @@
 {
     "references": {
         "MyNamespace\\AccountInterface": [
-            "./_cases/memberCall1.php"
+            "./memberCall1.php"
         ],
         "MyNamespace\\A": [
-            "./_cases/memberCall1.php"
+            "./memberCall1.php"
         ],
         "MyNamespace\\AccountInterface->getAccount()": [
-            "./_cases/memberCall1.php"
+            "./memberCall1.php"
         ]
     },
     "definitions": {
@@ -20,7 +20,7 @@
                 "name": "MyNamespace",
                 "kind": 3,
                 "location": {
-                    "uri": "./_cases/memberCall1.php"
+                    "uri": "./memberCall1.php"
                 },
                 "containerName": ""
             },
@@ -36,7 +36,7 @@
                 "name": "ParseErrorsTest",
                 "kind": 5,
                 "location": {
-                    "uri": "./_cases/memberCall1.php"
+                    "uri": "./memberCall1.php"
                 },
                 "containerName": "MyNamespace"
             },
@@ -52,7 +52,7 @@
                 "name": "setAccount",
                 "kind": 6,
                 "location": {
-                    "uri": "./_cases/memberCall1.php"
+                    "uri": "./memberCall1.php"
                 },
                 "containerName": "MyNamespace\\ParseErrorsTest"
             },

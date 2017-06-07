@@ -1,16 +1,16 @@
 {
     "references": {
         "NS1\\C": [
-            "./_cases/namespaces2.php"
+            "./namespaces2.php"
         ],
         "NS1": [
-            "./_cases/namespaces2.php"
+            "./namespaces2.php"
         ],
         "NS1\\I": [
-            "./_cases/namespaces2.php"
+            "./namespaces2.php"
         ],
         "NS1\\T": [
-            "./_cases/namespaces2.php"
+            "./namespaces2.php"
         ]
     },
     "definitions": {
@@ -23,7 +23,7 @@
                 "name": "MyNamespace1",
                 "kind": 3,
                 "location": {
-                    "uri": "./_cases/namespaces2.php"
+                    "uri": "./namespaces2.php"
                 },
                 "containerName": ""
             },

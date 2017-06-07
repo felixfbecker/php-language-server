@@ -10,7 +10,7 @@
                 "name": "B",
                 "kind": 3,
                 "location": {
-                    "uri": "./_cases/magicConstantsShouldBeGlobal.php"
+                    "uri": "./magicConstantsShouldBeGlobal.php"
                 },
                 "containerName": ""
             },

@@ -1,10 +1,10 @@
 {
     "references": {
         "MyNamespace\\B->hi()": [
-            "./_cases/objectCreation2.php"
+            "./objectCreation2.php"
         ],
         "MyNamespace\\B": [
-            "./_cases/objectCreation2.php"
+            "./objectCreation2.php"
         ]
     },
     "definitions": {
@@ -17,7 +17,7 @@
                 "name": "MyNamespace",
                 "kind": 3,
                 "location": {
-                    "uri": "./_cases/objectCreation2.php"
+                    "uri": "./objectCreation2.php"
                 },
                 "containerName": ""
             },
@@ -33,7 +33,7 @@
                 "name": "B",
                 "kind": 5,
                 "location": {
-                    "uri": "./_cases/objectCreation2.php"
+                    "uri": "./objectCreation2.php"
                 },
                 "containerName": "MyNamespace"
             },
@@ -49,7 +49,7 @@
                 "name": "A",
                 "kind": 5,
                 "location": {
-                    "uri": "./_cases/objectCreation2.php"
+                    "uri": "./objectCreation2.php"
                 },
                 "containerName": "MyNamespace"
             },
@@ -65,7 +65,7 @@
                 "name": "a",
                 "kind": 6,
                 "location": {
-                    "uri": "./_cases/objectCreation2.php"
+                    "uri": "./objectCreation2.php"
                 },
                 "containerName": "MyNamespace\\A"
             },

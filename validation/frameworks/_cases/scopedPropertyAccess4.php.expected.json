@@ -1,7 +1,7 @@
 {
     "references": {
         "A": [
-            "./_cases/scopedPropertyAccess4.php"
+            "./scopedPropertyAccess4.php"
         ]
     },
     "definitions": []

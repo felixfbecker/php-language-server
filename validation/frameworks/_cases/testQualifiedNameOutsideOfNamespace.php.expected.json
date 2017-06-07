@@ -1,7 +1,7 @@
 {
     "references": {
         "NameOutsideOfNamespace": [
-            "./_cases/testQualifiedNameOutsideOfNamespace.php"
+            "./testQualifiedNameOutsideOfNamespace.php"
         ]
     },
     "definitions": {
@@ -14,7 +14,7 @@
                 "name": "SomeNamespace",
                 "kind": 3,
                 "location": {
-                    "uri": "./_cases/testQualifiedNameOutsideOfNamespace.php"
+                    "uri": "./testQualifiedNameOutsideOfNamespace.php"
                 },
                 "containerName": ""
             },

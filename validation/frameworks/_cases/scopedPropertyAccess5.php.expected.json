@@ -1,16 +1,16 @@
 {
     "references": {
         "TestInterface": [
-            "./_cases/scopedPropertyAccess5.php"
+            "./scopedPropertyAccess5.php"
         ],
         "TestClass": [
-            "./_cases/scopedPropertyAccess5.php"
+            "./scopedPropertyAccess5.php"
         ],
         "TestClass::$testProperty": [
-            "./_cases/scopedPropertyAccess5.php"
+            "./scopedPropertyAccess5.php"
         ],
         "TestClass::$staticTestProperty": [
-            "./_cases/scopedPropertyAccess5.php"
+            "./scopedPropertyAccess5.php"
         ]
     },
     "definitions": {
@@ -23,7 +23,7 @@
                 "name": "TestClass",
                 "kind": 5,
                 "location": {
-                    "uri": "./_cases/scopedPropertyAccess5.php"
+                    "uri": "./scopedPropertyAccess5.php"
                 },
                 "containerName": ""
             },
@@ -39,7 +39,7 @@
                 "name": "testProperty",
                 "kind": 7,
                 "location": {
-                    "uri": "./_cases/scopedPropertyAccess5.php"
+                    "uri": "./scopedPropertyAccess5.php"
                 },
                 "containerName": "TestClass"
             },

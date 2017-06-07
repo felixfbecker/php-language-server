@@ -1,10 +1,10 @@
 {
     "references": {
         "MyNamespace\\A": [
-            "./_cases/ifStatement1.php"
+            "./ifStatement1.php"
         ],
         "A": [
-            "./_cases/ifStatement1.php"
+            "./ifStatement1.php"
         ]
     },
     "definitions": {
@@ -17,7 +17,7 @@
                 "name": "MyNamespace",
                 "kind": 3,
                 "location": {
-                    "uri": "./_cases/ifStatement1.php"
+                    "uri": "./ifStatement1.php"
                 },
                 "containerName": ""
             },

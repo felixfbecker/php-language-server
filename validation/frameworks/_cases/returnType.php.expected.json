@@ -1,10 +1,10 @@
 {
     "references": {
         "TestNamespace\\TestClass": [
-            "./_cases/returnType.php"
+            "./returnType.php"
         ],
         "TestNamespace\\TestClass2": [
-            "./_cases/returnType.php"
+            "./returnType.php"
         ]
     },
     "definitions": {
@@ -17,7 +17,7 @@
                 "name": "TestNamespace",
                 "kind": 3,
                 "location": {
-                    "uri": "./_cases/returnType.php"
+                    "uri": "./returnType.php"
                 },
                 "containerName": ""
             },
@@ -33,7 +33,7 @@
                 "name": "whatever",
                 "kind": 12,
                 "location": {
-                    "uri": "./_cases/returnType.php"
+                    "uri": "./returnType.php"
                 },
                 "containerName": "TestNamespace"
             },

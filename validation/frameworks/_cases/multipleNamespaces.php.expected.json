@@ -1,16 +1,16 @@
 {
     "references": {
         "MyNamespace2\\MyNamespace1\\B": [
-            "./_cases/multipleNamespaces.php"
+            "./multipleNamespaces.php"
         ],
         "MyNamespace2\\MyNamespace1": [
-            "./_cases/multipleNamespaces.php"
+            "./multipleNamespaces.php"
         ],
         "MyNamespace2": [
-            "./_cases/multipleNamespaces.php"
+            "./multipleNamespaces.php"
         ],
         "MyNamespace2\\A->b()": [
-            "./_cases/multipleNamespaces.php"
+            "./multipleNamespaces.php"
         ]
     },
     "definitions": {
@@ -23,7 +23,7 @@
                 "name": "MyNamespace1",
                 "kind": 3,
                 "location": {
-                    "uri": "./_cases/multipleNamespaces.php"
+                    "uri": "./multipleNamespaces.php"
                 },
                 "containerName": ""
             },
@@ -39,7 +39,7 @@
                 "name": "B",
                 "kind": 5,
                 "location": {
-                    "uri": "./_cases/multipleNamespaces.php"
+                    "uri": "./multipleNamespaces.php"
                 },
                 "containerName": "MyNamespace1"
             },
@@ -55,7 +55,7 @@
                 "name": "b",
                 "kind": 6,
                 "location": {
-                    "uri": "./_cases/multipleNamespaces.php"
+                    "uri": "./multipleNamespaces.php"
                 },
                 "containerName": "MyNamespace1\\B"
             },
@@ -72,7 +72,7 @@
                 "name": "MyNamespace2",
                 "kind": 3,
                 "location": {
-                    "uri": "./_cases/multipleNamespaces.php"
+                    "uri": "./multipleNamespaces.php"
                 },
                 "containerName": ""
             },
@@ -90,7 +90,7 @@
                 "name": "A",
                 "kind": 5,
                 "location": {
-                    "uri": "./_cases/multipleNamespaces.php"
+                    "uri": "./multipleNamespaces.php"
                 },
                 "containerName": "MyNamespace2"
             },
@@ -106,7 +106,7 @@
                 "name": "a",
                 "kind": 6,
                 "location": {
-                    "uri": "./_cases/multipleNamespaces.php"
+                    "uri": "./multipleNamespaces.php"
                 },
                 "containerName": "MyNamespace2\\A"
             },

@@ -1,16 +1,16 @@
 {
     "references": {
         "MyNamespace\\Request::create()": [
-            "./_cases/memberAccess4.php"
+            "./memberAccess4.php"
         ],
         "MyNamespace\\Request": [
-            "./_cases/memberAccess4.php"
+            "./memberAccess4.php"
         ],
         "MyNamespace\\Url->toString()": [
-            "./_cases/memberAccess4.php"
+            "./memberAccess4.php"
         ],
         "MyNamespace\\Url": [
-            "./_cases/memberAccess4.php"
+            "./memberAccess4.php"
         ]
     },
     "definitions": {
@@ -23,7 +23,7 @@
                 "name": "MyNamespace",
                 "kind": 3,
                 "location": {
-                    "uri": "./_cases/memberAccess4.php"
+                    "uri": "./memberAccess4.php"
                 },
                 "containerName": ""
             },
@@ -39,7 +39,7 @@
                 "name": "A",
                 "kind": 5,
                 "location": {
-                    "uri": "./_cases/memberAccess4.php"
+                    "uri": "./memberAccess4.php"
                 },
                 "containerName": "MyNamespace"
             },
@@ -55,7 +55,7 @@
                 "name": "testRequest",
                 "kind": 6,
                 "location": {
-                    "uri": "./_cases/memberAccess4.php"
+                    "uri": "./memberAccess4.php"
                 },
                 "containerName": "MyNamespace\\A"
             },

@@ -10,7 +10,7 @@
                 "name": "B",
                 "kind": 5,
                 "location": {
-                    "uri": "./_cases/stringVariable.php"
+                    "uri": "./stringVariable.php"
                 },
                 "containerName": ""
             },
@@ -26,7 +26,7 @@
                 "name": "hi",
                 "kind": 7,
                 "location": {
-                    "uri": "./_cases/stringVariable.php"
+                    "uri": "./stringVariable.php"
                 },
                 "containerName": "B"
             },
@@ -43,7 +43,7 @@
                 "name": "a",
                 "kind": 6,
                 "location": {
-                    "uri": "./_cases/stringVariable.php"
+                    "uri": "./stringVariable.php"
                 },
                 "containerName": "B"
             },

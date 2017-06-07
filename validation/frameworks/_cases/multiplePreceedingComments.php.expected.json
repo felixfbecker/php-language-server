@@ -10,7 +10,7 @@
                 "name": "Foo",
                 "kind": 5,
                 "location": {
-                    "uri": "./_cases/multiplePreceedingComments.php"
+                    "uri": "./multiplePreceedingComments.php"
                 },
                 "containerName": ""
             },
@@ -26,7 +26,7 @@
                 "name": "fn",
                 "kind": 6,
                 "location": {
-                    "uri": "./_cases/multiplePreceedingComments.php"
+                    "uri": "./multiplePreceedingComments.php"
                 },
                 "containerName": "Foo"
             },

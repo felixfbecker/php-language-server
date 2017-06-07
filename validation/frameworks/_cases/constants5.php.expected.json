@@ -1,7 +1,7 @@
 {
     "references": {
         "MyNamespace\\PHP_INT_MAX": [
-            "./_cases/constants5.php"
+            "./constants5.php"
         ]
     },
     "definitions": {
@@ -14,7 +14,7 @@
                 "name": "MyNamespace",
                 "kind": 3,
                 "location": {
-                    "uri": "./_cases/constants5.php"
+                    "uri": "./constants5.php"
                 },
                 "containerName": ""
             },
@@ -30,7 +30,7 @@
                 "name": "Mbstring",
                 "kind": 5,
                 "location": {
-                    "uri": "./_cases/constants5.php"
+                    "uri": "./constants5.php"
                 },
                 "containerName": "MyNamespace"
             },
@@ -46,7 +46,7 @@
                 "name": "MB_CASE_FOLD",
                 "kind": 14,
                 "location": {
-                    "uri": "./_cases/constants5.php"
+                    "uri": "./constants5.php"
                 },
                 "containerName": "MyNamespace\\Mbstring"
             },

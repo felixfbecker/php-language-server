@@ -10,7 +10,7 @@
                 "name": "MyClass",
                 "kind": 5,
                 "location": {
-                    "uri": "./_cases/propertyName1.php"
+                    "uri": "./propertyName1.php"
                 },
                 "containerName": ""
             },
@@ -26,7 +26,7 @@
                 "name": "mainPropertyName",
                 "kind": 7,
                 "location": {
-                    "uri": "./_cases/propertyName1.php"
+                    "uri": "./propertyName1.php"
                 },
                 "containerName": "MyClass"
             },

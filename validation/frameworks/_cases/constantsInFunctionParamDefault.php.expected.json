@@ -1,7 +1,7 @@
 {
     "references": {
         "MY_CONSTANT": [
-            "./_cases/constantsInFunctionParamDefault.php"
+            "./constantsInFunctionParamDefault.php"
         ]
     },
     "definitions": {
@@ -14,7 +14,7 @@
                 "name": "A",
                 "kind": 11,
                 "location": {
-                    "uri": "./_cases/constantsInFunctionParamDefault.php"
+                    "uri": "./constantsInFunctionParamDefault.php"
                 },
                 "containerName": ""
             },
@@ -30,7 +30,7 @@
                 "name": "b",
                 "kind": 6,
                 "location": {
-                    "uri": "./_cases/constantsInFunctionParamDefault.php"
+                    "uri": "./constantsInFunctionParamDefault.php"
                 },
                 "containerName": "A"
             },

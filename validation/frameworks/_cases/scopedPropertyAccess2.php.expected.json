@@ -1,7 +1,7 @@
 {
     "references": {
         "MyNamespace\\A": [
-            "./_cases/scopedPropertyAccess2.php"
+            "./scopedPropertyAccess2.php"
         ]
     },
     "definitions": {
@@ -14,7 +14,7 @@
                 "name": "MyNamespace",
                 "kind": 3,
                 "location": {
-                    "uri": "./_cases/scopedPropertyAccess2.php"
+                    "uri": "./scopedPropertyAccess2.php"
                 },
                 "containerName": ""
             },

@@ -1,10 +1,10 @@
 {
     "references": {
         "TestNamespace\\A": [
-            "./_cases/classDefinition1.php"
+            "./classDefinition1.php"
         ],
         "TestNamespace\\A->a": [
-            "./_cases/classDefinition1.php"
+            "./classDefinition1.php"
         ]
     },
     "definitions": {
@@ -17,7 +17,7 @@
                 "name": "TestNamespace",
                 "kind": 3,
                 "location": {
-                    "uri": "./_cases/classDefinition1.php"
+                    "uri": "./classDefinition1.php"
                 },
                 "containerName": ""
             },
@@ -33,7 +33,7 @@
                 "name": "A",
                 "kind": 5,
                 "location": {
-                    "uri": "./_cases/classDefinition1.php"
+                    "uri": "./classDefinition1.php"
                 },
                 "containerName": "TestNamespace"
             },
@@ -49,7 +49,7 @@
                 "name": "a",
                 "kind": 7,
                 "location": {
-                    "uri": "./_cases/classDefinition1.php"
+                    "uri": "./classDefinition1.php"
                 },
                 "containerName": "TestNamespace\\A"
             },

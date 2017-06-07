@@ -1,10 +1,10 @@
 {
     "references": {
         "CURLAUTH_BASIC": [
-            "./_cases/verifyFqsenOnClassProperty.php"
+            "./verifyFqsenOnClassProperty.php"
         ],
         "Foo->bar": [
-            "./_cases/verifyFqsenOnClassProperty.php"
+            "./verifyFqsenOnClassProperty.php"
         ]
     },
     "definitions": {
@@ -17,7 +17,7 @@
                 "name": "Foo",
                 "kind": 5,
                 "location": {
-                    "uri": "./_cases/verifyFqsenOnClassProperty.php"
+                    "uri": "./verifyFqsenOnClassProperty.php"
                 },
                 "containerName": ""
             },
@@ -33,7 +33,7 @@
                 "name": "bar",
                 "kind": 7,
                 "location": {
-                    "uri": "./_cases/verifyFqsenOnClassProperty.php"
+                    "uri": "./verifyFqsenOnClassProperty.php"
                 },
                 "containerName": "Foo"
             },
@@ -50,7 +50,7 @@
                 "name": "foo",
                 "kind": 6,
                 "location": {
-                    "uri": "./_cases/verifyFqsenOnClassProperty.php"
+                    "uri": "./verifyFqsenOnClassProperty.php"
                 },
                 "containerName": "Foo"
             },

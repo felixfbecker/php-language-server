@@ -1,13 +1,13 @@
 {
     "references": {
         "Fixtures\\Prophecy\\EmptyClass": [
-            "./_cases/WithReturnTypehints.php"
+            "./WithReturnTypehints.php"
         ],
         "self": [
-            "./_cases/WithReturnTypehints.php"
+            "./WithReturnTypehints.php"
         ],
         "parent": [
-            "./_cases/WithReturnTypehints.php"
+            "./WithReturnTypehints.php"
         ]
     },
     "definitions": {
@@ -20,7 +20,7 @@
                 "name": "Fixtures\\Prophecy",
                 "kind": 3,
                 "location": {
-                    "uri": "./_cases/WithReturnTypehints.php"
+                    "uri": "./WithReturnTypehints.php"
                 },
                 "containerName": "Fixtures"
             },
@@ -38,7 +38,7 @@
                 "name": "WithReturnTypehints",
                 "kind": 5,
                 "location": {
-                    "uri": "./_cases/WithReturnTypehints.php"
+                    "uri": "./WithReturnTypehints.php"
                 },
                 "containerName": "Fixtures\\Prophecy"
             },
@@ -54,7 +54,7 @@
                 "name": "getSelf",
                 "kind": 6,
                 "location": {
-                    "uri": "./_cases/WithReturnTypehints.php"
+                    "uri": "./WithReturnTypehints.php"
                 },
                 "containerName": "Fixtures\\Prophecy\\WithReturnTypehints"
             },
@@ -71,7 +71,7 @@
                 "name": "getName",
                 "kind": 6,
                 "location": {
-                    "uri": "./_cases/WithReturnTypehints.php"
+                    "uri": "./WithReturnTypehints.php"
                 },
                 "containerName": "Fixtures\\Prophecy\\WithReturnTypehints"
             },
@@ -88,7 +88,7 @@
                 "name": "getParent",
                 "kind": 6,
                 "location": {
-                    "uri": "./_cases/WithReturnTypehints.php"
+                    "uri": "./WithReturnTypehints.php"
                 },
                 "containerName": "Fixtures\\Prophecy\\WithReturnTypehints"
             },

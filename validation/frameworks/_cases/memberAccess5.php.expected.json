@@ -10,7 +10,7 @@
                 "name": "MyNamespace",
                 "kind": 3,
                 "location": {
-                    "uri": "./_cases/memberAccess5.php"
+                    "uri": "./memberAccess5.php"
                 },
                 "containerName": ""
             },
@@ -26,7 +26,7 @@
                 "name": "ParseErrorsTest",
                 "kind": 5,
                 "location": {
-                    "uri": "./_cases/memberAccess5.php"
+                    "uri": "./memberAccess5.php"
                 },
                 "containerName": "MyNamespace"
             },
@@ -42,7 +42,7 @@
                 "name": "setUp",
                 "kind": 6,
                 "location": {
-                    "uri": "./_cases/memberAccess5.php"
+                    "uri": "./memberAccess5.php"
                 },
                 "containerName": "MyNamespace\\ParseErrorsTest"
             },

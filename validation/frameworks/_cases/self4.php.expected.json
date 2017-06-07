@@ -1,16 +1,16 @@
 {
     "references": {
         "self": [
-            "./_cases/self4.php"
+            "./self4.php"
         ],
         "MyNamespace\\A->addTestFile()": [
-            "./_cases/self4.php"
+            "./self4.php"
         ],
         "MyNamespace\\DS": [
-            "./_cases/self4.php"
+            "./self4.php"
         ],
         "DS": [
-            "./_cases/self4.php"
+            "./self4.php"
         ]
     },
     "definitions": {
@@ -23,7 +23,7 @@
                 "name": "MyNamespace",
                 "kind": 3,
                 "location": {
-                    "uri": "./_cases/self4.php"
+                    "uri": "./self4.php"
                 },
                 "containerName": ""
             },
@@ -39,7 +39,7 @@
                 "name": "A",
                 "kind": 5,
                 "location": {
-                    "uri": "./_cases/self4.php"
+                    "uri": "./self4.php"
                 },
                 "containerName": "MyNamespace"
             },
@@ -55,7 +55,7 @@
                 "name": "suite",
                 "kind": 6,
                 "location": {
-                    "uri": "./_cases/self4.php"
+                    "uri": "./self4.php"
                 },
                 "containerName": "MyNamespace\\A"
             },

@@ -10,7 +10,7 @@
                 "name": "A",
                 "kind": 11,
                 "location": {
-                    "uri": "./_cases/interfaceProperty.php"
+                    "uri": "./interfaceProperty.php"
                 },
                 "containerName": ""
             },

@@ -1,25 +1,25 @@
 {
     "references": {
         "MyNamespace\\ClassLoader": [
-            "./_cases/memberAccess3.php"
+            "./memberAccess3.php"
         ],
         "Closure::bind()": [
-            "./_cases/memberAccess3.php"
+            "./memberAccess3.php"
         ],
         "Closure": [
-            "./_cases/memberAccess3.php"
+            "./memberAccess3.php"
         ],
         "MyNamespace\\ClassLoader->prefixesPsr0": [
-            "./_cases/memberAccess3.php"
+            "./memberAccess3.php"
         ],
         "MyNamespace\\ComposerStaticInitIncludePath": [
-            "./_cases/memberAccess3.php"
+            "./memberAccess3.php"
         ],
         "MyNamespace\\ComposerStaticInitIncludePath::$prefixesPsr0": [
-            "./_cases/memberAccess3.php"
+            "./memberAccess3.php"
         ],
         "MyNamespace\\ClassLoader::class": [
-            "./_cases/memberAccess3.php"
+            "./memberAccess3.php"
         ]
     },
     "definitions": {
@@ -32,7 +32,7 @@
                 "name": "MyNamespace",
                 "kind": 3,
                 "location": {
-                    "uri": "./_cases/memberAccess3.php"
+                    "uri": "./memberAccess3.php"
                 },
                 "containerName": ""
             },
@@ -48,7 +48,7 @@
                 "name": "A",
                 "kind": 5,
                 "location": {
-                    "uri": "./_cases/memberAccess3.php"
+                    "uri": "./memberAccess3.php"
                 },
                 "containerName": "MyNamespace"
             },
@@ -64,7 +64,7 @@
                 "name": "getInitializer",
                 "kind": 6,
                 "location": {
-                    "uri": "./_cases/memberAccess3.php"
+                    "uri": "./memberAccess3.php"
                 },
                 "containerName": "MyNamespace\\A"
             },

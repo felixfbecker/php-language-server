@@ -1,10 +1,10 @@
 {
     "references": {
         "A": [
-            "./_cases/scopedPropertyAccess3.php"
+            "./scopedPropertyAccess3.php"
         ],
         "A::$a": [
-            "./_cases/scopedPropertyAccess3.php"
+            "./scopedPropertyAccess3.php"
         ]
     },
     "definitions": {
@@ -17,7 +17,7 @@
                 "name": "A",
                 "kind": 5,
                 "location": {
-                    "uri": "./_cases/scopedPropertyAccess3.php"
+                    "uri": "./scopedPropertyAccess3.php"
                 },
                 "containerName": ""
             },
@@ -33,7 +33,7 @@
                 "name": "a",
                 "kind": 7,
                 "location": {
-                    "uri": "./_cases/scopedPropertyAccess3.php"
+                    "uri": "./scopedPropertyAccess3.php"
                 },
                 "containerName": "A"
             },

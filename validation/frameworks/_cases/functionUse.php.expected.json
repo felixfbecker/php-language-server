@@ -1,10 +1,10 @@
 {
     "references": {
         "A": [
-            "./_cases/functionUse.php"
+            "./functionUse.php"
         ],
         "A->b()": [
-            "./_cases/functionUse.php"
+            "./functionUse.php"
         ]
     },
     "definitions": []

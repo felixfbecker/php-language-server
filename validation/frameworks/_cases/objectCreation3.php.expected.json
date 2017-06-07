@@ -1,7 +1,7 @@
 {
     "references": {
         "A->args": [
-            "./_cases/objectCreation3.php"
+            "./objectCreation3.php"
         ]
     },
     "definitions": {
@@ -14,7 +14,7 @@
                 "name": "A",
                 "kind": 5,
                 "location": {
-                    "uri": "./_cases/objectCreation3.php"
+                    "uri": "./objectCreation3.php"
                 },
                 "containerName": ""
             },
@@ -30,7 +30,7 @@
                 "name": "a",
                 "kind": 6,
                 "location": {
-                    "uri": "./_cases/objectCreation3.php"
+                    "uri": "./objectCreation3.php"
                 },
                 "containerName": "A"
             },

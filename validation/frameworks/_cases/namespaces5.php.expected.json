@@ -1,25 +1,25 @@
 {
     "references": {
         "LanguageServer\\Protocol": [
-            "./_cases/namespaces5.php"
+            "./namespaces5.php"
         ],
         "LanguageServer": [
-            "./_cases/namespaces5.php"
+            "./namespaces5.php"
         ],
         "LanguageServer\\Protocol\\TextDocumentIdentifier": [
-            "./_cases/namespaces5.php"
+            "./namespaces5.php"
         ],
         "LanguageServer\\Protocol\\Position": [
-            "./_cases/namespaces5.php"
+            "./namespaces5.php"
         ],
         "LanguageServer\\Protocol\\ReferenceContext": [
-            "./_cases/namespaces5.php"
+            "./namespaces5.php"
         ],
         "LanguageServer\\Protocol\\Location": [
-            "./_cases/namespaces5.php"
+            "./namespaces5.php"
         ],
         "LanguageServer\\Protocol\\Range": [
-            "./_cases/namespaces5.php"
+            "./namespaces5.php"
         ]
     },
     "definitions": {
@@ -32,7 +32,7 @@
                 "name": "B",
                 "kind": 3,
                 "location": {
-                    "uri": "./_cases/namespaces5.php"
+                    "uri": "./namespaces5.php"
                 },
                 "containerName": ""
             },

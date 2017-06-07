@@ -1,10 +1,10 @@
 {
     "references": {
         "MyNamespace\\BYE": [
-            "./_cases/constants2.php"
+            "./constants2.php"
         ],
         "BYE": [
-            "./_cases/constants2.php"
+            "./constants2.php"
         ]
     },
     "definitions": {
@@ -17,7 +17,7 @@
                 "name": "MyNamespace",
                 "kind": 3,
                 "location": {
-                    "uri": "./_cases/constants2.php"
+                    "uri": "./constants2.php"
                 },
                 "containerName": ""
             },
@@ -33,7 +33,7 @@
                 "name": "A",
                 "kind": 5,
                 "location": {
-                    "uri": "./_cases/constants2.php"
+                    "uri": "./constants2.php"
                 },
                 "containerName": "MyNamespace"
             },
@@ -49,7 +49,7 @@
                 "name": "suite",
                 "kind": 6,
                 "location": {
-                    "uri": "./_cases/constants2.php"
+                    "uri": "./constants2.php"
                 },
                 "containerName": "MyNamespace\\A"
             },

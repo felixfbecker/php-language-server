@@ -1,10 +1,10 @@
 {
     "references": {
         "a\\b": [
-            "./_cases/namespaces4.php"
+            "./namespaces4.php"
         ],
         "a": [
-            "./_cases/namespaces4.php"
+            "./namespaces4.php"
         ]
     },
     "definitions": []

@@ -10,7 +10,7 @@
                 "name": "MyNamespace",
                 "kind": 3,
                 "location": {
-                    "uri": "./_cases/exceptions1.php"
+                    "uri": "./exceptions1.php"
                 },
                 "containerName": ""
             },

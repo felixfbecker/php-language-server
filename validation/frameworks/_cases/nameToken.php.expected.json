@@ -10,7 +10,7 @@
                 "name": "A",
                 "kind": 5,
                 "location": {
-                    "uri": "./_cases/nameToken.php"
+                    "uri": "./nameToken.php"
                 },
                 "containerName": ""
             },
@@ -26,7 +26,7 @@
                 "name": "b",
                 "kind": 6,
                 "location": {
-                    "uri": "./_cases/nameToken.php"
+                    "uri": "./nameToken.php"
                 },
                 "containerName": "A"
             },

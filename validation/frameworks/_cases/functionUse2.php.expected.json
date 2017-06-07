@@ -1,10 +1,10 @@
 {
     "references": {
         "LanguageServer": [
-            "./_cases/functionUse2.php"
+            "./functionUse2.php"
         ],
         "LanguageServer\\timeout()": [
-            "./_cases/functionUse2.php"
+            "./functionUse2.php"
         ]
     },
     "definitions": []

@@ -1,7 +1,7 @@
 {
     "references": {
         "MyNamespace\\Hi": [
-            "./_cases/param1.php"
+            "./param1.php"
         ]
     },
     "definitions": {
@@ -14,7 +14,7 @@
                 "name": "MyNamespace",
                 "kind": 3,
                 "location": {
-                    "uri": "./_cases/param1.php"
+                    "uri": "./param1.php"
                 },
                 "containerName": ""
             },
@@ -30,7 +30,7 @@
                 "name": "init",
                 "kind": 12,
                 "location": {
-                    "uri": "./_cases/param1.php"
+                    "uri": "./param1.php"
                 },
                 "containerName": "MyNamespace"
             },

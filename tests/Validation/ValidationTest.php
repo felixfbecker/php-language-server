@@ -21,48 +21,37 @@ use RecursiveIteratorIterator;
 use Sabre\Event\Loop;
 use Microsoft\PhpParser;
 
-$frameworksDir = realpath(__DIR__ . '/../../validation/frameworks');
-
 class ValidationTest extends TestCase
 {
-    public function frameworkErrorProvider()
+    public function validationTestProvider()
     {
-        global $frameworksDir;
-        $frameworks = glob($frameworksDir . '/*', GLOB_ONLYDIR);
-
         $testProviderArray = array();
-        foreach ($frameworks as $frameworkDir) {
-            $frameworkName = basename($frameworkDir);
-            if ($frameworkName !== '_cases') {
-                continue;
-            }
+        $testCasesDir = realpath(__DIR__ . '/../../validation/frameworks/_cases');
 
-            $iterator = new RecursiveDirectoryIterator($frameworkDir);
-            $skipped = json_decode(file_get_contents(__DIR__ . '/skipped.json'));
+        $iterator = new RecursiveDirectoryIterator($testCasesDir);
+        $disabled = json_decode(file_get_contents(__DIR__ . '/disabled.json'));
 
-            foreach (new RecursiveIteratorIterator($iterator) as $file) {
-                if (strpos(\strrev((string)$file), \strrev(".php")) === 0 && !\in_array(basename((string)$file), $skipped)) {
-                    if ($file->getSize() < 100000) {
-                        $testProviderArray[$frameworkName . "::" . $file->getBasename()] = [$file->getPathname(), $frameworkName];
-                    }
+        foreach (new RecursiveIteratorIterator($iterator) as $file) {
+            if (strpos(\strrev((string)$file), \strrev(".php")) === 0 && !\in_array(basename((string)$file), $disabled)) {
+                if ($file->getSize() < 100000) {
+                    $testProviderArray[] = [$file->getPathname()];
                 }
             }
-        }
-
-        if (count($testProviderArray) === 0) {
-            throw new Exception("ERROR: Validation testsuite frameworks not found - run `git submodule update --init --recursive` to download.");
         }
 
         return $testProviderArray;
     }
 
     /**
+     * This test loads the test cases specified in .php files under cases/ and looks at the whole set of 
+     * Definitions and References produced. It reads the expected results from associated .json files 
+     * and compares to the actual result. If they don't match, the test fails and it writes the new baseline
+     * to the .json file.
      * @group validation
-     * @dataProvider frameworkErrorProvider
+     * @dataProvider validationTestProvider
      * @param $testCaseFile
-     * @param $frameworkName
      */
-    public function testDefinitionErrors($testCaseFile, $frameworkName)
+    public function testDefinitionsAndReferences($testCaseFile)
     {
         $fileContents = file_get_contents($testCaseFile);
         $actualValues = $this->getActualTestValues($testCaseFile, $fileContents);
@@ -84,9 +73,7 @@ class ValidationTest extends TestCase
             }
         } catch (\Throwable $e) {
             $outputFile = getExpectedValuesFile($testCaseFile);
-            if ($frameworkName === '_cases') {
-                file_put_contents($outputFile, json_encode($actualValues, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));
-            }
+            file_put_contents($outputFile, json_encode($actualValues, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));
 
             throw $e;
         }
@@ -94,8 +81,6 @@ class ValidationTest extends TestCase
 
     private function getActualTestValues($filename, $fileContents): array
     {
-        global $frameworksDir;
-
         $index = new Index();
         $parser = new PhpParser\Parser();
         $docBlockFactory = DocBlockFactory::createInstance();
@@ -115,10 +100,10 @@ class ValidationTest extends TestCase
         );
 
         // Turn references into relative paths
+        $testCasesDir = realpath(__DIR__ . '/../../validation/frameworks/_cases');
         foreach ($refsAndDefs['references'] as $key => $list) {
-            $fixedPathRefs = array_map(function ($ref) {
-                global $frameworksDir;
-                return str_replace($frameworksDir, '.', $ref);
+            $fixedPathRefs = array_map(function ($ref) use ($testCasesDir) {
+                return str_replace($testCasesDir, '.', $ref);
             }, $list);
 
             $refsAndDefs['references']->$key = $fixedPathRefs;
@@ -128,7 +113,7 @@ class ValidationTest extends TestCase
         foreach ($refsAndDefs['definitions'] as $key => $def) {
             if ($def !== null && $def->symbolInformation !== null &&
                 $def->symbolInformation->location !== null && $def->symbolInformation->location->uri !== null) {
-                $def->symbolInformation->location->uri = str_replace($frameworksDir, '.', $def->symbolInformation->location->uri);
+                $def->symbolInformation->location->uri = str_replace($testCasesDir, '.', $def->symbolInformation->location->uri);
             }
         }
 

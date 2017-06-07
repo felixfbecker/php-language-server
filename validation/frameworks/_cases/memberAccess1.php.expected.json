@@ -1,10 +1,10 @@
 {
     "references": {
         "MyNamespace\\a": [
-            "./_cases/memberAccess1.php"
+            "./memberAccess1.php"
         ],
         "MyNamespace\\a->a()": [
-            "./_cases/memberAccess1.php"
+            "./memberAccess1.php"
         ]
     },
     "definitions": {
@@ -17,7 +17,7 @@
                 "name": "MyNamespace",
                 "kind": 3,
                 "location": {
-                    "uri": "./_cases/memberAccess1.php"
+                    "uri": "./memberAccess1.php"
                 },
                 "containerName": ""
             },
@@ -33,7 +33,7 @@
                 "name": "A",
                 "kind": 5,
                 "location": {
-                    "uri": "./_cases/memberAccess1.php"
+                    "uri": "./memberAccess1.php"
                 },
                 "containerName": "MyNamespace"
             },
@@ -49,7 +49,7 @@
                 "name": "a",
                 "kind": 6,
                 "location": {
-                    "uri": "./_cases/memberAccess1.php"
+                    "uri": "./memberAccess1.php"
                 },
                 "containerName": "MyNamespace\\A"
             },

@@ -1,10 +1,10 @@
 {
     "references": {
         "MyNamespace\\T_NEW": [
-            "./_cases/constants3.php"
+            "./constants3.php"
         ],
         "T_NEW": [
-            "./_cases/constants3.php"
+            "./constants3.php"
         ]
     },
     "definitions": {
@@ -17,7 +17,7 @@
                 "name": "MyNamespace",
                 "kind": 3,
                 "location": {
-                    "uri": "./_cases/constants3.php"
+                    "uri": "./constants3.php"
                 },
                 "containerName": ""
             },
@@ -33,7 +33,7 @@
                 "name": "A",
                 "kind": 5,
                 "location": {
-                    "uri": "./_cases/constants3.php"
+                    "uri": "./constants3.php"
                 },
                 "containerName": "MyNamespace"
             },
@@ -49,7 +49,7 @@
                 "name": "suite",
                 "kind": 6,
                 "location": {
-                    "uri": "./_cases/constants3.php"
+                    "uri": "./constants3.php"
                 },
                 "containerName": "MyNamespace\\A"
             },

@@ -1,7 +1,7 @@
 {
     "references": {
         "LanguageServer": [
-            "./_cases/namespaces8.php"
+            "./namespaces8.php"
         ]
     },
     "definitions": {
@@ -14,7 +14,7 @@
                 "name": "LanguageServer\\Tests\\Utils",
                 "kind": 3,
                 "location": {
-                    "uri": "./_cases/namespaces8.php"
+                    "uri": "./namespaces8.php"
                 },
                 "containerName": "LanguageServer\\Tests"
             },

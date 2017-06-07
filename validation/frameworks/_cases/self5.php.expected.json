@@ -1,7 +1,7 @@
 {
     "references": {
         "MyNamespace\\A->assertTrue()": [
-            "./_cases/self5.php"
+            "./self5.php"
         ]
     },
     "definitions": {
@@ -14,7 +14,7 @@
                 "name": "MyNamespace",
                 "kind": 3,
                 "location": {
-                    "uri": "./_cases/self5.php"
+                    "uri": "./self5.php"
                 },
                 "containerName": ""
             },
@@ -30,7 +30,7 @@
                 "name": "A",
                 "kind": 5,
                 "location": {
-                    "uri": "./_cases/self5.php"
+                    "uri": "./self5.php"
                 },
                 "containerName": "MyNamespace"
             },
@@ -46,7 +46,7 @@
                 "name": "typesProvider",
                 "kind": 6,
                 "location": {
-                    "uri": "./_cases/self5.php"
+                    "uri": "./self5.php"
                 },
                 "containerName": "MyNamespace\\A"
             },

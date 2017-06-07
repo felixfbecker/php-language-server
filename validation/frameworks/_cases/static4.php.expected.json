@@ -1,10 +1,10 @@
 {
     "references": {
         "MyNamespace\\B": [
-            "./_cases/static4.php"
+            "./static4.php"
         ],
         "static": [
-            "./_cases/static4.php"
+            "./static4.php"
         ]
     },
     "definitions": {
@@ -17,7 +17,7 @@
                 "name": "MyNamespace",
                 "kind": 3,
                 "location": {
-                    "uri": "./_cases/static4.php"
+                    "uri": "./static4.php"
                 },
                 "containerName": ""
             },
@@ -35,7 +35,7 @@
                 "name": "A",
                 "kind": 5,
                 "location": {
-                    "uri": "./_cases/static4.php"
+                    "uri": "./static4.php"
                 },
                 "containerName": "MyNamespace"
             },
@@ -51,7 +51,7 @@
                 "name": "a",
                 "kind": 6,
                 "location": {
-                    "uri": "./_cases/static4.php"
+                    "uri": "./static4.php"
                 },
                 "containerName": "MyNamespace\\A"
             },
