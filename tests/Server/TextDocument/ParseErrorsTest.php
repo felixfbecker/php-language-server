@@ -127,28 +127,28 @@ class ParseErrorsTest extends TestCase
         ], json_decode(json_encode($this->args), true));
     }
 
-    // This diagnostic not yet implemented in tolerant-php-parser
-    // public function testParseErrorsWithOnlyStartLine()
-    // {
-    //     $this->openFile(__DIR__ . '/../../../fixtures/namespace_not_first.php');
-    //     $this->assertEquals([
-    //         'whatever',
-    //         [[
-    //             'range' => [
-    //                 'start' => [
-    //                     'line' => 4,
-    //                     'character' => 0
-    //                 ],
-    //                 'end' => [
-    //                     'line' => 4,
-    //                     'character' => 0
-    //                 ]
-    //             ],
-    //             'severity' => DiagnosticSeverity::ERROR,
-    //             'code' => null,
-    //             'source' => 'php',
-    //             'message' => "Namespace declaration statement has to be the very first statement in the script"
-    //         ]]
-    //     ], json_decode(json_encode($this->args), true));
-    // }
+    public function testParseErrorsWithOnlyStartLine()
+    {
+        $this->markTestIncomplete('This diagnostic not yet implemented in tolerant-php-parser');
+        $this->openFile(__DIR__ . '/../../../fixtures/namespace_not_first.php');
+        $this->assertEquals([
+            'whatever',
+            [[
+                'range' => [
+                    'start' => [
+                        'line' => 4,
+                        'character' => 0
+                    ],
+                    'end' => [
+                        'line' => 4,
+                        'character' => 0
+                    ]
+                ],
+                'severity' => DiagnosticSeverity::ERROR,
+                'code' => null,
+                'source' => 'php',
+                'message' => "Namespace declaration statement has to be the very first statement in the script"
+            ]]
+        ], json_decode(json_encode($this->args), true));
+    }
 }
