@@ -23,6 +23,15 @@ class TreeAnalyzer
     /** @var string */
     private $content;
 
+    /** @var Node[] */
+    private $referenceNodes;
+
+    /** @var Definition[] */
+    private $definitions;
+
+    /** @var Node[] */
+    private $definitionNodes;
+
     /**
      * TreeAnalyzer constructor.
      * @param PhpParser\Parser $parser
@@ -33,7 +42,6 @@ class TreeAnalyzer
      */
     public function __construct($parser, $content, $docBlockFactory, $definitionResolver, $uri)
     {
-        $this->uri = $uri;
         $this->parser = $parser;
         $this->docBlockFactory = $docBlockFactory;
         $this->definitionResolver = $definitionResolver;
@@ -178,14 +186,5 @@ class TreeAnalyzer
     public function getStmts()
     {
         return $this->stmts;
-    }
-    /**
-     * Returns the URI of the document
-     *
-     * @return string
-     */
-    public function getUri(): string
-    {
-        return $this->uri;
     }
 }
