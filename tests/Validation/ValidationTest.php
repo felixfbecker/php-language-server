@@ -89,7 +89,6 @@ class ValidationTest extends TestCase
         $document = new PhpDocument($filename, $fileContents, $index, $parser, $docBlockFactory, $definitionResolver);
 
         $actualRefs = $index->getReferences();
-        $this->filterSkippedReferences($actualRefs);
         $actualDefs = $this->getTestValuesFromDefs($document->getDefinitions());
 
         // There's probably a more PHP-typical way to do this. Need to compare the objects parsed from json files
@@ -148,29 +147,6 @@ class ValidationTest extends TestCase
         }
 
         return $defsForAssert;
-    }
-
-    /**
-     * @return void
-     */
-    private function filterSkippedReferences(&$references)
-    {
-        $skipped = [
-            'false', 'true', 'null', 'FALSE', 'TRUE', 'NULL',
-            '__', // magic constants are treated as normal constants
-            'Exception', 'Error', // catch exception types missing from old definition resolver
-            'Trait', // use Trait references are missing from old definition resolve
-            '->tableAlias', '->realField', '->field', '->first_name', '->last_name', '->quoteMatch', '->idCol', '->timeCol', '->dataCol',
-            'pathToUri', 'uriToPath' // group function use declarations are broken in old definition resolver
-        ];
-
-        foreach ($references as $key => $value) {
-            foreach ($skipped as $s) {
-                if (strpos($key, $s) !== false) {
-                    unset($references[$key]);
-                }
-            }
-        }
     }
 }
 
