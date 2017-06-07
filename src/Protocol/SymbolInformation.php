@@ -67,7 +67,7 @@ class SymbolInformation
             $symbol->kind = SymbolKind::FUNCTION;
         } else if ($node instanceof Node\MethodDeclaration) {
             $nameText = $node->getName();
-            if ($nameText  === '__construct' || $nameText === '__destruct') {
+            if ($nameText === '__construct' || $nameText === '__destruct') {
                 $symbol->kind = SymbolKind::CONSTRUCTOR;
             } else {
                 $symbol->kind = SymbolKind::METHOD;

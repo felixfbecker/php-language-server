@@ -880,7 +880,7 @@ class DefinitionResolver
      * Takes any class name node (from a static method call, or new node) and returns a Type object
      * Resolves keywords like self, static and parent
      *
-     * @param Node || PhpParser\Token $class
+     * @param Node | PhpParser\Token $class
      * @return Type
      */
     public function resolveClassNameToType($class): Type
@@ -1079,7 +1079,7 @@ class DefinitionResolver
         // namespace A\B;           A\B
         if ($node instanceof Node\Statement\NamespaceDefinition && $node->name instanceof Node\QualifiedName) {
             $name = (string) PhpParser\ResolvedName::buildName($node->name->nameParts, $node->getFileContents());
-            return \count($name) > 0 ? $name : null;
+            return \strlen($name) > 0 ? $name : null;
         }
 
         // INPUT                   OUTPUT:
@@ -1088,7 +1088,7 @@ class DefinitionResolver
         if ($node instanceof Node\Statement\FunctionDeclaration) {
             // Function: use functionName() as the name
             $name = (string)$node->getNamespacedName();
-            return \count($name) > 0 ? $name . '()' : null;
+            return \strlen($name) > 0 ? $name . '()' : null;
         }
 
         // INPUT                        OUTPUT
