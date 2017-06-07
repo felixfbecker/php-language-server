@@ -174,5 +174,5 @@ function getVendorDir(\stdClass $composerJson = null): string
 
 function strStartsWith(string $haystack, string $prefix): bool
 {
-    return empty($prefix) || strpos($haystack, $prefix) === 0;
+    return substr($haystack, 0, strlen($prefix)) === $prefix;
 }
