@@ -49,7 +49,7 @@ class TextDocument
     /**
      * @var ReadableIndex
      */
-    public $index;
+    protected $index;
 
     /**
      * @var \stdClass|null

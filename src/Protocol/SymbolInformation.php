@@ -107,18 +107,6 @@ class SymbolInformation
             $symbol->name = $node->variableName->getText($node);
         } else if (!isset($symbol->name)) {
             return null;
-        // if (!isset($symbol->name)) {
-        //     if ($node instanceof Node\Name) {
-        //         $symbol->name = (string)$node;
-        //     } else if ($node instanceof Node\Expr\Assign || $node instanceof Node\Expr\AssignOp) {
-        //         $symbol->name = $node->var->name;
-        //     } else if ($node instanceof Node\Expr\ClosureUse) {
-        //         $symbol->name = $node->var;
-        //     } else if (isset($node->name)) {
-        //         $symbol->name = (string)$node->name;
-        //     } else {
-        //         return null;
-        //     }
         }
 
         $symbol->location = Location::fromNode($node);

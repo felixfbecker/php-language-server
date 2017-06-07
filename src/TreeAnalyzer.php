@@ -17,8 +17,10 @@ class TreeAnalyzer
     /** @var Node */
     private $stmts;
 
+    /** @var Diagnostic[] */
     private $diagnostics;
 
+    /** @var string */
     private $content;
 
     /**
@@ -65,11 +67,11 @@ class TreeAnalyzer
                 $this->update($node);
             }
 
-            if (($_error = PhpParser\DiagnosticsProvider::checkDiagnostics($node)) !== null) {
-                $range = PhpParser\PositionUtilities::getRangeFromPosition($_error->start, $_error->length, $this->content);
+            if (($error = PhpParser\DiagnosticsProvider::checkDiagnostics($node)) !== null) {
+                $range = PhpParser\PositionUtilities::getRangeFromPosition($error->start, $error->length, $this->content);
 
                 $this->diagnostics[] = new Diagnostic(
-                    $_error->message,
+                    $error->message,
                     new Range(
                         new Position($range->start->line, $range->start->character),
                         new Position($range->end->line, $range->start->character)

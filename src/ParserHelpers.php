@@ -15,7 +15,6 @@ class ParserHelpers
             (
             $node instanceof Node\QualifiedName &&
             (
-//                $node->parent instanceof Node\Statement\ExpressionStatement ||
                 $parent instanceof Node\Expression ||
                 $parent instanceof Node\DelimitedList\ExpressionList ||
                 $parent instanceof Node\ArrayElement ||

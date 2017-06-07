@@ -30,7 +30,7 @@ class Range
      * @param Node $node
      * @return self
      */
-    public static function fromNode($node)
+    public static function fromNode(Node $node)
     {
         $range = PhpParser\PositionUtilities::getRangeFromPosition($node->getStart(), $node->getWidth(), $node->getFileContents());
 
