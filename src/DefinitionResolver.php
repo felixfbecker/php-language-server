@@ -1079,7 +1079,7 @@ class DefinitionResolver
         // namespace A\B;           A\B
         if ($node instanceof Node\Statement\NamespaceDefinition && $node->name instanceof Node\QualifiedName) {
             $name = (string) PhpParser\ResolvedName::buildName($node->name->nameParts, $node->getFileContents());
-            return \strlen($name) > 0 ? $name : null;
+            return $name === "" ? null : $name;
         }
 
         // INPUT                   OUTPUT:
@@ -1088,7 +1088,7 @@ class DefinitionResolver
         if ($node instanceof Node\Statement\FunctionDeclaration) {
             // Function: use functionName() as the name
             $name = (string)$node->getNamespacedName();
-            return \strlen($name) > 0 ? $name . '()' : null;
+            return $name === "" ? null : $name . '()';
         }
 
         // INPUT                        OUTPUT
