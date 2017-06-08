@@ -420,10 +420,10 @@ class CompletionProvider
         return $vars;
     }
 
-    private function isAssignmentToVariableWithPrefix($node, $namePrefix)
+    private function isAssignmentToVariableWithPrefix(Node $node, string $namePrefix): bool
     {
         return $node instanceof Node\Expression\AssignmentExpression
             && $node->leftOperand instanceof Node\Expression\Variable
-            && (empty($namePrefix) || strpos($node->leftOperand->getName(), $namePrefix) !== false);
+            && ($namePrefix === '' || strpos($node->leftOperand->getName(), $namePrefix) !== false);
     }
 }
