@@ -5,8 +5,6 @@ namespace LanguageServer\FqnUtilities;
 use phpDocumentor\Reflection\{Type, Types};
 use Microsoft\PhpParser;
 
-echo "FQN_UTILIIES" . PHP_EOL;
-
 /**
  * Returns all possible FQNs in a type
  *

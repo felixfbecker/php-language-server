@@ -54,7 +54,8 @@
         },
         "files" : [
             "src/utils.php",
-            "src/FqnUtilities.php"
+            "src/FqnUtilities.php",
+            "src/ParserHelpers.php"
         ]
     },
     "autoload-dev": {

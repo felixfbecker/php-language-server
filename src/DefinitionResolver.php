@@ -56,8 +56,8 @@ class DefinitionResolver
         //  - [PropertyDeclaration] // public $a, [$b = 3], $c; => public $b = 3;
         //  - [ConstDeclaration | ClassConstDeclaration] // "const A = 3, [B = 4];" => "const B = 4;"
         if (
-            ($declaration = ParserHelpers::tryGetPropertyDeclaration($node)) && ($elements = $declaration->propertyElements) ||
-            ($declaration = ParserHelpers::tryGetConstOrClassConstDeclaration($node)) && ($elements = $declaration->constElements)
+            ($declaration = ParserHelpers\tryGetPropertyDeclaration($node)) && ($elements = $declaration->propertyElements) ||
+            ($declaration = ParserHelpers\tryGetConstOrClassConstDeclaration($node)) && ($elements = $declaration->constElements)
         ) {
             $defLine = $declaration->getText();
             $defLineStart = $declaration->getStart();
@@ -95,7 +95,7 @@ class DefinitionResolver
 
         // For properties and constants, set the node to the declaration node, rather than the individual property.
         // This is because they get defined as part of a list.
-        $constOrPropertyDeclaration = ParserHelpers::tryGetPropertyDeclaration($node) ?? ParserHelpers::tryGetConstOrClassConstDeclaration($node);
+        $constOrPropertyDeclaration = ParserHelpers\tryGetPropertyDeclaration($node) ?? ParserHelpers\tryGetConstOrClassConstDeclaration($node);
         if ($constOrPropertyDeclaration !== null) {
             $node = $constOrPropertyDeclaration;
         }
@@ -104,7 +104,7 @@ class DefinitionResolver
         if ($node instanceof Node\Parameter) {
             $variableName = $node->getName();
 
-            $functionLikeDeclaration = ParserHelpers::getFunctionLikeDeclarationFromParameter($node);
+            $functionLikeDeclaration = ParserHelpers\getFunctionLikeDeclarationFromParameter($node);
             $docBlock = $this->getDocBlock($functionLikeDeclaration);
 
             $parameterDocBlockTag = $this->tryGetDocBlockTagForParameter($docBlock, $variableName);
@@ -193,7 +193,7 @@ class DefinitionResolver
         $def->isStatic = (
             ($node instanceof Node\MethodDeclaration && $node->isStatic()) ||
 
-            (($propertyDeclaration = ParserHelpers::tryGetPropertyDeclaration($node)) !== null
+            (($propertyDeclaration = ParserHelpers\tryGetPropertyDeclaration($node)) !== null
             && $propertyDeclaration->isStatic())
         );
 
@@ -258,7 +258,7 @@ class DefinitionResolver
         // If the node is a function or constant, it could be namespaced, but PHP falls back to global
         // http://php.net/manual/en/language.namespaces.fallback.php
         // TODO - verify that this is not a method
-        $globalFallback = ParserHelpers::isConstantFetch($node) || $parent instanceof Node\Expression\CallExpression;
+        $globalFallback = ParserHelpers\isConstantFetch($node) || $parent instanceof Node\Expression\CallExpression;
         // Return the Definition object from the index index
         return $this->index->getDefinition($fqn, $globalFallback);
     }
@@ -277,7 +277,7 @@ class DefinitionResolver
             return $this->resolveQualifiedNameNodeToFqn($node);
         } else if ($node instanceof Node\Expression\MemberAccessExpression) {
             return $this->resolveMemberAccessExpressionNodeToFqn($node);
-        } else if (ParserHelpers::isConstantFetch($node)) {
+        } else if (ParserHelpers\isConstantFetch($node)) {
             return (string)($node->getNamespacedName());
         } else if (
             // A\B::C - constant access expression
@@ -497,7 +497,7 @@ class DefinitionResolver
         // Traverse the AST up
         do {
             // If a function is met, check the parameters and use statements
-            if (ParserHelpers::isFunctionLike($n)) {
+            if (ParserHelpers\isFunctionLike($n)) {
                 if ($n->parameters !== null) {
                     foreach ($n->parameters->getElements() as $param) {
                         if ($param->getName() === $name) {
@@ -611,7 +611,7 @@ class DefinitionResolver
 
         // CONSTANT FETCH
         // Resolve constants by retrieving corresponding definition type from FQN
-        if (ParserHelpers::isConstantFetch($expr)) {
+        if (ParserHelpers\isConstantFetch($expr)) {
             $fqn = (string)$expr->getNamespacedName();
             $def = $this->index->getDefinition($fqn, true);
             if ($def !== null) {
@@ -728,7 +728,7 @@ class DefinitionResolver
         //   isset($var)
         //   >, >=, <, <=, &&, ||, AND, OR, XOR, ==, ===, !=, !==
         if (
-            ParserHelpers::isBooleanExpression($expr)
+            ParserHelpers\isBooleanExpression($expr)
 
             || ($expr instanceof Node\Expression\CastExpression && $expr->castType->kind === PhpParser\TokenKind::BoolCastToken)
             || ($expr instanceof Node\Expression\UnaryOpExpression && $expr->operator->kind === PhpParser\TokenKind::ExclamationToken)
@@ -933,7 +933,7 @@ class DefinitionResolver
      */
     public function getTypeFromNode($node)
     {
-        if (ParserHelpers::isConstDefineExpression($node)) {
+        if (ParserHelpers\isConstDefineExpression($node)) {
             // constants with define() like
             // define('TEST_DEFINE_CONSTANT', false);
             return $this->resolveExpressionNodeToType($node->argumentExpressionList->children[2]->expression);
@@ -950,7 +950,7 @@ class DefinitionResolver
             //  * @param MyClass $myParam
             //  */
             //  function foo($a)
-            $functionLikeDeclaration = ParserHelpers::getFunctionLikeDeclarationFromParameter($node);
+            $functionLikeDeclaration = ParserHelpers\getFunctionLikeDeclarationFromParameter($node);
             $variableName = $node->getName();
             $docBlock = $this->getDocBlock($functionLikeDeclaration);
 
@@ -987,7 +987,7 @@ class DefinitionResolver
         //   1. doc block
         //   2. return type hint
         //   3. TODO: infer from return statements
-        if (ParserHelpers::isFunctionLike($node)) {
+        if (ParserHelpers\isFunctionLike($node)) {
             // Functions/methods
             $docBlock = $this->getDocBlock($node);
             if (
@@ -1014,8 +1014,8 @@ class DefinitionResolver
         // Get the documented type the assignment resolves to.
         if (
             ($declarationNode =
-                ParserHelpers::tryGetPropertyDeclaration($node) ??
-                ParserHelpers::tryGetConstOrClassConstDeclaration($node)
+                ParserHelpers\tryGetPropertyDeclaration($node) ??
+                ParserHelpers\tryGetConstOrClassConstDeclaration($node)
             ) !== null ||
             ($node = $node->parent) instanceof Node\Expression\AssignmentExpression) {
             $declarationNode = $declarationNode ?? $node;
@@ -1123,7 +1123,7 @@ class DefinitionResolver
         //   $a = 4, $b = 4             A\B\C->$a, A\B\C->$b // TODO verify variable name
         // }
         if (
-            ($propertyDeclaration = ParserHelpers::tryGetPropertyDeclaration($node)) !== null &&
+            ($propertyDeclaration = ParserHelpers\tryGetPropertyDeclaration($node)) !== null &&
             ($classDeclaration =
                 $node->getFirstAncestor(
                     Node\Expression\ObjectCreationExpression::class,
@@ -1148,7 +1148,7 @@ class DefinitionResolver
         // class C {
         //   const $a, $b = 4           A\B\C::$a(), A\B\C::$b
         // }
-        if (($constDeclaration = ParserHelpers::tryGetConstOrClassConstDeclaration($node)) !== null) {
+        if (($constDeclaration = ParserHelpers\tryGetConstOrClassConstDeclaration($node)) !== null) {
             if ($constDeclaration instanceof Node\Statement\ConstDeclaration) {
                 // Basic constant: use CONSTANT_NAME as name
                 return (string)$node->getNamespacedName();
@@ -1168,7 +1168,7 @@ class DefinitionResolver
             return (string)$classDeclaration->getNamespacedName() . '::' . $node->getName();
         }
 
-        if (ParserHelpers::isConstDefineExpression($node)) {
+        if (ParserHelpers\isConstDefineExpression($node)) {
             return $node->argumentExpressionList->children[0]->expression->getStringContentsText();
         }
 

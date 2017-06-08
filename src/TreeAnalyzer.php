@@ -137,7 +137,7 @@ class TreeAnalyzer
                     // Namespaced constant access and function calls also need to register a reference
                     // to the global version because PHP falls back to global at runtime
                     // http://php.net/manual/en/language.namespaces.fallback.php
-                    if (ParserHelpers::isConstantFetch($node) ||
+                    if (ParserHelpers\isConstantFetch($node) ||
                         ($parent instanceof Node\Expression\CallExpression
                             && !(
                                 $node instanceof Node\Expression\ScopedPropertyAccessExpression ||

@@ -228,7 +228,7 @@ class CompletionProvider
                     }
                 }
             }
-        } elseif (ParserHelpers::isConstantFetch($node) ||
+        } elseif (ParserHelpers\isConstantFetch($node) ||
             ($creation = $node->parent) instanceof Node\Expression\ObjectCreationExpression ||
             (($creation = $node) instanceof Node\Expression\ObjectCreationExpression)) {
             $class = isset($creation) ? $creation->classTypeDesignator : $node;
@@ -296,7 +296,7 @@ class CompletionProvider
                     $list->items[] = $item;
                 }
             }
-        } elseif (ParserHelpers::isConstantFetch($node)) {
+        } elseif (ParserHelpers\isConstantFetch($node)) {
             $prefix = (string) ($node->getResolvedName() ?? PhpParser\ResolvedName::buildName($node->nameParts, $node->getFileContents()));
             foreach (self::KEYWORDS as $keyword) {
                 $item = new CompletionItem($keyword, CompletionItemKind::KEYWORD);
@@ -353,7 +353,7 @@ class CompletionProvider
 
         // Walk the AST upwards until a scope boundary is met
         $level = $node;
-        while ($level && !ParserHelpers::isFunctionLike($level)) {
+        while ($level && !ParserHelpers\isFunctionLike($level)) {
             // Walk siblings before the node
             $sibling = $level;
             while ($sibling = $sibling->getPreviousSibling()) {
@@ -367,7 +367,7 @@ class CompletionProvider
 
         // If the traversal ended because a function was met,
         // also add its parameters and closure uses to the result list
-        if ($level && ParserHelpers::isFunctionLike($level) && $level->parameters !== null) {
+        if ($level && ParserHelpers\isFunctionLike($level) && $level->parameters !== null) {
             foreach ($level->parameters->getValues() as $param) {
                 $paramName = $param->getName();
                 if (empty($namePrefix) || strpos($paramName, $namePrefix) !== false) {
