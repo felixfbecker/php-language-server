@@ -1177,12 +1177,12 @@ class DefinitionResolver
 
     /**
      * @param DocBlock | null $docBlock
-     * @param $variableName
+     * @param string | null $variableName
      * @return DocBlock\Tags\Param | null
      */
     private function tryGetDocBlockTagForParameter($docBlock, $variableName)
     {
-        if ($docBlock === null) {
+        if ($docBlock === null || $variableName === null) {
             return null;
         }
         $tags = $docBlock->getTagsByName('param');
