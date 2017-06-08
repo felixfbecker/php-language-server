@@ -43,8 +43,8 @@ class ValidationTest extends TestCase
     }
 
     /**
-     * This test loads the test cases specified in .php files under cases/ and looks at the whole set of 
-     * Definitions and References produced. It reads the expected results from associated .json files 
+     * This test loads the test cases specified in .php files under cases/ and looks at the whole set of
+     * Definitions and References produced. It reads the expected results from associated .json files
      * and compares to the actual result. If they don't match, the test fails and it writes the new baseline
      * to the .json file.
      * @group validation

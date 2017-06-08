@@ -2,6 +2,7 @@
 <ruleset name="PHP Language Server">
     <file>src</file>
     <file>tests</file>
+    <exclude-pattern>tests/Validation/cases</exclude-pattern>
     <rule ref="PSR2">
         <exclude name="PSR2.Namespaces.UseDeclaration.MultipleDeclarations"/>
         <exclude name="PSR2.ControlStructures.ElseIfDeclaration.NotAllowed"/>
