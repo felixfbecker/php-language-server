@@ -68,7 +68,7 @@ class DefinitionCollectorTest extends TestCase
     /**
      * @param $path
      */
-    private function collectDefinitions($path): array
+    private function collectDefinitions(string $path): array
     {
         $uri = pathToUri($path);
         $parser = new PhpParser\Parser();

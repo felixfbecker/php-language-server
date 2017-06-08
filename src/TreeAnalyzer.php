@@ -156,11 +156,17 @@ class TreeAnalyzer
         $this->collectDefinitionsAndReferences($node);
     }
 
-    public function getDiagnostics()
+    /**
+     * @return Diagnostic[]
+     */
+    public function getDiagnostics(): array
     {
         return $this->diagnostics ?? [];
     }
 
+    /**
+     * @return void
+     */
     private function addReference(string $fqn, Node $node)
     {
         if (!isset($this->referenceNodes[$fqn])) {
@@ -169,21 +175,33 @@ class TreeAnalyzer
         $this->referenceNodes[$fqn][] = $node;
     }
 
+    /**
+     * @return Definition
+     */
     public function getDefinitions()
     {
         return $this->definitions ?? [];
     }
 
+    /**
+     * @return Node[]
+     */
     public function getDefinitionNodes()
     {
         return $this->definitionNodes ?? [];
     }
 
+    /**
+     * @return Node[]
+     */
     public function getReferenceNodes()
     {
         return $this->referenceNodes ?? [];
     }
 
+    /**
+     * @return Node[]
+     */
     public function getStmts()
     {
         return $this->stmts;
