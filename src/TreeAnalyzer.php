@@ -12,6 +12,7 @@ use Microsoft\PhpParser\Node;
 
 class TreeAnalyzer
 {
+    /** @var PhpParser\Parser */
     private $parser;
 
     /** @var Node */
@@ -33,14 +34,13 @@ class TreeAnalyzer
     private $definitionNodes;
 
     /**
-     * TreeAnalyzer constructor.
      * @param PhpParser\Parser $parser
-     * @param $content
-     * @param $docBlockFactory
+     * @param string $content
+     * @param DocBlockFactory $docBlockFactory
      * @param DefinitionResolver $definitionResolver
-     * @param $uri
+     * @param string $uri
      */
-    public function __construct($parser, $content, $docBlockFactory, $definitionResolver, $uri)
+    public function __construct(PhpParser\Parser $parser, string $content, DocBlockFactory $docBlockFactory, DefinitionResolver $definitionResolver, string $uri)
     {
         $this->parser = $parser;
         $this->docBlockFactory = $docBlockFactory;
@@ -53,7 +53,7 @@ class TreeAnalyzer
         $this->collectDefinitionsAndReferences($this->stmts);
     }
 
-    public function collectDefinitionsAndReferences(Node $stmts)
+    private function collectDefinitionsAndReferences(Node $stmts)
     {
         foreach ($stmts::CHILD_NAMES as $name) {
             $node = $stmts->$name;
@@ -94,6 +94,7 @@ class TreeAnalyzer
 
     /**
      * Collect definitions and references for the given node
+     *
      * @param Node $node
      */
     private function update(Node $node)
