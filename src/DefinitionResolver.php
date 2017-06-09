@@ -176,8 +176,8 @@ class DefinitionResolver
         // Determines whether the suggestion will show after "new"
         $def->canBeInstantiated = (
             $node instanceof Node\Statement\ClassDeclaration &&
-            // use text's length for speedup: |abstract| = 7; |final| = 5
-            ($node->abstractOrFinalModifier === null || $node->abstractOrFinalModifier->length !== 7)
+            // use text's length for speedup: |abstract| = 8; |final| = 5
+            ($node->abstractOrFinalModifier === null || $node->abstractOrFinalModifier->length !== 8)
         );
 
         // Interfaces, classes, traits, namespaces, functions, and global const elements
