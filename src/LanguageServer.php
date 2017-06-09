@@ -106,7 +106,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     protected $definitionResolver;
 
     /**
-     * @param PotocolReader  $reader
+     * @param ProtocolReader  $reader
      * @param ProtocolWriter $writer
      */
     public function __construct(ProtocolReader $reader, ProtocolWriter $writer)
@@ -132,7 +132,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                     // If a ResponseError is thrown, send it back in the Response
                     $error = $e;
                 } catch (Throwable $e) {
-                    // If an unexpected error occured, send back an INTERNAL_ERROR error response
+                    // If an unexpected error occurred, send back an INTERNAL_ERROR error response
                     $error = new AdvancedJsonRpc\Error(
                         (string)$e,
                         AdvancedJsonRpc\ErrorCode::INTERNAL_ERROR,

@@ -114,7 +114,7 @@ class DefinitionResolver
         // For everything else, get the doc block summary corresponding to the current node.
         $docBlock = $this->getDocBlock($node);
         if ($docBlock !== null) {
-            // check wether we have a description, when true, add a new paragraph
+            // check whether we have a description, when true, add a new paragraph
             // with the description
             $description = $docBlock->getDescription()->render();
 
@@ -174,7 +174,11 @@ class DefinitionResolver
         $def->fqn = $fqn;
 
         // Determines whether the suggestion will show after "new"
-        $def->canBeInstantiated = $node instanceof Node\Statement\ClassDeclaration;
+        $def->canBeInstantiated = (
+            $node instanceof Node\Statement\ClassDeclaration &&
+            // use text's length for speedup: |abstract| = 7; |final| = 5
+            ($node->abstractOrFinalModifier === null || $node->abstractOrFinalModifier->length !== 7)
+        );
 
         // Interfaces, classes, traits, namespaces, functions, and global const elements
         $def->isGlobal = (
