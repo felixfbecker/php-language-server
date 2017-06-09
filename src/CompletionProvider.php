@@ -268,9 +268,8 @@ class CompletionProvider
                         }
 
 
-                        if (!$isNotFullyQualified && ($fqnStartsWithPrefix || strStartsWith($fqn, $namespacePrefix . "\\" . $prefix))) {
-                            // $fqn = $fqn;
-                        } elseif (!$isAliased && !array_search($fqn, array_values($namespaceImportTable))) {
+                        $isFullyQualifiedAndPrefixMatches = !$isNotFullyQualified && ($fqnStartsWithPrefix || strStartsWith($fqn, $namespacePrefix . "\\" . $prefix));
+                        if (!$isFullyQualifiedAndPrefixMatches && !$isAliased && !array_search($fqn, array_values($namespaceImportTable))) {
                             if (empty($prefix)) {
                                 $fqn = '\\' . $fqn;
                             } elseif (strStartsWith($fqn, $namespacePrefix . "\\" . $prefix)) {
@@ -278,7 +277,7 @@ class CompletionProvider
                             } else {
                                 continue;
                             }
-                        } elseif (!$isAliased) {
+                        } elseif (!$isFullyQualifiedAndPrefixMatches && !$isAliased) {
                             continue;
                         }
                     } elseif ($fqnStartsWithPrefix && $class instanceof Node\QualifiedName && $class->isFullyQualifiedName()) {
