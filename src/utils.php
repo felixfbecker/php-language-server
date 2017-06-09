@@ -5,7 +5,6 @@ namespace LanguageServer;
 
 use Throwable;
 use InvalidArgumentException;
-use PhpParser\Node;
 use Sabre\Event\{Loop, Promise, EmitterInterface};
 use Sabre\Uri;
 
@@ -92,23 +91,6 @@ function waitForEvent(EmitterInterface $emitter, string $event): Promise
     $p = new Promise;
     $emitter->once($event, [$p, 'fulfill']);
     return $p;
-}
-
-/**
- * Returns the closest node of a specific type
- *
- * @param Node $node
- * @param string $type The node class name
- * @return Node|null $type
- */
-function getClosestNode(Node $node, string $type)
-{
-    $n = $node;
-    while ($n = $n->getAttribute('parentNode')) {
-        if ($n instanceof $type) {
-            return $n;
-        }
-    }
 }
 
 /**

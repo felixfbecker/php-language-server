@@ -5,3 +5,4 @@ vendor/
 .phpls/
 composer.lock
 stubs
+*.ast

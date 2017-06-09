@@ -2,7 +2,8 @@
 
 namespace LanguageServer\Protocol;
 
-use PhpParser\Node;
+use Microsoft\PhpParser;
+use Microsoft\PhpParser\Node;
 use Exception;
 
 /**
@@ -44,65 +45,68 @@ class SymbolInformation
      *
      * @param Node $node
      * @param string $fqn If given, $containerName will be extracted from it
-     * @return self|null
+     * @return SymbolInformation|null
      */
-    public static function fromNode(Node $node, string $fqn = null)
+    public static function fromNode($node, string $fqn = null)
     {
-        $parent = $node->getAttribute('parentNode');
         $symbol = new self;
-
-        if (
-            $node instanceof Node\Expr\FuncCall
-            && $node->name instanceof Node\Name
-            && strtolower((string)$node->name) === 'define'
-            && isset($node->args[0])
-            && $node->args[0]->value instanceof Node\Scalar\String_
-        ) {
+        if ($node instanceof Node\Statement\ClassDeclaration) {
+            $symbol->kind = SymbolKind::CLASS_;
+        } else if ($node instanceof Node\Statement\TraitDeclaration) {
+            $symbol->kind = SymbolKind::CLASS_;
+        } else if (\LanguageServer\ParserHelpers\isConstDefineExpression($node)) {
             // constants with define() like
             // define('TEST_DEFINE_CONSTANT', false);
             $symbol->kind = SymbolKind::CONSTANT;
-            $symbol->name = (string)$node->args[0]->value->value;
-        } else if ($node instanceof Node\Stmt\Class_ || $node instanceof Node\Stmt\Trait_) {
-            $symbol->kind = SymbolKind::CLASS_;
-        } else if ($node instanceof Node\Stmt\Interface_) {
+            $symbol->name = $node->argumentExpressionList->children[0]->expression->getStringContentsText();
+        } else if ($node instanceof Node\Statement\InterfaceDeclaration) {
             $symbol->kind = SymbolKind::INTERFACE;
-        } else if ($node instanceof Node\Name && $parent instanceof Node\Stmt\Namespace_) {
+        } else if ($node instanceof Node\Statement\NamespaceDefinition) {
             $symbol->kind = SymbolKind::NAMESPACE;
-        } else if ($node instanceof Node\Stmt\Function_) {
+        } else if ($node instanceof Node\Statement\FunctionDeclaration) {
             $symbol->kind = SymbolKind::FUNCTION;
-        } else if ($node instanceof Node\Stmt\ClassMethod && ($node->name === '__construct' || $node->name === '__destruct')) {
-            $symbol->kind = SymbolKind::CONSTRUCTOR;
-        } else if ($node instanceof Node\Stmt\ClassMethod) {
-            $symbol->kind = SymbolKind::METHOD;
-        } else if ($node instanceof Node\Stmt\PropertyProperty) {
+        } else if ($node instanceof Node\MethodDeclaration) {
+            $nameText = $node->getName();
+            if ($nameText === '__construct' || $nameText === '__destruct') {
+                $symbol->kind = SymbolKind::CONSTRUCTOR;
+            } else {
+                $symbol->kind = SymbolKind::METHOD;
+            }
+        } else if ($node instanceof Node\Expression\Variable && $node->getFirstAncestor(Node\PropertyDeclaration::class) !== null) {
             $symbol->kind = SymbolKind::PROPERTY;
-        } else if ($node instanceof Node\Const_) {
+        } else if ($node instanceof Node\ConstElement) {
             $symbol->kind = SymbolKind::CONSTANT;
         } else if (
             (
-                ($node instanceof Node\Expr\Assign || $node instanceof Node\Expr\AssignOp)
-                && $node->var instanceof Node\Expr\Variable
+                ($node instanceof Node\Expression\AssignmentExpression)
+                && $node->leftOperand instanceof Node\Expression\Variable
             )
-            || $node instanceof Node\Expr\ClosureUse
-            || $node instanceof Node\Param
+            || $node instanceof Node\UseVariableName
+            || $node instanceof Node\Parameter
         ) {
             $symbol->kind = SymbolKind::VARIABLE;
         } else {
             return null;
         }
-        
-        if (!isset($symbol->name)) {
-            if ($node instanceof Node\Name) {
-                $symbol->name = (string)$node;
-            } else if ($node instanceof Node\Expr\Assign || $node instanceof Node\Expr\AssignOp) {
-                $symbol->name = $node->var->name;
-            } else if ($node instanceof Node\Expr\ClosureUse) {
-                $symbol->name = $node->var;
-            } else if (isset($node->name)) {
-                $symbol->name = (string)$node->name;
-            } else {
-                return null;
+
+        if ($node instanceof Node\Expression\AssignmentExpression) {
+            if ($node->leftOperand instanceof Node\Expression\Variable) {
+                $symbol->name = $node->leftOperand->getName();
+            } elseif ($node->leftOperand instanceof PhpParser\Token) {
+                $symbol->name = trim($node->leftOperand->getText($node->getFileContents()), "$");
             }
+        } else if ($node instanceof Node\UseVariableName) {
+            $symbol->name = $node->getName();
+        } else if (isset($node->name)) {
+            if ($node->name instanceof Node\QualifiedName) {
+                $symbol->name = (string)PhpParser\ResolvedName::buildName($node->name->nameParts, $node->getFileContents());
+            } else {
+                $symbol->name = ltrim((string)$node->name->getText($node->getFileContents()), "$");
+            }
+        } else if (isset($node->variableName)) {
+            $symbol->name = $node->variableName->getText($node);
+        } else if (!isset($symbol->name)) {
+            return null;
         }
 
         $symbol->location = Location::fromNode($node);

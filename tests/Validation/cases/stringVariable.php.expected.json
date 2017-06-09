@@ -1,0 +1,61 @@
+{
+    "references": [],
+    "definitions": {
+        "B": {
+            "fqn": "B",
+            "extends": [],
+            "isGlobal": true,
+            "isStatic": false,
+            "canBeInstantiated": true,
+            "symbolInformation": {
+                "name": "B",
+                "kind": 5,
+                "location": {
+                    "uri": "./stringVariable.php"
+                },
+                "containerName": ""
+            },
+            "type": null,
+            "declarationLine": "class B",
+            "documentation": null
+        },
+        "B->hi": {
+            "fqn": "B->hi",
+            "extends": [],
+            "isGlobal": false,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "hi",
+                "kind": 7,
+                "location": {
+                    "uri": "./stringVariable.php"
+                },
+                "containerName": "B"
+            },
+            "type__class": "phpDocumentor\\Reflection\\Types\\Integer",
+            "type": {},
+            "declarationLine": "public $hi;",
+            "documentation": null
+        },
+        "B->a()": {
+            "fqn": "B->a()",
+            "extends": [],
+            "isGlobal": false,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "a",
+                "kind": 6,
+                "location": {
+                    "uri": "./stringVariable.php"
+                },
+                "containerName": "B"
+            },
+            "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
+            "type": {},
+            "declarationLine": "function a () {",
+            "documentation": null
+        }
+    }
+}

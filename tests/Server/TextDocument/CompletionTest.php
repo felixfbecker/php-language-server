@@ -5,15 +5,16 @@ namespace LanguageServer\Tests\Server\TextDocument;
 
 use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
-use LanguageServer\{Server, LanguageClient, PhpDocumentLoader, CompletionProvider, DefinitionResolver};
-use LanguageServer\Index\{Index, ProjectIndex, DependenciesIndex, GlobalIndex, StubsIndex};
+use LanguageServer\{
+    Server, LanguageClient, PhpDocumentLoader, DefinitionResolver
+};
+use LanguageServer\Index\{Index, ProjectIndex, DependenciesIndex};
 use LanguageServer\ContentRetriever\FileSystemContentRetriever;
 use LanguageServer\Protocol\{
     TextDocumentIdentifier,
     TextEdit,
     Range,
     Position,
-    ClientCapabilities,
     CompletionList,
     CompletionItem,
     CompletionItemKind
@@ -52,7 +53,7 @@ class CompletionTest extends TestCase
             new TextDocumentIdentifier($completionUri),
             new Position(3, 7)
         )->wait();
-        $this->assertEquals(new CompletionList([
+        $this->assertCompletionsListSubset(new CompletionList([
             new CompletionItem(
                 'testProperty',
                 CompletionItemKind::PROPERTY,
@@ -76,7 +77,7 @@ class CompletionTest extends TestCase
             new TextDocumentIdentifier($completionUri),
             new Position(3, 6)
         )->wait();
-        $this->assertEquals(new CompletionList([
+        $this->assertCompletionsListSubset(new CompletionList([
             new CompletionItem(
                 'testProperty',
                 CompletionItemKind::PROPERTY,
@@ -100,7 +101,7 @@ class CompletionTest extends TestCase
             new TextDocumentIdentifier($completionUri),
             new Position(8, 5)
         )->wait();
-        $this->assertEquals(new CompletionList([
+        $this->assertCompletionsListSubset(new CompletionList([
             new CompletionItem(
                 '$var',
                 CompletionItemKind::VARIABLE,
@@ -132,7 +133,7 @@ class CompletionTest extends TestCase
             new TextDocumentIdentifier($completionUri),
             new Position(8, 6)
         )->wait();
-        $this->assertEquals(new CompletionList([
+        $this->assertCompletionsListSubset(new CompletionList([
             new CompletionItem(
                 '$param',
                 CompletionItemKind::VARIABLE,
@@ -154,7 +155,7 @@ class CompletionTest extends TestCase
             new TextDocumentIdentifier($completionUri),
             new Position(6, 10)
         )->wait();
-        $this->assertEquals(new CompletionList([
+        $this->assertCompletionsListSubset(new CompletionList([
             // Global TestClass definition (inserted as \TestClass)
             new CompletionItem(
                 'TestClass',
@@ -223,17 +224,20 @@ class CompletionTest extends TestCase
             new TextDocumentIdentifier($completionUri),
             new Position(6, 5)
         )->wait();
-        $this->assertEquals(new CompletionList([
+        $this->assertCompletionsListSubset(new CompletionList([
             new CompletionItem(
                 'TestClass',
                 CompletionItemKind::CLASS_,
                 'TestNamespace',
                 'Pariatur ut laborum tempor voluptate consequat ea deserunt.' . "\n\n" .
-                'Deserunt enim minim sunt sint ea nisi. Deserunt excepteur tempor id nostrud' . "\n" .
-                'laboris commodo ad commodo velit mollit qui non officia id. Nulla duis veniam' . "\n" .
-                'veniam officia deserunt et non dolore mollit ea quis eiusmod sit non. Occaecat' . "\n" .
-                'consequat sunt culpa exercitation pariatur id reprehenderit nisi incididunt Lorem' . "\n" .
-                'sint. Officia culpa pariatur laborum nostrud cupidatat consequat mollit.'
+                    'Deserunt enim minim sunt sint ea nisi. Deserunt excepteur tempor id nostrud' . "\n" .
+                    'laboris commodo ad commodo velit mollit qui non officia id. Nulla duis veniam' . "\n" .
+                    'veniam officia deserunt et non dolore mollit ea quis eiusmod sit non. Occaecat' . "\n" .
+                    'consequat sunt culpa exercitation pariatur id reprehenderit nisi incididunt Lorem' . "\n" .
+                    'sint. Officia culpa pariatur laborum nostrud cupidatat consequat mollit.',
+                null,
+                null,
+                'TestClass'
             )
         ], true), $items);
     }
@@ -246,7 +250,7 @@ class CompletionTest extends TestCase
             new TextDocumentIdentifier($completionUri),
             new Position(2, 14)
         )->wait();
-        $this->assertEquals(new CompletionList([
+        $this->assertCompletionsListSubset(new CompletionList([
             new CompletionItem(
                 'staticTestProperty',
                 CompletionItemKind::PROPERTY,
@@ -267,7 +271,7 @@ class CompletionTest extends TestCase
             new TextDocumentIdentifier($completionUri),
             new Position(2, 11)
         )->wait();
-        $this->assertEquals(new CompletionList([
+        $this->assertCompletionsListSubset(new CompletionList([
             new CompletionItem(
                 'TEST_CLASS_CONST',
                 CompletionItemKind::VARIABLE,
@@ -300,7 +304,7 @@ class CompletionTest extends TestCase
             new TextDocumentIdentifier($completionUri),
             new Position(2, 13)
         )->wait();
-        $this->assertEquals(new CompletionList([
+        $this->assertCompletionsListSubset(new CompletionList([
             new CompletionItem(
                 'TEST_CLASS_CONST',
                 CompletionItemKind::VARIABLE,
@@ -333,7 +337,7 @@ class CompletionTest extends TestCase
             new TextDocumentIdentifier($completionUri),
             new Position(2, 13)
         )->wait();
-        $this->assertEquals(new CompletionList([
+        $this->assertCompletionsListSubset(new CompletionList([
             new CompletionItem(
                 'TEST_CLASS_CONST',
                 CompletionItemKind::VARIABLE,
@@ -366,7 +370,7 @@ class CompletionTest extends TestCase
             new TextDocumentIdentifier($completionUri),
             new Position(6, 6)
         )->wait();
-        $this->assertEquals(new CompletionList([
+        $this->assertCompletionsListSubset(new CompletionList([
             new CompletionItem(
                 'TestClass',
                 CompletionItemKind::CLASS_,
@@ -392,7 +396,7 @@ class CompletionTest extends TestCase
             new TextDocumentIdentifier($completionUri),
             new Position(2, 1)
         )->wait();
-        $this->assertEquals(new CompletionList([
+        $this->assertCompletionsListSubset(new CompletionList([
             new CompletionItem('class', CompletionItemKind::KEYWORD, null, null, null, null, 'class '),
             new CompletionItem('clone', CompletionItemKind::KEYWORD, null, null, null, null, 'clone ')
         ], true), $items);
@@ -406,7 +410,7 @@ class CompletionTest extends TestCase
             new TextDocumentIdentifier($completionUri),
             new Position(0, 0)
         )->wait();
-        $this->assertEquals(new CompletionList([
+        $this->assertCompletionsListSubset(new CompletionList([
             new CompletionItem(
                 '<?php',
                 CompletionItemKind::KEYWORD,
@@ -428,7 +432,7 @@ class CompletionTest extends TestCase
             new TextDocumentIdentifier($completionUri),
             new Position(0, 1)
         )->wait();
-        $this->assertEquals(new CompletionList([
+        $this->assertCompletionsListSubset(new CompletionList([
             new CompletionItem(
                 '<?php',
                 CompletionItemKind::KEYWORD,
@@ -450,7 +454,7 @@ class CompletionTest extends TestCase
             new TextDocumentIdentifier($completionUri),
             new Position(4, 6)
         )->wait();
-        $this->assertEquals(new CompletionList([
+        $this->assertCompletionsListSubset(new CompletionList([
             new CompletionItem(
                 'SomeNamespace',
                 CompletionItemKind::MODULE,
@@ -471,7 +475,7 @@ class CompletionTest extends TestCase
             new TextDocumentIdentifier($completionUri),
             new Position(4, 8)
         )->wait();
-        $this->assertEquals(new CompletionList([
+        $this->assertCompletionsListSubset(new CompletionList([
             new CompletionItem(
                 '$abc2',
                 CompletionItemKind::VARIABLE,
@@ -493,5 +497,14 @@ class CompletionTest extends TestCase
                 new TextEdit(new Range(new Position(4, 8), new Position(4, 8)), 'c')
             )
         ], true), $items);
+    }
+
+    private function assertCompletionsListSubset(CompletionList $subsetList, CompletionList $list)
+    {
+        foreach ($subsetList->items as $expectedItem) {
+            $this->assertContains($expectedItem, $list->items, null, null, false);
+        }
+
+        $this->assertEquals($subsetList->isIncomplete, $list->isIncomplete);
     }
 }

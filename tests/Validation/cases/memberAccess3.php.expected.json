@@ -1,0 +1,82 @@
+{
+    "references": {
+        "MyNamespace\\ClassLoader": [
+            "./memberAccess3.php"
+        ],
+        "Closure::bind()": [
+            "./memberAccess3.php"
+        ],
+        "Closure": [
+            "./memberAccess3.php"
+        ],
+        "MyNamespace\\ClassLoader->prefixesPsr0": [
+            "./memberAccess3.php"
+        ],
+        "MyNamespace\\ComposerStaticInitIncludePath": [
+            "./memberAccess3.php"
+        ],
+        "MyNamespace\\ComposerStaticInitIncludePath::$prefixesPsr0": [
+            "./memberAccess3.php"
+        ],
+        "MyNamespace\\ClassLoader::class": [
+            "./memberAccess3.php"
+        ]
+    },
+    "definitions": {
+        "MyNamespace": {
+            "fqn": "MyNamespace",
+            "extends": [],
+            "isGlobal": true,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "MyNamespace",
+                "kind": 3,
+                "location": {
+                    "uri": "./memberAccess3.php"
+                },
+                "containerName": ""
+            },
+            "type": null,
+            "declarationLine": "namespace MyNamespace;",
+            "documentation": null
+        },
+        "MyNamespace\\A": {
+            "fqn": "MyNamespace\\A",
+            "extends": [],
+            "isGlobal": true,
+            "isStatic": false,
+            "canBeInstantiated": true,
+            "symbolInformation": {
+                "name": "A",
+                "kind": 5,
+                "location": {
+                    "uri": "./memberAccess3.php"
+                },
+                "containerName": "MyNamespace"
+            },
+            "type": null,
+            "declarationLine": "class A {",
+            "documentation": null
+        },
+        "MyNamespace\\A::getInitializer()": {
+            "fqn": "MyNamespace\\A::getInitializer()",
+            "extends": [],
+            "isGlobal": false,
+            "isStatic": true,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "getInitializer",
+                "kind": 6,
+                "location": {
+                    "uri": "./memberAccess3.php"
+                },
+                "containerName": "MyNamespace\\A"
+            },
+            "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
+            "type": {},
+            "declarationLine": "public static function getInitializer(ClassLoader $loader)",
+            "documentation": null
+        }
+    }
+}

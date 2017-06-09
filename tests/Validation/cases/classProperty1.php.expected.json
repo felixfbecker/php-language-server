@@ -1,0 +1,86 @@
+{
+    "references": {
+        "SomeNamespace\\Goo": [
+            "./classProperty1.php"
+        ],
+        "SomeNamespace": [
+            "./classProperty1.php"
+        ]
+    },
+    "definitions": {
+        "TestNamespace": {
+            "fqn": "TestNamespace",
+            "extends": [],
+            "isGlobal": true,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "TestNamespace",
+                "kind": 3,
+                "location": {
+                    "uri": "./classProperty1.php"
+                },
+                "containerName": ""
+            },
+            "type": null,
+            "declarationLine": "namespace TestNamespace;",
+            "documentation": null
+        },
+        "TestNamespace\\TestClass": {
+            "fqn": "TestNamespace\\TestClass",
+            "extends": [],
+            "isGlobal": true,
+            "isStatic": false,
+            "canBeInstantiated": true,
+            "symbolInformation": {
+                "name": "TestClass",
+                "kind": 5,
+                "location": {
+                    "uri": "./classProperty1.php"
+                },
+                "containerName": "TestNamespace"
+            },
+            "type": null,
+            "declarationLine": "class TestClass",
+            "documentation": null
+        },
+        "TestNamespace\\TestClass->testProperty": {
+            "fqn": "TestNamespace\\TestClass->testProperty",
+            "extends": [],
+            "isGlobal": false,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "testProperty",
+                "kind": 7,
+                "location": {
+                    "uri": "./classProperty1.php"
+                },
+                "containerName": "TestNamespace\\TestClass"
+            },
+            "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
+            "type": {},
+            "declarationLine": "public $testProperty;",
+            "documentation": null
+        },
+        "TestNamespace\\TestClass->testMethod()": {
+            "fqn": "TestNamespace\\TestClass->testMethod()",
+            "extends": [],
+            "isGlobal": false,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "testMethod",
+                "kind": 6,
+                "location": {
+                    "uri": "./classProperty1.php"
+                },
+                "containerName": "TestNamespace\\TestClass"
+            },
+            "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
+            "type": {},
+            "declarationLine": "public function testMethod($testParameter)",
+            "documentation": null
+        }
+    }
+}

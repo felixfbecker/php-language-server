@@ -8,6 +8,7 @@ use LanguageServer\Index\ProjectIndex;
 use phpDocumentor\Reflection\DocBlockFactory;
 use Sabre\Event\Promise;
 use function Sabre\Event\coroutine;
+use Microsoft\PhpParser;
 
 /**
  * Takes care of loading documents and managing "open" documents
@@ -37,6 +38,11 @@ class PhpDocumentLoader
     private $parser;
 
     /**
+     * @var PhpParser\Parser
+     */
+    private $tolerantParser;
+
+    /**
      * @var DocBlockFactory
      */
     private $docBlockFactory;
@@ -47,9 +53,10 @@ class PhpDocumentLoader
     private $definitionResolver;
 
     /**
-     * @param ContentRetriever   $contentRetriever
-     * @param ProjectIndex       $project
+     * @param ContentRetriever $contentRetriever
+     * @param ProjectIndex $projectIndex
      * @param DefinitionResolver $definitionResolver
+     * @internal param ProjectIndex $project
      */
     public function __construct(
         ContentRetriever $contentRetriever,
@@ -59,7 +66,7 @@ class PhpDocumentLoader
         $this->contentRetriever = $contentRetriever;
         $this->projectIndex = $projectIndex;
         $this->definitionResolver = $definitionResolver;
-        $this->parser = new Parser;
+        $this->parser = new PhpParser\Parser();
         $this->docBlockFactory = DocBlockFactory::createInstance();
     }
 

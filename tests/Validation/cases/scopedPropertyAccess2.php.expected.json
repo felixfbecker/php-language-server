@@ -1,0 +1,27 @@
+{
+    "references": {
+        "MyNamespace\\A": [
+            "./scopedPropertyAccess2.php"
+        ]
+    },
+    "definitions": {
+        "MyNamespace": {
+            "fqn": "MyNamespace",
+            "extends": [],
+            "isGlobal": true,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "MyNamespace",
+                "kind": 3,
+                "location": {
+                    "uri": "./scopedPropertyAccess2.php"
+                },
+                "containerName": ""
+            },
+            "type": null,
+            "declarationLine": "namespace MyNamespace;",
+            "documentation": null
+        }
+    }
+}

@@ -5,11 +5,12 @@ namespace LanguageServer\Tests\Server\TextDocument\Definition;
 
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\Tests\Server\ServerTestCase;
-use LanguageServer\{Server, LanguageClient, PhpDocumentLoader, DefinitionResolver};
+use LanguageServer\{
+    Server, LanguageClient, PhpDocumentLoader, DefinitionResolver
+};
 use LanguageServer\Index\{Index, ProjectIndex, DependenciesIndex};
 use LanguageServer\ContentRetriever\FileSystemContentRetriever;
-use LanguageServer\Protocol\{TextDocumentIdentifier, Position, Range, Location, ClientCapabilities};
-use Sabre\Event\Promise;
+use LanguageServer\Protocol\{TextDocumentIdentifier, Position, Range, Location};
 
 class GlobalFallbackTest extends ServerTestCase
 {

@@ -1,0 +1,67 @@
+{
+    "references": {
+        "TestNamespace\\A": [
+            "./classDefinition1.php"
+        ],
+        "TestNamespace\\A->a": [
+            "./classDefinition1.php"
+        ]
+    },
+    "definitions": {
+        "TestNamespace": {
+            "fqn": "TestNamespace",
+            "extends": [],
+            "isGlobal": true,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "TestNamespace",
+                "kind": 3,
+                "location": {
+                    "uri": "./classDefinition1.php"
+                },
+                "containerName": ""
+            },
+            "type": null,
+            "declarationLine": "namespace TestNamespace;",
+            "documentation": null
+        },
+        "TestNamespace\\A": {
+            "fqn": "TestNamespace\\A",
+            "extends": [],
+            "isGlobal": true,
+            "isStatic": false,
+            "canBeInstantiated": true,
+            "symbolInformation": {
+                "name": "A",
+                "kind": 5,
+                "location": {
+                    "uri": "./classDefinition1.php"
+                },
+                "containerName": "TestNamespace"
+            },
+            "type": null,
+            "declarationLine": "class A {",
+            "documentation": null
+        },
+        "TestNamespace\\A->a": {
+            "fqn": "TestNamespace\\A->a",
+            "extends": [],
+            "isGlobal": false,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "a",
+                "kind": 7,
+                "location": {
+                    "uri": "./classDefinition1.php"
+                },
+                "containerName": "TestNamespace\\A"
+            },
+            "type__class": "phpDocumentor\\Reflection\\Types\\Integer",
+            "type": {},
+            "declarationLine": "public $a;",
+            "documentation": null
+        }
+    }
+}

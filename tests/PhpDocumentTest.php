@@ -3,22 +3,26 @@ declare(strict_types = 1);
 
 namespace LanguageServer\Tests\Server;
 
-use PHPUnit\Framework\TestCase;
+use LanguageServer\{
+    PhpDocument, DefinitionResolver
+};
+use LanguageServer\Index\{
+    Index
+};
+use LanguageServer\Protocol\{
+    Position
+};
+use Microsoft\PhpParser;
+use Microsoft\PhpParser\Node;
 use phpDocumentor\Reflection\DocBlockFactory;
-use LanguageServer\Tests\MockProtocolStream;
-use LanguageServer\{LanguageClient, PhpDocument, DefinitionResolver, Parser};
-use LanguageServer\NodeVisitor\NodeAtPositionFinder;
-use LanguageServer\ContentRetriever\FileSystemContentRetriever;
-use LanguageServer\Protocol\{SymbolKind, Position, ClientCapabilities};
-use LanguageServer\Index\{Index, ProjectIndex, DependenciesIndex};
-use PhpParser\Node;
+use PHPUnit\Framework\TestCase;
 use function LanguageServer\isVendored;
 
 class PhpDocumentTest extends TestCase
 {
     public function createDocument(string $uri, string $content)
     {
-        $parser = new Parser;
+        $parser = new PhpParser\Parser();
         $docBlockFactory = DocBlockFactory::createInstance();
         $index = new Index;
         $definitionResolver = new DefinitionResolver($index);
@@ -36,8 +40,13 @@ class PhpDocumentTest extends TestCase
     {
         $document = $this->createDocument('whatever', "<?php\n$\$a = new SomeClass;");
         $node = $document->getNodeAtPosition(new Position(1, 13));
-        $this->assertInstanceOf(Node\Name\FullyQualified::class, $node);
+        $this->assertQualifiedName($node);
         $this->assertEquals('SomeClass', (string)$node);
+    }
+
+    private function assertQualifiedName($node)
+    {
+        $this->assertInstanceOf(Node\QualifiedName::class, $node);
     }
 
     public function testIsVendored()

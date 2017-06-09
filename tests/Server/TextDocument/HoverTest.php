@@ -21,7 +21,7 @@ class HoverTest extends ServerTestCase
             $reference->range->start
         )->wait();
         $this->assertEquals(new Hover([
-            new MarkedString('php', "<?php\nclass TestClass implements \\TestInterface"),
+            new MarkedString('php', "<?php\nclass TestClass implements TestInterface"),
             'Pariatur ut laborum tempor voluptate consequat ea deserunt.' . "\n\n" .
             'Deserunt enim minim sunt sint ea nisi. Deserunt excepteur tempor id nostrud' . "\n" .
             'laboris commodo ad commodo velit mollit qui non officia id. Nulla duis veniam' . "\n" .
@@ -41,7 +41,7 @@ class HoverTest extends ServerTestCase
             $definition->range->start
         )->wait();
         $this->assertEquals(new Hover([
-            new MarkedString('php', "<?php\nclass TestClass implements \\TestInterface"),
+            new MarkedString('php', "<?php\nclass TestClass implements TestInterface"),
             'Pariatur ut laborum tempor voluptate consequat ea deserunt.' . "\n\n" .
             'Deserunt enim minim sunt sint ea nisi. Deserunt excepteur tempor id nostrud' . "\n" .
             'laboris commodo ad commodo velit mollit qui non officia id. Nulla duis veniam' . "\n" .
@@ -61,7 +61,7 @@ class HoverTest extends ServerTestCase
             $reference->range->end
         )->wait();
         $this->assertEquals(new Hover([
-            new MarkedString('php', "<?php\npublic function testMethod(\$testParameter) : \TestInterface"),
+            new MarkedString('php', "<?php\npublic function testMethod(\$testParameter): TestInterface"),
             'Non culpa nostrud mollit esse sunt laboris in irure ullamco cupidatat amet.'
         ], $reference->range), $result);
     }
@@ -165,8 +165,9 @@ class HoverTest extends ServerTestCase
             new TextDocumentIdentifier($reference->uri),
             $reference->range->end
         )->wait();
+        // TODO - should pretty print with fqns, like \define, \false. Not yet supported by tolerant-php-parser
         $this->assertEquals(new Hover([
-            new MarkedString('php', "<?php\n\\define('TEST_DEFINE_CONSTANT', \\false);"),
+            new MarkedString('php', "<?php\ndefine('TEST_DEFINE_CONSTANT', false)"),
             'Lorem ipsum dolor sit amet, consectetur.'
         ], $reference->range), $result);
     }
@@ -178,7 +179,7 @@ class HoverTest extends ServerTestCase
         $uri = pathToUri(realpath(__DIR__ . '/../../../fixtures/references.php'));
         $result = $this->textDocument->hover(new TextDocumentIdentifier($uri), new Position(13, 7))->wait();
         $this->assertEquals(new Hover(
-            [new MarkedString('php', "<?php\n\$var = 123;")],
+            [new MarkedString('php', "<?php\n\$var = 123")],
             new Range(new Position(13, 5), new Position(13, 9))
         ), $result);
     }
@@ -191,7 +192,7 @@ class HoverTest extends ServerTestCase
         $result = $this->textDocument->hover(new TextDocumentIdentifier($uri), new Position(22, 11))->wait();
         $this->assertEquals(new Hover(
             [
-                new MarkedString('php', "<?php\n\TestNamespace\TestClass \$param"),
+                new MarkedString('php', "<?php\nTestClass \$param"),
                 'Adipisicing non non cillum sint incididunt cillum enim mollit.'
             ],
             new Range(new Position(22, 9), new Position(22, 15))
@@ -205,7 +206,7 @@ class HoverTest extends ServerTestCase
         $uri = pathToUri(realpath(__DIR__ . '/../../../fixtures/global_symbols.php'));
         $result = $this->textDocument->hover(new TextDocumentIdentifier($uri), new Position(59, 11))->wait();
         $this->assertEquals(new Hover([
-            new MarkedString('php', "<?php\nclass TestClass implements \\TestInterface"),
+            new MarkedString('php', "<?php\nclass TestClass implements TestInterface"),
             'Pariatur ut laborum tempor voluptate consequat ea deserunt.' . "\n\n" .
             'Deserunt enim minim sunt sint ea nisi. Deserunt excepteur tempor id nostrud' . "\n" .
             'laboris commodo ad commodo velit mollit qui non officia id. Nulla duis veniam' . "\n" .

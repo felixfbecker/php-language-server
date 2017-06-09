@@ -1,0 +1,60 @@
+{
+    "references": [],
+    "definitions": {
+        "MyNamespace": {
+            "fqn": "MyNamespace",
+            "extends": [],
+            "isGlobal": true,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "MyNamespace",
+                "kind": 3,
+                "location": {
+                    "uri": "./memberAccess5.php"
+                },
+                "containerName": ""
+            },
+            "type": null,
+            "declarationLine": "namespace MyNamespace;",
+            "documentation": null
+        },
+        "MyNamespace\\ParseErrorsTest": {
+            "fqn": "MyNamespace\\ParseErrorsTest",
+            "extends": [],
+            "isGlobal": true,
+            "isStatic": false,
+            "canBeInstantiated": true,
+            "symbolInformation": {
+                "name": "ParseErrorsTest",
+                "kind": 5,
+                "location": {
+                    "uri": "./memberAccess5.php"
+                },
+                "containerName": "MyNamespace"
+            },
+            "type": null,
+            "declarationLine": "class ParseErrorsTest {",
+            "documentation": null
+        },
+        "MyNamespace\\ParseErrorsTest->setUp()": {
+            "fqn": "MyNamespace\\ParseErrorsTest->setUp()",
+            "extends": [],
+            "isGlobal": false,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "setUp",
+                "kind": 6,
+                "location": {
+                    "uri": "./memberAccess5.php"
+                },
+                "containerName": "MyNamespace\\ParseErrorsTest"
+            },
+            "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
+            "type": {},
+            "declarationLine": "public function setUp()",
+            "documentation": null
+        }
+    }
+}

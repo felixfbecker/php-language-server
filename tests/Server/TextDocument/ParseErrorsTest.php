@@ -5,10 +5,12 @@ namespace LanguageServer\Tests\Server\TextDocument;
 
 use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
-use LanguageServer\{Server, Client, LanguageClient, ClientHandler, PhpDocumentLoader, DefinitionResolver};
+use LanguageServer\{
+    Server, Client, LanguageClient, ClientHandler, PhpDocumentLoader, DefinitionResolver
+};
 use LanguageServer\Index\{Index, ProjectIndex, DependenciesIndex};
 use LanguageServer\ContentRetriever\FileSystemContentRetriever;
-use LanguageServer\Protocol\{TextDocumentIdentifier, TextDocumentItem, DiagnosticSeverity, ClientCapabilities};
+use LanguageServer\Protocol\{TextDocumentItem, DiagnosticSeverity};
 use Sabre\Event\Promise;
 use JsonMapper;
 
@@ -62,7 +64,55 @@ class ParseErrorsTest extends TestCase
                 'range' => [
                     'start' => [
                         'line' => 2,
-                        'character' => 10
+                        'character' => 9
+                    ],
+                    'end' => [
+                        'line' => 2,
+                        'character' => 9
+                    ]
+                ],
+                'severity' => DiagnosticSeverity::ERROR,
+                'code' => null,
+                'source' => 'php',
+                'message' => "'Name' expected."
+            ],
+            [
+                'range' => [
+                    'start' => [
+                        'line' => 2,
+                        'character' => 9
+                    ],
+                    'end' => [
+                        'line' => 2,
+                        'character' => 9
+                    ]
+                ],
+                'severity' => DiagnosticSeverity::ERROR,
+                'code' => null,
+                'source' => 'php',
+                'message' => "'{' expected."
+            ],
+            [
+                'range' => [
+                    'start' => [
+                        'line' => 2,
+                        'character' => 9
+                    ],
+                    'end' => [
+                        'line' => 2,
+                        'character' => 9
+                    ]
+                ],
+                'severity' => DiagnosticSeverity::ERROR,
+                'code' => null,
+                'source' => 'php',
+                'message' => "'}' expected."
+            ],
+            [
+                'range' => [
+                    'start' => [
+                        'line' => 2,
+                        'character' => 15
                     ],
                     'end' => [
                         'line' => 2,
@@ -72,13 +122,14 @@ class ParseErrorsTest extends TestCase
                 'severity' => DiagnosticSeverity::ERROR,
                 'code' => null,
                 'source' => 'php',
-                'message' => "Syntax error, unexpected T_CLASS, expecting T_STRING"
+                'message' => "'Name' expected."
             ]]
         ], json_decode(json_encode($this->args), true));
     }
 
     public function testParseErrorsWithOnlyStartLine()
     {
+        $this->markTestIncomplete('This diagnostic not yet implemented in tolerant-php-parser');
         $this->openFile(__DIR__ . '/../../../fixtures/namespace_not_first.php');
         $this->assertEquals([
             'whatever',
