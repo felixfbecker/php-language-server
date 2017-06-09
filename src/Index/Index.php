@@ -151,6 +151,17 @@ class Index implements ReadableIndex, \Serializable
     }
 
     /**
+     * For test use.
+     * Returns all references, keyed by fqn.
+     *
+     * @return string[][]
+     */
+    public function getReferences(): array
+    {
+        return $this->references;
+    }
+
+    /**
      * Adds a document URI as a referencee of a specific symbol
      *
      * @param string $fqn The fully qualified name of the symbol

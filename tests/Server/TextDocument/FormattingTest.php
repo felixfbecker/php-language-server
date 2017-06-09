@@ -5,14 +5,15 @@ namespace LanguageServer\Tests\Server\TextDocument;
 
 use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
-use LanguageServer\{Server, Client, LanguageClient, PhpDocumentLoader, DefinitionResolver};
+use LanguageServer\{
+    Server, LanguageClient, PhpDocumentLoader, DefinitionResolver
+};
 use LanguageServer\Index\{Index, ProjectIndex, DependenciesIndex};
 use LanguageServer\ContentRetriever\FileSystemContentRetriever;
 use LanguageServer\Protocol\{
     TextDocumentIdentifier,
     TextDocumentItem,
     FormattingOptions,
-    ClientCapabilities,
     TextEdit,
     Range,
     Position

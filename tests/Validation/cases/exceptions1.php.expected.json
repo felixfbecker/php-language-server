@@ -1,0 +1,23 @@
+{
+    "references": [],
+    "definitions": {
+        "MyNamespace": {
+            "fqn": "MyNamespace",
+            "extends": [],
+            "isGlobal": true,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "MyNamespace",
+                "kind": 3,
+                "location": {
+                    "uri": "./exceptions1.php"
+                },
+                "containerName": ""
+            },
+            "type": null,
+            "declarationLine": "namespace MyNamespace;",
+            "documentation": null
+        }
+    }
+}

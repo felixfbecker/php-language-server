@@ -1,0 +1,64 @@
+{
+    "references": {
+        "MyNamespace\\A->inline_diff_renderer": [
+            "./objectCreation.php"
+        ]
+    },
+    "definitions": {
+        "MyNamespace": {
+            "fqn": "MyNamespace",
+            "extends": [],
+            "isGlobal": true,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "MyNamespace",
+                "kind": 3,
+                "location": {
+                    "uri": "./objectCreation.php"
+                },
+                "containerName": ""
+            },
+            "type": null,
+            "declarationLine": "namespace MyNamespace;",
+            "documentation": null
+        },
+        "MyNamespace\\A": {
+            "fqn": "MyNamespace\\A",
+            "extends": [],
+            "isGlobal": true,
+            "isStatic": false,
+            "canBeInstantiated": true,
+            "symbolInformation": {
+                "name": "A",
+                "kind": 5,
+                "location": {
+                    "uri": "./objectCreation.php"
+                },
+                "containerName": "MyNamespace"
+            },
+            "type": null,
+            "declarationLine": "class A {",
+            "documentation": null
+        },
+        "MyNamespace\\A->a()": {
+            "fqn": "MyNamespace\\A->a()",
+            "extends": [],
+            "isGlobal": false,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "a",
+                "kind": 6,
+                "location": {
+                    "uri": "./objectCreation.php"
+                },
+                "containerName": "MyNamespace\\A"
+            },
+            "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
+            "type": {},
+            "declarationLine": "function a () {",
+            "documentation": null
+        }
+    }
+}

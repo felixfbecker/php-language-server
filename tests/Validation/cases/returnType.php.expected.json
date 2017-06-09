@@ -1,0 +1,49 @@
+{
+    "references": {
+        "TestNamespace\\TestClass": [
+            "./returnType.php"
+        ],
+        "TestNamespace\\TestClass2": [
+            "./returnType.php"
+        ]
+    },
+    "definitions": {
+        "TestNamespace": {
+            "fqn": "TestNamespace",
+            "extends": [],
+            "isGlobal": true,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "TestNamespace",
+                "kind": 3,
+                "location": {
+                    "uri": "./returnType.php"
+                },
+                "containerName": ""
+            },
+            "type": null,
+            "declarationLine": "namespace TestNamespace;",
+            "documentation": null
+        },
+        "TestNamespace\\whatever()": {
+            "fqn": "TestNamespace\\whatever()",
+            "extends": [],
+            "isGlobal": true,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "whatever",
+                "kind": 12,
+                "location": {
+                    "uri": "./returnType.php"
+                },
+                "containerName": "TestNamespace"
+            },
+            "type__class": "phpDocumentor\\Reflection\\Types\\Object_",
+            "type": {},
+            "declarationLine": "function whatever(TestClass $param): TestClass2 {",
+            "documentation": "Aute duis elit reprehenderit tempor cillum proident anim laborum eu laboris reprehenderit ea incididunt."
+        }
+    }
+}

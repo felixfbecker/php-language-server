@@ -1,0 +1,109 @@
+{
+    "references": {
+        "MyNamespace\\B": [
+            "./static3.php"
+        ],
+        "MyNamespace\\b()": [
+            "./static3.php"
+        ],
+        "b()": [
+            "./static3.php"
+        ]
+    },
+    "definitions": {
+        "MyNamespace": {
+            "fqn": "MyNamespace",
+            "extends": [],
+            "isGlobal": true,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "MyNamespace",
+                "kind": 3,
+                "location": {
+                    "uri": "./static3.php"
+                },
+                "containerName": ""
+            },
+            "type": null,
+            "declarationLine": "namespace MyNamespace;",
+            "documentation": null
+        },
+        "MyNamespace\\B": {
+            "fqn": "MyNamespace\\B",
+            "extends": [],
+            "isGlobal": true,
+            "isStatic": false,
+            "canBeInstantiated": true,
+            "symbolInformation": {
+                "name": "B",
+                "kind": 5,
+                "location": {
+                    "uri": "./static3.php"
+                },
+                "containerName": "MyNamespace"
+            },
+            "type": null,
+            "declarationLine": "class B {",
+            "documentation": null
+        },
+        "MyNamespace\\B->b()": {
+            "fqn": "MyNamespace\\B->b()",
+            "extends": [],
+            "isGlobal": false,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "b",
+                "kind": 6,
+                "location": {
+                    "uri": "./static3.php"
+                },
+                "containerName": "MyNamespace\\B"
+            },
+            "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
+            "type": {},
+            "declarationLine": "function b() {",
+            "documentation": null
+        },
+        "MyNamespace\\A": {
+            "fqn": "MyNamespace\\A",
+            "extends": [
+                "MyNamespace\\B"
+            ],
+            "isGlobal": true,
+            "isStatic": false,
+            "canBeInstantiated": true,
+            "symbolInformation": {
+                "name": "A",
+                "kind": 5,
+                "location": {
+                    "uri": "./static3.php"
+                },
+                "containerName": "MyNamespace"
+            },
+            "type": null,
+            "declarationLine": "class A extends B {",
+            "documentation": null
+        },
+        "MyNamespace\\A->a()": {
+            "fqn": "MyNamespace\\A->a()",
+            "extends": [],
+            "isGlobal": false,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "a",
+                "kind": 6,
+                "location": {
+                    "uri": "./static3.php"
+                },
+                "containerName": "MyNamespace\\A"
+            },
+            "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
+            "type": {},
+            "declarationLine": "function a () {",
+            "documentation": null
+        }
+    }
+}

@@ -1,0 +1,42 @@
+{
+    "references": [],
+    "definitions": {
+        "A": {
+            "fqn": "A",
+            "extends": [],
+            "isGlobal": true,
+            "isStatic": false,
+            "canBeInstantiated": true,
+            "symbolInformation": {
+                "name": "A",
+                "kind": 5,
+                "location": {
+                    "uri": "./nameToken.php"
+                },
+                "containerName": ""
+            },
+            "type": null,
+            "declarationLine": "class A {",
+            "documentation": null
+        },
+        "A->b()": {
+            "fqn": "A->b()",
+            "extends": [],
+            "isGlobal": false,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "b",
+                "kind": 6,
+                "location": {
+                    "uri": "./nameToken.php"
+                },
+                "containerName": "A"
+            },
+            "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
+            "type": {},
+            "declarationLine": "function b() {",
+            "documentation": null
+        }
+    }
+}

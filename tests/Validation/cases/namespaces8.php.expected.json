@@ -1,0 +1,27 @@
+{
+    "references": {
+        "LanguageServer": [
+            "./namespaces8.php"
+        ]
+    },
+    "definitions": {
+        "LanguageServer\\Tests\\Utils": {
+            "fqn": "LanguageServer\\Tests\\Utils",
+            "extends": [],
+            "isGlobal": true,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "LanguageServer\\Tests\\Utils",
+                "kind": 3,
+                "location": {
+                    "uri": "./namespaces8.php"
+                },
+                "containerName": "LanguageServer\\Tests"
+            },
+            "type": null,
+            "declarationLine": "namespace LanguageServer\\Tests\\Utils;",
+            "documentation": null
+        }
+    }
+}

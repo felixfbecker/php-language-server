@@ -6,6 +6,7 @@ namespace LanguageServer;
 use LanguageServer\Cache\Cache;
 use LanguageServer\FilesFinder\FilesFinder;
 use LanguageServer\Index\{DependenciesIndex, Index};
+use LanguageServer\Protocol\Message;
 use LanguageServer\Protocol\MessageType;
 use Webmozart\PathUtil\Path;
 use Composer\Semver\VersionParser;

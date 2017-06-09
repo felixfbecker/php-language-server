@@ -1,0 +1,27 @@
+{
+    "references": {
+        "NameOutsideOfNamespace": [
+            "./testQualifiedNameOutsideOfNamespace.php"
+        ]
+    },
+    "definitions": {
+        "SomeNamespace": {
+            "fqn": "SomeNamespace",
+            "extends": [],
+            "isGlobal": true,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "SomeNamespace",
+                "kind": 3,
+                "location": {
+                    "uri": "./testQualifiedNameOutsideOfNamespace.php"
+                },
+                "containerName": ""
+            },
+            "type": null,
+            "declarationLine": "namespace SomeNamespace { }",
+            "documentation": null
+        }
+    }
+}

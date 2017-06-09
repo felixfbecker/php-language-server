@@ -1,0 +1,68 @@
+{
+    "references": {
+        "CURLAUTH_BASIC": [
+            "./verifyFqsenOnClassProperty.php"
+        ],
+        "Foo->bar": [
+            "./verifyFqsenOnClassProperty.php"
+        ]
+    },
+    "definitions": {
+        "Foo": {
+            "fqn": "Foo",
+            "extends": [],
+            "isGlobal": true,
+            "isStatic": false,
+            "canBeInstantiated": true,
+            "symbolInformation": {
+                "name": "Foo",
+                "kind": 5,
+                "location": {
+                    "uri": "./verifyFqsenOnClassProperty.php"
+                },
+                "containerName": ""
+            },
+            "type": null,
+            "declarationLine": "class Foo {",
+            "documentation": null
+        },
+        "Foo->bar": {
+            "fqn": "Foo->bar",
+            "extends": [],
+            "isGlobal": false,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "bar",
+                "kind": 7,
+                "location": {
+                    "uri": "./verifyFqsenOnClassProperty.php"
+                },
+                "containerName": "Foo"
+            },
+            "type__class": "phpDocumentor\\Reflection\\Types\\Object_",
+            "type": {},
+            "declarationLine": "protected $bar;",
+            "documentation": null
+        },
+        "Foo->foo()": {
+            "fqn": "Foo->foo()",
+            "extends": [],
+            "isGlobal": false,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "foo",
+                "kind": 6,
+                "location": {
+                    "uri": "./verifyFqsenOnClassProperty.php"
+                },
+                "containerName": "Foo"
+            },
+            "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
+            "type": {},
+            "declarationLine": "public function foo () {",
+            "documentation": null
+        }
+    }
+}
