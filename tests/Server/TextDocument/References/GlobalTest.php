@@ -164,11 +164,11 @@ class GlobalTest extends ServerTestCase
     {
         // class UnusedClass
         // Get references for UnusedClass
-        $definition = $this->getDefinitionLocation('UnusedClass');
+        $symbolsUri = pathToUri(realpath(__DIR__ . '/../../../../fixtures/global_symbols.php'));
         $result = $this->textDocument->references(
             new ReferenceContext,
-            new TextDocumentIdentifier($definition->uri),
-            $definition->range->start
+            new TextDocumentIdentifier($symbolsUri),
+            new Position(111, 10)
         )->wait();
         $this->assertEquals([], $result);
     }
@@ -177,11 +177,11 @@ class GlobalTest extends ServerTestCase
     {
         // public $unusedProperty
         // Get references for unusedProperty
-        $definition = $this->getDefinitionLocation('UnusedClass::unusedProperty');
+        $symbolsUri = pathToUri(realpath(__DIR__ . '/../../../../fixtures/global_symbols.php'));
         $result = $this->textDocument->references(
             new ReferenceContext,
-            new TextDocumentIdentifier($definition->uri),
-            $definition->range->start
+            new TextDocumentIdentifier($symbolsUri),
+            new Position(113, 18)
         )->wait();
         $this->assertEquals([], $result);
     }
@@ -190,11 +190,11 @@ class GlobalTest extends ServerTestCase
     {
         // public function unusedMethod()
         // Get references for unusedMethod
-        $definition = $this->getDefinitionLocation('UnusedClass::unusedMethod');
+        $symbolsUri = pathToUri(realpath(__DIR__ . '/../../../../fixtures/global_symbols.php'));
         $result = $this->textDocument->references(
             new ReferenceContext,
-            new TextDocumentIdentifier($definition->uri),
-            $definition->range->start
+            new TextDocumentIdentifier($symbolsUri),
+            new Position(115, 26)
         )->wait();
         $this->assertEquals([], $result);
     }
