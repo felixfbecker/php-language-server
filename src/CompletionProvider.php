@@ -127,8 +127,11 @@ class CompletionProvider
         $node = $doc->getNodeAtPosition($pos);
 
         $offset = $node === null ? -1 : $pos->toOffset($node->getFileContents());
-        if ($node !== null && $offset > $node->getEndPosition() &&
-            $node->parent->getLastChild() instanceof PhpParser\MissingToken
+        if (
+            $node !== null
+            && $offset > $node->getEndPosition()
+            && $node->parent !== null
+            && $node->parent->getLastChild() instanceof PhpParser\MissingToken
         ) {
             $node = $node->parent;
         }
