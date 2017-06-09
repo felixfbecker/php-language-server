@@ -4,7 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer\Tests\Utils;
 
 use PHPUnit\Framework\TestCase;
-use function LanguageServer\{strStartsWith};
+use function LanguageServer\strStartsWith;
 
 class UtilsTest extends TestCase
 {

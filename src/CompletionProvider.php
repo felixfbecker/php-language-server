@@ -12,7 +12,7 @@ use LanguageServer\Protocol\{
     CompletionItem,
     CompletionItemKind
 };
-use function LanguageServer\{strStartsWith};
+use function LanguageServer\strStartsWith;
 use Microsoft\PhpParser;
 use Microsoft\PhpParser\Node;
 
