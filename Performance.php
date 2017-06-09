@@ -5,7 +5,6 @@ require __DIR__ . '/vendor/autoload.php';
 
 use Exception;
 use LanguageServer\Index\Index;
-use LanguageServer\ParserKind;
 use LanguageServer\PhpDocument;
 use LanguageServer\DefinitionResolver;
 use Microsoft\PhpParser;
@@ -32,40 +31,35 @@ foreach($frameworks as $framework) {
         throw new Exception("ERROR: Validation testsuite frameworks not found - run `git submodule update --init --recursive` to download.");
     }
 
+    $start = microtime(true);
 
-    $parserKinds = [ParserKind::PHP_PARSER, ParserKind::TOLERANT_PHP_PARSER];
-    foreach ($parserKinds as $kind) {
-        $start = microtime(true);
-
-        foreach ($testProviderArray as $idx => $testCaseFile) {
-            if (filesize($testCaseFile) > 10000) {
-                continue;
-            }
-            if ($idx % 1000 === 0) {
-                echo "$idx\n";
-            }
-
-            $fileContents = file_get_contents($testCaseFile);
-
-            $docBlockFactory = DocBlockFactory::createInstance();
-            $index = new Index;
-            $maxRecursion = [];
-            $definitions = [];
-
-            $definitionResolver = new DefinitionResolver($index);
-            $parser = new PhpParser\Parser();
-
-            try {
-                $document = new PhpDocument($testCaseFile, $fileContents, $index, $parser, $docBlockFactory, $definitionResolver);
-            } catch (\Throwable $e) {
-                continue;
-            }
+    foreach ($testProviderArray as $idx => $testCaseFile) {
+        if (filesize($testCaseFile) > 10000) {
+            continue;
+        }
+        if ($idx % 1000 === 0) {
+            echo "$idx\n";
         }
 
-        echo "------------------------------\n";
+        $fileContents = file_get_contents($testCaseFile);
 
-        echo "Time [$framework, $kind]: " . (microtime(true) - $start) . PHP_EOL;
+        $docBlockFactory = DocBlockFactory::createInstance();
+        $index = new Index;
+        $maxRecursion = [];
+        $definitions = [];
 
+        $definitionResolver = new DefinitionResolver($index);
+        $parser = new PhpParser\Parser();
+
+        try {
+            $document = new PhpDocument($testCaseFile, $fileContents, $index, $parser, $docBlockFactory, $definitionResolver);
+        } catch (\Throwable $e) {
+            continue;
+        }
     }
+
+    echo "------------------------------\n";
+
+    echo "Time [$framework]: " . (microtime(true) - $start) . PHP_EOL;
 }
 

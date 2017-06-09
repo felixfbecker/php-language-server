@@ -7,7 +7,6 @@ namespace LanguageServer\Tests;
 use Exception;
 use LanguageServer\Definition;
 use LanguageServer\Index\Index;
-use LanguageServer\ParserKind;
 use LanguageServer\PhpDocument;
 use LanguageServer\DefinitionResolver;
 use phpDocumentor\Reflection\DocBlock;
