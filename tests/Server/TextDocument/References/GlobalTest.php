@@ -159,4 +159,43 @@ class GlobalTest extends ServerTestCase
         )->wait();
         $this->assertEquals($this->getReferenceLocations('TestClass'), $result);
     }
+
+    public function testReferencesForUnusedClass()
+    {
+        // class UnusedClass
+        // Get references for UnusedClass
+        $definition = $this->getDefinitionLocation('UnusedClass');
+        $result = $this->textDocument->references(
+            new ReferenceContext,
+            new TextDocumentIdentifier($definition->uri),
+            $definition->range->start
+        )->wait();
+        $this->assertEquals([], $result);
+    }
+
+    public function testReferencesForUnusedProperty()
+    {
+        // public $unusedProperty
+        // Get references for unusedProperty
+        $definition = $this->getDefinitionLocation('UnusedClass::unusedProperty');
+        $result = $this->textDocument->references(
+            new ReferenceContext,
+            new TextDocumentIdentifier($definition->uri),
+            $definition->range->start
+        )->wait();
+        $this->assertEquals([], $result);
+    }
+
+    public function testReferencesForUnusedMethod()
+    {
+        // public function unusedMethod()
+        // Get references for unusedMethod
+        $definition = $this->getDefinitionLocation('UnusedClass::unusedMethod');
+        $result = $this->textDocument->references(
+            new ReferenceContext,
+            new TextDocumentIdentifier($definition->uri),
+            $definition->range->start
+        )->wait();
+        $this->assertEquals([], $result);
+    }
 }
