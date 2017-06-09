@@ -269,16 +269,18 @@ class CompletionProvider
                         $prefixWithNamespace = $namespacePrefix . "\\" . $prefix;
                         $fqnMatchesPrefixWithNamespace = substr($fqn, 0, strlen($prefixWithNamespace)) === $prefixWithNamespace;
                         $isFullyQualifiedAndPrefixMatches = !$isNotFullyQualified && ($fqnStartsWithPrefix || $fqnMatchesPrefixWithNamespace);
-                        if (!$isFullyQualifiedAndPrefixMatches && !$isAliased && !array_search($fqn, array_values($namespaceImportTable))) {
-                            if (empty($prefix)) {
-                                $fqn = '\\' . $fqn;
-                            } elseif ($fqnMatchesPrefixWithNamespace) {
-                                $fqn = substr($fqn, strlen($namespacePrefix) + 1);
+                        if (!$isFullyQualifiedAndPrefixMatches && !$isAliased) {
+                            if (!array_search($fqn, array_values($namespaceImportTable))) {
+                                if (empty($prefix)) {
+                                    $fqn = '\\' . $fqn;
+                                } elseif ($fqnMatchesPrefixWithNamespace) {
+                                    $fqn = substr($fqn, strlen($namespacePrefix) + 1);
+                                } else {
+                                    continue;
+                                }
                             } else {
                                 continue;
                             }
-                        } elseif (!$isFullyQualifiedAndPrefixMatches && !$isAliased) {
-                            continue;
                         }
                     } elseif ($fqnStartsWithPrefix && $class instanceof Node\QualifiedName && $class->isFullyQualifiedName()) {
                         $fqn = '\\' . $fqn;
