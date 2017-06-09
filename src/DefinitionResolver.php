@@ -176,8 +176,8 @@ class DefinitionResolver
         // Determines whether the suggestion will show after "new"
         $def->canBeInstantiated = (
             $node instanceof Node\Statement\ClassDeclaration &&
-            // use text's length for speedup: |abstract| = 8; |final| = 5
-            ($node->abstractOrFinalModifier === null || $node->abstractOrFinalModifier->length !== 8)
+            // check whether it is not an abstract class
+            ($node->abstractOrFinalModifier === null || $node->abstractOrFinalModifier->kind !== PhpParser\TokenKind::AbstractKeyword)
         );
 
         // Interfaces, classes, traits, namespaces, functions, and global const elements
@@ -1194,11 +1194,6 @@ class DefinitionResolver
             if ($tag->getVariableName() === \ltrim($variableName, "$")) {
                 return $tag;
             }
-        } else if ($node instanceof Node\Expr\FuncCall && $node->name instanceof Node\Name && strtolower((string)$node->name) === 'define') {
-            if (!isset($node->args[0]) || !($node->args[0]->value instanceof Node\Scalar\String_)) {
-                return null;
-            }
-            return (string)$node->args[0]->value->value;
         }
         return null;
     }
