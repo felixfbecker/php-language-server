@@ -171,8 +171,3 @@ function getVendorDir(\stdClass $composerJson = null): string
 {
     return $composerJson->config->{'vendor-dir'} ?? 'vendor';
 }
-
-function strStartsWith(string $haystack, string $prefix): bool
-{
-    return substr($haystack, 0, strlen($prefix)) === $prefix;
-}

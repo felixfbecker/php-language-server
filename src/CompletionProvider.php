@@ -12,7 +12,6 @@ use LanguageServer\Protocol\{
     CompletionItem,
     CompletionItemKind
 };
-use function LanguageServer\strStartsWith;
 use Microsoft\PhpParser;
 use Microsoft\PhpParser\Node;
 
@@ -248,7 +247,7 @@ class CompletionProvider
             }
 
             foreach ($this->index->getDefinitions() as $fqn => $def) {
-                $fqnStartsWithPrefix = strStartsWith($fqn, $prefix);
+                $fqnStartsWithPrefix = substr($fqn, 0, strlen($prefix)) === $prefix;
                 $fqnContainsPrefix = empty($prefix) || strpos($fqn, $prefix) !== false;
                 if (($def->canBeInstantiated || ($def->isGlobal && !isset($creation))) && $fqnContainsPrefix) {
                     if ($namespaceDefinition !== null && $namespaceDefinition->name !== null) {
@@ -259,7 +258,7 @@ class CompletionProvider
                         $isNotFullyQualified = !($class instanceof Node\QualifiedName) || !$class->isFullyQualifiedName();
                         if ($isNotFullyQualified) {
                             foreach ($namespaceImportTable as $alias => $name) {
-                                if (strStartsWith($fqn, $name)) {
+                                if (substr($fqn, 0, strlen($name)) === $name) {
                                     $fqn = $alias;
                                     $isAliased = true;
                                     break;
@@ -267,12 +266,13 @@ class CompletionProvider
                             }
                         }
 
-
-                        $isFullyQualifiedAndPrefixMatches = !$isNotFullyQualified && ($fqnStartsWithPrefix || strStartsWith($fqn, $namespacePrefix . "\\" . $prefix));
+                        $prefixWithNamespace = $namespacePrefix . "\\" . $prefix;
+                        $fqnMatchesPrefixWithNamespace = substr($fqn, 0, strlen($prefixWithNamespace)) === $prefixWithNamespace;
+                        $isFullyQualifiedAndPrefixMatches = !$isNotFullyQualified && ($fqnStartsWithPrefix || $fqnMatchesPrefixWithNamespace);
                         if (!$isFullyQualifiedAndPrefixMatches && !$isAliased && !array_search($fqn, array_values($namespaceImportTable))) {
                             if (empty($prefix)) {
                                 $fqn = '\\' . $fqn;
-                            } elseif (strStartsWith($fqn, $namespacePrefix . "\\" . $prefix)) {
+                            } elseif ($fqnMatchesPrefixWithNamespace) {
                                 $fqn = substr($fqn, strlen($namespacePrefix) + 1);
                             } else {
                                 continue;
