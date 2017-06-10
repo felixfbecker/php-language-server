@@ -68,6 +68,7 @@ class CompletionProvider
         'list',
         'namespace',
         'new',
+        'null',
         'or',
         'print',
         'private',
