@@ -64,12 +64,7 @@ class ValidationTest extends TestCase
 
         try {
             $this->assertEquals($expectedValues['definitions'], $actualValues['definitions']);
-
-            try {
-                $this->assertArraySubset((array)$expectedValues['references'], (array)$actualValues['references'], false, 'references don\'t match.');
-            } catch (\Throwable $e) {
-                $this->assertEquals((array)$expectedValues['references'], (array)$actualValues['references'], 'references don\'t match.');
-            }
+            $this->assertEquals((array)$expectedValues['references'], (array)$actualValues['references'], 'references don\'t match.');
         } catch (\Throwable $e) {
             $outputFile = getExpectedValuesFile($testCaseFile);
             file_put_contents($outputFile, json_encode($actualValues, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));

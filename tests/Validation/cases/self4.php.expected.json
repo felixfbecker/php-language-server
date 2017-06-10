@@ -6,6 +6,12 @@
         "MyNamespace\\A->addTestFile()": [
             "./self4.php"
         ],
+        "MyNamespace\\__DIR__": [
+            "./self4.php"
+        ],
+        "__DIR__": [
+            "./self4.php"
+        ],
         "MyNamespace\\DS": [
             "./self4.php"
         ],

@@ -1,5 +1,9 @@
 {
-    "references": [],
+    "references": {
+        "__CLASS__": [
+            "./magicConsts.php"
+        ]
+    },
     "definitions": {
         "A": {
             "fqn": "A",
