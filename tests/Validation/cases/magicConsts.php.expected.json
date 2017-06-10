@@ -1,5 +1,9 @@
 {
-    "references": [],
+    "references": {
+        "__CLASS__": [
+            "./magicConsts.php"
+        ]
+    },
     "definitions": {
         "A": {
             "fqn": "A",
@@ -33,7 +37,7 @@
                 },
                 "containerName": "A"
             },
-            "type__class": "phpDocumentor\\Reflection\\Types\\Array_",
+            "type__tostring": "\\__CLASS__[]",
             "type": {},
             "declarationLine": "private static $deprecationsTriggered;",
             "documentation": null

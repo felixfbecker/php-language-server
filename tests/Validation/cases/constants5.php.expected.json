@@ -55,7 +55,7 @@
                 },
                 "containerName": "MyNamespace\\Mbstring"
             },
-            "type__class": "phpDocumentor\\Reflection\\Types\\Object_",
+            "type__tostring": "\\MyNamespace\\PHP_INT_MAX",
             "type": {},
             "declarationLine": "const MB_CASE_FOLD = PHP_INT_MAX;",
             "documentation": null

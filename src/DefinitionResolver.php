@@ -623,6 +623,16 @@ class DefinitionResolver
             }
         }
 
+        // MEMBER CALL EXPRESSION/SCOPED PROPERTY CALL EXPRESSION
+        //   The type of the member/scoped property call expression is the type of the method, so resolve the
+        //   type of the callable expression.
+        if ($expr instanceof Node\Expression\CallExpression && (
+            $expr->callableExpression instanceof Node\Expression\MemberAccessExpression ||
+            $expr->callableExpression instanceof Node\Expression\ScopedPropertyAccessExpression)
+        ) {
+            return $this->resolveExpressionNodeToType($expr->callableExpression);
+        }
+
         // MEMBER ACCESS EXPRESSION
         if ($expr instanceof Node\Expression\MemberAccessExpression) {
             if ($expr->memberName instanceof Node\Expression) {

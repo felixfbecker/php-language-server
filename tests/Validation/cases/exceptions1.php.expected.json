@@ -1,5 +1,9 @@
 {
-    "references": [],
+    "references": {
+        "MyNamespace\\Exception": [
+            "./exceptions1.php"
+        ]
+    },
     "definitions": {
         "MyNamespace": {
             "fqn": "MyNamespace",

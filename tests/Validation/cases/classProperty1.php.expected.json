@@ -58,7 +58,7 @@
                 },
                 "containerName": "TestNamespace\\TestClass"
             },
-            "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
+            "type__tostring": "mixed",
             "type": {},
             "declarationLine": "public $testProperty;",
             "documentation": null
@@ -77,7 +77,7 @@
                 },
                 "containerName": "TestNamespace\\TestClass"
             },
-            "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
+            "type__tostring": "mixed",
             "type": {},
             "declarationLine": "public function testMethod($testParameter)",
             "documentation": null
