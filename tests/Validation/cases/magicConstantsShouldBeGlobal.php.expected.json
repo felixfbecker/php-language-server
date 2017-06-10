@@ -1,5 +1,12 @@
 {
-    "references": [],
+    "references": {
+        "B\\__FILE__": [
+            "./magicConstantsShouldBeGlobal.php"
+        ],
+        "__FILE__": [
+            "./magicConstantsShouldBeGlobal.php"
+        ]
+    },
     "definitions": {
         "B": {
             "fqn": "B",

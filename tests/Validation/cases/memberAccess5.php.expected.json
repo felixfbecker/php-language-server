@@ -1,5 +1,9 @@
 {
-    "references": [],
+    "references": {
+        "MyNamespace\\ParseErrorsTest->args": [
+            "./memberAccess5.php"
+        ]
+    },
     "definitions": {
         "MyNamespace": {
             "fqn": "MyNamespace",
