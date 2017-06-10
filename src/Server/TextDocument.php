@@ -221,18 +221,15 @@ class TextDocument
                         return [];
                     }
                 }
-                $referenceUris = $this->index->getReferenceUris($fqn);
-                if (!empty($referenceUris)) {
-                    $refDocuments = yield Promise\all(array_map(
-                        [$this->documentLoader, 'getOrLoad'],
-                        $referenceUris
-                    ));
-                    foreach ($refDocuments as $document) {
-                        $refs = $document->getReferenceNodesByFqn($fqn);
-                        if ($refs !== null) {
-                            foreach ($refs as $ref) {
-                                $locations[] = Location::fromNode($ref);
-                            }
+                $refDocuments = yield Promise\all(array_map(
+                    [$this->documentLoader, 'getOrLoad'],
+                    $this->index->getReferenceUris($fqn)
+                ));
+                foreach ($refDocuments as $document) {
+                    $refs = $document->getReferenceNodesByFqn($fqn);
+                    if ($refs !== null) {
+                        foreach ($refs as $ref) {
+                            $locations[] = Location::fromNode($ref);
                         }
                     }
                 }
