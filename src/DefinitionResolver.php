@@ -533,6 +533,15 @@ class DefinitionResolver
                 ) {
                     return $n;
                 }
+                
+                // foreach ([0, 1, 2, 3] as $foreachKey => $foreachValue) {}
+                if ($n instanceof Node\Statement\ForeachStatement) {
+                    if ($n->foreachValue !== null && $n->foreachValue->getText() === $name) {
+                        return $n->foreachValue;
+                    } elseif ($n->foreachKey !== null && $n->foreachKey->getText() === $name) {
+                        return $n->foreachKey;
+                    }
+                }
             }
         } while (isset($n) && $n = $n->parent);
         // Return null if nothing was found
@@ -563,6 +572,7 @@ class DefinitionResolver
         // VARIABLE
         //   $this -> Type\this
         //   $myVariable -> type of corresponding assignment expression
+        //   $foreachKey ->  Register type
         if ($expr instanceof Node\Expression\Variable || $expr instanceof Node\UseVariableName) {
             if ($expr->getName() === 'this') {
                 return new Types\This;
