@@ -51,7 +51,7 @@
                 },
                 "containerName": "MyNamespace\\ParseErrorsTest"
             },
-            "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
+            "type__tostring": "mixed",
             "type": {},
             "declarationLine": "public function setUp()",
             "documentation": null

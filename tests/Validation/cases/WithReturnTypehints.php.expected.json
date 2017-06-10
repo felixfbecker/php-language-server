@@ -63,7 +63,7 @@
                 },
                 "containerName": "Fixtures\\Prophecy\\WithReturnTypehints"
             },
-            "type__class": "phpDocumentor\\Reflection\\Types\\Object_",
+            "type__tostring": "\\self",
             "type": {},
             "declarationLine": "public function getSelf(): self {",
             "documentation": null
@@ -82,7 +82,7 @@
                 },
                 "containerName": "Fixtures\\Prophecy\\WithReturnTypehints"
             },
-            "type__class": "phpDocumentor\\Reflection\\Types\\String_",
+            "type__tostring": "string",
             "type": {},
             "declarationLine": "public function getName(): string {",
             "documentation": null
@@ -101,7 +101,7 @@
                 },
                 "containerName": "Fixtures\\Prophecy\\WithReturnTypehints"
             },
-            "type__class": "phpDocumentor\\Reflection\\Types\\Object_",
+            "type__tostring": "\\parent",
             "type": {},
             "declarationLine": "public function getParent(): parent {",
             "documentation": null

@@ -40,7 +40,7 @@
                 },
                 "containerName": "TestNamespace"
             },
-            "type__class": "phpDocumentor\\Reflection\\Types\\Object_",
+            "type__tostring": "\\TestNamespace\\TestClass",
             "type": {},
             "declarationLine": "function whatever(TestClass $param): TestClass2 {",
             "documentation": "Aute duis elit reprehenderit tempor cillum proident anim laborum eu laboris reprehenderit ea incididunt."

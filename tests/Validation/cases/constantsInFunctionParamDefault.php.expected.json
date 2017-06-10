@@ -37,7 +37,7 @@
                 },
                 "containerName": "A"
             },
-            "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
+            "type__tostring": "mixed",
             "type": {},
             "declarationLine": "function b ($a = MY_CONSTANT);",
             "documentation": null

@@ -33,7 +33,7 @@
                 },
                 "containerName": "A"
             },
-            "type__class": "phpDocumentor\\Reflection\\Types\\Array_",
+            "type__tostring": "\\__CLASS__[]",
             "type": {},
             "declarationLine": "private static $deprecationsTriggered;",
             "documentation": null

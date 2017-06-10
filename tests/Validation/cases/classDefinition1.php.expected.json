@@ -58,7 +58,7 @@
                 },
                 "containerName": "TestNamespace\\A"
             },
-            "type__class": "phpDocumentor\\Reflection\\Types\\Integer",
+            "type__tostring": "int",
             "type": {},
             "declarationLine": "public $a;",
             "documentation": null

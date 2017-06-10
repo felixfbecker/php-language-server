@@ -1,41 +1,45 @@
 {
-    "references": [],
+    "references": {
+        "FooClass": [
+            "./methodReturnType.php"
+        ]
+    },
     "definitions": {
-        "A": {
-            "fqn": "A",
+        "FooClass": {
+            "fqn": "FooClass",
             "extends": [],
             "isGlobal": true,
             "isStatic": false,
             "canBeInstantiated": true,
             "symbolInformation": {
-                "name": "A",
+                "name": "FooClass",
                 "kind": 5,
                 "location": {
-                    "uri": "./arrayValueShouldBeBoolean.php"
+                    "uri": "./methodReturnType.php"
                 },
                 "containerName": ""
             },
             "type": null,
-            "declarationLine": "class A {",
+            "declarationLine": "class FooClass {",
             "documentation": null
         },
-        "A->foo": {
-            "fqn": "A->foo",
+        "FooClass->foo()": {
+            "fqn": "FooClass->foo()",
             "extends": [],
             "isGlobal": false,
             "isStatic": false,
             "canBeInstantiated": false,
             "symbolInformation": {
                 "name": "foo",
-                "kind": 7,
+                "kind": 6,
                 "location": {
-                    "uri": "./arrayValueShouldBeBoolean.php"
+                    "uri": "./methodReturnType.php"
                 },
-                "containerName": "A"
+                "containerName": "FooClass"
             },
-            "type__tostring": "string[]",
+            "type__tostring": "\\FooClass",
             "type": {},
-            "declarationLine": "protected $foo;",
+            "declarationLine": "public function foo(): FooClass {",
             "documentation": null
         }
     }
