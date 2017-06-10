@@ -58,7 +58,7 @@
                 },
                 "containerName": "MyNamespace\\B"
             },
-            "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
+            "type__tostring": "mixed",
             "type": {},
             "declarationLine": "function b() {",
             "documentation": null
@@ -97,7 +97,7 @@
                 },
                 "containerName": "MyNamespace\\A"
             },
-            "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
+            "type__tostring": "mixed",
             "type": {},
             "declarationLine": "function a () {",
             "documentation": null

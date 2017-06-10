@@ -1,60 +1,64 @@
 {
-    "references": [],
+    "references": {
+        "FooClass": [
+            "./staticMethodReturnType.php"
+        ]
+    },
     "definitions": {
-        "B": {
-            "fqn": "B",
+        "FooClass": {
+            "fqn": "FooClass",
             "extends": [],
             "isGlobal": true,
             "isStatic": false,
             "canBeInstantiated": true,
             "symbolInformation": {
-                "name": "B",
+                "name": "FooClass",
                 "kind": 5,
                 "location": {
-                    "uri": "./stringVariable.php"
+                    "uri": "./staticMethodReturnType.php"
                 },
                 "containerName": ""
             },
             "type": null,
-            "declarationLine": "class B",
+            "declarationLine": "class FooClass {",
             "documentation": null
         },
-        "B->hi": {
-            "fqn": "B->hi",
+        "FooClass::staticFoo()": {
+            "fqn": "FooClass::staticFoo()",
             "extends": [],
             "isGlobal": false,
-            "isStatic": false,
+            "isStatic": true,
             "canBeInstantiated": false,
             "symbolInformation": {
-                "name": "hi",
-                "kind": 7,
-                "location": {
-                    "uri": "./stringVariable.php"
-                },
-                "containerName": "B"
-            },
-            "type__tostring": "int",
-            "type": {},
-            "declarationLine": "public $hi;",
-            "documentation": null
-        },
-        "B->a()": {
-            "fqn": "B->a()",
-            "extends": [],
-            "isGlobal": false,
-            "isStatic": false,
-            "canBeInstantiated": false,
-            "symbolInformation": {
-                "name": "a",
+                "name": "staticFoo",
                 "kind": 6,
                 "location": {
-                    "uri": "./stringVariable.php"
+                    "uri": "./staticMethodReturnType.php"
                 },
-                "containerName": "B"
+                "containerName": "FooClass"
+            },
+            "type__tostring": "\\FooClass",
+            "type": {},
+            "declarationLine": "public static function staticFoo(): FooClass {",
+            "documentation": null
+        },
+        "FooClass->bar()": {
+            "fqn": "FooClass->bar()",
+            "extends": [],
+            "isGlobal": false,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "bar",
+                "kind": 6,
+                "location": {
+                    "uri": "./staticMethodReturnType.php"
+                },
+                "containerName": "FooClass"
             },
             "type__tostring": "mixed",
             "type": {},
-            "declarationLine": "function a () {",
+            "declarationLine": "public function bar() { }",
             "documentation": null
         }
     }

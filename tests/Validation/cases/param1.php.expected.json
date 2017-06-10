@@ -37,7 +37,7 @@
                 },
                 "containerName": "MyNamespace"
             },
-            "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
+            "type__tostring": "mixed",
             "type": {},
             "declarationLine": "function init(Hi $view)",
             "documentation": null

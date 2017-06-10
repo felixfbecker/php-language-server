@@ -70,7 +70,7 @@
                 },
                 "containerName": "MyNamespace\\A"
             },
-            "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
+            "type__tostring": "mixed",
             "type": {},
             "declarationLine": "public static function suite()",
             "documentation": null

@@ -40,7 +40,7 @@
                 },
                 "containerName": "A"
             },
-            "type__class": "phpDocumentor\\Reflection\\Types\\String_",
+            "type__tostring": "string",
             "type": {},
             "declarationLine": "static $a;",
             "documentation": null

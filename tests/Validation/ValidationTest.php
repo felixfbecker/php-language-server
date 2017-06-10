@@ -132,8 +132,7 @@ class ValidationTest extends TestCase
                 } elseif ($propertyName === 'extends') {
                     $definition->$propertyName = $definition->$propertyName ?? [];
                 } elseif ($propertyName === 'type' && $definition->type !== null) {
-                    // Class info is not captured by json_encode. It's important for 'type'.
-                    $defsForAssert[$fqn]['type__class'] = get_class($definition->type);
+                    $defsForAssert[$fqn]['type__tostring'] = (string)$definition->type;
                 }
 
                 $defsForAssert[$fqn][$propertyName] = $definition->$propertyName;
