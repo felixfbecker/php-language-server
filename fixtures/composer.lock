@@ -1,0 +1,55 @@
+{
+    "_readme": [
+        "This is a mock lock file for composer"
+    ],
+    "content-hash": "3da868eb11c9a94f957057f73d2936ef",
+    "packages": [
+        {
+            "name": "example/example-version",
+            "version": "1.0.7",
+            "source": {
+                "type": "git",
+                "url": "https://example.com",
+                "reference": "b17e6153cb7f33c7e44eb59578dc12eee5dc8e12"
+            },
+            "require": {},
+            "require-dev": {},
+            "suggest": {},
+            "type": "library",
+            "extra": {},
+            "autoload": {},
+            "license": [],
+            "authors": [],
+            "description": "",
+            "keywords": [],
+            "time": "2017-03-06T11:59:08+00:00"
+        },
+        {
+            "name": "example/example-reference",
+            "version": "1.0.7",
+            "source": {
+                "type": "git",
+                "url": "https://example.com",
+                "reference": "b17e6153cb7f33c7e44eb59578dc12eee5dc8e12"
+            },
+            "require": {},
+            "require-dev": {},
+            "suggest": {},
+            "type": "library",
+            "extra": {},
+            "autoload": {},
+            "license": [],
+            "authors": [],
+            "description": "",
+            "keywords": [],
+            "time": "2017-03-06T11:59:08+00:00"
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "prefer-lowest": false,
+    "platform": {},
+    "platform-dev": []
+}

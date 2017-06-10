@@ -1,0 +1,6 @@
+{
+    "require": {
+        "example/example-version": "1.0.7",
+        "example/example-reference": "dev-master"
+    }
+}

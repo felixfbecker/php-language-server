@@ -150,11 +150,22 @@ class Indexer
                 $cacheKey = null;
                 $index = null;
                 foreach (array_merge($this->composerLock->packages, $this->composerLock->{'packages-dev'}) as $package) {
-                    // Check if package name matches and version is absolute
-                    // Dynamic constraints are not cached, because they can change every time
+                    if ($package->name !== $packageName) {
+                        continue;
+                    }
+                    // Check if package can be cached.
                     $packageVersion = ltrim($package->version, 'v');
-                    if ($package->name === $packageName && strpos($packageVersion, 'dev') === false) {
+                    // If package is anchored to a version
+                    if (strpos($packageVersion, 'dev') === false) {
                         $packageKey = $packageName . ':' . $packageVersion;
+                        $cacheKey = self::CACHE_VERSION . ':' . $packageKey;
+                        // Check cache
+                        $index = yield $this->cache->get($cacheKey);
+                        break;
+
+                    // If package is checked out
+                    } else if (isset($package->source->reference)) {
+                        $packageKey = $packageName . ':' . $package->source->reference;
                         $cacheKey = self::CACHE_VERSION . ':' . $packageKey;
                         // Check cache
                         $index = yield $this->cache->get($cacheKey);
