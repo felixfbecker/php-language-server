@@ -39,7 +39,8 @@ class ClientFilesFinder implements FilesFinder
             $uris = [];
             foreach ($textDocuments as $textDocument) {
                 $path = Uri\parse($textDocument->uri)['path'];
-                if (Glob::match($path, $glob)) {
+                // Also exclude any directories that also match the glob pattern
+                if (Glob::match($path, $glob) && !is_dir($path)) {
                     $uris[] = $textDocument->uri;
                 }
             }
