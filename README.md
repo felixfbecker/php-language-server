@@ -130,7 +130,7 @@ All classes are considered internal and are not subject to semver.
 The recommended installation method is through [Composer](https://getcomposer.org/).
 Simply run
 
-    composer require felixfbecker/language-server
+    composer require-dev felixfbecker/language-server
 
 and you will get the latest stable release and all dependencies.  
 Running `composer update` will update the server to the latest non-breaking version.
