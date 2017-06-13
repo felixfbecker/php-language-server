@@ -3,6 +3,16 @@ declare(strict_types = 1);
 
 namespace LanguageServer;
 
+use LanguageServer\Protocol\{Diagnostic, DiagnosticSeverity, Range, Position, TextEdit};
+use LanguageServer\NodeVisitor\{
+    NodeAtPositionFinder,
+    ReferencesAdder,
+    DocBlockParser,
+    DefinitionCollector,
+    ColumnCalculator,
+    ReferencesCollector,
+    DynamicLoader
+};
 use LanguageServer\Index\Index;
 use LanguageServer\Protocol\{
     Diagnostic, Position, Range
@@ -151,6 +161,23 @@ class PhpDocument
         $this->definitions = $treeAnalyzer->getDefinitions();
 
         $this->definitionNodes = $treeAnalyzer->getDefinitionNodes();
+
+        // Report errors from parsing docblocks
+        foreach ($docBlockParser->errors as $error) {
+            $this->diagnostics[] = Diagnostic::fromError($error, $this->content, DiagnosticSeverity::WARNING, 'php');
+        }
+
+        $traverser = new NodeTraverser;
+
+        // Collect all definitions
+        $definitionCollector = new DefinitionCollector($this->definitionResolver);
+        $traverser->addVisitor($definitionCollector);
+
+				$traverser->addVisitor(new DynamicLoader($definitionCollector, $this->definitionResolver));
+
+        // Collect all references
+        $referencesCollector = new ReferencesCollector($this->definitionResolver);
+        $traverser->addVisitor($referencesCollector);
 
         $this->referenceNodes = $treeAnalyzer->getReferenceNodes();
 
