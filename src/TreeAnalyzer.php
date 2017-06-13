@@ -15,8 +15,8 @@ class TreeAnalyzer
     /** @var PhpParser\Parser */
     private $parser;
 
-    /** @var Node */
-    private $stmts;
+    /** @var Node\SourceFileNode */
+    private $sourceFileNode;
 
     /** @var Diagnostic[] */
     private $diagnostics;
@@ -46,17 +46,17 @@ class TreeAnalyzer
         $this->docBlockFactory = $docBlockFactory;
         $this->definitionResolver = $definitionResolver;
         $this->content = $content;
-        $this->stmts = $this->parser->parseSourceFile($content, $uri);
+        $this->sourceFileNode = $this->parser->parseSourceFile($content, $uri);
 
         // TODO - docblock errors
 
-        $this->collectDefinitionsAndReferences($this->stmts);
+        $this->collectDefinitionsAndReferences($this->sourceFileNode);
     }
 
-    private function collectDefinitionsAndReferences(Node $stmts)
+    private function collectDefinitionsAndReferences(Node $sourceFileNode)
     {
-        foreach ($stmts::CHILD_NAMES as $name) {
-            $node = $stmts->$name;
+        foreach ($sourceFileNode::CHILD_NAMES as $name) {
+            $node = $sourceFileNode->$name;
 
             if ($node === null) {
                 continue;
@@ -200,10 +200,10 @@ class TreeAnalyzer
     }
 
     /**
-     * @return Node[]
+     * @return Node\SourceFileNode
      */
-    public function getStmts()
+    public function getSourceFileNode()
     {
-        return $this->stmts;
+        return $this->sourceFileNode;
     }
 }

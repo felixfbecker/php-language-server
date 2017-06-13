@@ -46,7 +46,7 @@
                 },
                 "containerName": "TestClass"
             },
-            "type__class": "phpDocumentor\\Reflection\\Types\\Array_",
+            "type__tostring": "\\TestClass[]",
             "type": {},
             "declarationLine": "public static $testProperty;",
             "documentation": "Lorem excepteur officia sit anim velit veniam enim."
