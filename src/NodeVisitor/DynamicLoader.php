@@ -31,7 +31,7 @@ class DynamicLoader extends NodeVisitorAbstract
             return;
         }
 
-        if ($node->name !== 'model' && $node->name !== 'library') {
+        if ($node->name !== 'model' && $node->name !== 'library' &&  $node->name !== 'helper') {
             return;
         }
 
@@ -45,26 +45,41 @@ class DynamicLoader extends NodeVisitorAbstract
             return;
         }
 
-        // make sure the first argument is a string.
-        if (!($node->args[0]->value instanceof Node\Scalar\String_)) {
-            return;
-        }
+        $nameNode = NULL;
+        if ($node->args[0]->value instanceof Node\Scalar\String_) {
+            // make sure the first argument is a string.
 
-        $argNode = $node->args[0];
-        $argstr = $argNode->value->value;
-        $argparts = explode('\\', $argstr);
-        $modelName = array_pop($argparts);
-        $fieldName = $modelName;
+            if ($argSize == 2) {
+                $nameNode = $node->args[1]->value;
+            }
+            $this->createDefintion($node, $node->args[0]->value, $nameNode);
+        } else if ($node->args[0]->value instanceof Node\Expr\Array_) {
+            $elems = $node->args[0]->value->items;
+            foreach ($elems as $item) {
+                if ($item->value instanceof Node\Scalar\String_) {
+                    $this->createDefintion($node, $item->value, $nameNode);
+                }
+            }
+        }
+    }
+
+
+    public function createDefintion($callNode, $entityNode, $nameNode)
+    {
+        $entityString = $entityNode->value;
+        $entityParts = explode('\\', $entityString);
+        $enityName = array_pop($entityParts);
+        $fieldName = $enityName;
 
         // deal with case like: 	$this->_CI->load->model('users_mdl', 'hahaha');
-        if ($argSize == 2) {
-            if (!($node->args[1]->value instanceof Node\Scalar\String_)) {
+        if ($callNode->name = "model" && $nameNode !== NULL) {
+            if (!($nameNode instanceof Node\Scalar\String_)) {
                 return;
             }
-            $fieldName = $node->args[1]->value->value;
+            $fieldName = $nameNode->value;
         }
 
-        $enclosedClass = $node;
+        $enclosedClass = $callNode;
         $fqn = NULL;
         $classFqn = NULL;
         while ($enclosedClass !== NULL) {
@@ -81,18 +96,18 @@ class DynamicLoader extends NodeVisitorAbstract
             return;
         }
 
-      // add fqn to nodes and definitions.
-        $this->definitionCollector->nodes[$fqn] = $argNode;
+        // add fqn to nodes and definitions.
+        $this->definitionCollector->nodes[$fqn] = $entityNode;
 
         // Create symbol
 //        $classFqnParts = preg_split('/(::|->|\\\\)/', $fqn);
 //        array_pop($classFqnParts);
 //        $classFqn = implode('\\', $classFqnParts);
-        $sym = new SymbolInformation($fieldName, SymbolKind::PROPERTY, Location::fromNode($argNode), $classFqn);
+        $sym = new SymbolInformation($fieldName, SymbolKind::PROPERTY, Location::fromNode($entityNode), $classFqn);
 
         // Create type
-        array_push($argparts, ucwords($modelName));
-        $typeName = implode('\\', $argparts);
+        array_push($entityParts, ucwords($enityName));
+        $typeName = implode('\\', $entityParts);
         $type = new Types\Object_(new Fqsen('\\' . $typeName));
 
         // Create defintion from symbol, type and all others
