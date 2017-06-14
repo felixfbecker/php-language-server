@@ -173,11 +173,11 @@ class PhpDocument
         $definitionCollector = new DefinitionCollector($this->definitionResolver);
         $traverser->addVisitor($definitionCollector);
 
-				$traverser->addVisitor(new DynamicLoader($definitionCollector, $this->definitionResolver));
+				$traverser->addVisitor(new DynamicLoader($definitionCollector));
 
         // Collect all references
         $referencesCollector = new ReferencesCollector($this->definitionResolver);
-        $traverser->addVisitor($referencesCollector);
+        //$traverser->addVisitor($referencesCollector);
 
         $this->referenceNodes = $treeAnalyzer->getReferenceNodes();
 
