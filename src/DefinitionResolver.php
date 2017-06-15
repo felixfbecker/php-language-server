@@ -906,11 +906,12 @@ class DefinitionResolver
             // Anonymous class
             return new Types\Object_;
         }
-        $className = (string)$class->getResolvedName();
-
-        if ($className === 'static') {
+        if ($class instanceof PhpParser\Token && $class->kind === PhpParser\TokenKind::StaticKeyword) {
+            // `new static`
             return new Types\Static_;
         }
+        $className = (string)$class->getResolvedName();
+
         if ($className === 'self' || $className === 'parent') {
             $classNode = $class->getFirstAncestor(Node\Statement\ClassDeclaration::class);
             if ($className === 'parent') {
