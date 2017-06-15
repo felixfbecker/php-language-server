@@ -77,7 +77,7 @@ function isBooleanExpression($expression) : bool
 /**
  * Tries to get the parent property declaration given a Node
  * @param Node $node
- * @return Node\PropertyDeclaration | null $node
+ * @return Node\PropertyDeclaration|null $node
  */
 function tryGetPropertyDeclaration(Node $node)
 {
@@ -93,7 +93,7 @@ function tryGetPropertyDeclaration(Node $node)
 /**
  * Tries to get the parent ConstDeclaration or ClassConstDeclaration given a Node
  * @param Node $node
- * @return Node\Statement\ConstDeclaration | Node\ClassConstDeclaration | null $node
+ * @return Node\Statement\ConstDeclaration|Node\ClassConstDeclaration|null $node
  */
 function tryGetConstOrClassConstDeclaration(Node $node)
 {

@@ -54,7 +54,7 @@ class DefinitionResolver
     {
         // If node is part of a declaration list, build a declaration line that discludes other elements in the list
         //  - [PropertyDeclaration] // public $a, [$b = 3], $c; => public $b = 3;
-        //  - [ConstDeclaration | ClassConstDeclaration] // "const A = 3, [B = 4];" => "const B = 4;"
+        //  - [ConstDeclaration|ClassConstDeclaration] // "const A = 3, [B = 4];" => "const B = 4;"
         if (
             ($declaration = ParserHelpers\tryGetPropertyDeclaration($node)) && ($elements = $declaration->propertyElements) ||
             ($declaration = ParserHelpers\tryGetConstOrClassConstDeclaration($node)) && ($elements = $declaration->constElements)
@@ -131,7 +131,7 @@ class DefinitionResolver
      * Gets Doc Block with resolved names for a Node
      *
      * @param Node $node
-     * @return DocBlock | null
+     * @return DocBlock|null
      */
     private function getDocBlock(Node $node)
     {
@@ -482,8 +482,8 @@ class DefinitionResolver
     /**
      * Returns the assignment or parameter node where a variable was defined
      *
-     * @param Node\Expression\Variable | Node\Expression\ClosureUse $var The variable access
-     * @return Node\Expression\Assign | Node\Expression\AssignOp|Node\Param | Node\Expression\ClosureUse|null
+     * @param Node\Expression\Variable|Node\Expression\ClosureUse $var The variable access
+     * @return Node\Expression\Assign|Node\Expression\AssignOp|Node\Param|Node\Expression\ClosureUse|null
      */
     public function resolveVariableToNode($var)
     {
@@ -894,7 +894,7 @@ class DefinitionResolver
      * Takes any class name node (from a static method call, or new node) and returns a Type object
      * Resolves keywords like self, static and parent
      *
-     * @param Node | PhpParser\Token $class
+     * @param Node|PhpParser\Token $class
      * @return Type
      */
     public function resolveClassNameToType($class): Type
@@ -1191,9 +1191,9 @@ class DefinitionResolver
     }
 
     /**
-     * @param DocBlock | null $docBlock
-     * @param string | null $variableName
-     * @return DocBlock\Tags\Param | null
+     * @param DocBlock|null $docBlock
+     * @param string|null $variableName
+     * @return DocBlock\Tags\Param|null
      */
     private function tryGetDocBlockTagForParameter($docBlock, $variableName)
     {
