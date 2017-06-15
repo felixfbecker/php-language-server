@@ -106,8 +106,9 @@ class DynamicLoader extends NodeVisitorAbstract
         $sym = new SymbolInformation($fieldName, SymbolKind::PROPERTY, Location::fromNode($entityNode), $classFqn);
 
         // Create type
-        array_push($entityParts, ucwords($enityName));
-        $typeName = implode('\\', $entityParts);
+        // array_push($entityParts, ucwords($enityName));
+        // $typeName = implode('\\', $entityParts);
+        $typeName = ucwords($enityName);
         $type = new Types\Object_(new Fqsen('\\' . $typeName));
 
         // Create defintion from symbol, type and all others
