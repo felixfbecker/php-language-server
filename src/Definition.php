@@ -45,6 +45,13 @@ class Definition
     public $isGlobal;
 
     /**
+     * True if this definition is affected by global namespace fallback (global function or global constant)
+     *
+     * @var bool
+     */
+    public $roamed;
+
+    /**
      * False for instance methods and properties
      *
      * @var bool

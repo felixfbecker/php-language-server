@@ -193,6 +193,16 @@ class DefinitionResolver
             ($node instanceof Node\ConstElement && $node->parent->parent instanceof Node\Statement\ConstDeclaration)
         );
 
+        // Definition is affected by global namespace fallback if it is a global constant or a global function
+        $def->roamed = (
+            $fqn !== null
+            && strpos($fqn, '\\') === false
+            && (
+                ($node instanceof Node\ConstElement && $node->parent->parent instanceof Node\Statement\ConstDeclaration)
+                || $node instanceof Node\Statement\FunctionDeclaration
+            )
+        );
+
         // Static methods and static property declarations
         $def->isStatic = (
             ($node instanceof Node\MethodDeclaration && $node->isStatic()) ||
