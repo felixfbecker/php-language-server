@@ -45,7 +45,6 @@ class TreeAnalyzer
         $this->parser = $parser;
         $this->docBlockFactory = $docBlockFactory;
         $this->definitionResolver = $definitionResolver;
-        $this->content = $content;
         $this->sourceFileNode = $this->parser->parseSourceFile($content, $uri);
 
         // TODO - docblock errors
@@ -76,7 +75,7 @@ class TreeAnalyzer
             }
 
             if (($error = PhpParser\DiagnosticsProvider::checkDiagnostics($node)) !== null) {
-                $range = PhpParser\PositionUtilities::getRangeFromPosition($error->start, $error->length, $this->content);
+                $range = PhpParser\PositionUtilities::getRangeFromPosition($error->start, $error->length, $this->sourceFileNode->fileContents);
 
                 $this->diagnostics[] = new Diagnostic(
                     $error->message,
