@@ -67,7 +67,7 @@ class DynamicLoader extends NodeVisitorAbstract
     public function createDefintion($callNode, $entityNode, $nameNode)
     {
         $entityString = $entityNode->value;
-        $entityParts = explode('\\', $entityString);
+        $entityParts = explode('/', $entityString);
         $enityName = array_pop($entityParts);
         $fieldName = $enityName;
 
