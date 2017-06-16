@@ -5,6 +5,7 @@
             "fqn": "Foo",
             "extends": [],
             "isGlobal": true,
+            "roamed": false,
             "isStatic": false,
             "canBeInstantiated": true,
             "symbolInformation": {
@@ -23,6 +24,7 @@
             "fqn": "Foo->fn()",
             "extends": [],
             "isGlobal": false,
+            "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
             "symbolInformation": {

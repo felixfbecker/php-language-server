@@ -12,6 +12,7 @@
             "fqn": "MyNamespace",
             "extends": [],
             "isGlobal": true,
+            "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
             "symbolInformation": {
@@ -30,6 +31,7 @@
             "fqn": "MyNamespace\\B",
             "extends": [],
             "isGlobal": true,
+            "roamed": false,
             "isStatic": false,
             "canBeInstantiated": true,
             "symbolInformation": {
@@ -48,6 +50,7 @@
             "fqn": "MyNamespace\\A",
             "extends": [],
             "isGlobal": true,
+            "roamed": false,
             "isStatic": false,
             "canBeInstantiated": true,
             "symbolInformation": {
@@ -66,6 +69,7 @@
             "fqn": "MyNamespace\\A->a()",
             "extends": [],
             "isGlobal": false,
+            "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
             "symbolInformation": {

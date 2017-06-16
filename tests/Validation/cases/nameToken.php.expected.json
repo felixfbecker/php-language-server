@@ -5,6 +5,7 @@
             "fqn": "A",
             "extends": [],
             "isGlobal": true,
+            "roamed": false,
             "isStatic": false,
             "canBeInstantiated": true,
             "symbolInformation": {
@@ -23,6 +24,7 @@
             "fqn": "A->b()",
             "extends": [],
             "isGlobal": false,
+            "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
             "symbolInformation": {

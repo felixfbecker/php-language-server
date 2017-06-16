@@ -9,6 +9,7 @@
             "fqn": "FooClass",
             "extends": [],
             "isGlobal": true,
+            "roamed": false,
             "isStatic": false,
             "canBeInstantiated": true,
             "symbolInformation": {
@@ -27,6 +28,7 @@
             "fqn": "FooClass::staticFoo()",
             "extends": [],
             "isGlobal": false,
+            "roamed": false,
             "isStatic": true,
             "canBeInstantiated": false,
             "symbolInformation": {
@@ -46,6 +48,7 @@
             "fqn": "FooClass->bar()",
             "extends": [],
             "isGlobal": false,
+            "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
             "symbolInformation": {

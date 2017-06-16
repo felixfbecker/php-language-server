@@ -15,6 +15,7 @@
             "fqn": "LanguageServer\\Tests\\Utils",
             "extends": [],
             "isGlobal": true,
+            "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
             "symbolInformation": {
