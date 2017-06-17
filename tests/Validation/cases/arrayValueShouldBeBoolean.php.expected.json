@@ -5,6 +5,7 @@
             "fqn": "A",
             "extends": [],
             "isGlobal": true,
+            "roamed": false,
             "isStatic": false,
             "canBeInstantiated": true,
             "symbolInformation": {
@@ -23,6 +24,7 @@
             "fqn": "A->foo",
             "extends": [],
             "isGlobal": false,
+            "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
             "symbolInformation": {
@@ -33,7 +35,7 @@
                 },
                 "containerName": "A"
             },
-            "type__class": "phpDocumentor\\Reflection\\Types\\Array_",
+            "type__tostring": "string[]",
             "type": {},
             "declarationLine": "protected $foo;",
             "documentation": null

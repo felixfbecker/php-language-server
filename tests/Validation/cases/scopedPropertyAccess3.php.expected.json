@@ -12,6 +12,7 @@
             "fqn": "A",
             "extends": [],
             "isGlobal": true,
+            "roamed": false,
             "isStatic": false,
             "canBeInstantiated": true,
             "symbolInformation": {
@@ -30,6 +31,7 @@
             "fqn": "A::$a",
             "extends": [],
             "isGlobal": false,
+            "roamed": false,
             "isStatic": true,
             "canBeInstantiated": false,
             "symbolInformation": {
@@ -40,7 +42,7 @@
                 },
                 "containerName": "A"
             },
-            "type__class": "phpDocumentor\\Reflection\\Types\\String_",
+            "type__tostring": "string",
             "type": {},
             "declarationLine": "static $a;",
             "documentation": null

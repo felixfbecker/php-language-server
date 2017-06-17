@@ -2,9 +2,6 @@
     "references": {
         "MyNamespace\\B": [
             "./static4.php"
-        ],
-        "static": [
-            "./static4.php"
         ]
     },
     "definitions": {
@@ -12,6 +9,7 @@
             "fqn": "MyNamespace",
             "extends": [],
             "isGlobal": true,
+            "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
             "symbolInformation": {
@@ -32,6 +30,7 @@
                 "MyNamespace\\B"
             ],
             "isGlobal": true,
+            "roamed": false,
             "isStatic": false,
             "canBeInstantiated": true,
             "symbolInformation": {
@@ -50,6 +49,7 @@
             "fqn": "MyNamespace\\A->a()",
             "extends": [],
             "isGlobal": false,
+            "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
             "symbolInformation": {
@@ -60,7 +60,7 @@
                 },
                 "containerName": "MyNamespace\\A"
             },
-            "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
+            "type__tostring": "mixed",
             "type": {},
             "declarationLine": "function a () {",
             "documentation": null

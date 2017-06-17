@@ -18,6 +18,7 @@
             "fqn": "TestClass",
             "extends": [],
             "isGlobal": true,
+            "roamed": false,
             "isStatic": false,
             "canBeInstantiated": true,
             "symbolInformation": {
@@ -36,6 +37,7 @@
             "fqn": "TestClass::$testProperty",
             "extends": [],
             "isGlobal": false,
+            "roamed": false,
             "isStatic": true,
             "canBeInstantiated": false,
             "symbolInformation": {
@@ -46,7 +48,7 @@
                 },
                 "containerName": "TestClass"
             },
-            "type__class": "phpDocumentor\\Reflection\\Types\\Array_",
+            "type__tostring": "\\TestClass[]",
             "type": {},
             "declarationLine": "public static $testProperty;",
             "documentation": "Lorem excepteur officia sit anim velit veniam enim."

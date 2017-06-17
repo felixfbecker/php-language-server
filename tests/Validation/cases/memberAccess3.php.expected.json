@@ -27,6 +27,7 @@
             "fqn": "MyNamespace",
             "extends": [],
             "isGlobal": true,
+            "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
             "symbolInformation": {
@@ -45,6 +46,7 @@
             "fqn": "MyNamespace\\A",
             "extends": [],
             "isGlobal": true,
+            "roamed": false,
             "isStatic": false,
             "canBeInstantiated": true,
             "symbolInformation": {
@@ -63,6 +65,7 @@
             "fqn": "MyNamespace\\A::getInitializer()",
             "extends": [],
             "isGlobal": false,
+            "roamed": false,
             "isStatic": true,
             "canBeInstantiated": false,
             "symbolInformation": {
@@ -73,7 +76,7 @@
                 },
                 "containerName": "MyNamespace\\A"
             },
-            "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
+            "type__tostring": "mixed",
             "type": {},
             "declarationLine": "public static function getInitializer(ClassLoader $loader)",
             "documentation": null

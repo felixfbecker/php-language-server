@@ -1,10 +1,15 @@
 {
-    "references": [],
+    "references": {
+        "MyNamespace\\Exception": [
+            "./exceptions1.php"
+        ]
+    },
     "definitions": {
         "MyNamespace": {
             "fqn": "MyNamespace",
             "extends": [],
             "isGlobal": true,
+            "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
             "symbolInformation": {

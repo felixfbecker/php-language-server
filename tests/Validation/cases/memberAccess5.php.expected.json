@@ -1,10 +1,15 @@
 {
-    "references": [],
+    "references": {
+        "MyNamespace\\ParseErrorsTest->args": [
+            "./memberAccess5.php"
+        ]
+    },
     "definitions": {
         "MyNamespace": {
             "fqn": "MyNamespace",
             "extends": [],
             "isGlobal": true,
+            "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
             "symbolInformation": {
@@ -23,6 +28,7 @@
             "fqn": "MyNamespace\\ParseErrorsTest",
             "extends": [],
             "isGlobal": true,
+            "roamed": false,
             "isStatic": false,
             "canBeInstantiated": true,
             "symbolInformation": {
@@ -41,6 +47,7 @@
             "fqn": "MyNamespace\\ParseErrorsTest->setUp()",
             "extends": [],
             "isGlobal": false,
+            "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
             "symbolInformation": {
@@ -51,7 +58,7 @@
                 },
                 "containerName": "MyNamespace\\ParseErrorsTest"
             },
-            "type__class": "phpDocumentor\\Reflection\\Types\\Mixed",
+            "type__tostring": "mixed",
             "type": {},
             "declarationLine": "public function setUp()",
             "documentation": null

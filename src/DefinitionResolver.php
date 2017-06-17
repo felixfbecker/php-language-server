@@ -54,7 +54,7 @@ class DefinitionResolver
     {
         // If node is part of a declaration list, build a declaration line that discludes other elements in the list
         //  - [PropertyDeclaration] // public $a, [$b = 3], $c; => public $b = 3;
-        //  - [ConstDeclaration | ClassConstDeclaration] // "const A = 3, [B = 4];" => "const B = 4;"
+        //  - [ConstDeclaration|ClassConstDeclaration] // "const A = 3, [B = 4];" => "const B = 4;"
         if (
             ($declaration = ParserHelpers\tryGetPropertyDeclaration($node)) && ($elements = $declaration->propertyElements) ||
             ($declaration = ParserHelpers\tryGetConstOrClassConstDeclaration($node)) && ($elements = $declaration->constElements)
@@ -131,7 +131,7 @@ class DefinitionResolver
      * Gets Doc Block with resolved names for a Node
      *
      * @param Node $node
-     * @return DocBlock | null
+     * @return DocBlock|null
      */
     private function getDocBlock(Node $node)
     {
@@ -191,6 +191,16 @@ class DefinitionResolver
             $node instanceof Node\Statement\FunctionDeclaration ||
 
             ($node instanceof Node\ConstElement && $node->parent->parent instanceof Node\Statement\ConstDeclaration)
+        );
+
+        // Definition is affected by global namespace fallback if it is a global constant or a global function
+        $def->roamed = (
+            $fqn !== null
+            && strpos($fqn, '\\') === false
+            && (
+                ($node instanceof Node\ConstElement && $node->parent->parent instanceof Node\Statement\ConstDeclaration)
+                || $node instanceof Node\Statement\FunctionDeclaration
+            )
         );
 
         // Static methods and static property declarations
@@ -482,8 +492,8 @@ class DefinitionResolver
     /**
      * Returns the assignment or parameter node where a variable was defined
      *
-     * @param Node\Expression\Variable | Node\Expression\ClosureUse $var The variable access
-     * @return Node\Expression\Assign | Node\Expression\AssignOp|Node\Param | Node\Expression\ClosureUse|null
+     * @param Node\Expression\Variable|Node\Expression\ClosureUse $var The variable access
+     * @return Node\Expression\Assign|Node\Expression\AssignOp|Node\Param|Node\Expression\ClosureUse|null
      */
     public function resolveVariableToNode($var)
     {
@@ -631,6 +641,16 @@ class DefinitionResolver
             if ($def !== null) {
                 return $def->type;
             }
+        }
+
+        // MEMBER CALL EXPRESSION/SCOPED PROPERTY CALL EXPRESSION
+        //   The type of the member/scoped property call expression is the type of the method, so resolve the
+        //   type of the callable expression.
+        if ($expr instanceof Node\Expression\CallExpression && (
+            $expr->callableExpression instanceof Node\Expression\MemberAccessExpression ||
+            $expr->callableExpression instanceof Node\Expression\ScopedPropertyAccessExpression)
+        ) {
+            return $this->resolveExpressionNodeToType($expr->callableExpression);
         }
 
         // MEMBER ACCESS EXPRESSION
@@ -894,7 +914,7 @@ class DefinitionResolver
      * Takes any class name node (from a static method call, or new node) and returns a Type object
      * Resolves keywords like self, static and parent
      *
-     * @param Node | PhpParser\Token $class
+     * @param Node|PhpParser\Token $class
      * @return Type
      */
     public function resolveClassNameToType($class): Type
@@ -906,11 +926,12 @@ class DefinitionResolver
             // Anonymous class
             return new Types\Object_;
         }
-        $className = (string)$class->getResolvedName();
-
-        if ($className === 'static') {
+        if ($class instanceof PhpParser\Token && $class->kind === PhpParser\TokenKind::StaticKeyword) {
+            // `new static`
             return new Types\Static_;
         }
+        $className = (string)$class->getResolvedName();
+
         if ($className === 'self' || $className === 'parent') {
             $classNode = $class->getFirstAncestor(Node\Statement\ClassDeclaration::class);
             if ($className === 'parent') {
@@ -1190,9 +1211,9 @@ class DefinitionResolver
     }
 
     /**
-     * @param DocBlock | null $docBlock
-     * @param string | null $variableName
-     * @return DocBlock\Tags\Param | null
+     * @param DocBlock|null $docBlock
+     * @param string|null $variableName
+     * @return DocBlock\Tags\Param|null
      */
     private function tryGetDocBlockTagForParameter($docBlock, $variableName)
     {

@@ -14,11 +14,11 @@ class DefinitionResolverTest extends TestCase
     {
         $parser = new PhpParser\Parser;
         $doc = new MockPhpDocument;
-        $stmts = $parser->parseSourceFile("<?php\ndefine('TEST_DEFINE', true);", $doc->getUri());
+        $sourceFileNode = $parser->parseSourceFile("<?php\ndefine('TEST_DEFINE', true);", $doc->getUri());
 
         $index = new Index;
         $definitionResolver = new DefinitionResolver($index);
-        $def = $definitionResolver->createDefinitionFromNode($stmts->statementList[1]->expression, '\TEST_DEFINE');
+        $def = $definitionResolver->createDefinitionFromNode($sourceFileNode->statementList[1]->expression, '\TEST_DEFINE');
 
         $this->assertInstanceOf(\phpDocumentor\Reflection\Types\Boolean::class, $def->type);
     }
@@ -27,11 +27,11 @@ class DefinitionResolverTest extends TestCase
     {
         $parser = new PhpParser\Parser;
         $doc = new MockPhpDocument;
-        $stmts = $parser->parseSourceFile("<?php\ndefine('TEST_DEFINE', true);", $doc->getUri());
+        $sourceFileNode = $parser->parseSourceFile("<?php\ndefine('TEST_DEFINE', true);", $doc->getUri());
 
         $index = new Index;
         $definitionResolver = new DefinitionResolver($index);
-        $type = $definitionResolver->getTypeFromNode($stmts->statementList[1]->expression);
+        $type = $definitionResolver->getTypeFromNode($sourceFileNode->statementList[1]->expression);
 
         $this->assertInstanceOf(\phpDocumentor\Reflection\Types\Boolean::class, $type);
     }
@@ -41,11 +41,11 @@ class DefinitionResolverTest extends TestCase
         // define('XXX') (only one argument) must not introduce a new symbol
         $parser = new PhpParser\Parser;
         $doc = new MockPhpDocument;
-        $stmts = $parser->parseSourceFile("<?php\ndefine('TEST_DEFINE');", $doc->getUri());
+        $sourceFileNode = $parser->parseSourceFile("<?php\ndefine('TEST_DEFINE');", $doc->getUri());
 
         $index = new Index;
         $definitionResolver = new DefinitionResolver($index);
-        $fqn = $definitionResolver->getDefinedFqn($stmts->statementList[1]->expression);
+        $fqn = $definitionResolver->getDefinedFqn($sourceFileNode->statementList[1]->expression);
 
         $this->assertNull($fqn);
     }
@@ -54,11 +54,11 @@ class DefinitionResolverTest extends TestCase
     {
         $parser = new PhpParser\Parser;
         $doc = new MockPhpDocument;
-        $stmts = $parser->parseSourceFile("<?php\ndefine('TEST_DEFINE', true);", $doc->getUri());
+        $sourceFileNode = $parser->parseSourceFile("<?php\ndefine('TEST_DEFINE', true);", $doc->getUri());
 
         $index = new Index;
         $definitionResolver = new DefinitionResolver($index);
-        $fqn = $definitionResolver->getDefinedFqn($stmts->statementList[1]->expression);
+        $fqn = $definitionResolver->getDefinedFqn($sourceFileNode->statementList[1]->expression);
 
         $this->assertEquals('TEST_DEFINE', $fqn);
     }

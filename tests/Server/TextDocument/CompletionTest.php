@@ -69,6 +69,27 @@ class CompletionTest extends TestCase
         ], true), $items);
     }
 
+    public function testGlobalFunctionInsideNamespaceAndClass()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/inside_namespace_and_method.php');
+        $this->loader->open($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(8, 11)
+        )->wait();
+        $this->assertCompletionsListSubset(new CompletionList([
+            new CompletionItem(
+                'test_function',
+                CompletionItemKind::FUNCTION,
+                'void', // Return type
+                'Officia aliquip adipisicing et nulla et laboris dolore labore.',
+                null,
+                null,
+                '\test_function'
+            )
+        ], true), $items);
+    }
+
     public function testPropertyAndMethodWithoutPrefix()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/property.php');
@@ -234,10 +255,7 @@ class CompletionTest extends TestCase
                     'laboris commodo ad commodo velit mollit qui non officia id. Nulla duis veniam' . "\n" .
                     'veniam officia deserunt et non dolore mollit ea quis eiusmod sit non. Occaecat' . "\n" .
                     'consequat sunt culpa exercitation pariatur id reprehenderit nisi incididunt Lorem' . "\n" .
-                    'sint. Officia culpa pariatur laborum nostrud cupidatat consequat mollit.',
-                null,
-                null,
-                'TestClass'
+                    'sint. Officia culpa pariatur laborum nostrud cupidatat consequat mollit.'
             )
         ], true), $items);
     }
@@ -397,8 +415,8 @@ class CompletionTest extends TestCase
             new Position(2, 1)
         )->wait();
         $this->assertCompletionsListSubset(new CompletionList([
-            new CompletionItem('class', CompletionItemKind::KEYWORD, null, null, null, null, 'class '),
-            new CompletionItem('clone', CompletionItemKind::KEYWORD, null, null, null, null, 'clone ')
+            new CompletionItem('class', CompletionItemKind::KEYWORD, null, null, null, null, 'class'),
+            new CompletionItem('clone', CompletionItemKind::KEYWORD, null, null, null, null, 'clone')
         ], true), $items);
     }
 
@@ -495,6 +513,50 @@ class CompletionTest extends TestCase
                 null,
                 null,
                 new TextEdit(new Range(new Position(4, 8), new Position(4, 8)), 'c')
+            )
+        ], true), $items);
+    }
+
+    public function testMethodReturnType()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/method_return_type.php');
+        $this->loader->open($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(10, 6)
+        )->wait();
+        $this->assertCompletionsListSubset(new CompletionList([
+            new CompletionItem(
+                'foo',
+                CompletionItemKind::METHOD,
+                '\FooClass',
+                null,
+                null,
+                null,
+                null,
+                null
+            )
+        ], true), $items);
+    }
+
+    public function testStaticMethodReturnType()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/static_method_return_type.php');
+        $this->loader->open($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(11, 6)
+        )->wait();
+        $this->assertCompletionsListSubset(new CompletionList([
+            new CompletionItem(
+                'bar',
+                CompletionItemKind::METHOD,
+                'mixed',
+                null,
+                null,
+                null,
+                null,
+                null
             )
         ], true), $items);
     }

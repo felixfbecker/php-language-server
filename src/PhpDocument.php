@@ -47,18 +47,11 @@ class PhpDocument
     private $uri;
 
     /**
-     * The content of the document
-     *
-     * @var string
-     */
-    private $content;
-
-    /**
      * The AST of the document
      *
-     * @var Node
+     * @var Node\SourceFileNode
      */
-    private $stmts;
+    private $sourceFileNode;
 
     /**
      * Map from fully qualified name (FQN) to Definition
@@ -133,8 +126,6 @@ class PhpDocument
      */
     public function updateContent(string $content)
     {
-        $this->content = $content;
-
         // Unregister old definitions
         if (isset($this->definitions)) {
             foreach ($this->definitions as $fqn => $definition) {
@@ -172,7 +163,7 @@ class PhpDocument
             $this->index->addReferenceUri($fqn, $this->uri);
         }
 
-        $this->stmts = $treeAnalyzer->getStmts();
+        $this->sourceFileNode = $treeAnalyzer->getSourceFileNode();
     }
 
     /**
@@ -182,10 +173,10 @@ class PhpDocument
      */
     public function getFormattedText()
     {
-        if (empty($this->content)) {
+        if (empty($this->getContent())) {
             return [];
         }
-        return Formatter::format($this->content, $this->uri);
+        return Formatter::format($this->getContent(), $this->uri);
     }
 
     /**
@@ -195,7 +186,7 @@ class PhpDocument
      */
     public function getContent()
     {
-        return $this->content;
+        return $this->sourceFileNode->fileContents;
     }
 
     /**
@@ -221,11 +212,11 @@ class PhpDocument
     /**
      * Returns the AST of the document
      *
-     * @return Node | null
+     * @return Node\SourceFileNode|null
      */
-    public function getStmts()
+    public function getSourceFileNode()
     {
-        return $this->stmts;
+        return $this->sourceFileNode;
     }
 
     /**
@@ -236,12 +227,12 @@ class PhpDocument
      */
     public function getNodeAtPosition(Position $position)
     {
-        if ($this->stmts === null) {
+        if ($this->sourceFileNode === null) {
             return null;
         }
 
-        $offset = $position->toOffset($this->stmts->getFileContents());
-        $node = $this->stmts->getDescendantNodeAtPosition($offset);
+        $offset = $position->toOffset($this->sourceFileNode->getFileContents());
+        $node = $this->sourceFileNode->getDescendantNodeAtPosition($offset);
         if ($node !== null && $node->getStart() > $offset) {
             return null;
         }
@@ -256,12 +247,10 @@ class PhpDocument
      */
     public function getRange(Range $range)
     {
-        if ($this->content === null) {
-            return null;
-        }
-        $start = $range->start->toOffset($this->content);
-        $length = $range->end->toOffset($this->content) - $start;
-        return substr($this->content, $start, $length);
+        $content = $this->getContent();
+        $start = $range->start->toOffset($content);
+        $length = $range->end->toOffset($content) - $start;
+        return substr($content, $start, $length);
     }
 
     /**

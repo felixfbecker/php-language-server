@@ -6,6 +6,12 @@
         "self": [
             "./WithReturnTypehints.php"
         ],
+        "Fixtures\\Prophecy\\__CLASS__": [
+            "./WithReturnTypehints.php"
+        ],
+        "__CLASS__": [
+            "./WithReturnTypehints.php"
+        ],
         "parent": [
             "./WithReturnTypehints.php"
         ]
@@ -15,6 +21,7 @@
             "fqn": "Fixtures\\Prophecy",
             "extends": [],
             "isGlobal": true,
+            "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
             "symbolInformation": {
@@ -35,6 +42,7 @@
                 "Fixtures\\Prophecy\\EmptyClass"
             ],
             "isGlobal": true,
+            "roamed": false,
             "isStatic": false,
             "canBeInstantiated": true,
             "symbolInformation": {
@@ -53,6 +61,7 @@
             "fqn": "Fixtures\\Prophecy\\WithReturnTypehints->getSelf()",
             "extends": [],
             "isGlobal": false,
+            "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
             "symbolInformation": {
@@ -63,7 +72,7 @@
                 },
                 "containerName": "Fixtures\\Prophecy\\WithReturnTypehints"
             },
-            "type__class": "phpDocumentor\\Reflection\\Types\\Object_",
+            "type__tostring": "\\self",
             "type": {},
             "declarationLine": "public function getSelf(): self {",
             "documentation": null
@@ -72,6 +81,7 @@
             "fqn": "Fixtures\\Prophecy\\WithReturnTypehints->getName()",
             "extends": [],
             "isGlobal": false,
+            "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
             "symbolInformation": {
@@ -82,7 +92,7 @@
                 },
                 "containerName": "Fixtures\\Prophecy\\WithReturnTypehints"
             },
-            "type__class": "phpDocumentor\\Reflection\\Types\\String_",
+            "type__tostring": "string",
             "type": {},
             "declarationLine": "public function getName(): string {",
             "documentation": null
@@ -91,6 +101,7 @@
             "fqn": "Fixtures\\Prophecy\\WithReturnTypehints->getParent()",
             "extends": [],
             "isGlobal": false,
+            "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
             "symbolInformation": {
@@ -101,7 +112,7 @@
                 },
                 "containerName": "Fixtures\\Prophecy\\WithReturnTypehints"
             },
-            "type__class": "phpDocumentor\\Reflection\\Types\\Object_",
+            "type__tostring": "\\parent",
             "type": {},
             "declarationLine": "public function getParent(): parent {",
             "documentation": null

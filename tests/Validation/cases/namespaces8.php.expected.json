@@ -2,6 +2,12 @@
     "references": {
         "LanguageServer": [
             "./namespaces8.php"
+        ],
+        "LanguageServer\\pathToUri()": [
+            "./namespaces8.php"
+        ],
+        "LanguageServer\\uriToPath()": [
+            "./namespaces8.php"
         ]
     },
     "definitions": {
@@ -9,6 +15,7 @@
             "fqn": "LanguageServer\\Tests\\Utils",
             "extends": [],
             "isGlobal": true,
+            "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
             "symbolInformation": {

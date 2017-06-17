@@ -12,6 +12,7 @@
             "fqn": "TestNamespace",
             "extends": [],
             "isGlobal": true,
+            "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
             "symbolInformation": {
@@ -30,6 +31,7 @@
             "fqn": "TestNamespace\\A",
             "extends": [],
             "isGlobal": true,
+            "roamed": false,
             "isStatic": false,
             "canBeInstantiated": true,
             "symbolInformation": {
@@ -48,6 +50,7 @@
             "fqn": "TestNamespace\\A->a",
             "extends": [],
             "isGlobal": false,
+            "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
             "symbolInformation": {
@@ -58,7 +61,7 @@
                 },
                 "containerName": "TestNamespace\\A"
             },
-            "type__class": "phpDocumentor\\Reflection\\Types\\Integer",
+            "type__tostring": "int",
             "type": {},
             "declarationLine": "public $a;",
             "documentation": null
