@@ -543,8 +543,8 @@ class DefinitionResolver
                 ) {
                     return $n;
                 }
-                
-                // foreach ([0, 1, 2, 3] as $foreachKey => $foreachValue) {}
+
+                // foreach loops
                 if ($n instanceof Node\Statement\ForeachStatement) {
                     if ($n->foreachValue !== null && $n->foreachValue->getText() === $name) {
                         return $n->foreachValue;
