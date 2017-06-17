@@ -575,7 +575,7 @@ class DefinitionResolver
         //   $myVariable -> type of corresponding assignment expression
         if ($expr instanceof Node\Expression\Variable || $expr instanceof Node\UseVariableName) {
             if ($expr->getName() === 'this') {
-                return new Types\This;
+                return new Types\Object_(new Fqsen('\\' . $this->getContainingClassFqn($expr)));
             }
             // Find variable definition (parameter or assignment expression)
             $defNode = $this->resolveVariableToNode($expr);
