@@ -1,0 +1,8 @@
+// Place your settings in this file to overwrite default and user settings.
+{
+    "search.exclude": {
+        "**/vendor": true,
+        "**/validation": true,
+        "**/tests/Validation/cases": true
+    }
+}
