@@ -670,23 +670,23 @@ class DefinitionResolver
                 if ($expr->parent instanceof Node\Expression\CallExpression) {
                     $add .= '()';
                 }
-                $fqn = $classFqn . $add;
-                $def = $this->index->getDefinition($fqn);
-                if ($def !== null) {
-                    return $def->type;
-                } else {
-                    $classDef = $this->index->getDefinition($classFqn);
-                    if ($classDef !== null && is_array($classDef->extends)) {
-                        foreach ($classDef->extends as $parent) {
-                            $def = $this->index->getDefinition($parent . $add);
-                            if ($def !== null) {
-                                if ($def->type instanceof Types\This) {
-                                    return new Types\Object_(new Fqsen('\\' . $classFqn));
-                                }
-                                return $def->type;
-                            }
+                $lookupDefinition = function (string $base, string $add) use (&$lookupDefinition) {
+                    $def = $this->index->getDefinition($base . $add);
+                    if ($def !== null) {
+                        yield $def;
+                    }
+                    $baseDef = $this->index->getDefinition($base);
+                    if ($baseDef !== null && is_array($baseDef->extends)) {
+                        foreach ($baseDef->extends as $name) {
+                            yield from $lookupDefinition($name, $add);
                         }
                     }
+                };
+                foreach ($lookupDefinition($classFqn, $add) as $def) {
+                    if ($def->type instanceof Types\This) {
+                        return new Types\Object_(new Fqsen('\\' . $classFqn));
+                    }
+                    return $def->type;
                 }
             }
         }

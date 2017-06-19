@@ -1,9 +1,13 @@
 <?php
-class Parent1 {
+class Grand
+{
   /** @return $this */
   public function foo() {
     return $this;
   }
+}
+class Parent1 extends Grand {
+  
 }
 
 class Child extends Parent1 {
