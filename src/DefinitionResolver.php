@@ -574,6 +574,7 @@ class DefinitionResolver
         //   $this -> Type\this
         //   $myVariable -> type of corresponding assignment expression
         if ($expr instanceof Node\Expression\Variable || $expr instanceof Node\UseVariableName) {
+            // TODO: this will need to change when fluent interfaces are supported
             if ($expr->getName() === 'this') {
                 return new Types\Object_(new Fqsen('\\' . $this->getContainingClassFqn($expr)));
             }
