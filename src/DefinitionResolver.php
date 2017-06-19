@@ -574,7 +574,6 @@ class DefinitionResolver
         //   $this -> Type\this
         //   $myVariable -> type of corresponding assignment expression
         if ($expr instanceof Node\Expression\Variable || $expr instanceof Node\UseVariableName) {
-            // TODO: this will need to change when fluent interfaces are supported
             if ($expr->getName() === 'this') {
                 return new Types\Object_(new Fqsen('\\' . $this->getContainingClassFqn($expr)));
             }
@@ -667,13 +666,27 @@ class DefinitionResolver
                 } else {
                     $classFqn = substr((string)$t->getFqsen(), 1);
                 }
-                $fqn = $classFqn . '->' . $expr->memberName->getText($expr->getFileContents());
+                $add = '->' . $expr->memberName->getText($expr->getFileContents());
                 if ($expr->parent instanceof Node\Expression\CallExpression) {
-                    $fqn .= '()';
+                    $add .= '()';
                 }
+                $fqn = $classFqn . $add;
                 $def = $this->index->getDefinition($fqn);
                 if ($def !== null) {
                     return $def->type;
+                } else {
+                    $classDef = $this->index->getDefinition($classFqn);
+                    if ($classDef !== null && is_array($classDef->extends)) {
+                        foreach ($classDef->extends as $parent) {
+                            $def = $this->index->getDefinition($parent . $add);
+                            if ($def !== null) {
+                                if ($def->type instanceof Types\This) {
+                                    return new Types\Object_(new Fqsen('\\' . $classFqn));
+                                }
+                                return $def->type;
+                            }
+                        }
+                    }
                 }
             }
         }
