@@ -115,6 +115,10 @@ class PhpDocument
         $this->updateContent($content);
     }
 
+		private function isVisitingAutoload() {
+			return false;
+		}
+
     /**
      * Get all references of a fully qualified name
      *
@@ -156,7 +160,23 @@ class PhpDocument
 
         $treeAnalyzer = new TreeAnalyzer($this->parser, $content, $this->docBlockFactory, $this->definitionResolver, $this->uri);
 
-        $this->diagnostics = $treeAnalyzer->getDiagnostics();
+        $this->diagnostics = [];
+        foreach ($errorHandler->getErrors() as $error) {
+            $this->diagnostics[] = Diagnostic::fromError($error, $this->content, DiagnosticSeverity::ERROR, 'php');
+        }
+
+				// figure out if it is analyzing an autoload file.
+				$isAutoload = false;
+				$ending = "application/config/autoload.php";
+				$endingLength = strlen($ending);
+				$isAutoload = (substr($this->uri, -$endingLength) === $ending);
+
+        // $stmts can be null in case of a fatal parsing error
+        if ($stmts) {
+            $traverser = new NodeTraverser;
+
+            // Resolve aliased names to FQNs
+            $traverser->addVisitor(new NameResolver($errorHandler));
 
         $this->definitions = $treeAnalyzer->getDefinitions();
 
@@ -173,7 +193,7 @@ class PhpDocument
         $definitionCollector = new DefinitionCollector($this->definitionResolver);
         $traverser->addVisitor($definitionCollector);
 
-				$traverser->addVisitor(new DynamicLoader($definitionCollector));
+        $traverser->addVisitor(new DynamicLoader($definitionCollector, $this->definitionResolver, $isAutoload));
 
         // Collect all references
         $referencesCollector = new ReferencesCollector($this->definitionResolver);

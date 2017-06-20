@@ -118,6 +118,18 @@ class Indexer
             /** @var string[][] */
             $deps = [];
 
+            $ending = "application/config/autoload.php";
+            $endingLength = strlen($ending);
+            foreach ($uris as $uri) {
+              $found = (substr($uri, -$endingLength) === $ending);
+
+              // if found, put it to the beginning of the list so that it gets analyzed first.
+              if ($found) {
+                array_unshift($uris, $uri); 
+                break;
+              }
+            }
+
             foreach ($uris as $uri) {
                 $packageName = getPackageName($uri, $this->composerJson);
                 if ($this->composerLock !== null && $packageName) {
