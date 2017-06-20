@@ -10,6 +10,7 @@ use LanguageServer\Protocol\{
     FileEvent,
     SymbolInformation,
     SymbolDescriptor,
+    PackageDescriptor,
     ReferenceInformation,
     DependencyReference,
     Location
@@ -147,19 +148,10 @@ class Workspace
             foreach ($refs as $uri => $fqns) {
                 foreach ($fqns as $fqn) {
                     $def = $this->dependenciesIndex->getDefinition($fqn);
-                    $symbol = new SymbolDescriptor;
                     $symbol->fqsen = $fqn;
-                    foreach (get_object_vars($def->symbolInformation) as $prop => $val) {
-                        $symbol->$prop = $val;
-                    }
                     // Find out package name
                     $packageName = getPackageName($def->symbolInformation->location->uri, $this->composerJson);
-                    foreach (array_merge($this->composerLock->packages, $this->composerLock->{'packages-dev'}) as $package) {
-                        if ($package->name === $packageName) {
-                            $symbol->package = $package;
-                            break;
-                        }
-                    }
+                    $symbol = new SymbolDescriptor($fqn, new PackageDescriptor($packageName));
                     // If there was no FQSEN provided, check if query attributes match
                     if (!isset($query->fqsen)) {
                         $matches = true;
