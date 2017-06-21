@@ -170,7 +170,7 @@ Example:
 #### `--memory-limit=integer` (optional)
 Sets memory limit for language server.
 Equivalent to [memory-limit](http://php.net/manual/en/ini.core.php#ini.memory-limit) php.ini directive.
-By default there is no memory limit.
+The default is 4GB (which is way more than needed).
 
 Example:
 
