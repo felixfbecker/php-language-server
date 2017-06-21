@@ -33,7 +33,7 @@ class Workspace
      *
      * @var ProjectIndex
      */
-    private $index;
+    private $projectIndex;
 
     /**
      * @var DependenciesIndex
@@ -57,17 +57,17 @@ class Workspace
 
     /**
      * @param LanguageClient    $client            LanguageClient instance used to signal updated results
-     * @param ProjectIndex      $index             Index that is searched on a workspace/symbol request
+     * @param ProjectIndex      $projectIndex      Index that is used to wait for full index completeness
      * @param DependenciesIndex $dependenciesIndex Index that is used on a workspace/xreferences request
      * @param DependenciesIndex $sourceIndex       Index that is used on a workspace/xreferences request
      * @param \stdClass         $composerLock      The parsed composer.lock of the project, if any
      * @param PhpDocumentLoader $documentLoader    PhpDocumentLoader instance to load documents
      */
-    public function __construct(LanguageClient $client, ProjectIndex $index, DependenciesIndex $dependenciesIndex, Index $sourceIndex, \stdClass $composerLock = null, PhpDocumentLoader $documentLoader, \stdClass $composerJson = null)
+    public function __construct(LanguageClient $client, ProjectIndex $projectIndex, DependenciesIndex $dependenciesIndex, Index $sourceIndex, \stdClass $composerLock = null, PhpDocumentLoader $documentLoader, \stdClass $composerJson = null)
     {
         $this->client = $client;
         $this->sourceIndex = $sourceIndex;
-        $this->index = $index;
+        $this->projectIndex = $projectIndex;
         $this->dependenciesIndex = $dependenciesIndex;
         $this->composerLock = $composerLock;
         $this->documentLoader = $documentLoader;
@@ -84,11 +84,11 @@ class Workspace
     {
         return coroutine(function () use ($query) {
             // Wait until indexing for definitions finished
-            if (!$this->index->isStaticComplete()) {
-                yield waitForEvent($this->index, 'static-complete');
+            if (!$this->sourceIndex->isStaticComplete()) {
+                yield waitForEvent($this->sourceIndex, 'static-complete');
             }
             $symbols = [];
-            foreach ($this->index->getDefinitions() as $fqn => $definition) {
+            foreach ($this->sourceIndex->getDefinitions() as $fqn => $definition) {
                 if ($query === '' || stripos($fqn, $query) !== false) {
                     $symbols[] = $definition->symbolInformation;
                 }
@@ -126,8 +126,8 @@ class Workspace
                 return [];
             }
             // Wait until indexing finished
-            if (!$this->index->isComplete()) {
-                yield waitForEvent($this->index, 'complete');
+            if (!$this->projectIndex->isComplete()) {
+                yield waitForEvent($this->projectIndex, 'complete');
             }
             /** Map from URI to array of referenced FQNs in dependencies */
             $refs = [];
