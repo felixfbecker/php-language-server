@@ -18,7 +18,7 @@ use LanguageServer\Protocol\{
 };
 use Sabre\Event\Promise;
 use function Sabre\Event\coroutine;
-use function LanguageServer\{waitForEvent, getPackageName};
+use function LanguageServer\waitForEvent;
 
 /**
  * Provides method handlers for all workspace/* methods
