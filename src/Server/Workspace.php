@@ -148,32 +148,11 @@ class Workspace
             $refInfos = [];
             foreach ($refs as $uri => $fqns) {
                 foreach ($fqns as $fqn) {
-                    $def = $this->dependenciesIndex->getDefinition($fqn);
-                    if ($def === null) {
-                        $this->client->window->logMessage(MessageType::WARNING, "Reference $fqn not found in index");
-                        continue;
-                    }
-                    // Find out package name
-                    $packageName = getPackageName($def->symbolInformation->location->uri, $this->composerJson);
-                    $symbol = new SymbolDescriptor($fqn, new PackageDescriptor($packageName));
-                    // If there was no FQSEN provided, check if query attributes match
-                    if (!isset($query->fqsen)) {
-                        $matches = true;
-                        foreach (get_object_vars($query) as $prop => $val) {
-                            if ($query->$prop != $symbol->$prop) {
-                                $matches = false;
-                                break;
-                            }
-                        }
-                        if (!$matches) {
-                            continue;
-                        }
-                    }
                     $doc = yield $this->documentLoader->getOrLoad($uri);
                     foreach ($doc->getReferenceNodesByFqn($fqn) as $node) {
                         $refInfo = new ReferenceInformation;
                         $refInfo->reference = Location::fromNode($node);
-                        $refInfo->symbol = $symbol;
+                        $refInfo->symbol = $query;
                         $refInfos[] = $refInfo;
                     }
                 }
