@@ -10,13 +10,15 @@ use LanguageServer\Protocol\{
     FileEvent,
     SymbolInformation,
     SymbolDescriptor,
+    PackageDescriptor,
     ReferenceInformation,
     DependencyReference,
-    Location
+    Location,
+    MessageType
 };
 use Sabre\Event\Promise;
 use function Sabre\Event\coroutine;
-use function LanguageServer\{waitForEvent, getPackageName};
+use function LanguageServer\waitForEvent;
 
 /**
  * Provides method handlers for all workspace/* methods
@@ -146,38 +148,11 @@ class Workspace
             $refInfos = [];
             foreach ($refs as $uri => $fqns) {
                 foreach ($fqns as $fqn) {
-                    $def = $this->dependenciesIndex->getDefinition($fqn);
-                    $symbol = new SymbolDescriptor;
-                    $symbol->fqsen = $fqn;
-                    foreach (get_object_vars($def->symbolInformation) as $prop => $val) {
-                        $symbol->$prop = $val;
-                    }
-                    // Find out package name
-                    $packageName = getPackageName($def->symbolInformation->location->uri, $this->composerJson);
-                    foreach (array_merge($this->composerLock->packages, $this->composerLock->{'packages-dev'}) as $package) {
-                        if ($package->name === $packageName) {
-                            $symbol->package = $package;
-                            break;
-                        }
-                    }
-                    // If there was no FQSEN provided, check if query attributes match
-                    if (!isset($query->fqsen)) {
-                        $matches = true;
-                        foreach (get_object_vars($query) as $prop => $val) {
-                            if ($query->$prop != $symbol->$prop) {
-                                $matches = false;
-                                break;
-                            }
-                        }
-                        if (!$matches) {
-                            continue;
-                        }
-                    }
                     $doc = yield $this->documentLoader->getOrLoad($uri);
                     foreach ($doc->getReferenceNodesByFqn($fqn) as $node) {
                         $refInfo = new ReferenceInformation;
                         $refInfo->reference = Location::fromNode($node);
-                        $refInfo->symbol = $symbol;
+                        $refInfo->symbol = $query;
                         $refInfos[] = $refInfo;
                     }
                 }

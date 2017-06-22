@@ -8,14 +8,26 @@ use LanguageServer\{
 };
 use LanguageServer\Index\ReadableIndex;
 use LanguageServer\Protocol\{
-    FormattingOptions, Hover, Location, MarkedString, Position, Range, ReferenceContext, SymbolDescriptor, SymbolLocationInformation, TextDocumentIdentifier, TextDocumentItem, VersionedTextDocumentIdentifier
+    FormattingOptions,
+    Hover,
+    Location,
+    MarkedString,
+    Position,
+    Range,
+    ReferenceContext,
+    SymbolDescriptor,
+    PackageDescriptor,
+    SymbolLocationInformation,
+    TextDocumentIdentifier,
+    TextDocumentItem,
+    VersionedTextDocumentIdentifier
 };
 use Microsoft\PhpParser;
 use Microsoft\PhpParser\Node;
 use Sabre\Event\Promise;
 use Sabre\Uri;
 use function LanguageServer\{
-    isVendored, waitForEvent
+    isVendored, waitForEvent, getPackageName
 };
 use function Sabre\Event\coroutine;
 
@@ -389,25 +401,14 @@ class TextDocument
             ) {
                 return [];
             }
-            $symbol = new SymbolDescriptor;
-            foreach (get_object_vars($def->symbolInformation) as $prop => $val) {
-                $symbol->$prop = $val;
-            }
-            $symbol->fqsen = $def->fqn;
+            // if Definition is inside a dependency, use the package name
             $packageName = getPackageName($def->symbolInformation->location->uri, $this->composerJson);
-            if ($packageName && $this->composerLock !== null) {
-                // Definition is inside a dependency
-                foreach (array_merge($this->composerLock->packages, $this->composerLock->{'packages-dev'}) as $package) {
-                    if ($package->name === $packageName) {
-                        $symbol->package = $package;
-                        break;
-                    }
-                }
-            } else if ($this->composerJson !== null) {
-                // Definition belongs to a root package
-                $symbol->package = $this->composerJson;
+            // else use the package name of the root package (if exists)
+            if (!$packageName && $this->composerJson !== null) {
+                $packageName = $this->composerJson->name;
             }
-            return [new SymbolLocationInformation($symbol, $symbol->location)];
+            $descriptor = new SymbolDescriptor($def->fqn, new PackageDescriptor($packageName));
+            return [new SymbolLocationInformation($descriptor, $def->symbolInformation->location)];
         });
     }
 }
