@@ -13,7 +13,8 @@ use LanguageServer\Protocol\{
     PackageDescriptor,
     ReferenceInformation,
     DependencyReference,
-    Location
+    Location,
+    MessageType
 };
 use Sabre\Event\Promise;
 use function Sabre\Event\coroutine;
@@ -148,7 +149,10 @@ class Workspace
             foreach ($refs as $uri => $fqns) {
                 foreach ($fqns as $fqn) {
                     $def = $this->dependenciesIndex->getDefinition($fqn);
-                    $symbol->fqsen = $fqn;
+                    if ($def === null) {
+                        $this->client->window->logMessage(MessageType::WARNING, "Reference $fqn not found in index");
+                        continue;
+                    }
                     // Find out package name
                     $packageName = getPackageName($def->symbolInformation->location->uri, $this->composerJson);
                     $symbol = new SymbolDescriptor($fqn, new PackageDescriptor($packageName));

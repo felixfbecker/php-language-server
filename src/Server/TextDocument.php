@@ -396,7 +396,8 @@ class TextDocument
             }
             if (
                 $def === null
-                || ($def->symbolInformation !== null && Uri\parse($def->symbolInformation->location->uri)['scheme'] === 'phpstubs')
+                || $def->symbolInformation === null
+                || Uri\parse($def->symbolInformation->location->uri)['scheme'] === 'phpstubs'
             ) {
                 return [];
             }
@@ -406,8 +407,8 @@ class TextDocument
             if (!$packageName && $this->composerJson !== null) {
                 $packageName = $this->composerJson->name;
             }
-            $symbol = new SymbolDescriptor($def->fqn, new PackageDescriptor($packageName));
-            return [new SymbolLocationInformation($symbol, $symbol->location)];
+            $descriptor = new SymbolDescriptor($def->fqn, new PackageDescriptor($packageName));
+            return [new SymbolLocationInformation($descriptor, $def->symbolInformation->location)];
         });
     }
 }
