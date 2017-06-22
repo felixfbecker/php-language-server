@@ -368,9 +368,10 @@ class TextDocument
                 return [];
             }
             // Handle definition nodes
+            $fqn = DefinitionResolver::getDefinedFqn($node);
             while (true) {
                 if ($fqn) {
-                    $def = $this->index->getDefinition($definedFqn);
+                    $def = $this->index->getDefinition($fqn);
                 } else {
                     // Handle reference nodes
                     $def = $this->definitionResolver->resolveReferenceNodeToDefinition($node);
