@@ -196,18 +196,15 @@ class CompletionProvider
             //    $a->|
 
             // Multiple prefixes for all possible types
-            $prefixes = FqnUtilities\getFqnsFromType(
+            $fqns = FqnUtilities\getFqnsFromType(
                 $this->definitionResolver->resolveExpressionNodeToType($node->dereferencableExpression)
             );
 
-            // Include parent classes
-            $prefixes = iterator_to_array($this->expandParentFqns($prefixes), false);
-
-            // Add the object access operator to only get members
-            foreach ($prefixes as &$prefix) {
-                $prefix .= '->';
+            // Add the object access operator to only get members of all parents
+            $prefixes = [];
+            foreach ($this->expandParentFqns($fqns) as $prefix) {
+                $prefixes[] = $prefix . '->';
             }
-            unset($prefix);
 
             // Collect all definitions that match any of the prefixes
             foreach ($this->index->getDefinitions() as $fqn => $def) {
@@ -232,18 +229,15 @@ class CompletionProvider
             //     TODO: $a::|
 
             // Resolve all possible types to FQNs
-            $prefixes = FqnUtilities\getFqnsFromType(
+            $fqns = FqnUtilities\getFqnsFromType(
                 $classType = $this->definitionResolver->resolveExpressionNodeToType($scoped->scopeResolutionQualifier)
             );
 
-            // Add parent classes
-            $prefixes = iterator_to_array($this->expandParentFqns($prefixes), false);
-
-            // Append :: operator to only get static members
-            foreach ($prefixes as &$prefix) {
-                $prefix .= '::';
+            // Append :: operator to only get static members of all parents
+            $prefixes = [];
+            foreach ($this->expandParentFqns($fqns) as $prefix) {
+                $prefixes[] = $prefix . '::';
             }
-            unset($prefix);
 
             // Collect all definitions that match any of the prefixes
             foreach ($this->index->getDefinitions() as $fqn => $def) {
@@ -388,7 +382,9 @@ class CompletionProvider
             yield $fqn;
             $def = $this->index->getDefinition($fqn);
             if ($def !== null) {
-                yield from $def->getAncestorFQNs($this->index);
+                foreach ($def->getAncestorDefinitions($this->index) as $name => $def) {
+                    yield $name;
+                }
             }
         }
     }

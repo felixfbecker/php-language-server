@@ -105,33 +105,22 @@ class Definition
     public function getAncestorDefinitions(ReadableIndex $index, bool $includeSelf = false)
     {
         if ($includeSelf) {
-            yield $this;
+            yield $this->fqn => $this;
         }
         if (is_array($this->extends)) {
             // iterating once, storing the references and iterating again
-            // guarantees that closest definitions are returned first
+            // guarantees that closest definitions are yielded first
             $definitions = [];
             foreach ($this->extends as $fqn) {
                 $def = $index->getDefinition($fqn);
                 if ($def !== null) {
-                    yield $def;
+                    yield $def->fqn => $def;
                     $definitions[] = $def;
                 }
             }
             foreach ($definitions as $def) {
                 yield from $def->getAncestorDefinitions($index);
             }
-        }
-    }
-    /**
-     * Gets the FQNs of all parent classes
-     *
-     * @return string[]
-     */
-    public function getAncestorFQNs(ReadableIndex $index, bool $includeSelf = false)
-    {
-        foreach ($this->getAncestorDefinitions($index, $includeSelf) as $def) {
-            yield $def->fqn;
         }
     }
 }

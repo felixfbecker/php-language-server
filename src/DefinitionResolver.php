@@ -672,7 +672,7 @@ class DefinitionResolver
                 }
                 $classDef = $this->index->getDefinition($classFqn);
                 if ($classDef !== null) {
-                    foreach ($classDef->getAncestorFQNs($this->index, true) as $fqn) {
+                    foreach ($classDef->getAncestorDefinitions($this->index, true) as $fqn => $def) {
                         $def = $this->index->getDefinition($fqn . $add);
                         if ($def !== null) {
                             if ($def->type instanceof Types\This) {
