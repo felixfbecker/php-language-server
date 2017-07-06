@@ -11,7 +11,7 @@
 A pure PHP implementation of the open [Language Server Protocol](https://github.com/Microsoft/language-server-protocol).
 Provides static code analysis for PHP for any IDE.
 
-Uses the great [PHP-Parser](https://github.com/nikic/PHP-Parser),
+Uses the great [Tolerant PHP Parser](https://github.com/Microsoft/tolerant-php-parser),
 [phpDocumentor's DocBlock reflection](https://github.com/phpDocumentor/ReflectionDocBlock)
 and an [event loop](http://sabre.io/event/loop/) for concurrency.
 
@@ -170,7 +170,7 @@ Example:
 #### `--memory-limit=integer` (optional)
 Sets memory limit for language server.
 Equivalent to [memory-limit](http://php.net/manual/en/ini.core.php#ini.memory-limit) php.ini directive.
-By default there is no memory limit.
+The default is 4GB (which is way more than needed).
 
 Example:
 
