@@ -201,7 +201,7 @@ class CompletionProvider
             );
 
             // Include parent classes
-            $prefixes = $this->expandParentFqns($prefixes);
+            $prefixes = iterator_to_array($this->expandParentFqns($prefixes), false);
 
             // Add the object access operator to only get members
             foreach ($prefixes as &$prefix) {
@@ -237,7 +237,7 @@ class CompletionProvider
             );
 
             // Add parent classes
-            $prefixes = $this->expandParentFqns($prefixes);
+            $prefixes = iterator_to_array($this->expandParentFqns($prefixes), false);
 
             // Append :: operator to only get static members
             foreach ($prefixes as &$prefix) {
@@ -382,18 +382,15 @@ class CompletionProvider
      * @param string[] $fqns
      * @return string[]
      */
-    private function expandParentFqns(array $fqns): array
+    private function expandParentFqns(array $fqns)
     {
-        $expanded = $fqns;
         foreach ($fqns as $fqn) {
+            yield $fqn;
             $def = $this->index->getDefinition($fqn);
-            if ($def) {
-                foreach ($this->expandParentFqns($def->extends ?? []) as $parent) {
-                    $expanded[] = $parent;
-                }
+            if ($def !== null) {
+                yield from $def->getAncestorFQNs($this->index);
             }
         }
-        return $expanded;
     }
 
     /**

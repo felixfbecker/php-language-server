@@ -3,6 +3,7 @@ declare(strict_types = 1);
 
 namespace LanguageServer;
 
+use LanguageServer\Index\ReadableIndex;
 use phpDocumentor\Reflection\{Types, Type, Fqsen, TypeResolver};
 use LanguageServer\Protocol\SymbolInformation;
 use Exception;
@@ -95,4 +96,42 @@ class Definition
      * @var string
      */
     public $documentation;
+
+    /**
+     * Gets the definitons of all ancestor classes
+     *
+     * @return Definition[]
+     */
+    public function getAncestorDefinitions(ReadableIndex $index, bool $includeSelf = false)
+    {
+        if ($includeSelf) {
+            yield $this;
+        }
+        if (is_array($this->extends)) {
+            // iterating once, storing the references and iterating again
+            // guarantees that closest definitions are returned first
+            $definitions = [];
+            foreach ($this->extends as $fqn) {
+                $def = $index->getDefinition($fqn);
+                if ($def !== null) {
+                    yield $def;
+                    $definitions[] = $def;
+                }
+            }
+            foreach ($definitions as $def) {
+                yield from $def->getAncestorDefinitions($index);
+            }
+        }
+    }
+    /**
+     * Gets the FQNs of all parent classes
+     *
+     * @return string[]
+     */
+    public function getAncestorFQNs(ReadableIndex $index, bool $includeSelf = false)
+    {
+        foreach ($this->getAncestorDefinitions($index, $includeSelf) as $def) {
+            yield $def->fqn;
+        }
+    }
 }
