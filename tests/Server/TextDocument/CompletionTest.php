@@ -653,4 +653,31 @@ class CompletionTest extends TestCase
             )
         ], true), $items);
     }
+
+    public function testThisReturnValue()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/this_return_value.php');
+        $this->loader->open($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(17, 23)
+        )->wait();
+        $this->assertEquals(new CompletionList([
+            new CompletionItem(
+                'foo',
+                CompletionItemKind::METHOD,
+                '$this' // Return type of the method
+            ),
+            new CompletionItem(
+                'bar',
+                CompletionItemKind::METHOD,
+                'mixed' // Return type of the method
+            ),
+            new CompletionItem(
+                'qux',
+                CompletionItemKind::METHOD,
+                'mixed' // Return type of the method
+            )
+        ], true), $items);
+    }
 }

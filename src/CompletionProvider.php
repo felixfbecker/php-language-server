@@ -14,6 +14,7 @@ use LanguageServer\Protocol\{
 };
 use Microsoft\PhpParser;
 use Microsoft\PhpParser\Node;
+use Generator;
 
 class CompletionProvider
 {
@@ -196,18 +197,15 @@ class CompletionProvider
             //    $a->|
 
             // Multiple prefixes for all possible types
-            $prefixes = FqnUtilities\getFqnsFromType(
+            $fqns = FqnUtilities\getFqnsFromType(
                 $this->definitionResolver->resolveExpressionNodeToType($node->dereferencableExpression)
             );
 
-            // Include parent classes
-            $prefixes = $this->expandParentFqns($prefixes);
-
-            // Add the object access operator to only get members
-            foreach ($prefixes as &$prefix) {
-                $prefix .= '->';
+            // Add the object access operator to only get members of all parents
+            $prefixes = [];
+            foreach ($this->expandParentFqns($fqns) as $prefix) {
+                $prefixes[] = $prefix . '->';
             }
-            unset($prefix);
 
             // Collect all definitions that match any of the prefixes
             foreach ($this->index->getDefinitions() as $fqn => $def) {
@@ -232,18 +230,15 @@ class CompletionProvider
             //     TODO: $a::|
 
             // Resolve all possible types to FQNs
-            $prefixes = FqnUtilities\getFqnsFromType(
+            $fqns = FqnUtilities\getFqnsFromType(
                 $classType = $this->definitionResolver->resolveExpressionNodeToType($scoped->scopeResolutionQualifier)
             );
 
-            // Add parent classes
-            $prefixes = $this->expandParentFqns($prefixes);
-
-            // Append :: operator to only get static members
-            foreach ($prefixes as &$prefix) {
-                $prefix .= '::';
+            // Append :: operator to only get static members of all parents
+            $prefixes = [];
+            foreach ($this->expandParentFqns($fqns) as $prefix) {
+                $prefixes[] = $prefix . '::';
             }
-            unset($prefix);
 
             // Collect all definitions that match any of the prefixes
             foreach ($this->index->getDefinitions() as $fqn => $def) {
@@ -377,23 +372,22 @@ class CompletionProvider
     }
 
     /**
-     * Adds the FQNs of all parent classes to an array of FQNs of classes
+     * Yields FQNs from an array along with the FQNs of all parent classes
      *
      * @param string[] $fqns
-     * @return string[]
+     * @return Generator
      */
-    private function expandParentFqns(array $fqns): array
+    private function expandParentFqns(array $fqns) : Generator
     {
-        $expanded = $fqns;
         foreach ($fqns as $fqn) {
+            yield $fqn;
             $def = $this->index->getDefinition($fqn);
-            if ($def) {
-                foreach ($this->expandParentFqns($def->extends ?? []) as $parent) {
-                    $expanded[] = $parent;
+            if ($def !== null) {
+                foreach ($def->getAncestorDefinitions($this->index) as $name => $def) {
+                    yield $name;
                 }
             }
         }
-        return $expanded;
     }
 
     /**
