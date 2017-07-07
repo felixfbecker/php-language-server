@@ -7,6 +7,7 @@ use LanguageServer\Index\ReadableIndex;
 use phpDocumentor\Reflection\{Types, Type, Fqsen, TypeResolver};
 use LanguageServer\Protocol\SymbolInformation;
 use Exception;
+use Generator;
 
 /**
  * Class used to represent symbols
@@ -98,16 +99,18 @@ class Definition
     public $documentation;
 
     /**
-     * Gets the definitons of all ancestor classes
+     * Yields the definitons of all ancestor classes (the Definition fqn is yielded as key)
      *
-     * @return Definition[]
+     * @param ReadableIndex $index the index to search for needed definitions 
+     * @param bool $includeSelf should the first yielded value be the current definition itself
+     * @return Generator
      */
-    public function getAncestorDefinitions(ReadableIndex $index, bool $includeSelf = false)
+    public function getAncestorDefinitions(ReadableIndex $index, bool $includeSelf = false) : Generator
     {
         if ($includeSelf) {
             yield $this->fqn => $this;
         }
-        if (is_array($this->extends)) {
+        if ($this->extends !== null) {
             // iterating once, storing the references and iterating again
             // guarantees that closest definitions are yielded first
             $definitions = [];

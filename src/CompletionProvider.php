@@ -14,6 +14,7 @@ use LanguageServer\Protocol\{
 };
 use Microsoft\PhpParser;
 use Microsoft\PhpParser\Node;
+use Generator;
 
 class CompletionProvider
 {
@@ -374,9 +375,9 @@ class CompletionProvider
      * Adds the FQNs of all parent classes to an array of FQNs of classes
      *
      * @param string[] $fqns
-     * @return string[]
+     * @return Generator
      */
-    private function expandParentFqns(array $fqns)
+    private function expandParentFqns(array $fqns) : Generator
     {
         foreach ($fqns as $fqn) {
             yield $fqn;
