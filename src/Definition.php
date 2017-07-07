@@ -105,7 +105,7 @@ class Definition
      * @param bool $includeSelf should the first yielded value be the current definition itself
      * @return Generator
      */
-    public function getAncestorDefinitions(ReadableIndex $index, bool $includeSelf = false) : Generator
+    public function getAncestorDefinitions(ReadableIndex $index, bool $includeSelf = false): Generator
     {
         if ($includeSelf) {
             yield $this->fqn => $this;
