@@ -101,7 +101,7 @@ class Definition
     /**
      * Yields the definitons of all ancestor classes (the Definition fqn is yielded as key)
      *
-     * @param ReadableIndex $index the index to search for needed definitions 
+     * @param ReadableIndex $index the index to search for needed definitions
      * @param bool $includeSelf should the first yielded value be the current definition itself
      * @return Generator
      */
