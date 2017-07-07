@@ -372,7 +372,7 @@ class CompletionProvider
     }
 
     /**
-     * Adds the FQNs of all parent classes to an array of FQNs of classes
+     * Yields FQNs from an array along with the FQNs of all parent classes
      *
      * @param string[] $fqns
      * @return Generator
