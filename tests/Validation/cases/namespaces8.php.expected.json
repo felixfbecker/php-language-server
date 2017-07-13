@@ -11,8 +11,8 @@
         ]
     },
     "definitions": {
-        "LanguageServer\\Tests\\Utils": {
-            "fqn": "LanguageServer\\Tests\\Utils",
+        "LanguageServer\\Tests\\Utils\\": {
+            "fqn": "LanguageServer\\Tests\\Utils\\",
             "extends": [],
             "isGlobal": true,
             "roamed": false,
@@ -24,7 +24,7 @@
                 "location": {
                     "uri": "./namespaces8.php"
                 },
-                "containerName": "LanguageServer\\Tests"
+                "containerName": "LanguageServer\\Tests\\Utils"
             },
             "type": null,
             "declarationLine": "namespace LanguageServer\\Tests\\Utils;",

@@ -1109,10 +1109,10 @@ class DefinitionResolver
         }
 
         // INPUT                   OUTPUT:
-        // namespace A\B;           A\B
+        // namespace A\B;           A\B\
         if ($node instanceof Node\Statement\NamespaceDefinition && $node->name instanceof Node\QualifiedName) {
             $name = (string) PhpParser\ResolvedName::buildName($node->name->nameParts, $node->getFileContents());
-            return $name === "" ? null : $name;
+            return $name === "" ? null : $name . '\\';
         }
 
         // INPUT                   OUTPUT:

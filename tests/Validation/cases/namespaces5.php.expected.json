@@ -23,8 +23,8 @@
         ]
     },
     "definitions": {
-        "B": {
-            "fqn": "B",
+        "B\\": {
+            "fqn": "B\\",
             "extends": [],
             "isGlobal": true,
             "roamed": false,
@@ -36,7 +36,7 @@
                 "location": {
                     "uri": "./namespaces5.php"
                 },
-                "containerName": ""
+                "containerName": "B"
             },
             "type": null,
             "declarationLine": "namespace B;",

@@ -30,7 +30,7 @@ class SymbolTest extends ServerTestCase
 
         // @codingStandardsIgnoreStart
         $this->assertEquals([
-            new SymbolInformation('TestNamespace',      SymbolKind::NAMESPACE, new Location($referencesUri, new Range(new Position(2, 0), new Position(2, 24))), ''),
+            new SymbolInformation('TestNamespace',      SymbolKind::NAMESPACE, new Location($referencesUri, new Range(new Position(2, 0), new Position(2, 24))), 'TestNamespace'),
             // Namespaced
             new SymbolInformation('TEST_CONST',             SymbolKind::CONSTANT,    $this->getDefinitionLocation('TestNamespace\\TEST_CONST'),                    'TestNamespace'),
             new SymbolInformation('TestClass',              SymbolKind::CLASS_,      $this->getDefinitionLocation('TestNamespace\\TestClass'),                     'TestNamespace'),
@@ -65,7 +65,7 @@ class SymbolTest extends ServerTestCase
             new SymbolInformation('unusedMethod',           SymbolKind::METHOD,      $this->getDefinitionLocation('UnusedClass::unusedMethod'),                    'UnusedClass'),
             new SymbolInformation('whatever',               SymbolKind::FUNCTION,    $this->getDefinitionLocation('whatever()'),                                   ''),
 
-            new SymbolInformation('SecondTestNamespace',    SymbolKind::NAMESPACE,   $this->getDefinitionLocation('SecondTestNamespace'),                          ''),
+            new SymbolInformation('SecondTestNamespace',    SymbolKind::NAMESPACE,   $this->getDefinitionLocation('SecondTestNamespace'),                          'SecondTestNamespace'),
         ], $result);
         // @codingStandardsIgnoreEnd
     }

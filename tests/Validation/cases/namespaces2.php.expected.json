@@ -14,8 +14,8 @@
         ]
     },
     "definitions": {
-        "MyNamespace1": {
-            "fqn": "MyNamespace1",
+        "MyNamespace1\\": {
+            "fqn": "MyNamespace1\\",
             "extends": [],
             "isGlobal": true,
             "roamed": false,
@@ -27,7 +27,7 @@
                 "location": {
                     "uri": "./namespaces2.php"
                 },
-                "containerName": ""
+                "containerName": "MyNamespace1"
             },
             "type": null,
             "declarationLine": "namespace MyNamespace1;",

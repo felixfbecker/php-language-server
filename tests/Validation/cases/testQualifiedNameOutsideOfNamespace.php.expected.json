@@ -5,8 +5,8 @@
         ]
     },
     "definitions": {
-        "SomeNamespace": {
-            "fqn": "SomeNamespace",
+        "SomeNamespace\\": {
+            "fqn": "SomeNamespace\\",
             "extends": [],
             "isGlobal": true,
             "roamed": false,
@@ -18,7 +18,7 @@
                 "location": {
                     "uri": "./testQualifiedNameOutsideOfNamespace.php"
                 },
-                "containerName": ""
+                "containerName": "SomeNamespace"
             },
             "type": null,
             "declarationLine": "namespace SomeNamespace { }",

@@ -1,8 +1,8 @@
 {
     "references": [],
     "definitions": {
-        "A\\B": {
-            "fqn": "A\\B",
+        "A\\B\\": {
+            "fqn": "A\\B\\",
             "extends": [],
             "isGlobal": true,
             "roamed": false,
@@ -14,7 +14,7 @@
                 "location": {
                     "uri": "./namespaces6.php"
                 },
-                "containerName": "A"
+                "containerName": "A\\B"
             },
             "type": null,
             "declarationLine": "namespace A \\ B;",

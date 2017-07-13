@@ -14,8 +14,8 @@
         ]
     },
     "definitions": {
-        "MyNamespace1": {
-            "fqn": "MyNamespace1",
+        "MyNamespace1\\": {
+            "fqn": "MyNamespace1\\",
             "extends": [],
             "isGlobal": true,
             "roamed": false,
@@ -27,7 +27,7 @@
                 "location": {
                     "uri": "./multipleNamespaces.php"
                 },
-                "containerName": ""
+                "containerName": "MyNamespace1"
             },
             "type": null,
             "declarationLine": "namespace MyNamespace1;",
@@ -72,8 +72,8 @@
             "declarationLine": "function b() {",
             "documentation": null
         },
-        "MyNamespace2": {
-            "fqn": "MyNamespace2",
+        "MyNamespace2\\": {
+            "fqn": "MyNamespace2\\",
             "extends": [],
             "isGlobal": true,
             "roamed": false,
@@ -85,7 +85,7 @@
                 "location": {
                     "uri": "./multipleNamespaces.php"
                 },
-                "containerName": ""
+                "containerName": "MyNamespace2"
             },
             "type": null,
             "declarationLine": "namespace MyNamespace2;",

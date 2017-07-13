@@ -21,7 +21,7 @@ class DefinitionCollectorTest extends TestCase
         $defNodes = $this->collectDefinitions($path);
 
         $this->assertEquals([
-            'TestNamespace',
+            'TestNamespace\\',
             'TestNamespace\\TEST_CONST',
             'TestNamespace\\TestClass',
             'TestNamespace\\TestClass::TEST_CLASS_CONST',
@@ -60,8 +60,8 @@ class DefinitionCollectorTest extends TestCase
         $path = realpath(__DIR__ . '/../../fixtures/references.php');
         $defNodes = $this->collectDefinitions($path);
 
-        $this->assertEquals(['TestNamespace', 'TestNamespace\\whatever()'], array_keys($defNodes));
-        $this->assertInstanceOf(Node\Statement\NamespaceDefinition::class, $defNodes['TestNamespace']);
+        $this->assertEquals(['TestNamespace\\', 'TestNamespace\\whatever()'], array_keys($defNodes));
+        $this->assertInstanceOf(Node\Statement\NamespaceDefinition::class, $defNodes['TestNamespace\\']);
         $this->assertInstanceOf(Node\Statement\FunctionDeclaration::class, $defNodes['TestNamespace\\whatever()']);
     }
 

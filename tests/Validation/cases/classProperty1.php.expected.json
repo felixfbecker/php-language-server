@@ -8,8 +8,8 @@
         ]
     },
     "definitions": {
-        "TestNamespace": {
-            "fqn": "TestNamespace",
+        "TestNamespace\\": {
+            "fqn": "TestNamespace\\",
             "extends": [],
             "isGlobal": true,
             "roamed": false,
@@ -21,7 +21,7 @@
                 "location": {
                     "uri": "./classProperty1.php"
                 },
-                "containerName": ""
+                "containerName": "TestNamespace"
             },
             "type": null,
             "declarationLine": "namespace TestNamespace;",

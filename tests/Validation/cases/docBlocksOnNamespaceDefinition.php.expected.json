@@ -1,8 +1,8 @@
 {
     "references": [],
     "definitions": {
-        "MyNamespace": {
-            "fqn": "MyNamespace",
+        "MyNamespace\\": {
+            "fqn": "MyNamespace\\",
             "extends": [],
             "isGlobal": true,
             "roamed": false,
@@ -14,7 +14,7 @@
                 "location": {
                     "uri": "./docBlocksOnNamespaceDefinition.php"
                 },
-                "containerName": ""
+                "containerName": "MyNamespace"
             },
             "type": null,
             "declarationLine": "namespace MyNamespace;",

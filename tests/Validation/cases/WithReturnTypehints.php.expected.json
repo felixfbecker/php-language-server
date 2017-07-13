@@ -17,8 +17,8 @@
         ]
     },
     "definitions": {
-        "Fixtures\\Prophecy": {
-            "fqn": "Fixtures\\Prophecy",
+        "Fixtures\\Prophecy\\": {
+            "fqn": "Fixtures\\Prophecy\\",
             "extends": [],
             "isGlobal": true,
             "roamed": false,
@@ -30,7 +30,7 @@
                 "location": {
                     "uri": "./WithReturnTypehints.php"
                 },
-                "containerName": "Fixtures"
+                "containerName": "Fixtures\\Prophecy"
             },
             "type": null,
             "declarationLine": "namespace Fixtures\\Prophecy;",
