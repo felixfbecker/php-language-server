@@ -22,7 +22,8 @@
             },
             "type": null,
             "declarationLine": "class FooClass {",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         },
         "FooClass->foo()": {
             "fqn": "FooClass->foo()",
@@ -42,7 +43,8 @@
             "type__tostring": "\\FooClass",
             "type": {},
             "declarationLine": "public function foo(): FooClass {",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         }
     }
 }

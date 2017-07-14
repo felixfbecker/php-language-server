@@ -25,7 +25,8 @@
             },
             "type": null,
             "declarationLine": "namespace TestNamespace;",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         },
         "TestNamespace\\TestClass": {
             "fqn": "TestNamespace\\TestClass",
@@ -44,7 +45,8 @@
             },
             "type": null,
             "declarationLine": "class TestClass",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         },
         "TestNamespace\\TestClass->testProperty": {
             "fqn": "TestNamespace\\TestClass->testProperty",
@@ -64,7 +66,8 @@
             "type__tostring": "mixed",
             "type": {},
             "declarationLine": "public $testProperty;",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         },
         "TestNamespace\\TestClass->testMethod()": {
             "fqn": "TestNamespace\\TestClass->testMethod()",
@@ -84,7 +87,13 @@
             "type__tostring": "mixed",
             "type": {},
             "declarationLine": "public function testMethod($testParameter)",
-            "documentation": null
+            "documentation": null,
+            "parameters": [
+                {
+                    "label": "$testParameter",
+                    "documentation": null
+                }
+            ]
         }
     }
 }

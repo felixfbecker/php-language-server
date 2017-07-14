@@ -18,7 +18,8 @@
             },
             "type": null,
             "declarationLine": "class A {",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         },
         "A->foo": {
             "fqn": "A->foo",
@@ -38,7 +39,8 @@
             "type__tostring": "string[]",
             "type": {},
             "declarationLine": "protected $foo;",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         }
     }
 }

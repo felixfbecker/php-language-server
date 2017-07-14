@@ -31,7 +31,8 @@
             },
             "type": null,
             "declarationLine": "class TestClass implements TestInterface {",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         },
         "TestClass::$testProperty": {
             "fqn": "TestClass::$testProperty",
@@ -51,7 +52,8 @@
             "type__tostring": "\\TestClass[]",
             "type": {},
             "declarationLine": "public static $testProperty;",
-            "documentation": "Lorem excepteur officia sit anim velit veniam enim."
+            "documentation": "Lorem excepteur officia sit anim velit veniam enim.",
+            "parameters": []
         }
     }
 }

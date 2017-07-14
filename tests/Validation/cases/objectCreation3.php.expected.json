@@ -22,7 +22,8 @@
             },
             "type": null,
             "declarationLine": "class A {",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         },
         "A->a()": {
             "fqn": "A->a()",
@@ -42,7 +43,8 @@
             "type__tostring": "mixed",
             "type": {},
             "declarationLine": "function a () {",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         }
     }
 }

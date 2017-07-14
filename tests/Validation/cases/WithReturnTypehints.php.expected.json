@@ -34,7 +34,8 @@
             },
             "type": null,
             "declarationLine": "namespace Fixtures\\Prophecy;",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         },
         "Fixtures\\Prophecy\\WithReturnTypehints": {
             "fqn": "Fixtures\\Prophecy\\WithReturnTypehints",
@@ -55,7 +56,8 @@
             },
             "type": null,
             "declarationLine": "class WithReturnTypehints extends EmptyClass",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         },
         "Fixtures\\Prophecy\\WithReturnTypehints->getSelf()": {
             "fqn": "Fixtures\\Prophecy\\WithReturnTypehints->getSelf()",
@@ -75,7 +77,8 @@
             "type__tostring": "\\self",
             "type": {},
             "declarationLine": "public function getSelf(): self {",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         },
         "Fixtures\\Prophecy\\WithReturnTypehints->getName()": {
             "fqn": "Fixtures\\Prophecy\\WithReturnTypehints->getName()",
@@ -95,7 +98,8 @@
             "type__tostring": "string",
             "type": {},
             "declarationLine": "public function getName(): string {",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         },
         "Fixtures\\Prophecy\\WithReturnTypehints->getParent()": {
             "fqn": "Fixtures\\Prophecy\\WithReturnTypehints->getParent()",
@@ -115,7 +119,8 @@
             "type__tostring": "\\parent",
             "type": {},
             "declarationLine": "public function getParent(): parent {",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         }
     }
 }

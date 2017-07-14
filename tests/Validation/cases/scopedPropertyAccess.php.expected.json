@@ -25,7 +25,8 @@
             },
             "type": null,
             "declarationLine": "namespace MyNamespace;",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         },
         "MyNamespace\\A": {
             "fqn": "MyNamespace\\A",
@@ -44,7 +45,8 @@
             },
             "type": null,
             "declarationLine": "class A {",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         },
         "MyNamespace\\A::a()": {
             "fqn": "MyNamespace\\A::a()",
@@ -64,7 +66,8 @@
             "type__tostring": "mixed",
             "type": {},
             "declarationLine": "static function a() {",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         }
     }
 }

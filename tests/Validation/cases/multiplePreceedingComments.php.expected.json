@@ -18,7 +18,8 @@
             },
             "type": null,
             "declarationLine": "class Foo",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         },
         "Foo->fn()": {
             "fqn": "Foo->fn()",
@@ -38,7 +39,8 @@
             "type__tostring": "\\Iterator",
             "type": {},
             "declarationLine": "public function fn()",
-            "documentation": "Foo"
+            "documentation": "Foo",
+            "parameters": []
         }
     }
 }

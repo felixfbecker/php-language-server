@@ -22,7 +22,8 @@
             },
             "type": null,
             "declarationLine": "class FooClass {",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         },
         "FooClass::staticFoo()": {
             "fqn": "FooClass::staticFoo()",
@@ -42,7 +43,8 @@
             "type__tostring": "\\FooClass",
             "type": {},
             "declarationLine": "public static function staticFoo(): FooClass {",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         },
         "FooClass->bar()": {
             "fqn": "FooClass->bar()",
@@ -62,7 +64,8 @@
             "type__tostring": "mixed",
             "type": {},
             "declarationLine": "public function bar() { }",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         }
     }
 }

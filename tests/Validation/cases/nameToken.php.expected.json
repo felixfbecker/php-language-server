@@ -18,7 +18,8 @@
             },
             "type": null,
             "declarationLine": "class A {",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         },
         "A->b()": {
             "fqn": "A->b()",
@@ -38,7 +39,8 @@
             "type__tostring": "mixed",
             "type": {},
             "declarationLine": "function b() {",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         }
     }
 }

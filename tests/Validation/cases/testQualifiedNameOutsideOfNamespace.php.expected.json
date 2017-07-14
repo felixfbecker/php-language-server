@@ -22,7 +22,8 @@
             },
             "type": null,
             "declarationLine": "namespace SomeNamespace { }",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         }
     }
 }

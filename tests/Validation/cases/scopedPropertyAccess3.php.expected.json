@@ -25,7 +25,8 @@
             },
             "type": null,
             "declarationLine": "class A {",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         },
         "A::$a": {
             "fqn": "A::$a",
@@ -45,7 +46,8 @@
             "type__tostring": "string",
             "type": {},
             "declarationLine": "static $a;",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         }
     }
 }

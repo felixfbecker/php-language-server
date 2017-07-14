@@ -22,7 +22,8 @@
             },
             "type": null,
             "declarationLine": "interface A {",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         },
         "A->b()": {
             "fqn": "A->b()",
@@ -42,7 +43,13 @@
             "type__tostring": "mixed",
             "type": {},
             "declarationLine": "function b ($a = MY_CONSTANT);",
-            "documentation": null
+            "documentation": null,
+            "parameters": [
+                {
+                    "label": "$a = MY_CONSTANT",
+                    "documentation": null
+                }
+            ]
         }
     }
 }
