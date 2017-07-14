@@ -58,8 +58,9 @@ class SignatureHelpProvider
         ) {
             return new SignatureHelp;
         }
-        $count = 0;
+        $count = null;
         if ($node instanceof ArgumentExpressionList) {
+            $count = 0;
             foreach ($node->getElements() as $param) {
                 $count ++;
             }
@@ -74,9 +75,6 @@ class SignatureHelpProvider
         if (!$def) {
             return new SignatureHelp;
         }
-        $params = array_map(function ($v) {
-            return $v->label;
-        }, $def->parameters);
         return new SignatureHelp(
             [
                 new SignatureInformation(
@@ -86,7 +84,7 @@ class SignatureHelpProvider
                 )
             ],
             0,
-            $count < count($def->parameters) ? $count : null
+            $count !== null && $def->parameters !== null && $count < count($def->parameters) ? $count : null
         );
     }
 }
