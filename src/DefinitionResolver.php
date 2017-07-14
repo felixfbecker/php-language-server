@@ -5,6 +5,7 @@ namespace LanguageServer;
 
 use LanguageServer\Index\ReadableIndex;
 use LanguageServer\Protocol\SymbolInformation;
+use LanguageServer\Protocol\ParameterInformation;
 use Microsoft\PhpParser;
 use Microsoft\PhpParser\Node;
 use phpDocumentor\Reflection\{
@@ -232,6 +233,18 @@ class DefinitionResolver
             $def->type = $this->getTypeFromNode($node);
             $def->declarationLine = $this->getDeclarationLineFromNode($node);
             $def->documentation = $this->getDocumentationFromNode($node);
+        }
+
+        $def->parameters = [];
+        if (property_exists($node, 'parameters') && $node->parameters) {
+            foreach ($node->parameters->getElements() as $param) {
+                //var_dump($param); die();
+                $def->parameters[] = new ParameterInformation(
+                    $this->getDeclarationLineFromNode($param),
+                    //$param->getName(), // TODO: rebuild this
+                    $this->getDocumentationFromNode($param)
+                );
+            }
         }
 
         return $def;

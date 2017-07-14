@@ -9,7 +9,8 @@ use LanguageServer\Protocol\{
     TextDocumentSyncKind,
     Message,
     InitializeResult,
-    CompletionOptions
+    CompletionOptions,
+    SignatureHelpOptions
 };
 use LanguageServer\FilesFinder\{FilesFinder, ClientFilesFinder, FileSystemFilesFinder};
 use LanguageServer\ContentRetriever\{ContentRetriever, ClientContentRetriever, FileSystemContentRetriever};
@@ -277,6 +278,9 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
             $serverCapabilities->completionProvider = new CompletionOptions;
             $serverCapabilities->completionProvider->resolveProvider = false;
             $serverCapabilities->completionProvider->triggerCharacters = ['$', '>'];
+            // support signature help
+            $serverCapabilities->signatureHelpProvider = new SignatureHelpOptions;
+            $serverCapabilities->signatureHelpProvider->triggerCharacters = ['(',','];
             // Support global references
             $serverCapabilities->xworkspaceReferencesProvider = true;
             $serverCapabilities->xdefinitionProvider = true;

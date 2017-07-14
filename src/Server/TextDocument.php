@@ -4,7 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer\Server;
 
 use LanguageServer\{
-    CompletionProvider, LanguageClient, PhpDocument, PhpDocumentLoader, DefinitionResolver
+    CompletionProvider, LanguageClient, PhpDocument, PhpDocumentLoader, DefinitionResolver, SignatureHelpProvider
 };
 use LanguageServer\Index\ReadableIndex;
 use LanguageServer\Protocol\{
@@ -72,6 +72,10 @@ class TextDocument
      * @var \stdClass|null
      */
     protected $composerLock;
+    /**
+     * @var SignatureHelpProvider
+     */
+    protected $signatureHelpProvider;
 
     /**
      * @param PhpDocumentLoader $documentLoader
@@ -93,6 +97,7 @@ class TextDocument
         $this->client = $client;
         $this->definitionResolver = $definitionResolver;
         $this->completionProvider = new CompletionProvider($this->definitionResolver, $index);
+        $this->signatureHelpProvider = new SignatureHelpProvider($this->definitionResolver, $index);
         $this->index = $index;
         $this->composerJson = $composerJson;
         $this->composerLock = $composerLock;
@@ -409,6 +414,14 @@ class TextDocument
             }
             $descriptor = new SymbolDescriptor($def->fqn, new PackageDescriptor($packageName));
             return [new SymbolLocationInformation($descriptor, $def->symbolInformation->location)];
+        });
+    }
+
+    public function signatureHelp(TextDocumentIdentifier $textDocument, Position $position): Promise
+    {
+        return coroutine(function () use ($textDocument, $position) {
+            $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
+            return $this->signatureHelpProvider->provideSignature($document, $position);
         });
     }
 }

@@ -6,6 +6,7 @@ namespace LanguageServer;
 use LanguageServer\Index\ReadableIndex;
 use phpDocumentor\Reflection\{Types, Type, Fqsen, TypeResolver};
 use LanguageServer\Protocol\SymbolInformation;
+use LanguageServer\Protocol\ParameterInformation;
 use Exception;
 use Generator;
 
@@ -97,6 +98,12 @@ class Definition
      * @var string
      */
     public $documentation;
+    /**
+     * Parameters array (for methods and functions), for use in textDocument/signatureHelp
+     *
+     * @var ParameterInformation[]
+     */
+    public $parameters;
 
     /**
      * Yields the definitons of all ancestor classes (the Definition fqn is yielded as key)

@@ -23,4 +23,13 @@ class ParameterInformation
      * @var string|null
      */
     public $documentation;
+    /**
+     * @param string                 $label         The label of this signature. Will be shown in the UI.
+     * @param string|null            $documentation The human-readable doc-comment of this signature.
+     */
+    public function __construct(string $label = null, string $documentation = null)
+    {
+        $this->label = $label;
+        $this->documentation = $documentation;
+    }
 }
