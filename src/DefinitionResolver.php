@@ -8,6 +8,9 @@ use LanguageServer\Protocol\SymbolInformation;
 use LanguageServer\Protocol\ParameterInformation;
 use Microsoft\PhpParser;
 use Microsoft\PhpParser\Node;
+use Microsoft\PhpParser\Node\Expression\AnonymousFunctionCreationExpression;
+use Microsoft\PhpParser\Node\MethodDeclaration;
+use Microsoft\PhpParser\Node\Statement\FunctionDeclaration;
 use phpDocumentor\Reflection\{
     DocBlock, DocBlockFactory, Fqsen, Type, TypeResolver, Types
 };
@@ -236,7 +239,11 @@ class DefinitionResolver
         }
 
         $def->parameters = [];
-        if (property_exists($node, 'parameters') && $node->parameters) {
+        if (($node instanceof MethodDeclaration ||
+             $node instanceof FunctionDeclaration ||
+             $node instanceof AnonymousFunctionCreationExpression) &&
+            $node->parameters !== null
+        ) {
             foreach ($node->parameters->getElements() as $param) {
                 $def->parameters[] = new ParameterInformation(
                     $this->getDeclarationLineFromNode($param),
