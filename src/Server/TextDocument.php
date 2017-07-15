@@ -417,6 +417,14 @@ class TextDocument
         });
     }
 
+    /**
+     * The signature help request is sent from the client to the server to request signature information
+     * at a given cursor position.
+     *
+     * @param TextDocumentIdentifier $textDocument The text document
+     * @param Position               $position     The position inside the text document
+     * @return Promise <SignatureHelp>
+     */
     public function signatureHelp(TextDocumentIdentifier $textDocument, Position $position): Promise
     {
         return coroutine(function () use ($textDocument, $position) {

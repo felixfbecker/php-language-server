@@ -238,10 +238,8 @@ class DefinitionResolver
         $def->parameters = [];
         if (property_exists($node, 'parameters') && $node->parameters) {
             foreach ($node->parameters->getElements() as $param) {
-                //var_dump($param); die();
                 $def->parameters[] = new ParameterInformation(
                     $this->getDeclarationLineFromNode($param),
-                    //$param->getName(), // TODO: rebuild this
                     $this->getDocumentationFromNode($param)
                 );
             }
