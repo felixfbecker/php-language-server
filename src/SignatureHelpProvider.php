@@ -5,6 +5,7 @@ namespace LanguageServer;
 
 use Microsoft\PhpParser\Node\DelimitedList\ArgumentExpressionList;
 use Microsoft\PhpParser\Node\Expression\CallExpression;
+use Microsoft\PhpParser\Node\Expression\ArgumentExpression;
 use LanguageServer\Index\ReadableIndex;
 use LanguageServer\Protocol\{
     Range,
@@ -46,14 +47,16 @@ class SignatureHelpProvider
     public function provideSignature(PhpDocument $doc, Position $pos) : SignatureHelp
     {
         $node = $doc->getNodeAtPosition($pos);
-        $nodes = [$node];
+        $arge = null;
         while ($node &&
             !($node instanceof ArgumentExpressionList) &&
             !($node instanceof CallExpression) &&
             $node->parent
         ) {
+            if ($node instanceof ArgumentExpression) {
+                $arge = $node;
+            }
             $node = $node->parent;
-            $nodes[] = $node;
         }
         if (!($node instanceof ArgumentExpressionList) &&
             !($node instanceof CallExpression)
@@ -64,7 +67,7 @@ class SignatureHelpProvider
         if ($node instanceof ArgumentExpressionList) {
             $count = 0;
             foreach ($node->getElements() as $param) {
-                if (in_array($param, $nodes)) {
+                if ($param === $arge) {
                     break;
                 }
                 $count ++;
