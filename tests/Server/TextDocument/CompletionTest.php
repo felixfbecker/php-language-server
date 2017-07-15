@@ -476,11 +476,11 @@ class CompletionTest extends TestCase
             new CompletionItem(
                 'SomeNamespace',
                 CompletionItemKind::MODULE,
+                'SomeNamespace',
                 null,
                 null,
                 null,
-                null,
-                'SomeNamespace'
+                'SomeNamespace\\'
             )
         ], true), $items);
     }
@@ -605,7 +605,7 @@ class CompletionTest extends TestCase
             )
         ], true), $items);
     }
-    
+
     public function testThisWithPrefix()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/this_with_prefix.php');
