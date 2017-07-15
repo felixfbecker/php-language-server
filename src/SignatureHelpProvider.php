@@ -46,12 +46,14 @@ class SignatureHelpProvider
     public function provideSignature(PhpDocument $doc, Position $pos) : SignatureHelp
     {
         $node = $doc->getNodeAtPosition($pos);
+        $nodes = [$node];
         while ($node &&
             !($node instanceof ArgumentExpressionList) &&
             !($node instanceof CallExpression) &&
             $node->parent
         ) {
             $node = $node->parent;
+            $nodes[] = $node;
         }
         if (!($node instanceof ArgumentExpressionList) &&
             !($node instanceof CallExpression)
@@ -62,6 +64,9 @@ class SignatureHelpProvider
         if ($node instanceof ArgumentExpressionList) {
             $count = 0;
             foreach ($node->getElements() as $param) {
+                if (in_array($param, $nodes)) {
+                    break;
+                }
                 $count ++;
             }
             while ($node && !($node instanceof CallExpression) && $node->parent) {

@@ -219,4 +219,30 @@ class SignatureHelpTest extends TestCase
             ]
         ), $result);
     }
+
+    public function testMethodActiveParam()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/signature/methodActiveParam.php');
+        $this->loader->open($completionUri, file_get_contents($completionUri));
+        $result = $this->textDocument->signatureHelp(
+            new TextDocumentIdentifier($completionUri),
+            new Position(14, 21)
+        )->wait();
+
+        $this->assertEquals(new SignatureHelp(
+            [
+                new SignatureInformation(
+                    'method(string $param = "", int $count = 0, bool $test = null)',
+                    null,
+                    [
+                        new ParameterInformation('string $param = ""'),
+                        new ParameterInformation('int $count = 0'),
+                        new ParameterInformation('bool $test = null')
+                    ]
+                )
+            ],
+            0,
+            1
+        ), $result);
+    }
 }
