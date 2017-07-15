@@ -38,6 +38,19 @@ class SignatureHelpProvider
     }
 
     /**
+     * Get the short declaration for a callable (class modifiers, function keyword, etc are stripped)
+     *
+     * @param string $declaration
+     * @return string
+     */
+    protected function getShortDeclaration(string $declaration): string
+    {
+        $parts = explode('(', $declaration, 2);
+        $name = array_reverse(explode(' ', trim($parts[0])))[0];
+        return $name . '(' . $parts[1];
+    }
+
+    /**
      * Returns signature help for a specific cursor position in a document
      *
      * @param PhpDocument $doc The opened document
@@ -86,7 +99,7 @@ class SignatureHelpProvider
         return new SignatureHelp(
             [
                 new SignatureInformation(
-                    trim(str_replace(['public', 'protected', 'private', 'function', 'static'], '', $def->declarationLine)),
+                    $this->getShortDeclaration($def->declarationLine),
                     $def->documentation,
                     $def->parameters
                 )
