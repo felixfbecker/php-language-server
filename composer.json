@@ -31,7 +31,7 @@
         "phpdocumentor/reflection-docblock": "~3.1.1",
         "sabre/event": "^5.0",
         "felixfbecker/advanced-json-rpc": "^2.0",
-        "squizlabs/php_codesniffer" : "3.0.0RC3",
+        "squizlabs/php_codesniffer" : "^3.0",
         "netresearch/jsonmapper": "^1.0",
         "webmozart/path-util": "^2.3",
         "webmozart/glob": "^4.1",
