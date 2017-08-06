@@ -605,7 +605,7 @@ class CompletionTest extends TestCase
             )
         ], true), $items);
     }
-    
+
     public function testThisWithPrefix()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/this_with_prefix.php');
@@ -615,18 +615,6 @@ class CompletionTest extends TestCase
             new Position(12, 16)
         )->wait();
         $this->assertEquals(new CompletionList([
-            new CompletionItem(
-                'testProperty',
-                CompletionItemKind::PROPERTY,
-                '\TestClass', // Type of the property
-                'Reprehenderit magna velit mollit ipsum do.'
-            ),
-            new CompletionItem(
-                'testMethod',
-                CompletionItemKind::METHOD,
-                '\TestClass', // Return type of the method
-                'Non culpa nostrud mollit esse sunt laboris in irure ullamco cupidatat amet.'
-            ),
             new CompletionItem(
                 'foo',
                 CompletionItemKind::PROPERTY,
@@ -650,7 +638,19 @@ class CompletionTest extends TestCase
                 CompletionItemKind::METHOD,
                 'mixed', // Return type of the method
                 null
-            )
+            ),
+            new CompletionItem(
+                'testProperty',
+                CompletionItemKind::PROPERTY,
+                '\TestClass', // Type of the property
+                'Reprehenderit magna velit mollit ipsum do.'
+            ),
+            new CompletionItem(
+                'testMethod',
+                CompletionItemKind::METHOD,
+                '\TestClass', // Return type of the method
+                'Non culpa nostrud mollit esse sunt laboris in irure ullamco cupidatat amet.'
+            ),
         ], true), $items);
     }
 
@@ -664,11 +664,6 @@ class CompletionTest extends TestCase
         )->wait();
         $this->assertEquals(new CompletionList([
             new CompletionItem(
-                'foo',
-                CompletionItemKind::METHOD,
-                '$this' // Return type of the method
-            ),
-            new CompletionItem(
                 'bar',
                 CompletionItemKind::METHOD,
                 'mixed' // Return type of the method
@@ -677,7 +672,12 @@ class CompletionTest extends TestCase
                 'qux',
                 CompletionItemKind::METHOD,
                 'mixed' // Return type of the method
-            )
+            ),
+            new CompletionItem(
+                'foo',
+                CompletionItemKind::METHOD,
+                '$this' // Return type of the method
+            ),
         ], true), $items);
     }
 }
