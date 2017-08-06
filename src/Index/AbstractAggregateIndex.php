@@ -100,7 +100,7 @@ abstract class AbstractAggregateIndex implements ReadableIndex
 
     /**
      * Returns an associative array [string => Definition] that maps fully qualified symbol names
-     * to Definitions
+     * to Definitions (global or not)
      *
      * @return Definition[]
      */
@@ -109,6 +109,23 @@ abstract class AbstractAggregateIndex implements ReadableIndex
         $defs = [];
         foreach ($this->getIndexes() as $index) {
             foreach ($index->getDefinitions() as $fqn => $def) {
+                $defs[$fqn] = $def;
+            }
+        }
+        return $defs;
+    }
+
+    /**
+     * Returns an associative array [string => Definition] that maps fully qualified symbol names
+     * to global Definitions
+     *
+     * @return Definition[]
+     */
+    public function getGlobalDefinitions(): array
+    {
+        $defs = [];
+        foreach ($this->getIndexes() as $index) {
+            foreach ($index->getGlobalDefinitions() as $fqn => $def) {
                 $defs[$fqn] = $def;
             }
         }

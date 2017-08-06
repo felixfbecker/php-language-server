@@ -314,26 +314,22 @@ class CompletionProvider
             // Suggest global symbols that either
             //  - start with the current namespace + prefix, if the Name node is not fully qualified
             //  - start with just the prefix, if the Name node is fully qualified
-            foreach ($this->index->getDefinitions() as $fqn => $def) {
+            foreach ($this->index->getGlobalDefinitions() as $fqn => $def) {
 
                 $fqnStartsWithPrefix = substr($fqn, 0, $prefixLen) === $prefix;
 
                 if (
-                    // Exclude methods, properties etc.
-                    !$def->isMember
-                    && (
-                        !$prefix
+                    !$prefix
+                    || (
+                        // Either not qualified, but a matching prefix with global fallback
+                        ($def->roamed && !$isQualified && $fqnStartsWithPrefix)
+                        // Or not in a namespace or a fully qualified name or AND matching the prefix
+                        || ((!$namespaceNode || $isFullyQualified) && $fqnStartsWithPrefix)
+                        // Or in a namespace, not fully qualified and matching the prefix + current namespace
                         || (
-                            // Either not qualified, but a matching prefix with global fallback
-                            ($def->roamed && !$isQualified && $fqnStartsWithPrefix)
-                            // Or not in a namespace or a fully qualified name or AND matching the prefix
-                            || ((!$namespaceNode || $isFullyQualified) && $fqnStartsWithPrefix)
-                            // Or in a namespace, not fully qualified and matching the prefix + current namespace
-                            || (
-                                $namespaceNode
-                                && !$isFullyQualified
-                                && substr($fqn, 0, $namespacedPrefixLen) === $namespacedPrefix
-                            )
+                            $namespaceNode
+                            && !$isFullyQualified
+                            && substr($fqn, 0, $namespacedPrefixLen) === $namespacedPrefix
                         )
                     )
                     // Only suggest classes for `new`

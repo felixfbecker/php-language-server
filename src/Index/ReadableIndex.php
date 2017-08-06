@@ -31,11 +31,19 @@ interface ReadableIndex extends EmitterInterface
 
     /**
      * Returns an associative array [string => Definition] that maps fully qualified symbol names
-     * to Definitions
+     * to Definitions (global or not)
      *
      * @return Definitions[]
      */
     public function getDefinitions(): array;
+
+    /**
+     * Returns an associative array [string => Definition] that maps fully qualified symbol names
+     * to global Definitions
+     *
+     * @return Definitions[]
+     */
+    public function getGlobalDefinitions(): array;
 
     /**
      * Returns the Definitions that are in the given namespace
