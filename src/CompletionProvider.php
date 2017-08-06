@@ -201,20 +201,43 @@ class CompletionProvider
                 $this->definitionResolver->resolveExpressionNodeToType($node->dereferencableExpression)
             );
 
+            $checksCount = 0;
+            $start = microtime(true);
             // Add the object access operator to only get members of all parents
-            $prefixes = [];
-            foreach ($this->expandParentFqns($fqns) as $prefix) {
-                $prefixes[] = $prefix . '->';
+            $namespaces = [];
+            foreach ($this->expandParentFqns($fqns) as $namespace) {
+                $namespaces[] = $namespace;
             }
 
             // Collect all definitions that match any of the prefixes
-            foreach ($this->index->getDefinitions() as $fqn => $def) {
-                foreach ($prefixes as $prefix) {
-                    if (substr($fqn, 0, strlen($prefix)) === $prefix && $def->isMember) {
+            foreach ($namespaces as $namespace) {
+                foreach ($this->index->getDefinitionsForNamespace($namespace) as $fqn => $def) {
+                    ++$checksCount;
+                    $prefix = $namespace . '->';
+                    if (substr($fqn, 0, strlen($prefix)) === $prefix && !$def->isMember) {
                         $list->items[] = CompletionItem::fromDefinition($def);
                     }
                 }
             }
+
+            // $prefixes = [];
+            // foreach ($this->expandParentFqns($fqns) as $prefix) {
+            //     $prefixes[] = $prefix . '->';
+            // }
+            // foreach ($this->index->getDefinitions() as $fqn => $def) {
+            //     foreach ($prefixes as $prefix) {
+            //         ++$checksCount;
+            //         if (substr($fqn, 0, strlen($prefix)) === $prefix && !$def->isGlobal) {
+            //             $list->items[] = CompletionItem::fromDefinition($def);
+            //         }
+            //     }
+            // }
+            $duration = microtime(true) - $start;
+            file_put_contents(
+                '/home/nicolas/tmp/php_language-server.log',
+                sprintf("%d items found, %d checks, memory : %d bytes, %ss\n", sizeof($list->items), $checksCount, memory_get_usage(true), $duration),
+                FILE_APPEND
+            );
 
         } elseif (
             ($scoped = $node->parent) instanceof Node\Expression\ScopedPropertyAccessExpression ||

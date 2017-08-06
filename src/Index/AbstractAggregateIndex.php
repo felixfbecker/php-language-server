@@ -116,6 +116,23 @@ abstract class AbstractAggregateIndex implements ReadableIndex
     }
 
     /**
+     * Returns the Definitions that are in the given namespace
+     *
+     * @param string $namespace
+     * @return Definitions[]
+     */
+    public function getDefinitionsForNamespace(string $namespace): array
+    {
+        $defs = [];
+        foreach ($this->getIndexes() as $index) {
+            foreach ($index->getDefinitionsForNamespace($namespace) as $fqn => $def) {
+                $defs[$fqn] = $def;
+            }
+        }
+        return $defs;
+    }
+
+    /**
      * Returns the Definition object by a specific FQN
      *
      * @param string $fqn

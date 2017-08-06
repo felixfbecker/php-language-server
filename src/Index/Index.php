@@ -22,6 +22,13 @@ class Index implements ReadableIndex, \Serializable
     private $definitions = [];
 
     /**
+     * An associative array that maps namespaces to an associative array of FQN to Definitions
+     *
+     * @var Definition[]
+     */
+    private $namespaceDefinitions = [];
+
+    /**
      * An associative array that maps fully qualified symbol names to arrays of document URIs that reference the symbol
      *
      * @var string[][]
@@ -95,6 +102,20 @@ class Index implements ReadableIndex, \Serializable
     }
 
     /**
+     * Returns the Definitions that are in the given namespace
+     *
+     * @param string $namespace
+     * @return Definitions[]
+     */
+    public function getDefinitionsForNamespace(string $namespace): array
+    {
+        return isset($this->namespaceDefinitions[$namespace])
+            ? $this->namespaceDefinitions[$namespace]
+            : []
+        ;
+    }
+
+    /**
      * Returns the Definition object by a specific FQN
      *
      * @param string $fqn
@@ -123,6 +144,7 @@ class Index implements ReadableIndex, \Serializable
     public function setDefinition(string $fqn, Definition $definition)
     {
         $this->definitions[$fqn] = $definition;
+        $this->setNamespaceDefinition($fqn, $definition);
         $this->emit('definition-added');
     }
 
@@ -137,6 +159,7 @@ class Index implements ReadableIndex, \Serializable
     {
         unset($this->definitions[$fqn]);
         unset($this->references[$fqn]);
+        $this->removeNamespaceDefinition($fqn);
     }
 
     /**
@@ -207,6 +230,7 @@ class Index implements ReadableIndex, \Serializable
         foreach ($data as $prop => $val) {
             $this->$prop = $val;
         }
+        $this->buildNamespaceDefinitionsIndex();
     }
 
     /**
@@ -221,5 +245,60 @@ class Index implements ReadableIndex, \Serializable
             'complete' => $this->complete,
             'staticComplete' => $this->staticComplete
         ]);
+    }
+
+    /**
+     * @return void
+     */
+    private function buildNamespaceDefinitionsIndex()
+    {
+        foreach ($this->definitions as $fqn => $definition) {
+            $this->setNamespaceDefinition($fqn, $definition);
+        }
+    }
+
+    /**
+     * Registers a definition to a namespace
+     *
+     * @param string $fqn The fully qualified name of the symbol
+     * @param Definition $definition The Definition object
+     * @return void
+     */
+    private function setNamespaceDefinition(string $fqn, Definition $definition)
+    {
+        $namespace = $this->extractNamespace($fqn);
+        if (!isset($this->namespaceDefinitions[$namespace])) {
+            $this->namespaceDefinitions[$namespace] = [];
+        }
+        $this->namespaceDefinitions[$namespace][$fqn] = $definition;
+    }
+
+    /**
+     * Removes a definition from a namespace
+     *
+     * @param string $fqn The fully qualified name of the symbol
+     * @return void
+     */
+    private function removeNamespaceDefinition(string $fqn)
+    {
+        $namespace = $this->extractNamespace($fqn);
+        if (isset($this->namespaceDefinitions[$namespace])) {
+            unset($this->namespaceDefinitions[$namespace][$fqn]);
+        }
+    }
+
+    /**
+     * @param string $fqn
+     * @return string The namespace extracted from the given FQN
+     */
+    private function extractNamespace(string $fqn): string
+    {
+        foreach (['::', '->'] as $operator) {
+            if (false !== ($pos = strpos($fqn, $operator))) {
+                return substr($fqn, 0, $pos);
+            }
+        }
+
+        return $fqn;
     }
 }

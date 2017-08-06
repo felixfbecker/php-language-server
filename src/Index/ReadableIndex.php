@@ -38,6 +38,14 @@ interface ReadableIndex extends EmitterInterface
     public function getDefinitions(): array;
 
     /**
+     * Returns the Definitions that are in the given namespace
+     *
+     * @param string $namespace
+     * @return Definitions[]
+     */
+    public function getDefinitionsForNamespace(string $namespace): array;
+
+    /**
      * Returns the Definition object by a specific FQN
      *
      * @param string $fqn
