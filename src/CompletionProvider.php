@@ -233,11 +233,11 @@ class CompletionProvider
             //     }
             // }
             $duration = microtime(true) - $start;
-            file_put_contents(
-                '/home/nicolas/tmp/php_language-server.log',
-                sprintf("%d items found, %d checks, memory : %d bytes, %ss\n", sizeof($list->items), $checksCount, memory_get_usage(true), $duration),
-                FILE_APPEND
-            );
+            // file_put_contents(
+            //     '/home/nicolas/tmp/php_language-server.log',
+            //     sprintf("%d items found, %d checks, memory : %d bytes, %ss\n", sizeof($list->items), $checksCount, memory_get_usage(true), $duration),
+            //     FILE_APPEND
+            // );
 
         } elseif (
             ($scoped = $node->parent) instanceof Node\Expression\ScopedPropertyAccessExpression ||
@@ -252,25 +252,49 @@ class CompletionProvider
             //
             //     TODO: $a::|
 
+            $checksCount = 0;
+            $start = microtime(true);
             // Resolve all possible types to FQNs
             $fqns = FqnUtilities\getFqnsFromType(
                 $classType = $this->definitionResolver->resolveExpressionNodeToType($scoped->scopeResolutionQualifier)
             );
 
             // Append :: operator to only get static members of all parents
-            $prefixes = [];
-            foreach ($this->expandParentFqns($fqns) as $prefix) {
-                $prefixes[] = $prefix . '::';
+            $namespaces = [];
+            foreach ($this->expandParentFqns($fqns) as $namespace) {
+                $namespaces[] = $namespace;
             }
 
             // Collect all definitions that match any of the prefixes
-            foreach ($this->index->getDefinitions() as $fqn => $def) {
-                foreach ($prefixes as $prefix) {
-                    if (substr(strtolower($fqn), 0, strlen($prefix)) === strtolower($prefix) && $def->isMember) {
+            foreach ($namespaces as $namespace) {
+                foreach ($this->index->getDefinitionsForNamespace($namespace) as $fqn => $def) {
+                    ++$checksCount;
+                    $prefix = strtolower($namespace . '::');
+                    if (substr(strtolower($fqn), 0, strlen($prefix)) === $prefix && !$def->isMember) {
                         $list->items[] = CompletionItem::fromDefinition($def);
                     }
                 }
             }
+
+            // $prefixes = [];
+            // foreach ($this->expandParentFqns($fqns) as $prefix) {
+            //     $prefixes[] = $prefix . '::';
+            // }
+
+            // foreach ($this->index->getDefinitions() as $fqn => $def) {
+            //     foreach ($prefixes as $prefix) {
+            //         ++$checksCount;
+            //         if (substr(strtolower($fqn), 0, strlen($prefix)) === strtolower($prefix) && !$def->isGlobal) {
+            //             $list->items[] = CompletionItem::fromDefinition($def);
+            //         }
+            //     }
+            // }
+            $duration = microtime(true) - $start;
+            file_put_contents(
+                '/home/nicolas/tmp/php_language-server_static.log',
+                sprintf("%d items found, %d checks, memory : %d bytes, %ss\n", sizeof($list->items), $checksCount, memory_get_usage(true), $duration),
+                FILE_APPEND
+            );
 
         } elseif (
             ParserHelpers\isConstantFetch($node)
