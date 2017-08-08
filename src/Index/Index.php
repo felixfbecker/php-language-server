@@ -313,6 +313,10 @@ class Index implements ReadableIndex, \Serializable
         $namespace = $this->extractNamespace($fqn);
         if (isset($this->namespaceDefinitions[$namespace])) {
             unset($this->namespaceDefinitions[$namespace][$fqn]);
+
+            if (0 === sizeof($this->namespaceDefinitions[$namespace])) {
+                unset($this->namespaceDefinitions[$namespace]);
+            }
         }
     }
 
