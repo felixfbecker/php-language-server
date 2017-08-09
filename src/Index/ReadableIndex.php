@@ -30,12 +30,12 @@ interface ReadableIndex extends EmitterInterface
     public function isStaticComplete(): bool;
 
     /**
-     * Returns an associative array [string => Definition] that maps fully qualified symbol names
-     * to Definitions (global or not)
+     * Returns a Generator providing an associative array [string => Definition]
+     * that maps fully qualified symbol names to Definitions (global or not)
      *
-     * @return Definitions[]
+     * @return \Generator providing Definition[]
      */
-    public function getDefinitions(): array;
+    public function getDefinitions(): \Generator;
 
     /**
      * Returns an associative array [string => Definition] that maps fully qualified symbol names

@@ -99,20 +99,16 @@ abstract class AbstractAggregateIndex implements ReadableIndex
     }
 
     /**
-     * Returns an associative array [string => Definition] that maps fully qualified symbol names
-     * to Definitions (global or not)
+     * Returns a Generator providing an associative array [string => Definition]
+     * that maps fully qualified symbol names to Definitions (global or not)
      *
-     * @return Definition[]
+     * @return \Generator providing Definition[]
      */
-    public function getDefinitions(): array
+    public function getDefinitions(): \Generator
     {
-        $defs = [];
         foreach ($this->getIndexes() as $index) {
-            foreach ($index->getDefinitions() as $fqn => $def) {
-                $defs[$fqn] = $def;
-            }
+            yield $index->getDefinitions();
         }
-        return $defs;
     }
 
     /**
