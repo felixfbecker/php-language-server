@@ -107,28 +107,29 @@ class Index implements ReadableIndex, \Serializable
     }
 
     /**
-     * Returns an associative array [string => Definition] that maps fully qualified symbol names
-     * to global Definitions
+     * Returns a Generator providing an associative array [string => Definition]
+     * that maps fully qualified symbol names to global Definitions
      *
-     * @return Definition[]
+     * @return \Generator providing Definitions[]
      */
-    public function getGlobalDefinitions(): array
+    public function getGlobalDefinitions(): \Generator
     {
-        return $this->globalDefinitions;
+        foreach ($this->globalDefinitions as $fqn => $definition) {
+            yield $fqn => $definition;
+        }
     }
 
     /**
-     * Returns the Definitions that are in the given namespace
+     * Returns a Generator providing the Definitions that are in the given namespace
      *
      * @param string $namespace
-     * @return Definitions[]
+     * @return \Generator providing Definitions[]
      */
-    public function getDefinitionsForNamespace(string $namespace): array
+    public function getDefinitionsForNamespace(string $namespace): \Generator
     {
-        return isset($this->namespaceDefinitions[$namespace])
-            ? $this->namespaceDefinitions[$namespace]
-            : []
-        ;
+        foreach ($this->doGetDefinitionsForNamespace($namespace) as $fqn => $definition) {
+            yield $fqn => $definition;
+        }
     }
 
     /**
@@ -141,7 +142,7 @@ class Index implements ReadableIndex, \Serializable
     public function getDefinition(string $fqn, bool $globalFallback = false)
     {
         $namespace = $this->extractNamespace($fqn);
-        $definitions = $this->getDefinitionsForNamespace($namespace);
+        $definitions = $this->doGetDefinitionsForNamespace($namespace);
 
         if (isset($definitions[$fqn])) {
             return $definitions[$fqn];
@@ -313,5 +314,19 @@ class Index implements ReadableIndex, \Serializable
         }
 
         return $fqn;
+    }
+
+    /**
+     * Returns the Definitions that are in the given namespace
+     *
+     * @param string $namespace
+     * @return Definition[]
+     */
+    private function doGetDefinitionsForNamespace(string $namespace): array
+    {
+        return isset($this->namespaceDefinitions[$namespace])
+            ? $this->namespaceDefinitions[$namespace]
+            : []
+        ;
     }
 }

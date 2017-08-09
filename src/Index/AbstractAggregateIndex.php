@@ -107,42 +107,40 @@ abstract class AbstractAggregateIndex implements ReadableIndex
     public function getDefinitions(): \Generator
     {
         foreach ($this->getIndexes() as $index) {
-            yield $index->getDefinitions();
-        }
-    }
-
-    /**
-     * Returns an associative array [string => Definition] that maps fully qualified symbol names
-     * to global Definitions
-     *
-     * @return Definition[]
-     */
-    public function getGlobalDefinitions(): array
-    {
-        $defs = [];
-        foreach ($this->getIndexes() as $index) {
-            foreach ($index->getGlobalDefinitions() as $fqn => $def) {
-                $defs[$fqn] = $def;
+            foreach ($index->getDefinitions() as $fqn => $definitions) {
+                yield $fqn => $definition;
             }
         }
-        return $defs;
     }
 
     /**
-     * Returns the Definitions that are in the given namespace
+     * Returns a Generator providing an associative array [string => Definition]
+     * that maps fully qualified symbol names to global Definitions
+     *
+     * @return \Generator providing Definitions[]
+     */
+    public function getGlobalDefinitions(): \Generator
+    {
+        foreach ($this->getIndexes() as $index) {
+            foreach ($index->getGlobalDefinitions() as $fqn => $definition) {
+                yield $fqn => $definition;
+            }
+        }
+    }
+
+    /**
+     * Returns a Generator providing the Definitions that are in the given namespace
      *
      * @param string $namespace
-     * @return Definitions[]
+     * @return \Generator providing Definitions[]
      */
-    public function getDefinitionsForNamespace(string $namespace): array
+    public function getDefinitionsForNamespace(string $namespace): \Generator
     {
-        $defs = [];
         foreach ($this->getIndexes() as $index) {
-            foreach ($index->getDefinitionsForNamespace($namespace) as $fqn => $def) {
-                $defs[$fqn] = $def;
+            foreach ($index->getDefinitionsForNamespace($namespace) as $fqn => $definition) {
+                yield $fqn => $definition;
             }
         }
-        return $defs;
     }
 
     /**

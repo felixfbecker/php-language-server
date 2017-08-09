@@ -38,20 +38,20 @@ interface ReadableIndex extends EmitterInterface
     public function getDefinitions(): \Generator;
 
     /**
-     * Returns an associative array [string => Definition] that maps fully qualified symbol names
-     * to global Definitions
+     * Returns a Generator providing an associative array [string => Definition]
+     * that maps fully qualified symbol names to global Definitions
      *
-     * @return Definitions[]
+     * @return \Generator providing Definitions[]
      */
-    public function getGlobalDefinitions(): array;
+    public function getGlobalDefinitions(): \Generator;
 
     /**
-     * Returns the Definitions that are in the given namespace
+     * Returns a Generator providing the Definitions that are in the given namespace
      *
      * @param string $namespace
-     * @return Definitions[]
+     * @return \Generator providing Definitions[]
      */
-    public function getDefinitionsForNamespace(string $namespace): array;
+    public function getDefinitionsForNamespace(string $namespace): \Generator;
 
     /**
      * Returns the Definition object by a specific FQN
