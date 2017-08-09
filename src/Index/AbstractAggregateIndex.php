@@ -160,19 +160,17 @@ abstract class AbstractAggregateIndex implements ReadableIndex
     }
 
     /**
-     * Returns all URIs in this index that reference a symbol
+     * Returns a Generator providing all URIs in this index that reference a symbol
      *
      * @param string $fqn The fully qualified name of the symbol
-     * @return string[]
+     * @return \Generator providing string[]
      */
-    public function getReferenceUris(string $fqn): array
+    public function getReferenceUris(string $fqn): \Generator
     {
-        $refs = [];
         foreach ($this->getIndexes() as $index) {
-            foreach ($index->getReferenceUris($fqn) as $ref) {
-                $refs[] = $ref;
+            foreach ($index->getReferenceUris($fqn) as $uri) {
+                yield $uri;
             }
         }
-        return $refs;
     }
 }

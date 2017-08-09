@@ -219,10 +219,9 @@ class TextDocument
                         return [];
                     }
                 }
-                $refDocuments = yield Promise\all(array_map(
-                    [$this->documentLoader, 'getOrLoad'],
-                    $this->index->getReferenceUris($fqn)
-                ));
+                $refDocuments = yield Promise\all(iterator_to_array(
+                    $this->getOrLoadReferences($fqn))
+                );
                 foreach ($refDocuments as $document) {
                     $refs = $document->getReferenceNodesByFqn($fqn);
                     if ($refs !== null) {
@@ -396,5 +395,18 @@ class TextDocument
             $descriptor = new SymbolDescriptor($def->fqn, new PackageDescriptor($packageName));
             return [new SymbolLocationInformation($descriptor, $def->symbolInformation->location)];
         });
+    }
+
+    /**
+     * Gets or loads the documents referencing the given FQN.
+     *
+     * @param string $fqn
+     * @return \Generator providing Promise
+     */
+    private function getOrLoadReferences(string $fqn): \Generator
+    {
+        foreach ($this->index->getReferenceUris($fqn) as $ref) {
+            yield $this->documentLoader->getOrLoad($ref);
+        }
     }
 }

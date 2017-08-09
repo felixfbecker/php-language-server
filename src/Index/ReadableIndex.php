@@ -63,10 +63,10 @@ interface ReadableIndex extends EmitterInterface
     public function getDefinition(string $fqn, bool $globalFallback = false);
 
     /**
-     * Returns all URIs in this index that reference a symbol
+     * Returns a Generator providing all URIs in this index that reference a symbol
      *
      * @param string $fqn The fully qualified name of the symbol
-     * @return string[]
+     * @return \Generator providing string[]
      */
-    public function getReferenceUris(string $fqn): array;
+    public function getReferenceUris(string $fqn): \Generator;
 }

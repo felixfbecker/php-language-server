@@ -197,14 +197,21 @@ class Index implements ReadableIndex, \Serializable
     }
 
     /**
-     * Returns all URIs in this index that reference a symbol
+     * Returns a Generator providing all URIs in this index that reference a symbol
      *
      * @param string $fqn The fully qualified name of the symbol
-     * @return string[]
+     * @return \Generator providing string[]
      */
-    public function getReferenceUris(string $fqn): array
+    public function getReferenceUris(string $fqn): \Generator
     {
-        return $this->references[$fqn] ?? [];
+        $uris = isset($this->references[$fqn])
+            ? $this->references[$fqn]
+            : []
+        ;
+
+        foreach ($uris as $uri) {
+            yield $uri;
+        }
     }
 
     /**
