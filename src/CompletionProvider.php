@@ -202,13 +202,8 @@ class CompletionProvider
             );
 
             // The namespaces of the symbol and its parents (eg the implemented interfaces)
-            $namespaces = [];
             foreach ($this->expandParentFqns($fqns) as $namespace) {
-                $namespaces[] = $namespace;
-            }
-
-            // Collect namespaces definitions
-            foreach ($namespaces as $namespace) {
+                // Collect namespaces definitions
                 foreach ($this->index->getDefinitionsForNamespace($namespace) as $fqn => $def) {
                     // Add the object access operator to only get members of all parents
                     $prefix = $namespace . '->';
@@ -237,13 +232,8 @@ class CompletionProvider
             );
 
             // The namespaces of the symbol and its parents (eg the implemented interfaces)
-            $namespaces = [];
             foreach ($this->expandParentFqns($fqns) as $namespace) {
-                $namespaces[] = $namespace;
-            }
-
-            // Collect namespaces definitions
-            foreach ($namespaces as $namespace) {
+                // Collect namespaces definitions
                 foreach ($this->index->getDefinitionsForNamespace($namespace) as $fqn => $def) {
                     // Append :: operator to only get static members of all parents
                     $prefix = strtolower($namespace . '::');
