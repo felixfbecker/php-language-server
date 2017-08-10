@@ -136,7 +136,7 @@ class Index implements ReadableIndex, \Serializable
      */
     public function getDefinitionsForNamespace(string $namespace): \Generator
     {
-        foreach ($this->doGetDefinitionsForNamespace($namespace) as $fqn => $definition) {
+        foreach ($this->namespaceDefinitions[$namespace] ?? [] as $fqn => $definition) {
             yield $fqn => $definition;
         }
     }
@@ -151,7 +151,7 @@ class Index implements ReadableIndex, \Serializable
     public function getDefinition(string $fqn, bool $globalFallback = false)
     {
         $namespace = $this->extractNamespace($fqn);
-        $definitions = $this->doGetDefinitionsForNamespace($namespace);
+        $definitions = $this->namespaceDefinitions[$namespace] ?? [];
 
         if (isset($definitions[$fqn])) {
             return $definitions[$fqn];
@@ -213,12 +213,7 @@ class Index implements ReadableIndex, \Serializable
      */
     public function getReferenceUris(string $fqn): \Generator
     {
-        $uris = isset($this->references[$fqn])
-            ? $this->references[$fqn]
-            : []
-        ;
-
-        foreach ($uris as $uri) {
+        foreach ($this->references[$fqn] ?? [] as $uri) {
             yield $uri;
         }
     }
@@ -330,19 +325,5 @@ class Index implements ReadableIndex, \Serializable
         }
 
         return $fqn;
-    }
-
-    /**
-     * Returns the Definitions that are in the given namespace
-     *
-     * @param string $namespace
-     * @return Definition[]
-     */
-    private function doGetDefinitionsForNamespace(string $namespace): array
-    {
-        return isset($this->namespaceDefinitions[$namespace])
-            ? $this->namespaceDefinitions[$namespace]
-            : []
-        ;
     }
 }
