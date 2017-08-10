@@ -16,21 +16,30 @@ class Index implements ReadableIndex, \Serializable
 
     /**
      * An associative array that maps namespaces to
-     *     an associative array that maps fully qualified symbol names to global Definitions
+     *     an associative array that maps fully qualified symbol names
+     *     to global Definitions, e.g. :
+     *     [
+     *         'Psr\Log\LoggerInterface' => [
+     *             'Psr\Log\LoggerInterface->log()' => $definition,
+     *             'Psr\Log\LoggerInterface->debug()' => $definition,
+     *         ],
+     *     ]
      *
      * @var array
      */
     private $namespaceDefinitions = [];
 
     /**
-     * An associative array that maps fully qualified symbol names to global Definitions
+     * An associative array that maps fully qualified symbol names
+     * to global Definitions
      *
      * @var Definition[]
      */
     private $globalDefinitions = [];
 
     /**
-     * An associative array that maps fully qualified symbol names to arrays of document URIs that reference the symbol
+     * An associative array that maps fully qualified symbol names
+     * to arrays of document URIs that reference the symbol
      *
      * @var string[][]
      */
