@@ -22,7 +22,7 @@ function getFqnsFromType($type): array
     }
     if ($type instanceof Types\Compound) {
         for ($i = 0; $t = $type->get($i); $i++) {
-            foreach (getFqnsFromType($type) as $fqn) {
+            foreach (getFqnsFromType($t) as $fqn) {
                 $fqns[] = $fqn;
             }
         }
