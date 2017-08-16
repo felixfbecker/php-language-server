@@ -108,8 +108,10 @@ class SignatureHelpProvider
         $signatureInformation = new SignatureInformation();
         $signatureInformation->label = $label;
         $signatureInformation->parameters = $params;
+        $signatureInformation->documentation = $this->definitionResolver->getDocumentationFromNode($node);
         $signatureHelp = new SignatureHelp();
         $signatureHelp->signatures = [$signatureInformation];
+        $signatureHelp->activeSignature = 0;
         $signatureHelp->activeParameter = $activeParam;
         return $signatureHelp;
     }

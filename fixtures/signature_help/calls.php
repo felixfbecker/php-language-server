@@ -1,0 +1,55 @@
+<?php
+
+namespace Foo;
+
+class Test
+{
+    /**
+     * Constructor comment goes here
+     *
+     * @param string $first  First param
+     * @param int    $second Second param
+     * @param Test   $third  Third param with a longer description
+     */
+    public function __construct(string $first, int $second, Test $third)
+    {
+    }
+
+    /**
+     * Function doc
+     *
+     * @param SomethingElse $a A param with a different doc type
+     * @param int|null      $b Param with default value
+     */
+    public function foo(\DateTime $a, int $b = null)
+    {
+    }
+
+    public static function bar($a)
+    {
+    }
+
+    /**
+     * Method with no params
+     */
+    public function baz()
+    {
+    }
+}
+
+/**
+ * @param int  $i Global function param one
+ * @param bool $b Default false param
+ */
+function foo(int $i, bool $b = false)
+{
+}
+
+$t = new Test();
+$t->foo();
+$t->foo(1, );
+$t->baz();
+
+foo();
+
+Test::bar();
