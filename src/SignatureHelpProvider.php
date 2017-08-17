@@ -21,11 +21,15 @@ class SignatureHelpProvider
     /** @var ReadableIndex */
     private $index;
 
+    /** @var PhpDocumentLoader */
     private $documentLoader;
 
     /**
+     * Constructor
+     *
      * @param DefinitionResolver $definitionResolver
      * @param ReadableIndex      $index
+     * @param PhpDocumentLoader  $documentLoader
      */
     public function __construct(DefinitionResolver $definitionResolver, ReadableIndex $index, PhpDocumentLoader $documentLoader)
     {
@@ -34,81 +38,44 @@ class SignatureHelpProvider
         $this->documentLoader = $documentLoader;
     }
 
+    /**
+     * Finds signature help for a callable position
+     *
+     * @param PhpDocument $doc      The document the position belongs to
+     * @param Position    $position The position to detect a call from
+     *
+     * @return SignatureHelp
+     */
     public function getSignatureHelp(PhpDocument $doc, Position $position): SignatureHelp
     {
         // Find the node under the cursor
         $node = $doc->getNodeAtPosition($position);
 
-        $fqn = null;
-
-        // First find the node that the call belongs to
-        if ($node instanceof Node\DelimitedList\ArgumentExpressionList) {
-            $argumentExpressionList = $node;
-            if ($node->parent instanceof Node\Expression\ObjectCreationExpression) {
-                $node = $node->parent->classTypeDesignator;
-                if (!$node instanceof Node\QualifiedName) {
-                    return new SignatureHelp();
-                }
-                $fqn = $this->definitionResolver->resolveReferenceNodeToFqn($node);
-                $fqn = "{$fqn}->__construct()";
-            } else {
-                $node = $node->parent->getFirstChildNode(
-                    Node\Expression\MemberAccessExpression::class,
-                    Node\Expression\ScopedPropertyAccessExpression::class,
-                    Node\QualifiedName::class
-                );
-            }
-        } elseif ($node instanceof Node\Expression\CallExpression) {
-            $argumentExpressionList = $node->getFirstChildNode(Node\DelimitedList\ArgumentExpressionList::class);
-            $node = $node->getFirstChildNode(
-                Node\Expression\MemberAccessExpression::class,
-                Node\Expression\ScopedPropertyAccessExpression::class,
-                Node\QualifiedName::class
-            );
-        } elseif ($node instanceof Node\Expression\ObjectCreationExpression) {
-            $argumentExpressionList = $node->getFirstChildNode(Node\DelimitedList\ArgumentExpressionList::class);
-            //$node = $node->getFirstChildNode(Node\QualifiedName::class);
-            $node = $node->classTypeDesignator;
-            if (!$node instanceof Node\QualifiedName) {
-                return new SignatureHelp();
-            }
-            $fqn = $this->definitionResolver->resolveReferenceNodeToFqn($node);
-            $fqn = "{$fqn}->__construct()";
-        } else {
-            $node = null;
-        }
-
-        if (!$node) {
-            return new SignatureHelp();
-        }
-
-        // Now find the definition of the call
-        $fqn = $fqn ?: DefinitionResolver::getDefinedFqn($node);
-        if ($fqn) {
-            $def = $this->index->getDefinition($fqn);
-        } else {
-            $def = $this->definitionResolver->resolveReferenceNodeToDefinition($node);
-        }
+        // Find the definition of the item being called
+        list($def, $argumentExpressionList) = $this->getCallingInfo($node);
 
         if (!$def) {
             return new SignatureHelp();
         }
 
+        // Find the active parameter
         $activeParam = $argumentExpressionList
             ? $this->findActiveParameter($argumentExpressionList, $position, $doc)
             : 0;
 
-        $doc = $this->documentLoader->get($def->symbolInformation->location->uri);
-        if (!$doc) {
+        // Get information from the item being called to build the signature information
+        $calledDoc = $this->documentLoader->get($def->symbolInformation->location->uri);
+        if (!$calledDoc) {
             return new SignatureHelp();
         }
-        $node = $doc->getNodeAtPosition($def->symbolInformation->location->range->start);
-        $params = $this->getParameters($node, $doc);
-        $label = $this->getLabel($node, $params, $doc);
+        $calledNode = $calledDoc->getNodeAtPosition($def->symbolInformation->location->range->start);
+        $params = $this->getParameters($calledNode, $calledDoc);
+        $label = $this->getLabel($calledNode, $params, $calledDoc);
+
         $signatureInformation = new SignatureInformation();
         $signatureInformation->label = $label;
         $signatureInformation->parameters = $params;
-        $signatureInformation->documentation = $this->definitionResolver->getDocumentationFromNode($node);
+        $signatureInformation->documentation = $this->definitionResolver->getDocumentationFromNode($calledNode);
         $signatureHelp = new SignatureHelp();
         $signatureHelp->signatures = [$signatureInformation];
         $signatureHelp->activeSignature = 0;
@@ -117,11 +84,84 @@ class SignatureHelpProvider
     }
 
     /**
-     * @param Node\MethodDeclaration|Node\Statement\FunctionDeclaration $node
+     * Given a node that could be a callable, finds the definition of the call and the argument expression list of
+     * the node
+     *
+     * @param Node $node The node to find calling information from
+     *
+     * @return array|null
      */
-    private function getLabel($node, array $params, PhpDocument $doc): string
+    private function getCallingInfo(Node $node)
     {
-        //$label = $node->getName() . '(';
+        $fqn = null;
+        $callingNode = null;
+        if ($node instanceof Node\DelimitedList\ArgumentExpressionList) {
+            // Cursor is already inside a (
+            $argumentExpressionList = $node;
+            if ($node->parent instanceof Node\Expression\ObjectCreationExpression) {
+                // Constructing something
+                $callingNode = $node->parent->classTypeDesignator;
+                if (!$callingNode instanceof Node\QualifiedName) {
+                    // We only support constructing from a QualifiedName
+                    return null;
+                }
+                $fqn = $this->definitionResolver->resolveReferenceNodeToFqn($callingNode);
+                $fqn = "{$fqn}->__construct()";
+            } else {
+                $callingNode = $node->parent->getFirstChildNode(
+                    Node\Expression\MemberAccessExpression::class,
+                    Node\Expression\ScopedPropertyAccessExpression::class,
+                    Node\QualifiedName::class
+                );
+            }
+        } elseif ($node instanceof Node\Expression\CallExpression) {
+            $argumentExpressionList = $node->getFirstChildNode(Node\DelimitedList\ArgumentExpressionList::class);
+            $callingNode = $node->getFirstChildNode(
+                Node\Expression\MemberAccessExpression::class,
+                Node\Expression\ScopedPropertyAccessExpression::class,
+                Node\QualifiedName::class
+            );
+        } elseif ($node instanceof Node\Expression\ObjectCreationExpression) {
+            $argumentExpressionList = $node->getFirstChildNode(Node\DelimitedList\ArgumentExpressionList::class);
+            $callingNode = $node->classTypeDesignator;
+            if (!$callingNode instanceof Node\QualifiedName) {
+                // We only support constructing from a QualifiedName
+                return null;
+            }
+            // Manually build the __construct fqn
+            $fqn = $this->definitionResolver->resolveReferenceNodeToFqn($callingNode);
+            $fqn = "{$fqn}->__construct()";
+        }
+
+        if (!$callingNode) {
+            return null;
+        }
+
+        // Now find the definition of the call
+        $fqn = $fqn ?: DefinitionResolver::getDefinedFqn($callingNode);
+        if ($fqn) {
+            $def = $this->index->getDefinition($fqn);
+        } else {
+            $def = $this->definitionResolver->resolveReferenceNodeToDefinition($callingNode);
+        }
+
+        if (!$def) {
+            return null;
+        }
+        return [$def, $argumentExpressionList];
+    }
+
+    /**
+     * Creates a label for SignatureInformation
+     *
+     * @param Node\MethodDeclaration|Node\Statement\FunctionDeclaration $node   The method/function declaration node
+     *                                                                          we are building the label for
+     * @param ParameterInformation[]                                    $params Parameters that belong to the node
+     *
+     * @return string
+     */
+    private function getLabel($node, array $params): string
+    {
         $label = '(';
         if ($params) {
             foreach ($params as $param) {
@@ -130,21 +170,16 @@ class SignatureHelpProvider
             $label = substr($label, 0, -2);
         }
         $label .= ')';
-        /*
-        if ($node->returnType) {
-            $label .= ': ';
-            if ($node->returnType instanceof QualifiedName) {
-                $label .= $node->returnType->getResolvedName();
-            } else {
-                $label .= $node->returnType->getText($doc->getContent());
-            }
-        }
-        */
         return $label;
     }
 
     /**
-     * @param Node\MethodDeclaration|Node\Statement\FunctionDeclaration $node
+     * Builds ParameterInformation from a node
+     *
+     * @param Node\MethodDeclaration|Node\Statement\FunctionDeclaration $node The node to build parameters from
+     * @param PhpDocument                                               $doc  The document the node belongs to
+     *
+     * @return ParameterInformation[]
      */
     private function getParameters($node, PhpDocument $doc): array
     {
@@ -165,6 +200,15 @@ class SignatureHelpProvider
         return $params;
     }
 
+    /**
+     * Given a position and arguments, finds the "active" argument at the position
+     *
+     * @param Node\DelimitedList\ArgumentExpressionList $argumentExpressionList The argument expression list
+     * @param Position                                  $position               The position to detect the active argument from
+     * @param PhpDocument                               $doc                    The document that contains the expression
+     *
+     * @return int
+     */
     private function findActiveParameter(
         Node\DelimitedList\ArgumentExpressionList $argumentExpressionList,
         Position $position,
@@ -177,7 +221,6 @@ class SignatureHelpProvider
             if ($arg instanceof Node) {
                 $start = $arg->getFullStart();
                 $end = $arg->getEndPosition();
-                ++$i;
             } else {
                 $start = $arg->fullStart;
                 $end = $start + $arg->length;
@@ -186,6 +229,9 @@ class SignatureHelpProvider
             if ($offset >= $start && $offset <= $end) {
                 $found = $i;
                 break;
+            }
+            if ($arg instanceof Node) {
+                ++$i;
             }
         }
         if (is_null($found)) {

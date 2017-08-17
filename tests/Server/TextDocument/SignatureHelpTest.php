@@ -80,7 +80,26 @@ class SignatureHelpTest extends TestCase
                 ]),
             ],
             'member call 2nd param active' => [
-                new Position(49, 11),
+                new Position(49, 12),
+                $this->createSignatureHelp([
+                    'label' => '(\\Foo\\SomethingElse $a, int|null $b = null)',
+                    'documentation' => 'Function doc',
+                    'parameters' => [
+                        [
+                            'label' => '\\Foo\\SomethingElse $a',
+                            'documentation' => 'A param with a different doc type',
+                        ],
+                        [
+                            'label' => 'int|null $b = null',
+                            'documentation' => 'Param with default value',
+                        ],
+                    ],
+                    'activeSignature' => 0,
+                    'activeParameter' => 1,
+                ]),
+            ],
+            'member call 2nd param active and closing )' => [
+                new Position(50, 11),
                 $this->createSignatureHelp([
                     'label' => '(\\Foo\\SomethingElse $a, int|null $b = null)',
                     'documentation' => 'Function doc',
@@ -99,7 +118,7 @@ class SignatureHelpTest extends TestCase
                 ]),
             ],
             'method with no params' => [
-                new Position(50, 9),
+                new Position(51, 9),
                 $this->createSignatureHelp([
                     'label' => '()',
                     'documentation' => 'Method with no params',
@@ -133,7 +152,7 @@ class SignatureHelpTest extends TestCase
                 ]),
             ],
             'global function' => [
-                new Position(52, 4),
+                new Position(53, 4),
                 $this->createSignatureHelp([
                     'label' => '(int $i, bool $b = false)',
                     'documentation' => null,
@@ -152,7 +171,7 @@ class SignatureHelpTest extends TestCase
                 ]),
             ],
             'static method' => [
-                new Position(54, 10),
+                new Position(55, 10),
                 $this->createSignatureHelp([
                     'label' => '(mixed $a)',
                     'documentation' => null,

@@ -47,7 +47,8 @@ function foo(int $i, bool $b = false)
 
 $t = new Test();
 $t->foo();
-$t->foo(1, );
+$t->foo(1,  
+$t->foo(1,);
 $t->baz();
 
 foo();

@@ -58,6 +58,9 @@ class TextDocument
      */
     protected $completionProvider;
 
+    /**
+     * @var SignatureHelpProvider
+     */
     protected $signatureHelpProvider;
 
     /**
@@ -254,12 +257,13 @@ class TextDocument
     }
 
     /**
-     * The goto definition request is sent from the client to the server to resolve the definition location of a symbol
-     * at a given text document position.
+     * The signature help request is sent from the client to the server to request signature information at a given
+     * cursor position.
      *
      * @param TextDocumentIdentifier $textDocument The text document
-     * @param Position $position The position inside the text document
-     * @return Promise <Location|Location[]>
+     * @param Position               $position     The position inside the text document
+     *
+     * @return Promise <SignatureHelp>
      */
     public function signatureHelp(TextDocumentIdentifier $textDocument, Position $position): Promise
     {
