@@ -64,7 +64,7 @@ class SignatureHelpProvider
             : 0;
 
         // Get information from the item being called to build the signature information
-        $calledDoc = $this->documentLoader->get($def->symbolInformation->location->uri);
+        $calledDoc = $this->documentLoader->getOrLoad($def->symbolInformation->location->uri)->wait();
         if (!$calledDoc) {
             return new SignatureHelp();
         }
