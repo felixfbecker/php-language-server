@@ -232,7 +232,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                     $this->composerLock,
                     $this->composerJson
                 );
-                $indexer->index()->otherwise('\\LanguageServer\\crash');
+                yield $indexer->index()->otherwise('\\LanguageServer\\crash');
             }
 
 

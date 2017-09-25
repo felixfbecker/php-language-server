@@ -20,7 +20,7 @@ class PhpDocumentLoader
      *
      * @var PhpDocument
      */
-    private $documents = [];
+    public $documents = [];
 
     /**
      * @var ContentRetriever
@@ -110,7 +110,7 @@ class PhpDocumentLoader
             $content = yield $this->contentRetriever->retrieve($uri);
             $size = strlen($content);
             if ($size > $limit) {
-                throw new ContentTooLargeException($uri, $size, $limit);
+                return $this->create($uri, "");
             }
 
             if (isset($this->documents[$uri])) {

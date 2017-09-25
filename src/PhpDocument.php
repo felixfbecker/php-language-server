@@ -3,6 +3,16 @@ declare(strict_types = 1);
 
 namespace LanguageServer;
 
+use LanguageServer\Protocol\{Diagnostic, DiagnosticSeverity, Range, Position, TextEdit};
+use LanguageServer\NodeVisitor\{
+    NodeAtPositionFinder,
+    ReferencesAdder,
+    DocBlockParser,
+    DefinitionCollector,
+    ColumnCalculator,
+    ReferencesCollector,
+    DynamicLoader
+};
 use LanguageServer\Index\Index;
 use LanguageServer\Protocol\{
     Diagnostic, Position, Range
@@ -105,6 +115,10 @@ class PhpDocument
         $this->updateContent($content);
     }
 
+		private function isVisitingAutoload() {
+			return false;
+		}
+
     /**
      * Get all references of a fully qualified name
      *
@@ -146,11 +160,44 @@ class PhpDocument
 
         $treeAnalyzer = new TreeAnalyzer($this->parser, $content, $this->docBlockFactory, $this->definitionResolver, $this->uri);
 
-        $this->diagnostics = $treeAnalyzer->getDiagnostics();
+        $this->diagnostics = [];
+        foreach ($errorHandler->getErrors() as $error) {
+            $this->diagnostics[] = Diagnostic::fromError($error, $this->content, DiagnosticSeverity::ERROR, 'php');
+        }
+
+				// figure out if it is analyzing an autoload file.
+				$isAutoload = false;
+				$ending = "application/config/autoload.php";
+				$endingLength = strlen($ending);
+				$isAutoload = (substr($this->uri, -$endingLength) === $ending);
+
+        // $stmts can be null in case of a fatal parsing error
+        if ($stmts) {
+            $traverser = new NodeTraverser;
+
+            // Resolve aliased names to FQNs
+            $traverser->addVisitor(new NameResolver($errorHandler));
 
         $this->definitions = $treeAnalyzer->getDefinitions();
 
         $this->definitionNodes = $treeAnalyzer->getDefinitionNodes();
+
+        // Report errors from parsing docblocks
+        foreach ($docBlockParser->errors as $error) {
+            $this->diagnostics[] = Diagnostic::fromError($error, $this->content, DiagnosticSeverity::WARNING, 'php');
+        }
+
+        $traverser = new NodeTraverser;
+
+        // Collect all definitions
+        $definitionCollector = new DefinitionCollector($this->definitionResolver);
+        $traverser->addVisitor($definitionCollector);
+
+        $traverser->addVisitor(new DynamicLoader($definitionCollector, $this->definitionResolver, $isAutoload));
+
+        // Collect all references
+        $referencesCollector = new ReferencesCollector($this->definitionResolver);
+        //$traverser->addVisitor($referencesCollector);
 
         $this->referenceNodes = $treeAnalyzer->getReferenceNodes();
 
