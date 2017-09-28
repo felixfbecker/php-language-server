@@ -49,18 +49,29 @@ class TreeAnalyzer
 
         // TODO - docblock errors
 
-        $this->collectDefinitionsAndReferences($this->sourceFileNode);
+        $this->traverse($this->sourceFileNode);
     }
 
+    /**
+     * Collects Parser diagnostic messages for the Node/Token
+     * and transforms them into LSP Format
+     *
+     * @param Node|Token $node
+     * @return Diagnostic
+     */
     private function collectDiagnostics($node)
     {
         if (($error = PhpParser\DiagnosticsProvider::checkDiagnostics($node)) !== null) {
             $range = PhpParser\PositionUtilities::getRangeFromPosition($error->start, $error->length, $this->sourceFileNode->fileContents);
 
-            if ($error->kind == \Microsoft\PhpParser\DiagnosticKind::Error) {
-                $severity = DiagnosticSeverity::ERROR;
-            } else {
-                $severity = DiagnosticSeverity::WARNING;
+            switch ($error->kind) {
+                case \Microsoft\PhpParser\DiagnosticKind::Error:
+                    $severity = DiagnosticSeverity::ERROR;
+                    break;
+                case \Microsoft\PhpParser\DiagnosticKind::Warning:
+                default:
+                    $severity = DiagnosticSeverity::WARNING;
+                    break;
             }
 
             $this->diagnostics[] = new Diagnostic(
@@ -76,34 +87,35 @@ class TreeAnalyzer
         }
     }
 
-    private function collectDefinitionsAndReferences(Node $sourceFileNode)
+    /**
+     * Recursive AST traversal to collect definitions/references and diagnostics
+     *
+     * @param Node|Token $currentNode The node/token to process
+     */
+    private function traverse($currentNode)
     {
-        $this->collectDiagnostics($sourceFileNode);
+        $this->collectDiagnostics($currentNode);
 
-        foreach ($sourceFileNode::CHILD_NAMES as $name) {
-            $node = $sourceFileNode->$name;
+        // Only update/descend into Nodes, Tokens are leaves
+        if ($currentNode instanceof Node) {
+            $this->collectDefinitionsAndReferences($currentNode);
 
-            if ($node === null) {
-                continue;
-            }
+            foreach ($currentNode::CHILD_NAMES as $name) {
+                $child = $currentNode->$name;
 
-            if (\is_array($node)) {
-                foreach ($node as $child) {
-                    if ($child !== null) {
-                        if ($child instanceof Node) {
-                            $this->update($child);
-                        } else {
-                            $this->collectDiagnostics($child);
+                if ($child === null) {
+                    continue;
+                }
+
+                if (\is_array($child)) {
+                    foreach ($child as $actualChild) {
+                        if ($actualChild !== null) {
+                            $this->traverse($actualChild);
                         }
                     }
+                } else {
+                    $this->traverse($child);
                 }
-                continue;
-            }
-
-            if ($node instanceof Node) {
-                $this->update($node);
-            } else {
-                $this->collectDiagnostics($node);
             }
         }
     }
@@ -113,7 +125,7 @@ class TreeAnalyzer
      *
      * @param Node $node
      */
-    private function update(Node $node)
+    private function collectDefinitionsAndReferences(Node $node)
     {
         $fqn = ($this->definitionResolver)::getDefinedFqn($node);
         // Only index definitions with an FQN (no variables)
@@ -169,7 +181,6 @@ class TreeAnalyzer
                 }
             }
         }
-        $this->collectDefinitionsAndReferences($node);
     }
 
     /**
