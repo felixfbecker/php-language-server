@@ -52,8 +52,34 @@ class TreeAnalyzer
         $this->collectDefinitionsAndReferences($this->sourceFileNode);
     }
 
+    private function collectDiagnostics($node) {
+        if (($error = PhpParser\DiagnosticsProvider::checkDiagnostics($node)) !== null) {
+            $range = PhpParser\PositionUtilities::getRangeFromPosition($error->start, $error->length, $this->sourceFileNode->fileContents);
+
+            if ($error->kind == \Microsoft\PhpParser\DiagnosticKind::Error) {
+                $severity = DiagnosticSeverity::ERROR;
+            }
+            else {
+                $severity = DiagnosticSeverity::WARNING;
+            }
+
+            $this->diagnostics[] = new Diagnostic(
+                $error->message,
+                new Range(
+                    new Position($range->start->line, $range->start->character),
+                    new Position($range->end->line, $range->start->character)
+                ),
+                null,
+                $severity,
+                'php'
+            );
+        }
+    }
+
     private function collectDefinitionsAndReferences(Node $sourceFileNode)
     {
+        $this->collectDiagnostics($sourceFileNode);
+
         foreach ($sourceFileNode::CHILD_NAMES as $name) {
             $node = $sourceFileNode->$name;
 
@@ -63,8 +89,13 @@ class TreeAnalyzer
 
             if (\is_array($node)) {
                 foreach ($node as $child) {
-                    if ($child instanceof Node) {
-                        $this->update($child);
+                    if ($child !== null) {
+                        if ($child instanceof Node) {
+                            $this->update($child);
+                        }
+                        else {
+                            $this->collectDiagnostics($child);
+                        }
                     }
                 }
                 continue;
@@ -73,20 +104,8 @@ class TreeAnalyzer
             if ($node instanceof Node) {
                 $this->update($node);
             }
-
-            if (($error = PhpParser\DiagnosticsProvider::checkDiagnostics($node)) !== null) {
-                $range = PhpParser\PositionUtilities::getRangeFromPosition($error->start, $error->length, $this->sourceFileNode->fileContents);
-
-                $this->diagnostics[] = new Diagnostic(
-                    $error->message,
-                    new Range(
-                        new Position($range->start->line, $range->start->character),
-                        new Position($range->end->line, $range->start->character)
-                    ),
-                    null,
-                    DiagnosticSeverity::ERROR,
-                    'php'
-                );
+            else {
+                $this->collectDiagnostics($node);
             }
         }
     }
