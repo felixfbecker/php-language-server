@@ -52,14 +52,14 @@ class TreeAnalyzer
         $this->collectDefinitionsAndReferences($this->sourceFileNode);
     }
 
-    private function collectDiagnostics($node) {
+    private function collectDiagnostics($node)
+    {
         if (($error = PhpParser\DiagnosticsProvider::checkDiagnostics($node)) !== null) {
             $range = PhpParser\PositionUtilities::getRangeFromPosition($error->start, $error->length, $this->sourceFileNode->fileContents);
 
             if ($error->kind == \Microsoft\PhpParser\DiagnosticKind::Error) {
                 $severity = DiagnosticSeverity::ERROR;
-            }
-            else {
+            } else {
                 $severity = DiagnosticSeverity::WARNING;
             }
 
@@ -92,8 +92,7 @@ class TreeAnalyzer
                     if ($child !== null) {
                         if ($child instanceof Node) {
                             $this->update($child);
-                        }
-                        else {
+                        } else {
                             $this->collectDiagnostics($child);
                         }
                     }
@@ -103,8 +102,7 @@ class TreeAnalyzer
 
             if ($node instanceof Node) {
                 $this->update($node);
-            }
-            else {
+            } else {
                 $this->collectDiagnostics($node);
             }
         }
