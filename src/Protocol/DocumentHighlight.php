@@ -7,7 +7,7 @@ namespace LanguageServer\Protocol;
  * special attention. Usually a document highlight is visualized by changing
  * the background color of its range.
  */
-class DocumentHighlightKind
+class DocumentHighlight
 {
     /**
      * The range this highlight applies to.
