@@ -61,7 +61,6 @@
         "post-install-cmd": "@parse-stubs"
     },
     "config": {
-        "preferred-install": "dist",
         "sort-packages": true
     },
     "minimum-stability": "dev",
