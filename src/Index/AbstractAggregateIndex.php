@@ -129,16 +129,16 @@ abstract class AbstractAggregateIndex implements ReadableIndex
     }
 
     /**
-     * Returns a Generator providing the Definitions that are in the given namespace
+     * Returns a Generator providing the Definitions that are in the given FQN
      *
-     * @param string $namespace
+     * @param string $fqn
      * @return \Generator providing Definitions[]
      */
-    public function getDefinitionsForNamespace(string $namespace): \Generator
+    public function getDefinitionsForFqn(string $fqn): \Generator
     {
         foreach ($this->getIndexes() as $index) {
-            foreach ($index->getDefinitionsForNamespace($namespace) as $fqn => $definition) {
-                yield $fqn => $definition;
+            foreach ($index->getDefinitionsForFqn($fqn) as $symbolFqn => $definition) {
+                yield $symbolFqn => $definition;
             }
         }
     }

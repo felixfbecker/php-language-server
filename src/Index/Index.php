@@ -15,7 +15,7 @@ class Index implements ReadableIndex, \Serializable
     use EmitterTrait;
 
     /**
-     * An associative array that maps namespaces to
+     * An associative array that maps fully qualified names to
      *     an associative array that maps fully qualified symbol names
      *     to global Definitions, e.g. :
      *     [
@@ -27,7 +27,7 @@ class Index implements ReadableIndex, \Serializable
      *
      * @var array
      */
-    private $namespaceDefinitions = [];
+    private $fqnDefinitions = [];
 
     /**
      * An associative array that maps fully qualified symbol names
@@ -108,8 +108,8 @@ class Index implements ReadableIndex, \Serializable
      */
     public function getDefinitions(): \Generator
     {
-        foreach ($this->namespaceDefinitions as $namespaceDefinition) {
-            foreach ($namespaceDefinition as $fqn => $definition) {
+        foreach ($this->fqnDefinitions as $fqnDefinition) {
+            foreach ($fqnDefinition as $fqn => $definition) {
                 yield $fqn => $definition;
             }
         }
@@ -129,15 +129,15 @@ class Index implements ReadableIndex, \Serializable
     }
 
     /**
-     * Returns a Generator providing the Definitions that are in the given namespace
+     * Returns a Generator providing the Definitions that are in the given FQN
      *
-     * @param string $namespace
+     * @param string $fqn
      * @return \Generator providing Definitions[]
      */
-    public function getDefinitionsForNamespace(string $namespace): \Generator
+    public function getDefinitionsForFqn(string $fqn): \Generator
     {
-        foreach ($this->namespaceDefinitions[$namespace] ?? [] as $fqn => $definition) {
-            yield $fqn => $definition;
+        foreach ($this->fqnDefinitions[$fqn] ?? [] as $symbolFqn => $definition) {
+            yield $symbolFqn => $definition;
         }
     }
 
@@ -150,8 +150,8 @@ class Index implements ReadableIndex, \Serializable
      */
     public function getDefinition(string $fqn, bool $globalFallback = false)
     {
-        $namespace = $this->extractNamespace($fqn);
-        $definitions = $this->namespaceDefinitions[$namespace] ?? [];
+        $namespacedFqn = $this->extractNamespacedFqn($fqn);
+        $definitions = $this->fqnDefinitions[$namespacedFqn] ?? [];
 
         if (isset($definitions[$fqn])) {
             return $definitions[$fqn];
@@ -173,12 +173,12 @@ class Index implements ReadableIndex, \Serializable
      */
     public function setDefinition(string $fqn, Definition $definition)
     {
-        $namespace = $this->extractNamespace($fqn);
-        if (!isset($this->namespaceDefinitions[$namespace])) {
-            $this->namespaceDefinitions[$namespace] = [];
+        $namespacedFqn = $this->extractNamespacedFqn($fqn);
+        if (!isset($this->fqnDefinitions[$namespacedFqn])) {
+            $this->fqnDefinitions[$namespacedFqn] = [];
         }
 
-        $this->namespaceDefinitions[$namespace][$fqn] = $definition;
+        $this->fqnDefinitions[$namespacedFqn][$fqn] = $definition;
         $this->setGlobalDefinition($fqn, $definition);
         $this->emit('definition-added');
     }
@@ -192,12 +192,12 @@ class Index implements ReadableIndex, \Serializable
      */
     public function removeDefinition(string $fqn)
     {
-        $namespace = $this->extractNamespace($fqn);
-        if (isset($this->namespaceDefinitions[$namespace])) {
-            unset($this->namespaceDefinitions[$namespace][$fqn]);
+        $namespacedFqn = $this->extractNamespacedFqn($fqn);
+        if (isset($this->fqnDefinitions[$namespacedFqn])) {
+            unset($this->fqnDefinitions[$namespacedFqn][$fqn]);
 
-            if (empty($this->namespaceDefinitions[$namespace])) {
-                unset($this->namespaceDefinitions[$namespace]);
+            if (empty($this->fqnDefinitions[$namespacedFqn])) {
+                unset($this->fqnDefinitions[$namespacedFqn]);
             }
         }
 
@@ -277,8 +277,8 @@ class Index implements ReadableIndex, \Serializable
             $this->$prop = $val;
         }
 
-        foreach ($this->namespaceDefinitions as $namespaceDefinition) {
-            foreach ($namespaceDefinition as $fqn => $definition) {
+        foreach ($this->fqnDefinitions as $fqnDefinition) {
+            foreach ($fqnDefinition as $fqn => $definition) {
                 $this->setGlobalDefinition($fqn, $definition);
             }
         }
@@ -291,7 +291,7 @@ class Index implements ReadableIndex, \Serializable
     public function serialize()
     {
         return serialize([
-            'namespaceDefinitions' => $this->namespaceDefinitions,
+            'fqnDefinitions' => $this->fqnDefinitions,
             'references' => $this->references,
             'complete' => $this->complete,
             'staticComplete' => $this->staticComplete
@@ -313,10 +313,10 @@ class Index implements ReadableIndex, \Serializable
     }
 
     /**
-     * @param string $fqn
-     * @return string The namespace extracted from the given FQN
+     * @param string $fqn The symbol FQN
+     * @return string The namespaced FQN extracted from the given symbol FQN
      */
-    private function extractNamespace(string $fqn): string
+    private function extractNamespacedFqn(string $fqn): string
     {
         foreach (['::', '->'] as $operator) {
             if (false !== ($pos = strpos($fqn, $operator))) {

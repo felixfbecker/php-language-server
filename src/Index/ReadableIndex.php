@@ -46,12 +46,12 @@ interface ReadableIndex extends EmitterInterface
     public function getGlobalDefinitions(): \Generator;
 
     /**
-     * Returns a Generator providing the Definitions that are in the given namespace
+     * Returns a Generator providing the Definitions that are in the given FQN
      *
-     * @param string $namespace
+     * @param string $fqn
      * @return \Generator providing Definitions[]
      */
-    public function getDefinitionsForNamespace(string $namespace): \Generator;
+    public function getDefinitionsForFqn(string $fqn): \Generator;
 
     /**
      * Returns the Definition object by a specific FQN
