@@ -196,8 +196,8 @@ Then parse the stubs with
 
 Run the tests with 
 
-    vendor/bin/phpunit
+    composer test
 
 Lint with
 
-    vendor/bin/phpcs
+    composer lint
