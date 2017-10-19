@@ -57,7 +57,10 @@
     ],
     "scripts": {
         "parse-stubs": "LanguageServer\\ComposerScripts::parseStubs",
-        "post-install-cmd": "@parse-stubs"
+        "post-install-cmd": "@parse-stubs",
+        "post-update-cmd": "@parse-stubs",
+        "test": "vendor/bin/phpunit",
+        "lint": "vendor/bin/phpcs"
     },
     "config": {
         "sort-packages": true
