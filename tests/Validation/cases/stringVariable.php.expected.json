@@ -1,5 +1,9 @@
 {
-    "references": [],
+    "references": {
+        "B->hi": [
+            "./stringVariable.php"
+        ]
+    },
     "definitions": {
         "B": {
             "fqn": "B",
