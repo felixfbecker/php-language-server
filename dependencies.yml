@@ -3,11 +3,8 @@ collectors:
 - type: php-composer
   path: /
   actors:
-  # pull requests for updates to our major version
+  # pull requests for new major versions
   - type: php-composer
-    versions: "L.Y.Y"
-  # create issues for new major versions
-  - type: repo-issue
     versions: "Y.0.0"
     settings:
       commit_message_prefix: "chore: "

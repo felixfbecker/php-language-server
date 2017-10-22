@@ -5,3 +5,4 @@ vendor/
 composer.lock
 stubs
 *.ast
+node_modules/

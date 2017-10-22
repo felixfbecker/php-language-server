@@ -11,6 +11,7 @@ services:
 cache:
   directories:
     - $HOME/.composer/cache
+    - $HOME/.npm
 
 install:
   - composer install --prefer-dist --no-interaction
@@ -22,9 +23,12 @@ script:
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
-  - |
-    if [[ $TRAVIS_TAG == v* ]]; then
-      docker build -t felixfbecker/php-language-server:${TRAVIS_TAG:1} .
-      docker login -e="$DOCKER_EMAIL" -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
-      docker push felixfbecker/php-language-server:${TRAVIS_TAG:1}
-    fi
+  - git config --replace-all remote.origin.fetch +refs/heads/*:refs/remotes/origin/*
+  - git fetch --tags
+  - nvm install 8 && nvm use 8
+  - npm install
+  - npm run semantic-release
+
+branches:
+  except:
+    - /^v\d+\.\d+\.\d+$/
