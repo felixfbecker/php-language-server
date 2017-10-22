@@ -151,7 +151,7 @@ class TextDocument
      * The document's truth now exists where the document's uri points to (e.g. if the document's uri is a file uri the
      * truth now exists on disk).
      *
-     * @param \LanguageServer\Protocol\TextDocumentItem $textDocument The document that was closed
+     * @param \LanguageServer\Protocol\TextDocumentIdentifier $textDocument The document that was closed
      * @return void
      */
     public function didClose(TextDocumentIdentifier $textDocument)

@@ -56,7 +56,8 @@ class ComposerScripts
                 $parts['scheme'] = 'phpstubs';
                 $uri = Uri\build($parts);
 
-                $document = new PhpDocument($uri, $content, $index, $parser, $docBlockFactory, $definitionResolver);
+                // Create a new document and add it to $index
+                new PhpDocument($uri, $content, $index, $parser, $docBlockFactory, $definitionResolver);
             }
 
             $index->setComplete();
