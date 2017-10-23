@@ -15,7 +15,6 @@ cache:
 
 install:
   - composer install --prefer-dist --no-interaction
-  - composer run-script parse-stubs
 
 script:
   - vendor/bin/phpcs -n
