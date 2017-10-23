@@ -9,11 +9,18 @@ use phpDocumentor\Reflection\DocBlockFactory;
 use Sabre\Uri;
 use Microsoft\PhpParser;
 use Microsoft\PhpParser\Node;
+use Microsoft\PhpParser\Token;
 
 class TreeAnalyzer
 {
     /** @var PhpParser\Parser */
     private $parser;
+
+    /** @var DocBlockFactory */
+    private $docBlockFactory;
+
+    /** @var DefinitionResolver */
+    private $definitionResolver;
 
     /** @var Node\SourceFileNode */
     private $sourceFileNode;
@@ -57,7 +64,7 @@ class TreeAnalyzer
      * and transforms them into LSP Format
      *
      * @param Node|Token $node
-     * @return Diagnostic
+     * @return void
      */
     private function collectDiagnostics($node)
     {
@@ -203,7 +210,7 @@ class TreeAnalyzer
     }
 
     /**
-     * @return Definition
+     * @return Definition[]
      */
     public function getDefinitions()
     {
