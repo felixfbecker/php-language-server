@@ -78,7 +78,7 @@ class Definition
      * For functions and methods, this is the return type.
      * For any other declaration it will be null.
      * Can also be a compound type.
-     * If it is unknown, will be Types\Mixed.
+     * If it is unknown, will be Types\Mixed_.
      *
      * @var \phpDocumentor\Type|null
      */
