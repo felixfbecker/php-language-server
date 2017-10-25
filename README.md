@@ -191,9 +191,6 @@ Clone the repository and run
     composer install
 
 to install dependencies.
-Then parse the stubs with
-
-    composer run-script parse-stubs
 
 Run the tests with 
 
