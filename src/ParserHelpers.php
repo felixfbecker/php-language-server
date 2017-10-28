@@ -40,10 +40,7 @@ function getFunctionLikeDeclarationFromParameter(Node\Parameter $node)
 
 function isFunctionLike(Node $node)
 {
-    return
-        $node instanceof Node\Statement\FunctionDeclaration ||
-        $node instanceof Node\MethodDeclaration ||
-        $node instanceof Node\Expression\AnonymousFunctionCreationExpression;
+    return $node instanceof PhpParser\FunctionLike;
 }
 
 function isBooleanExpression($expression) : bool
