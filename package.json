@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "commitmsg": "validate-commit-msg",
-    "semantic-release": "semantic-release pre && ./release-docker.sh && semantic-release post"
+    "semantic-release": "semantic-release pre && php release-docker.php && semantic-release post"
   },
   "devDependencies": {
     "cz-conventional-changelog": "^2.0.0",
