@@ -5,6 +5,9 @@ php:
   - 7.1
   - 7.2
 
+git:
+  submodules: false
+
 services:
   - docker
 
@@ -18,6 +21,7 @@ cache:
     - $HOME/.npm
 
 install:
+  - git submodule update --init --jobs 9
   - composer install --prefer-dist --no-interaction
 
 script:

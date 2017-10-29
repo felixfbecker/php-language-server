@@ -1,27 +1,36 @@
 [submodule "validation/frameworks/php-language-server"]
 	path = validation/frameworks/php-language-server
 	url = https://github.com/felixfbecker/php-language-server
+	shallow = true
 [submodule "validation/frameworks/wordpress"]
 	path = validation/frameworks/wordpress
 	url = https://github.com/wordpress/wordpress
+	shallow = true
 [submodule "validation/frameworks/drupal"]
 	path = validation/frameworks/drupal
 	url = https://github.com/drupal/drupal
+	shallow = true
 [submodule "validation/frameworks/tolerant-php-parser"]
 	path = validation/frameworks/tolerant-php-parser
 	url = https://github.com/microsoft/tolerant-php-parser
+	shallow = true
 [submodule "validation/frameworks/symfony"]
 	path = validation/frameworks/symfony
 	url = https://github.com/symfony/symfony
+	shallow = true
 [submodule "validation/frameworks/math-php"]
 	path = validation/frameworks/math-php
 	url = https://github.com/markrogoyski/math-php
+	shallow = true
 [submodule "validation/frameworks/codeigniter"]
 	path = validation/frameworks/codeigniter
 	url = https://github.com/bcit-ci/codeigniter
+	shallow = true
 [submodule "validation/frameworks/cakephp"]
 	path = validation/frameworks/cakephp
 	url = https://github.com/cakephp/cakephp
+	shallow = true
 [submodule "validation/frameworks/phpunit"]
 	path = validation/frameworks/phpunit
 	url = https://github.com/sebastianbergmann/phpunit
+	shallow = true
