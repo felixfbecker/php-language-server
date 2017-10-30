@@ -25,7 +25,7 @@ function isConstantFetch(Node $node) : bool
             $parent instanceof Node\Expression\CallExpression ||
             $parent instanceof Node\Expression\ObjectCreationExpression ||
             $parent instanceof Node\Expression\ScopedPropertyAccessExpression ||
-            isFunctionLike($parent) ||
+            $parent instanceof PhpParser\FunctionLike ||
             (
                 $parent instanceof Node\Expression\BinaryExpression &&
                 $parent->operator->kind === PhpParser\TokenKind::InstanceOfKeyword
@@ -36,11 +36,6 @@ function isConstantFetch(Node $node) : bool
 function getFunctionLikeDeclarationFromParameter(Node\Parameter $node)
 {
     return $node->parent->parent;
-}
-
-function isFunctionLike(Node $node)
-{
-    return $node instanceof PhpParser\FunctionLike;
 }
 
 function isBooleanExpression($expression) : bool
