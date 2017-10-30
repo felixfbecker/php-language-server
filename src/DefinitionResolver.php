@@ -181,7 +181,7 @@ class DefinitionResolver
         );
 
         // Interfaces, classes, traits, namespaces, functions, and global const elements
-        $def->isGlobal = (
+        $def->isMember = !(
             $node instanceof PhpParser\ClassLike ||
 
             ($node instanceof Node\Statement\NamespaceDefinition && $node->name !== null) ||

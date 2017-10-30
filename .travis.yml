@@ -8,6 +8,10 @@ php:
 services:
   - docker
 
+env:
+  global:
+    - BUILD_LEADER_ID=1
+
 cache:
   directories:
     - $HOME/.composer/cache

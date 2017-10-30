@@ -17,7 +17,7 @@
         "MyNamespace1": {
             "fqn": "MyNamespace1",
             "extends": [],
-            "isGlobal": true,
+            "isMember": false,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,

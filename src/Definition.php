@@ -39,12 +39,13 @@ class Definition
     public $extends;
 
     /**
-     * Only true for classes, interfaces, traits, functions and non-class constants
+     * False for classes, interfaces, traits, functions and non-class constants
+     * True for methods, properties and class constants
      * This is so methods and properties are not suggested in the global scope
      *
      * @var bool
      */
-    public $isGlobal;
+    public $isMember;
 
     /**
      * True if this definition is affected by global namespace fallback (global function or global constant)

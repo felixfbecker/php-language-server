@@ -26,7 +26,7 @@
         "MyNamespace": {
             "fqn": "MyNamespace",
             "extends": [],
-            "isGlobal": true,
+            "isMember": false,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
@@ -45,7 +45,7 @@
         "MyNamespace\\A": {
             "fqn": "MyNamespace\\A",
             "extends": [],
-            "isGlobal": true,
+            "isMember": false,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": true,
@@ -64,7 +64,7 @@
         "MyNamespace\\A::getInitializer()": {
             "fqn": "MyNamespace\\A::getInitializer()",
             "extends": [],
-            "isGlobal": false,
+            "isMember": true,
             "roamed": false,
             "isStatic": true,
             "canBeInstantiated": false,
