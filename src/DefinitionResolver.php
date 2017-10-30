@@ -509,7 +509,7 @@ class DefinitionResolver
         // Traverse the AST up
         do {
             // If a function is met, check the parameters and use statements
-            if (ParserHelpers\isFunctionLike($n)) {
+            if ($n instanceof PhpParser\FunctionLike) {
                 if ($n->parameters !== null) {
                     foreach ($n->parameters->getElements() as $param) {
                         if ($param->getName() === $name) {
@@ -1018,7 +1018,7 @@ class DefinitionResolver
         //   1. doc block
         //   2. return type hint
         //   3. TODO: infer from return statements
-        if (ParserHelpers\isFunctionLike($node)) {
+        if ($node instanceof PhpParser\FunctionLike) {
             // Functions/methods
             $docBlock = $this->getDocBlock($node);
             if (

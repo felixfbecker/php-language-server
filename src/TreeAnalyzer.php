@@ -72,10 +72,10 @@ class TreeAnalyzer
             $range = PhpParser\PositionUtilities::getRangeFromPosition($error->start, $error->length, $this->sourceFileNode->fileContents);
 
             switch ($error->kind) {
-                case \Microsoft\PhpParser\DiagnosticKind::Error:
+                case PhpParser\DiagnosticKind::Error:
                     $severity = DiagnosticSeverity::ERROR;
                     break;
-                case \Microsoft\PhpParser\DiagnosticKind::Warning:
+                case PhpParser\DiagnosticKind::Warning:
                 default:
                     $severity = DiagnosticSeverity::WARNING;
                     break;
