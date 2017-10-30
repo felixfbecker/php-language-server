@@ -11,7 +11,7 @@
         "Foo": {
             "fqn": "Foo",
             "extends": [],
-            "isGlobal": true,
+            "isMember": false,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": true,
@@ -30,7 +30,7 @@
         "Foo->bar": {
             "fqn": "Foo->bar",
             "extends": [],
-            "isGlobal": false,
+            "isMember": true,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
@@ -50,7 +50,7 @@
         "Foo->foo()": {
             "fqn": "Foo->foo()",
             "extends": [],
-            "isGlobal": false,
+            "isMember": true,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
