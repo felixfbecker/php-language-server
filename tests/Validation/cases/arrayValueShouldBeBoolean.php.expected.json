@@ -4,7 +4,7 @@
         "A": {
             "fqn": "A",
             "extends": [],
-            "isGlobal": true,
+            "isMember": false,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": true,
@@ -23,7 +23,7 @@
         "A->foo": {
             "fqn": "A->foo",
             "extends": [],
-            "isGlobal": false,
+            "isMember": true,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
