@@ -17,17 +17,30 @@ cache:
     - $HOME/.composer/cache
     - $HOME/.npm
 
+before_install:
+  - git config --replace-all remote.origin.fetch +refs/heads/*:refs/remotes/origin/*
+  - git fetch --tags
+
 install:
   - composer install --prefer-dist --no-interaction
 
 script:
   - vendor/bin/phpcs -n
   - vendor/bin/phpunit --coverage-clover=coverage.xml
+  - |
+    php Performance.php >> $TRAVIS_BUILD_DIR/benchmark.txt
+    REMOTE_URL="$(git config --get remote.origin.url)"
+    cd $TRAVIS_BUILD_DIR/..
+    git clone --depth 1 --branch master ${REMOTE_URL} "${TRAVIS_REPO_SLUG}-bench"
+    cd "${TRAVIS_REPO_SLUG}-bench"
+    git submodule update --init
+    composer install --prefer-dist --no-interaction
+    php Performance.php >> $TRAVIS_BUILD_DIR/benchmark.txt
+    cd $TRAVIS_BUILD_DIR
+  - cat $TRAVIS_BUILD_DIR/benchmark.txt
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
-  - git config --replace-all remote.origin.fetch +refs/heads/*:refs/remotes/origin/*
-  - git fetch --tags
   - nvm install 8 && nvm use 8
   - npm install
   - npm run semantic-release
