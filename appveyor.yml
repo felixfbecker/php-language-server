@@ -10,6 +10,7 @@ max_jobs: 3
 
 cache:
   - '%LOCALAPPDATA%\Composer'
+  - '%LOCALAPPDATA%\Temp\Chocolatey'
 
 environment:
   ANSICON: 121x90 (121x90)
@@ -19,6 +20,7 @@ environment:
 install:
   # Enable Windows Update service, needed to install vcredist2015 (dependency of php)
   - ps: Set-Service wuauserv -StartupType Manual
+  - choco config set cacheLocation %LOCALAPPDATA%\Temp\Chocolatey
   - choco install -y php --version %PHP_VERSION%
   - choco install -y composer
   - refreshenv
