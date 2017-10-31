@@ -11,10 +11,28 @@ use Microsoft\PhpParser;
 use phpDocumentor\Reflection\DocBlockFactory;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
+use Composer\{Factory, XdebugHandler};
+
+// Convert all errors to ErrorExceptions
+set_error_handler(function (int $severity, string $message, string $file, int $line) {
+    if (!(error_reporting() & $severity)) {
+        // This error code is not included in error_reporting (can also be caused by the @ operator)
+        return;
+    }
+    throw new \ErrorException($message, 0, $severity, $file, $line);
+});
+
+// Only write uncaught exceptions to STDERR, not STDOUT
+set_exception_handler(function (\Throwable $e) {
+    fwrite(STDERR, (string)$e);
+});
+
+// If XDebug is enabled, restart without it
+(new XdebugHandler(Factory::createOutput()))->check();
 
 $totalSize = 0;
 
-$frameworks = ["drupal", "wordpress", "php-language-server", "tolerant-php-parser", "math-php", "symfony", "CodeIgniter", "cakephp"];
+$frameworks = ["drupal", "wordpress", "php-language-server", "tolerant-php-parser", "math-php", "symfony", "codeigniter", "cakephp"];
 
 foreach($frameworks as $framework) {
     $iterator = new RecursiveDirectoryIterator(__DIR__ . "/validation/frameworks/$framework");
@@ -37,9 +55,6 @@ foreach($frameworks as $framework) {
         if (filesize($testCaseFile) > 10000) {
             continue;
         }
-        if ($idx % 1000 === 0) {
-            echo "$idx\n";
-        }
 
         $fileContents = file_get_contents($testCaseFile);
 
@@ -58,8 +73,6 @@ foreach($frameworks as $framework) {
         }
     }
 
-    echo "------------------------------\n";
-
-    echo "Time [$framework]: " . (microtime(true) - $start) . PHP_EOL;
+    echo "Time " . str_pad($framework, 20) . number_format(microtime(true) - $start, 3) . "s" . PHP_EOL;
 }
 
