@@ -192,9 +192,6 @@ Clone the repository and run
     composer install
 
 to install dependencies.
-Then parse the stubs with
-
-    composer run-script parse-stubs
 
 Run the tests with 
 
@@ -203,3 +200,7 @@ Run the tests with
 Lint with
 
     composer lint
+    
+The project parses PHPStorm's PHP stubs to get support for PHP builtins. It re-parses them as needed after Composer processes, but after some code changes (such as ones involving the index or parsing) you may have to explicitly re-parse them:
+
+    composer run-script parse-stubs
