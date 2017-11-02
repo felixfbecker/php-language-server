@@ -96,7 +96,9 @@ class ValidationTest extends TestCase
         $testCasesDir = realpath(__DIR__ . '/cases');
         foreach ($refsAndDefs['references'] as $key => $list) {
             $fixedPathRefs = array_map(function ($ref) use ($testCasesDir) {
-                return str_replace($testCasesDir, '.', $ref);
+                $ref = str_replace($testCasesDir, '.', $ref);
+                $ref = str_replace(DIRECTORY_SEPARATOR, '/', $ref);
+                return $ref;
             }, $list);
 
             $refsAndDefs['references']->$key = $fixedPathRefs;
@@ -107,6 +109,7 @@ class ValidationTest extends TestCase
             if ($def !== null && $def->symbolInformation !== null &&
                 $def->symbolInformation->location !== null && $def->symbolInformation->location->uri !== null) {
                 $def->symbolInformation->location->uri = str_replace($testCasesDir, '.', $def->symbolInformation->location->uri);
+                $def->symbolInformation->location->uri = str_replace(DIRECTORY_SEPARATOR, '/', $def->symbolInformation->location->uri);
             }
         }
 

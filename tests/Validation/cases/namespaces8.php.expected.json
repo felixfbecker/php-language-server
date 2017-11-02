@@ -14,7 +14,7 @@
         "LanguageServer\\Tests\\Utils": {
             "fqn": "LanguageServer\\Tests\\Utils",
             "extends": [],
-            "isGlobal": true,
+            "isMember": false,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,

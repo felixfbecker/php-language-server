@@ -181,10 +181,8 @@ class DefinitionResolver
         );
 
         // Interfaces, classes, traits, namespaces, functions, and global const elements
-        $def->isGlobal = (
-            $node instanceof Node\Statement\InterfaceDeclaration ||
-            $node instanceof Node\Statement\ClassDeclaration ||
-            $node instanceof Node\Statement\TraitDeclaration ||
+        $def->isMember = !(
+            $node instanceof PhpParser\ClassLike ||
 
             ($node instanceof Node\Statement\NamespaceDefinition && $node->name !== null) ||
 
@@ -511,7 +509,7 @@ class DefinitionResolver
         // Traverse the AST up
         do {
             // If a function is met, check the parameters and use statements
-            if (ParserHelpers\isFunctionLike($n)) {
+            if ($n instanceof PhpParser\FunctionLike) {
                 if ($n->parameters !== null) {
                     foreach ($n->parameters->getElements() as $param) {
                         if ($param->getName() === $name) {
@@ -1020,7 +1018,7 @@ class DefinitionResolver
         //   1. doc block
         //   2. return type hint
         //   3. TODO: infer from return statements
-        if (ParserHelpers\isFunctionLike($node)) {
+        if ($node instanceof PhpParser\FunctionLike) {
             // Functions/methods
             $docBlock = $this->getDocBlock($node);
             if (
@@ -1101,9 +1099,7 @@ class DefinitionResolver
         // interface C { }          A\B\C
         // trait C { }              A\B\C
         if (
-            $node instanceof Node\Statement\ClassDeclaration ||
-            $node instanceof Node\Statement\InterfaceDeclaration ||
-            $node instanceof Node\Statement\TraitDeclaration
+            $node instanceof PhpParser\ClassLike
         ) {
             return (string) $node->getNamespacedName();
         }
@@ -1134,9 +1130,7 @@ class DefinitionResolver
             // Class method: use ClassName->methodName() as name
             $class = $node->getFirstAncestor(
                 Node\Expression\ObjectCreationExpression::class,
-                Node\Statement\ClassDeclaration::class,
-                Node\Statement\InterfaceDeclaration::class,
-                Node\Statement\TraitDeclaration::class
+                PhpParser\ClassLike::class
             );
             if (!isset($class->name)) {
                 // Ignore anonymous classes
@@ -1160,9 +1154,7 @@ class DefinitionResolver
             ($classDeclaration =
                 $node->getFirstAncestor(
                     Node\Expression\ObjectCreationExpression::class,
-                    Node\Statement\ClassDeclaration::class,
-                    Node\Statement\InterfaceDeclaration::class,
-                    Node\Statement\TraitDeclaration::class
+                    PhpParser\ClassLike::class
                 )
             ) !== null && isset($classDeclaration->name)) {
             $name = $node->getName();
@@ -1190,9 +1182,7 @@ class DefinitionResolver
             // Class constant: use ClassName::CONSTANT_NAME as name
             $classDeclaration = $constDeclaration->getFirstAncestor(
                 Node\Expression\ObjectCreationExpression::class,
-                Node\Statement\ClassDeclaration::class,
-                Node\Statement\InterfaceDeclaration::class,
-                Node\Statement\TraitDeclaration::class
+                PhpParser\ClassLike::class
             );
 
             if (!isset($classDeclaration->name)) {

@@ -16,9 +16,9 @@ use function Sabre\Event\coroutine;
 class Indexer
 {
     /**
-     * @var The prefix for every cache item
+     * @var int The prefix for every cache item
      */
-    const CACHE_VERSION = 1;
+    const CACHE_VERSION = 2;
 
     /**
      * @var FilesFinder

@@ -210,7 +210,7 @@ class CompletionProvider
             // Collect all definitions that match any of the prefixes
             foreach ($this->index->getDefinitions() as $fqn => $def) {
                 foreach ($prefixes as $prefix) {
-                    if (substr($fqn, 0, strlen($prefix)) === $prefix && !$def->isGlobal) {
+                    if (substr($fqn, 0, strlen($prefix)) === $prefix && $def->isMember) {
                         $list->items[] = CompletionItem::fromDefinition($def);
                     }
                 }
@@ -243,7 +243,7 @@ class CompletionProvider
             // Collect all definitions that match any of the prefixes
             foreach ($this->index->getDefinitions() as $fqn => $def) {
                 foreach ($prefixes as $prefix) {
-                    if (substr(strtolower($fqn), 0, strlen($prefix)) === strtolower($prefix) && !$def->isGlobal) {
+                    if (substr(strtolower($fqn), 0, strlen($prefix)) === strtolower($prefix) && $def->isMember) {
                         $list->items[] = CompletionItem::fromDefinition($def);
                     }
                 }
@@ -316,7 +316,7 @@ class CompletionProvider
 
                 if (
                     // Exclude methods, properties etc.
-                    $def->isGlobal
+                    !$def->isMember
                     && (
                         !$prefix
                         || (
@@ -415,7 +415,7 @@ class CompletionProvider
 
         // Walk the AST upwards until a scope boundary is met
         $level = $node;
-        while ($level && !ParserHelpers\isFunctionLike($level)) {
+        while ($level && !($level instanceof PhpParser\FunctionLike)) {
             // Walk siblings before the node
             $sibling = $level;
             while ($sibling = $sibling->getPreviousSibling()) {
@@ -429,7 +429,7 @@ class CompletionProvider
 
         // If the traversal ended because a function was met,
         // also add its parameters and closure uses to the result list
-        if ($level && ParserHelpers\isFunctionLike($level) && $level->parameters !== null) {
+        if ($level && $level instanceof PhpParser\FunctionLike && $level->parameters !== null) {
             foreach ($level->parameters->getValues() as $param) {
                 $paramName = $param->getName();
                 if (empty($namePrefix) || strpos($paramName, $namePrefix) !== false) {
