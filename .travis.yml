@@ -6,6 +6,7 @@ php:
   - 7.2
 
 git:
+  depth: 10
   submodules: false
 
 services:
