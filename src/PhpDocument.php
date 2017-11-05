@@ -167,19 +167,6 @@ class PhpDocument
     }
 
     /**
-     * Returns array of TextEdit changes to format this document.
-     *
-     * @return \LanguageServer\Protocol\TextEdit[]
-     */
-    public function getFormattedText()
-    {
-        if (empty($this->getContent())) {
-            return [];
-        }
-        return Formatter::format($this->getContent(), $this->uri);
-    }
-
-    /**
      * Returns this document's text content.
      *
      * @return string

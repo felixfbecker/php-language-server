@@ -265,8 +265,6 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
             $serverCapabilities->documentSymbolProvider = true;
             // Support "Find all symbols in workspace"
             $serverCapabilities->workspaceSymbolProvider = true;
-            // Support "Format Code"
-            $serverCapabilities->documentFormattingProvider = true;
             // Support "Go to definition"
             $serverCapabilities->definitionProvider = true;
             // Support "Find all references"

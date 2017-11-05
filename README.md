@@ -42,9 +42,6 @@ For Parameters, it will return the `@param` tag.
 The query is matched case-insensitively against the fully qualified name of the symbol.  
 Non-Standard: An empty query will return _all_ symbols found in the workspace.
 
-### [Document Formatting](https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#document-formatting-request)
-![Document Formatting demo](images/formatDocument.gif)
-
 ### Error reporting through [Publish Diagnostics](https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#publishdiagnostics-notification)
 ![Error reporting demo](images/publishDiagnostics.png)
 

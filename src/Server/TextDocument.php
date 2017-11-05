@@ -160,20 +160,6 @@ class TextDocument
     }
 
     /**
-     * The document formatting request is sent from the server to the client to format a whole document.
-     *
-     * @param TextDocumentIdentifier $textDocument The document to format
-     * @param FormattingOptions $options The format options
-     * @return Promise <TextEdit[]>
-     */
-    public function formatting(TextDocumentIdentifier $textDocument, FormattingOptions $options)
-    {
-        return $this->documentLoader->getOrLoad($textDocument->uri)->then(function (PhpDocument $document) {
-            return $document->getFormattedText();
-        });
-    }
-
-    /**
      * The references request is sent from the client to the server to resolve project-wide references for the symbol
      * denoted by the given text document position.
      *
