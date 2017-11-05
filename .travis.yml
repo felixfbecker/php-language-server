@@ -11,9 +11,9 @@ matrix:
       osx_image: xcode9.1
       language: generic
       before_install:
-        - brew tap homebrew/homebrew-php
         # Fix ruby error https://github.com/Homebrew/brew/issues/3299
         - brew update
+        - brew tap homebrew/homebrew-php
         - brew install php71
         - curl https://getcomposer.org/installer | php
         - ln -s "`pwd`/composer.phar" /usr/local/bin/composer
