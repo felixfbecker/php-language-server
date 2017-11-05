@@ -15,6 +15,7 @@ matrix:
         - brew update
         - brew tap homebrew/homebrew-php
         - brew install php71
+        - brew install homebrew/php/php71-xdebug
         - curl https://getcomposer.org/installer | php
         - ln -s "`pwd`/composer.phar" /usr/local/bin/composer
 
