@@ -4,6 +4,20 @@ php:
   - '7.0'
   - '7.2'
 
+matrix:
+  include:
+    - os: osx
+      osx_image: xcode9.1
+      language: generic
+      before_install:
+        # Fix ruby error https://github.com/Homebrew/brew/issues/3299
+        - brew update
+        - brew tap homebrew/homebrew-php
+        - brew install php71
+        - brew install homebrew/php/php71-xdebug
+        - curl https://getcomposer.org/installer | php
+        - ln -s "`pwd`/composer.phar" /usr/local/bin/composer
+
 git:
   depth: 10
   submodules: false
