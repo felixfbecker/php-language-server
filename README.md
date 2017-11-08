@@ -201,3 +201,9 @@ Lint with
 The project parses PHPStorm's PHP stubs to get support for PHP builtins. It re-parses them as needed after Composer processes, but after some code changes (such as ones involving the index or parsing) you may have to explicitly re-parse them:
 
     composer run-script parse-stubs
+    
+To debug with xDebug ensure that you have this set as an environment variable
+
+    COMPOSER_ALLOW_XDEBUG=1
+
+This allows the php-language-server to not force restart while xdebug is enable
