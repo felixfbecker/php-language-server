@@ -11,7 +11,7 @@ git:
 
 env:
   global:
-    - BUILD_LEADER_ID=1
+    - BUILD_LEADER_ID=4
 
 cache:
   directories:

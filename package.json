@@ -19,7 +19,6 @@
     }
   },
   "release": {
-    "verifyConditions": [],
     "getLastRelease": "last-release-git"
   },
   "repository": {
