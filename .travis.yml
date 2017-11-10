@@ -15,16 +15,15 @@ env:
 
 cache:
   directories:
+    - $HOME/Library/Caches/Homebrew
     - $HOME/.composer/cache
     - $HOME/.npm
 
 install:
-  - git submodule update --init --jobs 9
   - composer install --prefer-dist --no-interaction
 script:
   - vendor/bin/phpcs -n
   - vendor/bin/phpunit --coverage-clover=coverage.xml
-after_script:
   - bash <(curl -s https://codecov.io/bash)
 
 jobs:
@@ -51,7 +50,7 @@ jobs:
         - git fetch --tags
       install:
         - npm install
-      script:
+      after_success:
         - npm run semantic-release
 
 stages:
