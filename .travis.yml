@@ -45,11 +45,12 @@ jobs:
       node_js: '8'
       services:
         - docker
-      before_install:
+      install:
         - git config --replace-all remote.origin.fetch +refs/heads/*:refs/remotes/origin/*
         - git fetch --tags
-      install:
+        - composer install --prefer-dist --no-interaction
         - npm install
+      script: skip
       after_success:
         - npm run semantic-release
 
