@@ -42,13 +42,15 @@ jobs:
         - ln -s "`pwd`/composer.phar" /usr/local/bin/composer
     - stage: release
       language: node_js
-      node_js: '8'
+      php: '7.0'
       services:
         - docker
       install:
         - git config --replace-all remote.origin.fetch +refs/heads/*:refs/remotes/origin/*
         - git fetch --tags
         - composer install --prefer-dist --no-interaction
+        - nvm install 8
+        - nvm use 8
         - npm install
       script: skip
       after_success:
