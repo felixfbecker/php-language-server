@@ -41,7 +41,6 @@ jobs:
         - curl https://getcomposer.org/installer | php
         - ln -s "`pwd`/composer.phar" /usr/local/bin/composer
     - stage: release
-      language: node_js
       php: '7.0'
       services:
         - docker
