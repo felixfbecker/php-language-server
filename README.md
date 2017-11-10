@@ -206,4 +206,4 @@ To debug with xDebug ensure that you have this set as an environment variable
 
     COMPOSER_ALLOW_XDEBUG=1
 
-This allows the php-language-server to not force restart while xdebug is enable
+This tells the Language Server to not restart without XDebug if it detects that XDebug is enabled (XDebug has a high performance impact).
