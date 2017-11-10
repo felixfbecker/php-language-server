@@ -1,29 +1,13 @@
+
 language: php
 
 php:
   - '7.0'
   - '7.2'
 
-matrix:
-  include:
-    - os: osx
-      osx_image: xcode9.1
-      language: generic
-      before_install:
-        # Fix ruby error https://github.com/Homebrew/brew/issues/3299
-        - brew update
-        - brew tap homebrew/homebrew-php
-        - brew install php71
-        - brew install homebrew/php/php71-xdebug
-        - curl https://getcomposer.org/installer | php
-        - ln -s "`pwd`/composer.phar" /usr/local/bin/composer
-
 git:
   depth: 10
   submodules: false
-
-services:
-  - docker
 
 env:
   global:
@@ -37,18 +21,43 @@ cache:
 install:
   - git submodule update --init --jobs 9
   - composer install --prefer-dist --no-interaction
-
 script:
   - vendor/bin/phpcs -n
   - vendor/bin/phpunit --coverage-clover=coverage.xml
-
-after_success:
+after_script:
   - bash <(curl -s https://codecov.io/bash)
-  - git config --replace-all remote.origin.fetch +refs/heads/*:refs/remotes/origin/*
-  - git fetch --tags
-  - nvm install 8 && nvm use 8
-  - npm install
-  - npm run semantic-release
+
+jobs:
+  include:
+    - stage: test
+      os: osx
+      osx_image: xcode9.1
+      language: generic
+      before_install:
+        # Fix ruby error https://github.com/Homebrew/brew/issues/3299
+        - brew update
+        - brew tap homebrew/homebrew-php
+        - brew install php71
+        - brew install homebrew/php/php71-xdebug
+        - curl https://getcomposer.org/installer | php
+        - ln -s "`pwd`/composer.phar" /usr/local/bin/composer
+    - stage: release
+      language: node_js
+      node_js: '8'
+      services:
+        - docker
+      before_install:
+        - git config --replace-all remote.origin.fetch +refs/heads/*:refs/remotes/origin/*
+        - git fetch --tags
+      install:
+        - npm install
+      script:
+        - npm run semantic-release
+
+stages:
+  - test
+  - name: release
+    if: branch = master
 
 branches:
   except:
