@@ -17,7 +17,7 @@ class Index implements ReadableIndex, \Serializable
     /**
      * An associative array that maps fully qualified names to
      *     an associative array that maps fully qualified symbol names
-     *     to global Definitions, e.g. :
+     *     to Definitions, e.g. :
      *     [
      *         'Psr\Log\LoggerInterface' => [
      *             'Psr\Log\LoggerInterface->log()' => $definition,
@@ -31,7 +31,7 @@ class Index implements ReadableIndex, \Serializable
 
     /**
      * An associative array that maps fully qualified symbol names
-     * to global Definitions
+     * to global (ie non member) Definitions
      *
      * @var Definition[]
      */
@@ -307,7 +307,7 @@ class Index implements ReadableIndex, \Serializable
      */
     private function setGlobalDefinition(string $fqn, Definition $definition)
     {
-        if ($definition->isGlobal) {
+        if ($definition->isMember) {
             $this->globalDefinitions[$fqn] = $definition;
         }
     }
