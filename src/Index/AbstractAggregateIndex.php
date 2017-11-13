@@ -107,24 +107,11 @@ abstract class AbstractAggregateIndex implements ReadableIndex
     public function getDefinitions(): \Generator
     {
         foreach ($this->getIndexes() as $index) {
-            foreach ($index->getDefinitions() as $fqn => $definitions) {
-                yield $fqn => $definition;
-            }
-        }
-    }
+            // foreach ($index->getDefinitions() as $fqn => $definition) {
+            //     yield $fqn => $definition;
+            // }
 
-    /**
-     * Returns a Generator providing an associative array [string => Definition]
-     * that maps fully qualified symbol names to global Definitions
-     *
-     * @return \Generator providing Definitions[]
-     */
-    public function getGlobalDefinitions(): \Generator
-    {
-        foreach ($this->getIndexes() as $index) {
-            foreach ($index->getGlobalDefinitions() as $fqn => $definition) {
-                yield $fqn => $definition;
-            }
+            yield from $index->getDefinitions();
         }
     }
 
@@ -137,9 +124,11 @@ abstract class AbstractAggregateIndex implements ReadableIndex
     public function getDefinitionsForFqn(string $fqn): \Generator
     {
         foreach ($this->getIndexes() as $index) {
-            foreach ($index->getDefinitionsForFqn($fqn) as $symbolFqn => $definition) {
-                yield $symbolFqn => $definition;
-            }
+            // foreach ($index->getDefinitionsForFqn($fqn) as $symbolFqn => $definition) {
+            //     yield $symbolFqn => $definition;
+            // }
+
+            yield from $index->getDefinitionsForFqn($fqn);
         }
     }
 
@@ -168,9 +157,11 @@ abstract class AbstractAggregateIndex implements ReadableIndex
     public function getReferenceUris(string $fqn): \Generator
     {
         foreach ($this->getIndexes() as $index) {
-            foreach ($index->getReferenceUris($fqn) as $uri) {
-                yield $uri;
-            }
+            // foreach ($index->getReferenceUris($fqn) as $uri) {
+            //     yield $uri;
+            // }
+
+            yield from $index->getReferenceUris($fqn);
         }
     }
 }

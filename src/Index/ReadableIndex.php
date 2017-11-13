@@ -38,14 +38,6 @@ interface ReadableIndex extends EmitterInterface
     public function getDefinitions(): \Generator;
 
     /**
-     * Returns a Generator providing an associative array [string => Definition]
-     * that maps fully qualified symbol names to global Definitions
-     *
-     * @return \Generator providing Definitions[]
-     */
-    public function getGlobalDefinitions(): \Generator;
-
-    /**
      * Returns a Generator providing the Definitions that are in the given FQN
      *
      * @param string $fqn

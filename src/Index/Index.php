@@ -15,27 +15,21 @@ class Index implements ReadableIndex, \Serializable
     use EmitterTrait;
 
     /**
-     * An associative array that maps fully qualified names to
-     *     an associative array that maps fully qualified symbol names
-     *     to Definitions, e.g. :
-     *     [
-     *         'Psr\Log\LoggerInterface' => [
-     *             'Psr\Log\LoggerInterface->log()' => $definition,
-     *             'Psr\Log\LoggerInterface->debug()' => $definition,
+     * An associative array that maps splitted fully qualified symbol names
+     * to definitions, eg :
+     * [
+     *     'Psr' => [
+     *         '\Log' => [
+     *             '\LoggerInterface' => [
+     *                 '->log()' => $definition,
+     *             ],
      *         ],
-     *     ]
+     *     ],
+     * ]
      *
      * @var array
      */
-    private $fqnDefinitions = [];
-
-    /**
-     * An associative array that maps fully qualified symbol names
-     * to global (ie non member) Definitions
-     *
-     * @var Definition[]
-     */
-    private $globalDefinitions = [];
+    private $definitions = [];
 
     /**
      * An associative array that maps fully qualified symbol names
@@ -108,24 +102,13 @@ class Index implements ReadableIndex, \Serializable
      */
     public function getDefinitions(): \Generator
     {
-        foreach ($this->fqnDefinitions as $fqnDefinition) {
-            foreach ($fqnDefinition as $fqn => $definition) {
-                yield $fqn => $definition;
-            }
-        }
-    }
+        // foreach ($this->fqnDefinitions as $fqnDefinition) {
+        //     foreach ($fqnDefinition as $fqn => $definition) {
+        //         yield $fqn => $definition;
+        //     }
+        // }
 
-    /**
-     * Returns a Generator providing an associative array [string => Definition]
-     * that maps fully qualified symbol names to global Definitions
-     *
-     * @return \Generator providing Definitions[]
-     */
-    public function getGlobalDefinitions(): \Generator
-    {
-        foreach ($this->globalDefinitions as $fqn => $definition) {
-            yield $fqn => $definition;
-        }
+        yield from $this->generateDefinitionsRecursively($this->definitions);
     }
 
     /**
@@ -136,8 +119,17 @@ class Index implements ReadableIndex, \Serializable
      */
     public function getDefinitionsForFqn(string $fqn): \Generator
     {
-        foreach ($this->fqnDefinitions[$fqn] ?? [] as $symbolFqn => $definition) {
-            yield $symbolFqn => $definition;
+        // foreach ($this->fqnDefinitions[$fqn] ?? [] as $symbolFqn => $definition) {
+        //     yield $symbolFqn => $definition;
+        // }
+
+        $parts = $this->splitFqn($fqn);
+        $result = $this->getIndexValue($parts, $this->definitions);
+
+        if ($result instanceof Definition) {
+            yield $fqn => $definition;
+        } elseif (is_array($result)) {
+            yield from $this->generateDefinitionsRecursively($result, $fqn);
         }
     }
 
@@ -150,18 +142,23 @@ class Index implements ReadableIndex, \Serializable
      */
     public function getDefinition(string $fqn, bool $globalFallback = false)
     {
-        $namespacedFqn = $this->extractNamespacedFqn($fqn);
-        $definitions = $this->fqnDefinitions[$namespacedFqn] ?? [];
+        // $namespacedFqn = $this->extractNamespacedFqn($fqn);
+        // $definitions = $this->fqnDefinitions[$namespacedFqn] ?? [];
 
-        if (isset($definitions[$fqn])) {
-            return $definitions[$fqn];
-        }
+        // if (isset($definitions[$fqn])) {
+        //     return $definitions[$fqn];
+        // }
 
-        if ($globalFallback) {
-            $parts = explode('\\', $fqn);
-            $fqn = end($parts);
-            return $this->getDefinition($fqn);
-        }
+        // if ($globalFallback) {
+        //     $parts = explode('\\', $fqn);
+        //     $fqn = end($parts);
+        //     return $this->getDefinition($fqn);
+        // }
+
+        $parts = $this->splitFqn($fqn);
+        $result = $this->getIndexValue($parts, $this->definitions);
+
+        return $result instanceof Definition ?? null;
     }
 
     /**
@@ -173,13 +170,16 @@ class Index implements ReadableIndex, \Serializable
      */
     public function setDefinition(string $fqn, Definition $definition)
     {
-        $namespacedFqn = $this->extractNamespacedFqn($fqn);
-        if (!isset($this->fqnDefinitions[$namespacedFqn])) {
-            $this->fqnDefinitions[$namespacedFqn] = [];
-        }
+        // $namespacedFqn = $this->extractNamespacedFqn($fqn);
+        // if (!isset($this->fqnDefinitions[$namespacedFqn])) {
+        //     $this->fqnDefinitions[$namespacedFqn] = [];
+        // }
 
-        $this->fqnDefinitions[$namespacedFqn][$fqn] = $definition;
-        $this->setGlobalDefinition($fqn, $definition);
+        // $this->fqnDefinitions[$namespacedFqn][$fqn] = $definition;
+
+        $parts = $this->splitFqn($fqn);
+        $this->indexDefinition(0, $parts, $this->definitions, $definition);
+
         $this->emit('definition-added');
     }
 
@@ -192,16 +192,18 @@ class Index implements ReadableIndex, \Serializable
      */
     public function removeDefinition(string $fqn)
     {
-        $namespacedFqn = $this->extractNamespacedFqn($fqn);
-        if (isset($this->fqnDefinitions[$namespacedFqn])) {
-            unset($this->fqnDefinitions[$namespacedFqn][$fqn]);
+        // $namespacedFqn = $this->extractNamespacedFqn($fqn);
+        // if (isset($this->fqnDefinitions[$namespacedFqn])) {
+        //     unset($this->fqnDefinitions[$namespacedFqn][$fqn]);
 
-            if (empty($this->fqnDefinitions[$namespacedFqn])) {
-                unset($this->fqnDefinitions[$namespacedFqn]);
-            }
-        }
+        //     if (empty($this->fqnDefinitions[$namespacedFqn])) {
+        //         unset($this->fqnDefinitions[$namespacedFqn]);
+        //     }
+        // }
 
-        unset($this->globalDefinitions[$fqn]);
+        $parts = $this->splitFqn($fqn);
+        $this->removeIndexedDefinition(0, $parts, $this->definitions);
+
         unset($this->references[$fqn]);
     }
 
@@ -276,12 +278,6 @@ class Index implements ReadableIndex, \Serializable
         foreach ($data as $prop => $val) {
             $this->$prop = $val;
         }
-
-        foreach ($this->fqnDefinitions as $fqnDefinition) {
-            foreach ($fqnDefinition as $fqn => $definition) {
-                $this->setGlobalDefinition($fqn, $definition);
-            }
-        }
     }
 
     /**
@@ -291,7 +287,7 @@ class Index implements ReadableIndex, \Serializable
     public function serialize()
     {
         return serialize([
-            'fqnDefinitions' => $this->fqnDefinitions,
+            'definitions' => $this->definitions,
             'references' => $this->references,
             'complete' => $this->complete,
             'staticComplete' => $this->staticComplete
@@ -299,31 +295,167 @@ class Index implements ReadableIndex, \Serializable
     }
 
     /**
-     * Registers a definition to the global definitions index if it is global
-     *
-     * @param string $fqn The fully qualified name of the symbol
-     * @param Definition $definition The Definition object
-     * @return void
+     * @param string $fqn The symbol FQN
+     * @return string The namespaced FQN extracted from the given symbol FQN
      */
-    private function setGlobalDefinition(string $fqn, Definition $definition)
+    // private function extractNamespacedFqn(string $fqn): string
+    // {
+    //     foreach (['::', '->'] as $operator) {
+    //         if (false !== ($pos = strpos($fqn, $operator))) {
+    //             return substr($fqn, 0, $pos);
+    //         }
+    //     }
+
+    //     return $fqn;
+    // }
+
+    /**
+     * Returns a Genrerator containing all the into the given $storage recursively.
+     * The generator yields key => value pairs, eg
+     * 'Psr\Log\LoggerInterface->log()' => $definition
+     *
+     * @param array &$storage
+     * @param string $prefix (optional)
+     * @return \Generator
+     */
+    private function generateDefinitionsRecursively(array &$storage, string $prefix = ''): \Generator
     {
-        if ($definition->isMember) {
-            $this->globalDefinitions[$fqn] = $definition;
+        foreach ($storage as $key => $value) {
+            $prefix .= $key;
+            if (!is_array($value)) {
+                yield $prefix => $value;
+            } else {
+                yield from generateDefinitionsRecursively($value, $prefix);
+            }
         }
     }
 
     /**
-     * @param string $fqn The symbol FQN
-     * @return string The namespaced FQN extracted from the given symbol FQN
+     * Splits the given FQN into an array, eg :
+     * 'Psr\Log\LoggerInterface->log' will be ['Psr', '\Log', '\LoggerInterface', '->log()']
+     * '\Exception->getMessage()'     will be ['\Exception', '->getMessage()']
+     * 'PHP_VERSION'                  will be ['PHP_VERSION']
+     *
+     * @param string $fqn
+     * @return array
      */
-    private function extractNamespacedFqn(string $fqn): string
+    private function splitFqn(string $fqn): array
     {
+        // split fqn at backslashes
+        $parts = explode('\\', $fqn);
+
+        // write back the backslach prefix to the first part if it was present
+        if ('' === $parts[0]) {
+            $parts = array_slice($parts, 1);
+            $parts[0] = sprintf('\\%s', $parts[0]);
+        }
+
+        // write back the backslashes prefixes for the other parts
+        for ($i = 1; $i < count($parts); $i++) {
+            $parts[$i] = sprintf('\\%s', $parts[$i]);
+        }
+
+        // split the last part in 2 parts at the operator
+        $lastPart = end($parts);
         foreach (['::', '->'] as $operator) {
-            if (false !== ($pos = strpos($fqn, $operator))) {
-                return substr($fqn, 0, $pos);
+            $endParts = explode($operator, $lastPart);
+            if (count($endParts) > 1) {
+                // replace the last part by its pieces
+                array_pop($parts);
+                $parts[] = $endParts[0];
+                $parts[] = sprintf('%s%s', $operator, $endParts[1]);
+                break;
             }
         }
 
-        return $fqn;
+        return $parts;
+    }
+
+    /**
+     * Return the values stored in this index under the given $parts array.
+     * It can be an index node or a Definition if the $parts are precise
+     * enough. Returns null when nothing is found.
+     *
+     * @param array $parts            The splitted FQN
+     * @param array &$storage         The array in which to store the $definition
+     * @return array|Definition|null
+     */
+    private function getIndexValue(array $parts, array &$storage)
+    {
+        $part = $parts[0];
+
+        if (!isset($storage[$part])) {
+            return null;
+        }
+
+        $parts = array_slice($parts, 1);
+        // we've reached the last provided part
+        if (0 === count($parts)) {
+            return $storage[$part];
+        }
+
+        return getIndexValue($parts, $storage[$part]);
+    }
+
+    /**
+     * Recusrive function which store the given definition in the given $storage
+     * array represented as a tree matching the given $parts.
+     *
+     * @param int $level              The current level of FQN part
+     * @param array $parts            The splitted FQN
+     * @param array &$storage         The array in which to store the $definition
+     * @param Definition $definition  The Definition to store
+     */
+    private function indexDefinition(int $level, array $parts, array &$storage, Definition $definition)
+    {
+        $part = $parts[$level];
+
+        if ($level + 1 === count($parts)) {
+            $storage[$part] = $definition;
+
+            return;
+        }
+
+        if (!isset($storage[$part])) {
+            $storage[$part] = [];
+        }
+
+        $this->indexDefinition($level + 1, $parts, $storage[$part], $definition);
+    }
+
+    /**
+     * Recusrive function which remove the definition matching the given $parts
+     * from the given $storage array.
+     * The function also looks up recursively to remove the parents of the
+     * definition which no longer has children to avoid to let empty arrays
+     * in the index.
+     *
+     * @param int $level              The current level of FQN part
+     * @param array $parts            The splitted FQN
+     * @param array &$storage         The current array in which to remove data
+     * @param array &$rootStorage     The root storage array
+     */
+    private function removeIndexedDefinition(int $level, array $parts, array &$storage, &$rootStorage)
+    {
+        $part = $parts[$level];
+
+        if ($level + 1 === count($parts)) {
+            if (isset($storage[$part]) && count($storage[$part]) < 2) {
+                unset($storage[$part]);
+
+                if (0 === $level) {
+                    // we're at root level, no need to check for parents
+                    // w/o children
+                    return;
+                }
+
+                array_pop($parts);
+                // parse again the definition tree to see if the parent
+                // can be removed too if it has no more children
+                removeIndexedDefinition(0, $parts, $rootStorage, $rootStorage);
+            }
+        } else {
+            removeIndexedDefinition($level + 1, $parts, $storage[$part], $rootStorage);
+        }
     }
 }
