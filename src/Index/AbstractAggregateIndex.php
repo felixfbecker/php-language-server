@@ -107,10 +107,6 @@ abstract class AbstractAggregateIndex implements ReadableIndex
     public function getDefinitions(): \Generator
     {
         foreach ($this->getIndexes() as $index) {
-            // foreach ($index->getDefinitions() as $fqn => $definition) {
-            //     yield $fqn => $definition;
-            // }
-
             yield from $index->getDefinitions();
         }
     }
@@ -124,10 +120,6 @@ abstract class AbstractAggregateIndex implements ReadableIndex
     public function getDefinitionsForFqn(string $fqn): \Generator
     {
         foreach ($this->getIndexes() as $index) {
-            // foreach ($index->getDefinitionsForFqn($fqn) as $symbolFqn => $definition) {
-            //     yield $symbolFqn => $definition;
-            // }
-
             yield from $index->getDefinitionsForFqn($fqn);
         }
     }
@@ -157,10 +149,6 @@ abstract class AbstractAggregateIndex implements ReadableIndex
     public function getReferenceUris(string $fqn): \Generator
     {
         foreach ($this->getIndexes() as $index) {
-            // foreach ($index->getReferenceUris($fqn) as $uri) {
-            //     yield $uri;
-            // }
-
             yield from $index->getReferenceUris($fqn);
         }
     }

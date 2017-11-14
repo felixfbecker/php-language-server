@@ -103,12 +103,6 @@ class Index implements ReadableIndex, \Serializable
      */
     public function getDefinitions(): \Generator
     {
-        // foreach ($this->fqnDefinitions as $fqnDefinition) {
-        //     foreach ($fqnDefinition as $fqn => $definition) {
-        //         yield $fqn => $definition;
-        //     }
-        // }
-
         yield from $this->yieldDefinitionsRecursively($this->definitions);
     }
 
@@ -120,14 +114,10 @@ class Index implements ReadableIndex, \Serializable
      */
     public function getDefinitionsForFqn(string $fqn): \Generator
     {
-        // foreach ($this->fqnDefinitions[$fqn] ?? [] as $symbolFqn => $definition) {
-        //     yield $symbolFqn => $definition;
-        // }
-
         $parts = $this->splitFqn($fqn);
         if ('' === end($parts)) {
             // we want to return all the definitions in the given FQN, not only
-            // the one matching exactly the FQN.
+            // the one (non member) matching exactly the FQN.
             array_pop($parts);
         }
 
@@ -149,19 +139,6 @@ class Index implements ReadableIndex, \Serializable
      */
     public function getDefinition(string $fqn, bool $globalFallback = false)
     {
-        // $namespacedFqn = $this->extractNamespacedFqn($fqn);
-        // $definitions = $this->fqnDefinitions[$namespacedFqn] ?? [];
-
-        // if (isset($definitions[$fqn])) {
-        //     return $definitions[$fqn];
-        // }
-
-        // if ($globalFallback) {
-        //     $parts = explode('\\', $fqn);
-        //     $fqn = end($parts);
-        //     return $this->getDefinition($fqn);
-        // }
-
         $parts = $this->splitFqn($fqn);
         $result = $this->getIndexValue($parts, $this->definitions);
 
@@ -175,11 +152,6 @@ class Index implements ReadableIndex, \Serializable
 
             return $this->getDefinition($fqn);
         }
-
-        // return $result instanceof Definition
-        //     ? $result
-        //     : null
-        // ;
     }
 
     /**
@@ -191,13 +163,6 @@ class Index implements ReadableIndex, \Serializable
      */
     public function setDefinition(string $fqn, Definition $definition)
     {
-        // $namespacedFqn = $this->extractNamespacedFqn($fqn);
-        // if (!isset($this->fqnDefinitions[$namespacedFqn])) {
-        //     $this->fqnDefinitions[$namespacedFqn] = [];
-        // }
-
-        // $this->fqnDefinitions[$namespacedFqn][$fqn] = $definition;
-
         $parts = $this->splitFqn($fqn);
         $this->indexDefinition(0, $parts, $this->definitions, $definition);
 
@@ -213,17 +178,7 @@ class Index implements ReadableIndex, \Serializable
      */
     public function removeDefinition(string $fqn)
     {
-        // $namespacedFqn = $this->extractNamespacedFqn($fqn);
-        // if (isset($this->fqnDefinitions[$namespacedFqn])) {
-        //     unset($this->fqnDefinitions[$namespacedFqn][$fqn]);
-
-        //     if (empty($this->fqnDefinitions[$namespacedFqn])) {
-        //         unset($this->fqnDefinitions[$namespacedFqn]);
-        //     }
-        // }
-
         $parts = $this->splitFqn($fqn);
-
         $this->removeIndexedDefinition(0, $parts, $this->definitions);
 
         unset($this->references[$fqn]);
@@ -323,21 +278,6 @@ class Index implements ReadableIndex, \Serializable
             'staticComplete' => $this->staticComplete
         ]);
     }
-
-    /**
-     * @param string $fqn The symbol FQN
-     * @return string The namespaced FQN extracted from the given symbol FQN
-     */
-    // private function extractNamespacedFqn(string $fqn): string
-    // {
-    //     foreach (['::', '->'] as $operator) {
-    //         if (false !== ($pos = strpos($fqn, $operator))) {
-    //             return substr($fqn, 0, $pos);
-    //         }
-    //     }
-
-    //     return $fqn;
-    // }
 
     /**
      * Returns a Genrerator containing all the into the given $storage recursively.
