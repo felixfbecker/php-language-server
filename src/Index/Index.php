@@ -16,7 +16,7 @@ class Index implements ReadableIndex, \Serializable
 
     /**
      * An associative array that maps splitted fully qualified symbol names
-     * to definitions, eg :
+     * to member definitions, eg :
      * [
      *     'Psr' => [
      *         '\Log' => [
@@ -29,7 +29,23 @@ class Index implements ReadableIndex, \Serializable
      *
      * @var array
      */
-    private $definitions = [];
+    private $memberDefinitions = [];
+
+    /**
+     * An associative array that maps splitted fully qualified symbol names
+     * to non member definitions, eg :
+     * [
+     *     'Psr' => [
+     *         '\Log' => [
+     *             '\LoggerInterface' => $definition,
+     *         ],
+     *     ],
+     * ]
+     *
+     * @var array
+     */
+    private $nonMemberDefinitions = [];
+
 
     /**
      * An associative array that maps fully qualified symbol names
@@ -108,7 +124,8 @@ class Index implements ReadableIndex, \Serializable
         //     }
         // }
 
-        yield from $this->generateDefinitionsRecursively($this->definitions);
+        yield from $this->yieldDefinitionsRecursively($this->memberDefinitions);
+        yield from $this->yieldDefinitionsRecursively($this->nonMemberDefinitions);
     }
 
     /**
@@ -124,12 +141,20 @@ class Index implements ReadableIndex, \Serializable
         // }
 
         $parts = $this->splitFqn($fqn);
-        $result = $this->getIndexValue($parts, $this->definitions);
+        $result = $this->getIndexValue($parts, $this->memberDefinitions);
 
         if ($result instanceof Definition) {
-            yield $fqn => $definition;
+            yield $fqn => $result;
         } elseif (is_array($result)) {
-            yield from $this->generateDefinitionsRecursively($result, $fqn);
+            yield from $this->yieldDefinitionsRecursively($result, $fqn);
+        } else {
+            $result = $this->getIndexValue($parts, $this->nonMemberDefinitions);
+
+            if ($result instanceof Definition) {
+                yield $fqn => $result;
+            } elseif (is_array($result)) {
+                yield from $this->yieldDefinitionsRecursively($result, $fqn);
+            }
         }
     }
 
@@ -156,9 +181,18 @@ class Index implements ReadableIndex, \Serializable
         // }
 
         $parts = $this->splitFqn($fqn);
-        $result = $this->getIndexValue($parts, $this->definitions);
+        $result = $this->getIndexValue($parts, $this->memberDefinitions);
 
-        return $result instanceof Definition ?? null;
+        if ($result instanceof Definition) {
+            return $result;
+        }
+
+        $result = $this->getIndexValue($parts, $this->nonMemberDefinitions);
+
+        return $result instanceof Definition
+            ? $result
+            : null
+        ;
     }
 
     /**
@@ -178,7 +212,12 @@ class Index implements ReadableIndex, \Serializable
         // $this->fqnDefinitions[$namespacedFqn][$fqn] = $definition;
 
         $parts = $this->splitFqn($fqn);
-        $this->indexDefinition(0, $parts, $this->definitions, $definition);
+
+        if ($definition->isMember) {
+            $this->indexDefinition(0, $parts, $this->memberDefinitions, $definition);
+        } else {
+            $this->indexDefinition(0, $parts, $this->nonMemberDefinitions, $definition);
+        }
 
         $this->emit('definition-added');
     }
@@ -202,7 +241,10 @@ class Index implements ReadableIndex, \Serializable
         // }
 
         $parts = $this->splitFqn($fqn);
-        $this->removeIndexedDefinition(0, $parts, $this->definitions);
+
+        if (true !== $this->removeIndexedDefinition(0, $parts, $this->memberDefinitions)) {
+            $this->removeIndexedDefinition(0, $parts, $this->nonMemberDefinitions);
+        }
 
         unset($this->references[$fqn]);
     }
@@ -287,7 +329,8 @@ class Index implements ReadableIndex, \Serializable
     public function serialize()
     {
         return serialize([
-            'definitions' => $this->definitions,
+            'memberDefinitions' => $this->memberDefinitions,
+            'nonMemberDefinitions' => $this->nonMemberDefinitions,
             'references' => $this->references,
             'complete' => $this->complete,
             'staticComplete' => $this->staticComplete
@@ -318,14 +361,13 @@ class Index implements ReadableIndex, \Serializable
      * @param string $prefix (optional)
      * @return \Generator
      */
-    private function generateDefinitionsRecursively(array &$storage, string $prefix = ''): \Generator
+    private function yieldDefinitionsRecursively(array &$storage, string $prefix = ''): \Generator
     {
         foreach ($storage as $key => $value) {
-            $prefix .= $key;
             if (!is_array($value)) {
-                yield $prefix => $value;
+                yield sprintf('%s%s', $prefix, $key) => $value;
             } else {
-                yield from generateDefinitionsRecursively($value, $prefix);
+                yield from $this->yieldDefinitionsRecursively($value, sprintf('%s%s', $prefix, $key));
             }
         }
     }
@@ -346,7 +388,10 @@ class Index implements ReadableIndex, \Serializable
 
         // write back the backslach prefix to the first part if it was present
         if ('' === $parts[0]) {
-            $parts = array_slice($parts, 1);
+            if (count($parts) > 1) {
+                $parts = array_slice($parts, 1);
+            }
+
             $parts[0] = sprintf('\\%s', $parts[0]);
         }
 
@@ -394,7 +439,13 @@ class Index implements ReadableIndex, \Serializable
             return $storage[$part];
         }
 
-        return getIndexValue($parts, $storage[$part]);
+        if (!is_array($storage[$part]) && count($parts) > 0) {
+            // we're looking for a member definition in the non member index,
+            // no matches can be found.
+            return null;
+        }
+
+        return $this->getIndexValue($parts, $storage[$part]);
     }
 
     /**
@@ -420,6 +471,12 @@ class Index implements ReadableIndex, \Serializable
             $storage[$part] = [];
         }
 
+        if (!is_array($storage[$part])) {
+            // it's a non member definition, we can't add it to the member
+            // definitions index
+            return;
+        }
+
         $this->indexDefinition($level + 1, $parts, $storage[$part], $definition);
     }
 
@@ -434,6 +491,7 @@ class Index implements ReadableIndex, \Serializable
      * @param array $parts            The splitted FQN
      * @param array &$storage         The current array in which to remove data
      * @param array &$rootStorage     The root storage array
+     * @return boolean|null           True when the definition has been found and removed, null otherwise.
      */
     private function removeIndexedDefinition(int $level, array $parts, array &$storage, &$rootStorage)
     {
@@ -446,16 +504,16 @@ class Index implements ReadableIndex, \Serializable
                 if (0 === $level) {
                     // we're at root level, no need to check for parents
                     // w/o children
-                    return;
+                    return true;
                 }
 
                 array_pop($parts);
                 // parse again the definition tree to see if the parent
                 // can be removed too if it has no more children
-                removeIndexedDefinition(0, $parts, $rootStorage, $rootStorage);
+                return $this->removeIndexedDefinition(0, $parts, $rootStorage, $rootStorage);
             }
         } else {
-            removeIndexedDefinition($level + 1, $parts, $storage[$part], $rootStorage);
+            return $this->removeIndexedDefinition($level + 1, $parts, $storage[$part], $rootStorage);
         }
     }
 }
