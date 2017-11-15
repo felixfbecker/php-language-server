@@ -301,12 +301,12 @@ class Index implements ReadableIndex, \Serializable
 
     /**
      * Splits the given FQN into an array, eg :
-     * 'Psr\Log\LoggerInterface->log' will be ['Psr', '\Log', '\LoggerInterface', '->log()']
-     * '\Exception->getMessage()'     will be ['\Exception', '->getMessage()']
-     * 'PHP_VERSION'                  will be ['PHP_VERSION']
+     * - `'Psr\Log\LoggerInterface->log'` will be `['Psr', '\Log', '\LoggerInterface', '->log()']`
+     * - `'\Exception->getMessage()'`     will be `['\Exception', '->getMessage()']`
+     * - `'PHP_VERSION'`                  will be `['PHP_VERSION']`
      *
      * @param string $fqn
-     * @return array
+     * @return string[]
      */
     private function splitFqn(string $fqn): array
     {
@@ -360,7 +360,7 @@ class Index implements ReadableIndex, \Serializable
      * It can be an index node or a Definition if the $parts are precise
      * enough. Returns null when nothing is found.
      *
-     * @param array $parts            The splitted FQN
+     * @param string[] $parts         The splitted FQN
      * @param array &$storage         The array in which to store the $definition
      * @return array|Definition|null
      */
@@ -386,7 +386,7 @@ class Index implements ReadableIndex, \Serializable
      * array represented as a tree matching the given $parts.
      *
      * @param int $level              The current level of FQN part
-     * @param array $parts            The splitted FQN
+     * @param string[] $parts         The splitted FQN
      * @param array &$storage         The array in which to store the $definition
      * @param Definition $definition  The Definition to store
      */
@@ -415,7 +415,7 @@ class Index implements ReadableIndex, \Serializable
      * in the index.
      *
      * @param int $level              The current level of FQN part
-     * @param array $parts            The splitted FQN
+     * @param string[] $parts         The splitted FQN
      * @param array &$storage         The current array in which to remove data
      * @param array &$rootStorage     The root storage array
      */
