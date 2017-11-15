@@ -18,7 +18,7 @@ class Indexer
     /**
      * @var int The prefix for every cache item
      */
-    const CACHE_VERSION = 1;
+    const CACHE_VERSION = 2;
 
     /**
      * @var FilesFinder
