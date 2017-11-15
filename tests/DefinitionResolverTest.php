@@ -62,4 +62,19 @@ class DefinitionResolverTest extends TestCase
 
         $this->assertEquals('TEST_DEFINE', $fqn);
     }
+
+    public function testGetVaribleFromForeachValue()
+    {
+        $parser = new PhpParser\Parser;
+        $doc = new MockPhpDocument;
+        $sourceFileNode = $parser->parseSourceFile("<?php\nforeach([1, 2] as \$testValue) { echo \$testValue; }", $doc->getUri());
+
+        $index = new Index;
+
+        $definitionResolver = new DefinitionResolver($index);
+        $testValueVariable = $sourceFileNode->statementList[1]->statements->statements[0]->expression->expressions->children[0];
+        $fqn = $definitionResolver->resolveVariableToNode($testValueVariable);
+
+        $this->assertInstanceOf(PhpParser\Node\ForeachValue::class, $fqn);
+    }
 }

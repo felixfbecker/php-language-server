@@ -534,10 +534,19 @@ class DefinitionResolver
                 if ($n instanceof Node\Statement\ExpressionStatement) {
                     $n = $n->expression;
                 }
+
                 if (
                     // TODO - clean this up
                     ($n instanceof Node\Expression\AssignmentExpression && $n->operator->kind === PhpParser\TokenKind::EqualsToken)
                     && $n->leftOperand instanceof Node\Expression\Variable && $n->leftOperand->getName() === $name
+                ) {
+                    return $n;
+                }
+
+                // get variables from foreach statements
+                if (
+                    ($n instanceof Node\ForeachValue || $n instanceof Node\ForeachKey) &&
+                    $n->expression->getName() === $name
                 ) {
                     return $n;
                 }

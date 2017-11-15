@@ -288,6 +288,8 @@ class TextDocument
     public function hover(TextDocumentIdentifier $textDocument, Position $position): Promise
     {
         return coroutine(function () use ($textDocument, $position) {
+            $contents = [];
+
             $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
             // Find the node under the cursor
             $node = $document->getNodeAtPosition($position);
