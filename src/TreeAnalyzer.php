@@ -68,6 +68,7 @@ class TreeAnalyzer
      */
     private function collectDiagnostics($node)
     {
+        // Get errors from the parser.
         if (($error = PhpParser\DiagnosticsProvider::checkDiagnostics($node)) !== null) {
             $range = PhpParser\PositionUtilities::getRangeFromPosition($error->start, $error->length, $this->sourceFileNode->fileContents);
 
@@ -91,6 +92,24 @@ class TreeAnalyzer
                 $severity,
                 'php'
             );
+        }
+
+        // Check for invalid usage of $this.
+        if ($node instanceof Node\Expression\Variable && $node->getName() === 'this') {
+            // Find the first ancestor that's a class method. Return an error
+            // if there is none, or if the method is static.
+            $method = $node->getFirstAncestor(Node\MethodDeclaration::class);
+            if ($method === null || $method->isStatic()) {
+                $this->diagnostics[] = new Diagnostic(
+                    $method === null
+                        ? "\$this can only be used in an object context."
+                        : "\$this can not be used in static methods.",
+                    Range::fromNode($node),
+                    null,
+                    DiagnosticSeverity::ERROR,
+                    'php'
+                );
+            }
         }
     }
 
