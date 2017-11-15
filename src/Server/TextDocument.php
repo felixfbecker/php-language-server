@@ -220,8 +220,8 @@ class TextDocument
                     }
                 }
                 $refDocuments = yield Promise\all(iterator_to_array(
-                    $this->getOrLoadReferences($fqn))
-                );
+                    $this->getOrLoadReferences($fqn)
+                ));
                 foreach ($refDocuments as $document) {
                     $refs = $document->getReferenceNodesByFqn($fqn);
                     if ($refs !== null) {
