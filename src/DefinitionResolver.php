@@ -979,6 +979,11 @@ class DefinitionResolver
             return $this->resolveExpressionNodeToType($node->argumentExpressionList->children[2]->expression);
         }
 
+        // FOREACH KEY VARIABLE
+        if ($node instanceof Node\ForeachKey) {
+            return new Types\Integer;
+        }
+
         // PARAMETERS
         // Get the type of the parameter:
         //   1. Doc block
