@@ -292,9 +292,9 @@ class Index implements ReadableIndex, \Serializable
     {
         foreach ($storage as $key => $value) {
             if (!is_array($value)) {
-                yield sprintf('%s%s', $prefix, $key) => $value;
+                yield $prefix.$key => $value;
             } else {
-                yield from $this->yieldDefinitionsRecursively($value, sprintf('%s%s', $prefix, $key));
+                yield from $this->yieldDefinitionsRecursively($value, $prefix.$key);
             }
         }
     }
@@ -319,12 +319,12 @@ class Index implements ReadableIndex, \Serializable
                 $parts = array_slice($parts, 1);
             }
 
-            $parts[0] = sprintf('\\%s', $parts[0]);
+            $parts[0] = '\\'.$parts[0];
         }
 
         // write back the backslashes prefixes for the other parts
         for ($i = 1; $i < count($parts); $i++) {
-            $parts[$i] = sprintf('\\%s', $parts[$i]);
+            $parts[$i] = '\\'.$parts[$i];
         }
 
         // split the last part in 2 parts at the operator
@@ -337,7 +337,7 @@ class Index implements ReadableIndex, \Serializable
                 // replace the last part by its pieces
                 array_pop($parts);
                 $parts[] = $endParts[0];
-                $parts[] = sprintf('%s%s', $operator, $endParts[1]);
+                $parts[] = $operator.$endParts[1];
                 break;
             }
         }
