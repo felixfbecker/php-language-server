@@ -11,7 +11,7 @@
         "MyNamespace": {
             "fqn": "MyNamespace",
             "extends": [],
-            "isGlobal": true,
+            "isMember": false,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
@@ -31,7 +31,7 @@
         "MyNamespace\\A": {
             "fqn": "MyNamespace\\A",
             "extends": [],
-            "isGlobal": true,
+            "isMember": false,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": true,
@@ -51,7 +51,7 @@
         "MyNamespace\\A->suite()": {
             "fqn": "MyNamespace\\A->suite()",
             "extends": [],
-            "isGlobal": false,
+            "isMember": true,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,

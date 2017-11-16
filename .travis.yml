@@ -1,28 +1,65 @@
+
 language: php
 
 php:
- - '7.0'
+  - '7.0'
+  - '7.2.0RC5'
 
-services:
- - docker
+git:
+  depth: 10
+  submodules: false
+
+env:
+  global:
+    - BUILD_LEADER_ID=4
 
 cache:
   directories:
-   - $HOME/.composer/cache
+    - $HOME/Library/Caches/Homebrew
+    - $HOME/.composer/cache
+    - $HOME/.npm
 
 install:
- - composer install
- - composer run-script parse-stubs
-
+  - composer install --prefer-dist --no-interaction
 script:
- - vendor/bin/phpcs -n
- - vendor/bin/phpunit --coverage-clover=coverage.xml
+  - vendor/bin/phpcs -n
+  - vendor/bin/phpunit --coverage-clover=coverage.xml
+  - bash <(curl -s https://codecov.io/bash)
 
-after_success:
- - bash <(curl -s https://codecov.io/bash)
- - |
-   if [[ $TRAVIS_TAG == v* ]]; then
-     docker build -t felixfbecker/php-language-server:${TRAVIS_TAG:1} .
-     docker login -e="$DOCKER_EMAIL" -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
-     docker push felixfbecker/php-language-server:${TRAVIS_TAG:1}
-   fi
+jobs:
+  include:
+    - stage: test
+      os: osx
+      osx_image: xcode9.1
+      language: generic
+      before_install:
+        # Fix ruby error https://github.com/Homebrew/brew/issues/3299
+        - brew update
+        - brew tap homebrew/homebrew-php
+        - brew install php71
+        - brew install homebrew/php/php71-xdebug
+        - curl https://getcomposer.org/installer | php
+        - ln -s "`pwd`/composer.phar" /usr/local/bin/composer
+    - stage: release
+      php: '7.0'
+      services:
+        - docker
+      install:
+        - git config --replace-all remote.origin.fetch +refs/heads/*:refs/remotes/origin/*
+        - git fetch --tags
+        - composer install --prefer-dist --no-interaction
+        - nvm install 8
+        - nvm use 8
+        - npm install
+      script: skip
+      after_success:
+        - npm run semantic-release
+
+stages:
+  - test
+  - name: release
+    if: branch = master AND type = push AND fork = false
+
+branches:
+  except:
+    - /^v\d+\.\d+\.\d+$/

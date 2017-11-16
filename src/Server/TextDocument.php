@@ -20,7 +20,8 @@ use LanguageServer\Protocol\{
     SymbolLocationInformation,
     TextDocumentIdentifier,
     TextDocumentItem,
-    VersionedTextDocumentIdentifier
+    VersionedTextDocumentIdentifier,
+    CompletionContext
 };
 use Microsoft\PhpParser;
 use Microsoft\PhpParser\Node;
@@ -156,26 +157,12 @@ class TextDocument
      * The document's truth now exists where the document's uri points to (e.g. if the document's uri is a file uri the
      * truth now exists on disk).
      *
-     * @param \LanguageServer\Protocol\TextDocumentItem $textDocument The document that was closed
+     * @param \LanguageServer\Protocol\TextDocumentIdentifier $textDocument The document that was closed
      * @return void
      */
     public function didClose(TextDocumentIdentifier $textDocument)
     {
         $this->documentLoader->close($textDocument->uri);
-    }
-
-    /**
-     * The document formatting request is sent from the server to the client to format a whole document.
-     *
-     * @param TextDocumentIdentifier $textDocument The document to format
-     * @param FormattingOptions $options The format options
-     * @return Promise <TextEdit[]>
-     */
-    public function formatting(TextDocumentIdentifier $textDocument, FormattingOptions $options)
-    {
-        return $this->documentLoader->getOrLoad($textDocument->uri)->then(function (PhpDocument $document) {
-            return $document->getFormattedText();
-        });
     }
 
     /**
@@ -354,13 +341,14 @@ class TextDocument
      *
      * @param TextDocumentIdentifier The text document
      * @param Position $position The position
+     * @param CompletionContext|null $context The completion context
      * @return Promise <CompletionItem[]|CompletionList>
      */
-    public function completion(TextDocumentIdentifier $textDocument, Position $position): Promise
+    public function completion(TextDocumentIdentifier $textDocument, Position $position, CompletionContext $context = null): Promise
     {
-        return coroutine(function () use ($textDocument, $position) {
+        return coroutine(function () use ($textDocument, $position, $context) {
             $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
-            return $this->completionProvider->provideCompletion($document, $position);
+            return $this->completionProvider->provideCompletion($document, $position, $context);
         });
     }
 

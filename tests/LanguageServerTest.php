@@ -35,7 +35,6 @@ class LanguageServerTest extends TestCase
         $serverCapabilities->textDocumentSync = TextDocumentSyncKind::FULL;
         $serverCapabilities->documentSymbolProvider = true;
         $serverCapabilities->workspaceSymbolProvider = true;
-        $serverCapabilities->documentFormattingProvider = true;
         $serverCapabilities->definitionProvider = true;
         $serverCapabilities->referencesProvider = true;
         $serverCapabilities->hoverProvider = true;

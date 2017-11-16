@@ -1,9 +1,11 @@
 # PHP Language Server
 
 [![Version](https://img.shields.io/packagist/v/felixfbecker/language-server.svg)](https://packagist.org/packages/felixfbecker/language-server)
-[![Build Status](https://travis-ci.org/felixfbecker/php-language-server.svg?branch=master)](https://travis-ci.org/felixfbecker/php-language-server)
+[![Linux Build Status](https://travis-ci.org/felixfbecker/php-language-server.svg?branch=master)](https://travis-ci.org/felixfbecker/php-language-server)
+[![Windows Build status](https://ci.appveyor.com/api/projects/status/2sp5ll052wdjqmdm/branch/master?svg=true)](https://ci.appveyor.com/project/felixfbecker/php-language-server/branch/master)
 [![Coverage](https://codecov.io/gh/felixfbecker/php-language-server/branch/master/graph/badge.svg)](https://codecov.io/gh/felixfbecker/php-language-server)
 [![Dependency Status](https://gemnasium.com/badges/github.com/felixfbecker/php-language-server.svg)](https://gemnasium.com/github.com/felixfbecker/php-language-server)
+[![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg)](https://github.com/semantic-release/semantic-release)
 [![Minimum PHP Version](https://img.shields.io/badge/php-%3E%3D%207.0-8892BF.svg)](https://php.net/)
 [![License](https://img.shields.io/packagist/l/felixfbecker/language-server.svg)](https://github.com/felixfbecker/php-language-server/blob/master/LICENSE.txt)
 [![Gitter](https://badges.gitter.im/felixfbecker/php-language-server.svg)](https://gitter.im/felixfbecker/php-language-server?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
@@ -39,9 +41,6 @@ For Parameters, it will return the `@param` tag.
 
 The query is matched case-insensitively against the fully qualified name of the symbol.  
 Non-Standard: An empty query will return _all_ symbols found in the workspace.
-
-### [Document Formatting](https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#document-formatting-request)
-![Document Formatting demo](images/formatDocument.gif)
 
 ### Error reporting through [Publish Diagnostics](https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#publishdiagnostics-notification)
 ![Error reporting demo](images/publishDiagnostics.png)
@@ -190,14 +189,21 @@ Clone the repository and run
     composer install
 
 to install dependencies.
-Then parse the stubs with
-
-    composer run-script parse-stubs
 
 Run the tests with 
 
-    vendor/bin/phpunit
+    composer test
 
 Lint with
 
-    vendor/bin/phpcs
+    composer lint
+    
+The project parses PHPStorm's PHP stubs to get support for PHP builtins. It re-parses them as needed after Composer processes, but after some code changes (such as ones involving the index or parsing) you may have to explicitly re-parse them:
+
+    composer run-script parse-stubs
+    
+To debug with xDebug ensure that you have this set as an environment variable
+
+    COMPOSER_ALLOW_XDEBUG=1
+
+This tells the Language Server to not restart without XDebug if it detects that XDebug is enabled (XDebug has a high performance impact).

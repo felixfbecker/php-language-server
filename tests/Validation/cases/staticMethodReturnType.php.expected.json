@@ -8,7 +8,7 @@
         "FooClass": {
             "fqn": "FooClass",
             "extends": [],
-            "isGlobal": true,
+            "isMember": false,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": true,
@@ -28,7 +28,7 @@
         "FooClass::staticFoo()": {
             "fqn": "FooClass::staticFoo()",
             "extends": [],
-            "isGlobal": false,
+            "isMember": true,
             "roamed": false,
             "isStatic": true,
             "canBeInstantiated": false,
@@ -49,7 +49,7 @@
         "FooClass->bar()": {
             "fqn": "FooClass->bar()",
             "extends": [],
-            "isGlobal": false,
+            "isMember": true,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,

@@ -17,7 +17,7 @@
         "TestClass": {
             "fqn": "TestClass",
             "extends": [],
-            "isGlobal": true,
+            "isMember": false,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": true,
@@ -37,7 +37,7 @@
         "TestClass::$testProperty": {
             "fqn": "TestClass::$testProperty",
             "extends": [],
-            "isGlobal": false,
+            "isMember": true,
             "roamed": false,
             "isStatic": true,
             "canBeInstantiated": false,

@@ -20,7 +20,7 @@
         "Fixtures\\Prophecy": {
             "fqn": "Fixtures\\Prophecy",
             "extends": [],
-            "isGlobal": true,
+            "isMember": false,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
@@ -42,7 +42,7 @@
             "extends": [
                 "Fixtures\\Prophecy\\EmptyClass"
             ],
-            "isGlobal": true,
+            "isMember": false,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": true,
@@ -62,7 +62,7 @@
         "Fixtures\\Prophecy\\WithReturnTypehints->getSelf()": {
             "fqn": "Fixtures\\Prophecy\\WithReturnTypehints->getSelf()",
             "extends": [],
-            "isGlobal": false,
+            "isMember": true,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
@@ -83,7 +83,7 @@
         "Fixtures\\Prophecy\\WithReturnTypehints->getName()": {
             "fqn": "Fixtures\\Prophecy\\WithReturnTypehints->getName()",
             "extends": [],
-            "isGlobal": false,
+            "isMember": true,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
@@ -104,7 +104,7 @@
         "Fixtures\\Prophecy\\WithReturnTypehints->getParent()": {
             "fqn": "Fixtures\\Prophecy\\WithReturnTypehints->getParent()",
             "extends": [],
-            "isGlobal": false,
+            "isMember": true,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,

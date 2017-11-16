@@ -4,7 +4,7 @@
         "MyClass": {
             "fqn": "MyClass",
             "extends": [],
-            "isGlobal": true,
+            "isMember": false,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": true,
@@ -24,7 +24,7 @@
         "MyClass->mainPropertyName": {
             "fqn": "MyClass->mainPropertyName",
             "extends": [],
-            "isGlobal": false,
+            "isMember": true,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,

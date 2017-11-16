@@ -148,9 +148,8 @@ function isVendored(PhpDocument $document, \stdClass $composerJson = null): bool
  * Check a given URI against the composer.json to see if it
  * is a vendored URI
  *
- * @param \stdClass|null $composerJson
  * @param string         $uri
- * @param array          $matches
+ * @param \stdClass|null $composerJson
  * @return string|null
  */
 function getPackageName(string $uri, \stdClass $composerJson = null)

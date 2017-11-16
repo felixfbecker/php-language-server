@@ -7,11 +7,6 @@
 FROM php:7-cli
 MAINTAINER Felix Becker <felix.b@outlook.com>
 
-RUN apt-get update \
-    # Needed for CodeSniffer
-    && apt-get install -y libxml2 libxml2-dev \
-    && rm -rf /var/lib/apt/lists/*
-
 RUN docker-php-ext-configure pcntl --enable-pcntl
 RUN docker-php-ext-install pcntl
 COPY ./php.ini /usr/local/etc/php/conf.d/
