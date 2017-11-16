@@ -20,7 +20,8 @@ use LanguageServer\Protocol\{
     SymbolLocationInformation,
     TextDocumentIdentifier,
     TextDocumentItem,
-    VersionedTextDocumentIdentifier
+    VersionedTextDocumentIdentifier,
+    CompletionContext
 };
 use Microsoft\PhpParser;
 use Microsoft\PhpParser\Node;
@@ -337,13 +338,14 @@ class TextDocument
      *
      * @param TextDocumentIdentifier The text document
      * @param Position $position The position
+     * @param CompletionContext|null $context The completion context
      * @return Promise <CompletionItem[]|CompletionList>
      */
-    public function completion(TextDocumentIdentifier $textDocument, Position $position): Promise
+    public function completion(TextDocumentIdentifier $textDocument, Position $position, CompletionContext $context = null): Promise
     {
-        return coroutine(function () use ($textDocument, $position) {
+        return coroutine(function () use ($textDocument, $position, $context) {
             $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
-            return $this->completionProvider->provideCompletion($document, $position);
+            return $this->completionProvider->provideCompletion($document, $position, $context);
         });
     }
 
