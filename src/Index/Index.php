@@ -99,7 +99,7 @@ class Index implements ReadableIndex, \Serializable
      * Returns a Generator providing an associative array [string => Definition]
      * that maps fully qualified symbol names to Definitions (global or not)
      *
-     * @return \Generator providing Definition[]
+     * @return \Generator yields Definition
      */
     public function getDefinitions(): \Generator
     {
@@ -107,12 +107,12 @@ class Index implements ReadableIndex, \Serializable
     }
 
     /**
-     * Returns a Generator providing the Definitions that are in the given FQN
+     * Returns a Generator that yields all the descendant Definitions of a given FQN
      *
      * @param string $fqn
-     * @return \Generator providing Definitions[]
+     * @return \Generator yields Definition
      */
-    public function getDefinitionsForFqn(string $fqn): \Generator
+    public function getDescendantDefinitionsForFqn(string $fqn): \Generator
     {
         $parts = $this->splitFqn($fqn);
         if ('' === end($parts)) {
@@ -188,7 +188,7 @@ class Index implements ReadableIndex, \Serializable
      * Returns a Generator providing all URIs in this index that reference a symbol
      *
      * @param string $fqn The fully qualified name of the symbol
-     * @return \Generator providing string[]
+     * @return \Generator yields string
      */
     public function getReferenceUris(string $fqn): \Generator
     {
@@ -280,9 +280,9 @@ class Index implements ReadableIndex, \Serializable
     }
 
     /**
-     * Returns a Genrerator containing all the into the given $storage recursively.
-     * The generator yields key => value pairs, eg
-     * 'Psr\Log\LoggerInterface->log()' => $definition
+     * Returns a Generator that yields all the Definitions in the given $storage recursively.
+     * The generator yields key => value pairs, e.g.
+     * `'Psr\Log\LoggerInterface->log()' => $definition`
      *
      * @param array &$storage
      * @param string $prefix (optional)
@@ -319,12 +319,12 @@ class Index implements ReadableIndex, \Serializable
                 $parts = array_slice($parts, 1);
             }
 
-            $parts[0] = '\\'.$parts[0];
+            $parts[0] = '\\' . $parts[0];
         }
 
         // write back the backslashes prefixes for the other parts
         for ($i = 1; $i < count($parts); $i++) {
-            $parts[$i] = '\\'.$parts[$i];
+            $parts[$i] = '\\' . $parts[$i];
         }
 
         // split the last part in 2 parts at the operator
@@ -337,7 +337,7 @@ class Index implements ReadableIndex, \Serializable
                 // replace the last part by its pieces
                 array_pop($parts);
                 $parts[] = $endParts[0];
-                $parts[] = $operator.$endParts[1];
+                $parts[] = $operator . $endParts[1];
                 break;
             }
         }
@@ -382,8 +382,8 @@ class Index implements ReadableIndex, \Serializable
     }
 
     /**
-     * Recusrive function which store the given definition in the given $storage
-     * array represented as a tree matching the given $parts.
+     * Recursive function that stores the given Definition in the given $storage array represented
+     * as a tree matching the given $parts.
      *
      * @param int $level              The current level of FQN part
      * @param string[] $parts         The splitted FQN
@@ -408,11 +408,9 @@ class Index implements ReadableIndex, \Serializable
     }
 
     /**
-     * Recusrive function which remove the definition matching the given $parts
-     * from the given $storage array.
-     * The function also looks up recursively to remove the parents of the
-     * definition which no longer has children to avoid to let empty arrays
-     * in the index.
+     * Recursive function that removes the definition matching the given $parts from the given
+     * $storage array. The function also looks up recursively to remove the parents of the
+     * definition which no longer has children to avoid to let empty arrays in the index.
      *
      * @param int $level              The current level of FQN part
      * @param string[] $parts         The splitted FQN

@@ -221,7 +221,7 @@ class CompletionProvider
             // The FQNs of the symbol and its parents (eg the implemented interfaces)
             foreach ($this->expandParentFqns($fqns) as $parentFqn) {
                 // Collect fqn definitions
-                foreach ($this->index->getDefinitionsForFqn($parentFqn) as $fqn => $def) {
+                foreach ($this->index->getDescendantDefinitionsForFqn($parentFqn) as $fqn => $def) {
                     // Add the object access operator to only get members of all parents
                     $prefix = $parentFqn . '->';
                     if (substr($fqn, 0, strlen($prefix)) === $prefix && $def->isMember) {
@@ -251,7 +251,7 @@ class CompletionProvider
             // The FQNs of the symbol and its parents (eg the implemented interfaces)
             foreach ($this->expandParentFqns($fqns) as $parentFqn) {
                 // Collect fqn definitions
-                foreach ($this->index->getDefinitionsForFqn($parentFqn) as $fqn => $def) {
+                foreach ($this->index->getDescendantDefinitionsForFqn($parentFqn) as $fqn => $def) {
                     // Append :: operator to only get static members of all parents
                     $prefix = strtolower($parentFqn . '::');
                     if (substr(strtolower($fqn), 0, strlen($prefix)) === $prefix && $def->isMember) {
