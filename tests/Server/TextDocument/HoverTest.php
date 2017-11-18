@@ -15,7 +15,7 @@ class HoverTest extends ServerTestCase
     {
         // $obj = new TestClass();
         // Get hover for TestClass
-        $reference = $this->getReferenceLocations('TestClass')[0];
+        $reference = $this->getReferenceLocations('TestClass')[1];
         $result = $this->textDocument->hover(
             new TextDocumentIdentifier($reference->uri),
             $reference->range->start
