@@ -122,15 +122,16 @@ abstract class ServerTestCase extends TestCase
                 0 => new Location($referencesUri, new Range(new Position(29,  5), new Position(29, 15)))
             ],
             'TestNamespace\\TestClass' => [
-                0 => new Location($symbolsUri   , new Range(new Position(99, 25), new Position(99, 34))), // class ChildClass extends TestClass {}
-                1 => new Location($referencesUri, new Range(new Position( 4, 11), new Position( 4, 20))), // $obj = new TestClass();
-                2 => new Location($referencesUri, new Range(new Position( 7,  0), new Position( 7,  9))), // TestClass::staticTestMethod();
-                3 => new Location($referencesUri, new Range(new Position( 8,  5), new Position( 8, 14))), // echo TestClass::$staticTestProperty;
-                4 => new Location($referencesUri, new Range(new Position( 9,  5), new Position( 9, 14))), // TestClass::TEST_CLASS_CONST;
-                5 => new Location($referencesUri, new Range(new Position(21, 18), new Position(21, 27))), // function whatever(TestClass $param)
-                6 => new Location($referencesUri, new Range(new Position(21, 37), new Position(21, 46))), // function whatever(TestClass $param): TestClass
-                7 => new Location($referencesUri, new Range(new Position(39,  0), new Position(39,  9))), // TestClass::$staticTestProperty[123]->testProperty;
-                8 => new Location($useUri,        new Range(new Position( 4,  4), new Position( 4, 27))), // use TestNamespace\TestClass;
+                0 => new Location($symbolsUri,    new Range(new Position(48, 13), new Position(48, 17))), // echo self::TEST_CLASS_CONST;
+                1 => new Location($symbolsUri   , new Range(new Position(99, 25), new Position(99, 34))), // class ChildClass extends TestClass {}
+                2 => new Location($referencesUri, new Range(new Position( 4, 11), new Position( 4, 20))), // $obj = new TestClass();
+                3 => new Location($referencesUri, new Range(new Position( 7,  0), new Position( 7,  9))), // TestClass::staticTestMethod();
+                4 => new Location($referencesUri, new Range(new Position( 8,  5), new Position( 8, 14))), // echo TestClass::$staticTestProperty;
+                5 => new Location($referencesUri, new Range(new Position( 9,  5), new Position( 9, 14))), // TestClass::TEST_CLASS_CONST;
+                6 => new Location($referencesUri, new Range(new Position(21, 18), new Position(21, 27))), // function whatever(TestClass $param)
+                7 => new Location($referencesUri, new Range(new Position(21, 37), new Position(21, 46))), // function whatever(TestClass $param): TestClass
+                8 => new Location($referencesUri, new Range(new Position(39,  0), new Position(39,  9))), // TestClass::$staticTestProperty[123]->testProperty;
+                9 => new Location($useUri,        new Range(new Position( 4,  4), new Position( 4, 27))), // use TestNamespace\TestClass;
             ],
             'TestNamespace\\TestChild' => [
                 0 => new Location($referencesUri, new Range(new Position(42,  5), new Position(42, 25))), // echo $child->testProperty;
@@ -176,14 +177,15 @@ abstract class ServerTestCase extends TestCase
                 1 => new Location($globalReferencesUri, new Range(new Position(29,  5), new Position(29, 15)))
             ],
             'TestClass' => [
-                0 => new Location($globalSymbolsUri,    new Range(new Position(99, 25), new Position(99, 34))), // class ChildClass extends TestClass {}
-                1 => new Location($globalReferencesUri, new Range(new Position( 4, 11), new Position( 4, 20))), // $obj = new TestClass();
-                2 => new Location($globalReferencesUri, new Range(new Position( 7,  0), new Position( 7,  9))), // TestClass::staticTestMethod();
-                3 => new Location($globalReferencesUri, new Range(new Position( 8,  5), new Position( 8, 14))), // echo TestClass::$staticTestProperty;
-                4 => new Location($globalReferencesUri, new Range(new Position( 9,  5), new Position( 9, 14))), // TestClass::TEST_CLASS_CONST;
-                5 => new Location($globalReferencesUri, new Range(new Position(21, 18), new Position(21, 27))), // function whatever(TestClass $param)
-                6 => new Location($globalReferencesUri, new Range(new Position(21, 37), new Position(21, 46))), // function whatever(TestClass $param): TestClass
-                7 => new Location($globalReferencesUri, new Range(new Position(39,  0), new Position(39,  9))), // TestClass::$staticTestProperty[123]->testProperty;
+                0 => new Location($globalSymbolsUri,    new Range(new Position(48, 13), new Position(48, 17))), // echo self::TEST_CLASS_CONST;
+                1 => new Location($globalSymbolsUri,    new Range(new Position(99, 25), new Position(99, 34))), // class ChildClass extends TestClass {}
+                2 => new Location($globalReferencesUri, new Range(new Position( 4, 11), new Position( 4, 20))), // $obj = new TestClass();
+                3 => new Location($globalReferencesUri, new Range(new Position( 7,  0), new Position( 7,  9))), // TestClass::staticTestMethod();
+                4 => new Location($globalReferencesUri, new Range(new Position( 8,  5), new Position( 8, 14))), // echo TestClass::$staticTestProperty;
+                5 => new Location($globalReferencesUri, new Range(new Position( 9,  5), new Position( 9, 14))), // TestClass::TEST_CLASS_CONST;
+                6 => new Location($globalReferencesUri, new Range(new Position(21, 18), new Position(21, 27))), // function whatever(TestClass $param)
+                7 => new Location($globalReferencesUri, new Range(new Position(21, 37), new Position(21, 46))), // function whatever(TestClass $param): TestClass
+                8 => new Location($globalReferencesUri, new Range(new Position(39,  0), new Position(39,  9))), // TestClass::$staticTestProperty[123]->testProperty;
             ],
             'TestChild' => [
                 0 => new Location($globalReferencesUri, new Range(new Position(42,  5), new Position(42, 25))), // echo $child->testProperty;
