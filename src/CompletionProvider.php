@@ -10,7 +10,9 @@ use LanguageServer\Protocol\{
     Position,
     CompletionList,
     CompletionItem,
-    CompletionItemKind
+    CompletionItemKind,
+    CompletionContext,
+    CompletionTriggerKind
 };
 use Microsoft\PhpParser;
 use Microsoft\PhpParser\Node;
@@ -122,9 +124,10 @@ class CompletionProvider
      *
      * @param PhpDocument $doc The opened document
      * @param Position $pos The cursor position
+     * @param CompletionContext $context The completion context
      * @return CompletionList
      */
-    public function provideCompletion(PhpDocument $doc, Position $pos): CompletionList
+    public function provideCompletion(PhpDocument $doc, Position $pos, CompletionContext $context = null): CompletionList
     {
         // This can be made much more performant if the tree follows specific invariants.
         $node = $doc->getNodeAtPosition($pos);
@@ -152,7 +155,21 @@ class CompletionProvider
 
         // Inspect the type of expression under the cursor
 
-        if ($node === null || $node instanceof Node\Statement\InlineHtml || $pos == new Position(0, 0)) {
+        $content = $doc->getContent();
+        $offset = $pos->toOffset($content);
+        if (
+            $node === null
+            || (
+                $node instanceof Node\Statement\InlineHtml
+                && (
+                    $context === null
+                    // Make sure to not suggest on the > trigger character in HTML
+                    || $context->triggerKind === CompletionTriggerKind::INVOKED
+                    || $context->triggerCharacter === '<'
+                )
+            )
+            || $pos == new Position(0, 0)
+        ) {
             // HTML, beginning of file
 
             // Inside HTML and at the beginning of the file, propose <?php

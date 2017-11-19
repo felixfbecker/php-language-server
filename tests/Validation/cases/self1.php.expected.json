@@ -6,7 +6,7 @@
         "MyNamespace\\A::b()": [
             "./self1.php"
         ],
-        "self": [
+        "MyNamespace\\A": [
             "./self1.php"
         ]
     },

@@ -17,7 +17,9 @@ use LanguageServer\Protocol\{
     Position,
     CompletionList,
     CompletionItem,
-    CompletionItemKind
+    CompletionItemKind,
+    CompletionContext,
+    CompletionTriggerKind
 };
 use function LanguageServer\pathToUri;
 
@@ -451,6 +453,41 @@ class CompletionTest extends TestCase
             new Position(0, 1)
         )->wait();
         $this->assertCompletionsListSubset(new CompletionList([
+            new CompletionItem(
+                '<?php',
+                CompletionItemKind::KEYWORD,
+                null,
+                null,
+                null,
+                null,
+                null,
+                new TextEdit(new Range(new Position(0, 1), new Position(0, 1)), '?php')
+            )
+        ], true), $items);
+    }
+
+    public function testHtmlPrefixShouldNotTriggerCompletion()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/html_no_completion.php');
+        $this->loader->open($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(0, 1),
+            new CompletionContext(CompletionTriggerKind::TRIGGER_CHARACTER, '>')
+        )->wait();
+        $this->assertEquals(new CompletionList([], true), $items);
+    }
+
+    public function testHtmlPrefixShouldTriggerCompletionIfManuallyInvoked()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/html_no_completion.php');
+        $this->loader->open($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(0, 1),
+            new CompletionContext(CompletionTriggerKind::INVOKED)
+        )->wait();
+        $this->assertEquals(new CompletionList([
             new CompletionItem(
                 '<?php',
                 CompletionItemKind::KEYWORD,

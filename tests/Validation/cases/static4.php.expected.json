@@ -2,6 +2,9 @@
     "references": {
         "MyNamespace\\B": [
             "./static4.php"
+        ],
+        "MyNamespace\\A": [
+            "./static4.php"
         ]
     },
     "definitions": {
