@@ -6,7 +6,7 @@
         "MyNamespace\\A::b()": [
             "./static1.php"
         ],
-        "static": [
+        "MyNamespace\\A": [
             "./static1.php"
         ]
     },

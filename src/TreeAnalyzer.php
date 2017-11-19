@@ -159,8 +159,9 @@ class TreeAnalyzer
             $this->definitionNodes[$fqn] = $node;
             $this->definitions[$fqn] = $this->definitionResolver->createDefinitionFromNode($node, $fqn);
         } else {
+
             $parent = $node->parent;
-            if (!(
+            if (
                 (
                     // $node->parent instanceof Node\Expression\ScopedPropertyAccessExpression ||
                     ($node instanceof Node\Expression\ScopedPropertyAccessExpression ||
@@ -169,41 +170,68 @@ class TreeAnalyzer
                         $node->parent instanceof Node\Expression\CallExpression ||
                         $node->memberName instanceof PhpParser\Token
                     ))
-                || ($parent instanceof Node\Statement\NamespaceDefinition && $parent->name !== null && $parent->name->getStart() === $node->getStart()))
+                || ($parent instanceof Node\Statement\NamespaceDefinition && $parent->name !== null && $parent->name->getStart() === $node->getStart())
             ) {
-                $fqn = $this->definitionResolver->resolveReferenceNodeToFqn($node);
-                if ($fqn !== null) {
-                    $this->addReference($fqn, $node);
+                return;
+            }
 
-                    if (
-                        $node instanceof Node\QualifiedName
-                        && ($node->isQualifiedName() || $node->parent instanceof Node\NamespaceUseClause)
-                        && !($parent instanceof Node\Statement\NamespaceDefinition && $parent->name->getStart() === $node->getStart()
-                        )
-                    ) {
-                        // Add references for each referenced namespace
-                        $ns = $fqn;
-                        while (($pos = strrpos($ns, '\\')) !== false) {
-                            $ns = substr($ns, 0, $pos);
-                            $this->addReference($ns, $node);
-                        }
-                    }
+            $fqn = $this->definitionResolver->resolveReferenceNodeToFqn($node);
+            if (!$fqn) {
+                return;
+            }
 
-                    // Namespaced constant access and function calls also need to register a reference
-                    // to the global version because PHP falls back to global at runtime
-                    // http://php.net/manual/en/language.namespaces.fallback.php
-                    if (ParserHelpers\isConstantFetch($node) ||
-                        ($parent instanceof Node\Expression\CallExpression
-                            && !(
-                                $node instanceof Node\Expression\ScopedPropertyAccessExpression ||
-                                $node instanceof Node\Expression\MemberAccessExpression
-                            ))) {
-                        $parts = explode('\\', $fqn);
-                        if (count($parts) > 1) {
-                            $globalFqn = end($parts);
-                            $this->addReference($globalFqn, $node);
-                        }
-                    }
+            if ($fqn === 'self' || $fqn === 'static') {
+                // Resolve self and static keywords to the containing class
+                // (This is not 100% correct for static but better than nothing)
+                $classNode = $node->getFirstAncestor(Node\Statement\ClassDeclaration::class);
+                if (!$classNode) {
+                    return;
+                }
+                $fqn = (string)$classNode->getNamespacedName();
+                if (!$fqn) {
+                    return;
+                }
+            } else if ($fqn === 'parent') {
+                // Resolve parent keyword to the base class FQN
+                $classNode = $node->getFirstAncestor(Node\Statement\ClassDeclaration::class);
+                if (!$classNode || !$classNode->classBaseClause || !$classNode->classBaseClause->baseClass) {
+                    return;
+                }
+                $fqn = (string)$classNode->classBaseClause->baseClass->getResolvedName();
+                if (!$fqn) {
+                    return;
+                }
+            }
+
+            $this->addReference($fqn, $node);
+
+            if (
+                $node instanceof Node\QualifiedName
+                && ($node->isQualifiedName() || $node->parent instanceof Node\NamespaceUseClause)
+                && !($parent instanceof Node\Statement\NamespaceDefinition && $parent->name->getStart() === $node->getStart()
+                )
+            ) {
+                // Add references for each referenced namespace
+                $ns = $fqn;
+                while (($pos = strrpos($ns, '\\')) !== false) {
+                    $ns = substr($ns, 0, $pos);
+                    $this->addReference($ns, $node);
+                }
+            }
+
+            // Namespaced constant access and function calls also need to register a reference
+            // to the global version because PHP falls back to global at runtime
+            // http://php.net/manual/en/language.namespaces.fallback.php
+            if (ParserHelpers\isConstantFetch($node) ||
+                ($parent instanceof Node\Expression\CallExpression
+                    && !(
+                        $node instanceof Node\Expression\ScopedPropertyAccessExpression ||
+                        $node instanceof Node\Expression\MemberAccessExpression
+                    ))) {
+                $parts = explode('\\', $fqn);
+                if (count($parts) > 1) {
+                    $globalFqn = end($parts);
+                    $this->addReference($globalFqn, $node);
                 }
             }
         }

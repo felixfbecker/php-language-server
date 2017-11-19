@@ -3,16 +3,13 @@
         "Fixtures\\Prophecy\\EmptyClass": [
             "./WithReturnTypehints.php"
         ],
-        "self": [
+        "Fixtures\\Prophecy\\WithReturnTypehints": [
             "./WithReturnTypehints.php"
         ],
         "Fixtures\\Prophecy\\__CLASS__": [
             "./WithReturnTypehints.php"
         ],
         "__CLASS__": [
-            "./WithReturnTypehints.php"
-        ],
-        "parent": [
             "./WithReturnTypehints.php"
         ]
     },
