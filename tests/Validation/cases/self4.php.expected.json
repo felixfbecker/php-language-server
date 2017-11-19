@@ -1,6 +1,6 @@
 {
     "references": {
-        "self": [
+        "MyNamespace\\A": [
             "./self4.php"
         ],
         "MyNamespace\\A->addTestFile()": [

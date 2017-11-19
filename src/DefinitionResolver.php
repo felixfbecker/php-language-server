@@ -264,13 +264,38 @@ class DefinitionResolver
         // Other references are references to a global symbol that have an FQN
         // Find out the FQN
         $fqn = $this->resolveReferenceNodeToFqn($node);
-        if ($fqn === null) {
+        if (!$fqn) {
             return null;
         }
+
+        if ($fqn === 'self' || $fqn === 'static') {
+            // Resolve self and static keywords to the containing class
+            // (This is not 100% correct for static but better than nothing)
+            $classNode = $node->getFirstAncestor(Node\Statement\ClassDeclaration::class);
+            if (!$classNode) {
+                return;
+            }
+            $fqn = (string)$classNode->getNamespacedName();
+            if (!$fqn) {
+                return;
+            }
+        } else if ($fqn === 'parent') {
+            // Resolve parent keyword to the base class FQN
+            $classNode = $node->getFirstAncestor(Node\Statement\ClassDeclaration::class);
+            if (!$classNode || !$classNode->classBaseClause || !$classNode->classBaseClause->baseClass) {
+                return;
+            }
+            $fqn = (string)$classNode->classBaseClause->baseClass->getResolvedName();
+            if (!$fqn) {
+                return;
+            }
+        }
+
         // If the node is a function or constant, it could be namespaced, but PHP falls back to global
         // http://php.net/manual/en/language.namespaces.fallback.php
         // TODO - verify that this is not a method
         $globalFallback = ParserHelpers\isConstantFetch($node) || $parent instanceof Node\Expression\CallExpression;
+
         // Return the Definition object from the index index
         return $this->index->getDefinition($fqn, $globalFallback);
     }
@@ -278,6 +303,7 @@ class DefinitionResolver
     /**
      * Given any node, returns the FQN of the symbol that is referenced
      * Returns null if the FQN could not be resolved or the reference node references a variable
+     * May also return "static", "self" or "parent"
      *
      * @param Node $node
      * @return string|null

@@ -151,7 +151,7 @@ class GlobalTest extends ServerTestCase
     {
         // $obj = new TestClass();
         // Get references for TestClass
-        $reference = $this->getReferenceLocations('TestClass')[0];
+        $reference = $this->getReferenceLocations('TestClass')[1];
         $result = $this->textDocument->references(
             new ReferenceContext,
             new TextDocumentIdentifier($reference->uri),

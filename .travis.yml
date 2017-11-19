@@ -23,7 +23,7 @@ install:
   - composer install --prefer-dist --no-interaction
 script:
   - vendor/bin/phpcs -n
-  - vendor/bin/phpunit --coverage-clover=coverage.xml
+  - vendor/bin/phpunit --coverage-clover=coverage.xml --colors=always
   - bash <(curl -s https://codecov.io/bash)
 
 jobs:
