@@ -179,7 +179,7 @@ class Index implements ReadableIndex, \Serializable
     public function removeDefinition(string $fqn)
     {
         $parts = $this->splitFqn($fqn);
-        $this->removeIndexedDefinition(0, $parts, $this->definitions);
+        $this->removeIndexedDefinition(0, $parts, $this->definitions, $this->definitions);
 
         unset($this->references[$fqn]);
     }
@@ -417,24 +417,19 @@ class Index implements ReadableIndex, \Serializable
      * @param array &$storage         The current array in which to remove data
      * @param array &$rootStorage     The root storage array
      */
-    private function removeIndexedDefinition(int $level, array $parts, array &$storage, &$rootStorage)
+    private function removeIndexedDefinition(int $level, array $parts, array &$storage, array &$rootStorage)
     {
         $part = $parts[$level];
 
         if ($level + 1 === count($parts)) {
-            if (isset($storage[$part]) && count($storage[$part]) < 2) {
+            if (isset($storage[$part])) {
                 unset($storage[$part]);
 
-                if (0 === $level) {
-                    // we're at root level, no need to check for parents
-                    // w/o children
-                    return;
+                if (0 === count($storage)) {
+                    // parse again the definition tree to remove the parent
+                    // when it has no more children
+                    $this->removeIndexedDefinition(0, array_slice($parts, 0, $level), $rootStorage, $rootStorage);
                 }
-
-                array_pop($parts);
-                // parse again the definition tree to see if the parent
-                // can be removed too if it has no more children
-                $this->removeIndexedDefinition(0, $parts, $rootStorage, $rootStorage);
             }
         } else {
             $this->removeIndexedDefinition($level + 1, $parts, $storage[$part], $rootStorage);
