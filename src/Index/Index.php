@@ -16,13 +16,12 @@ class Index implements ReadableIndex, \Serializable
 
     /**
      * An associative array that maps splitted fully qualified symbol names
-     * to definitions, eg :
+     * to non-member definitions, eg :
      * [
      *     'Psr' => [
      *         '\Log' => [
      *             '\LoggerInterface' => [
-     *                 ''        => $def1, // definition for 'Psr\Log\LoggerInterface' which is non-member
-     *                 '->log()' => $def2, // definition for 'Psr\Log\LoggerInterface->log()' which is a member definition
+     *                 '' => $definition,
      *             ],
      *         ],
      *     ],
@@ -30,7 +29,24 @@ class Index implements ReadableIndex, \Serializable
      *
      * @var array
      */
-    private $definitions = [];
+    private $nonMemberDefinitions = [];
+
+    /**
+     * An associative array that maps splitted fully qualified symbol names
+     * to member definitions, eg :
+     * [
+     *     'Psr' => [
+     *         '\Log' => [
+     *             '\LoggerInterface' => [
+     *                 '->log()' => $definition,
+     *             ],
+     *         ],
+     *     ],
+     * ]
+     *
+     * @var array
+     */
+    private $memberDefinitions = [];
 
     /**
      * An associative array that maps fully qualified symbol names
@@ -99,20 +115,29 @@ class Index implements ReadableIndex, \Serializable
      * Returns a Generator providing an associative array [string => Definition]
      * that maps fully qualified symbol names to Definitions (global or not)
      *
+     * @param boolean|null $member Indicates if we want member or non-member definitions (null for both, default null)
      * @return \Generator yields Definition
      */
-    public function getDefinitions(): \Generator
+    public function getDefinitions(bool $member = null): \Generator
     {
-        yield from $this->yieldDefinitionsRecursively($this->definitions);
+        if (true === $member) {
+            yield from $this->yieldDefinitionsRecursively($this->memberDefinitions);
+        } elseif (false === $member) {
+            yield from $this->yieldDefinitionsRecursively($this->nonMemberDefinitions);
+        } else {
+            yield from $this->yieldDefinitionsRecursively($this->memberDefinitions);
+            yield from $this->yieldDefinitionsRecursively($this->nonMemberDefinitions);
+        }
     }
 
     /**
      * Returns a Generator that yields all the descendant Definitions of a given FQN
      *
      * @param string $fqn
+     * @param boolean|null $member Indicates if we want member or non-member definitions (null for both, default null)
      * @return \Generator yields Definition
      */
-    public function getDescendantDefinitionsForFqn(string $fqn): \Generator
+    public function getDescendantDefinitionsForFqn(string $fqn, bool $member = null): \Generator
     {
         $parts = $this->splitFqn($fqn);
         if ('' === end($parts)) {
@@ -121,12 +146,13 @@ class Index implements ReadableIndex, \Serializable
             array_pop($parts);
         }
 
-        $result = $this->getIndexValue($parts, $this->definitions);
-
-        if ($result instanceof Definition) {
-            yield $fqn => $result;
-        } elseif (is_array($result)) {
-            yield from $this->yieldDefinitionsRecursively($result, $fqn);
+        if (true === $member) {
+            yield from $this->doGetDescendantDefinitionsForFqn($fqn, $parts, $this->memberDefinitions);
+        } elseif (false === $member) {
+            yield from $this->doGetDescendantDefinitionsForFqn($fqn, $parts, $this->nonMemberDefinitions);
+        } else {
+            yield from $this->doGetDescendantDefinitionsForFqn($fqn, $parts, $this->memberDefinitions);
+            yield from $this->doGetDescendantDefinitionsForFqn($fqn, $parts, $this->nonMemberDefinitions);
         }
     }
 
@@ -140,8 +166,13 @@ class Index implements ReadableIndex, \Serializable
     public function getDefinition(string $fqn, bool $globalFallback = false)
     {
         $parts = $this->splitFqn($fqn);
-        $result = $this->getIndexValue($parts, $this->definitions);
 
+        $result = $this->getIndexValue($parts, $this->memberDefinitions);
+        if ($result instanceof Definition) {
+            return $result;
+        }
+
+        $result = $this->getIndexValue($parts, $this->nonMemberDefinitions);
         if ($result instanceof Definition) {
             return $result;
         }
@@ -164,7 +195,12 @@ class Index implements ReadableIndex, \Serializable
     public function setDefinition(string $fqn, Definition $definition)
     {
         $parts = $this->splitFqn($fqn);
-        $this->indexDefinition(0, $parts, $this->definitions, $definition);
+
+        if ($definition->isMember) {
+            $this->indexDefinition(0, $parts, $this->memberDefinitions, $definition);
+        } else {
+            $this->indexDefinition(0, $parts, $this->nonMemberDefinitions, $definition);
+        }
 
         $this->emit('definition-added');
     }
@@ -179,7 +215,8 @@ class Index implements ReadableIndex, \Serializable
     public function removeDefinition(string $fqn)
     {
         $parts = $this->splitFqn($fqn);
-        $this->removeIndexedDefinition(0, $parts, $this->definitions, $this->definitions);
+        $this->removeIndexedDefinition(0, $parts, $this->memberDefinitions, $this->memberDefinitions);
+        $this->removeIndexedDefinition(0, $parts, $this->nonMemberDefinitions, $this->nonMemberDefinitions);
 
         unset($this->references[$fqn]);
     }
@@ -277,6 +314,26 @@ class Index implements ReadableIndex, \Serializable
             'complete' => $this->complete,
             'staticComplete' => $this->staticComplete
         ]);
+    }
+
+    /**
+     * Returns a Generator that yields all the descendant Definitions of a given FQN
+     * in the given definition index.
+     *
+     * @param string $fqn
+     * @param string[] $parts The splitted FQN
+     * @param array &$storage The definitions index to look into
+     * @return \Generator yields Definition
+     */
+    private function doGetDescendantDefinitionsForFqn(string $fqn, array $parts, array &$storage): \Generator
+    {
+        $result = $this->getIndexValue($parts, $storage);
+
+        if ($result instanceof Definition) {
+            yield $fqn => $result;
+        } elseif (is_array($result)) {
+            yield from $this->yieldDefinitionsRecursively($result, $fqn);
+        }
     }
 
     /**
@@ -431,7 +488,7 @@ class Index implements ReadableIndex, \Serializable
                     $this->removeIndexedDefinition(0, array_slice($parts, 0, $level), $rootStorage, $rootStorage);
                 }
             }
-        } else {
+        } elseif (isset($storage[$part])) {
             $this->removeIndexedDefinition($level + 1, $parts, $storage[$part], $rootStorage);
         }
     }
