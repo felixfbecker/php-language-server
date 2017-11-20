@@ -2,9 +2,6 @@
     "references": {
         "MyNamespace\\B": [
             "./parent1.php"
-        ],
-        "parent": [
-            "./parent1.php"
         ]
     },
     "definitions": {

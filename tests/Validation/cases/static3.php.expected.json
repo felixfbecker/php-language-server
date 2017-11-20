@@ -3,10 +3,10 @@
         "MyNamespace\\B": [
             "./static3.php"
         ],
-        "MyNamespace\\b()": [
+        "static->b()": [
             "./static3.php"
         ],
-        "b()": [
+        "MyNamespace\\A": [
             "./static3.php"
         ]
     },

@@ -5,9 +5,6 @@
         ],
         "MyNamespace\\B->b()": [
             "./parent3.php"
-        ],
-        "parent": [
-            "./parent3.php"
         ]
     },
     "definitions": {
