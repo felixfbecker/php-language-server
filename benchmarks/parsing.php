@@ -17,7 +17,7 @@ $totalSize = 0;
 $frameworks = ["drupal", "wordpress", "php-language-server", "tolerant-php-parser", "math-php", "symfony", "CodeIgniter", "cakephp"];
 
 foreach($frameworks as $framework) {
-    $iterator = new RecursiveDirectoryIterator(__DIR__ . "/validation/frameworks/$framework");
+    $iterator = new RecursiveDirectoryIterator(__DIR__ . "/../validation/frameworks/$framework");
     $testProviderArray = array();
 
     foreach (new RecursiveIteratorIterator($iterator) as $file) {
