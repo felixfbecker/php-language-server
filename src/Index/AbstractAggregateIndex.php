@@ -112,15 +112,15 @@ abstract class AbstractAggregateIndex implements ReadableIndex
     }
 
     /**
-     * Returns a Generator that yields all the descendant Definitions of a given FQN
+     * Returns a Generator that yields all the direct child Definitions of a given FQN
      *
      * @param string $fqn
      * @return \Generator yields Definition
      */
-    public function getDescendantDefinitionsForFqn(string $fqn): \Generator
+    public function getChildDefinitionsForFqn(string $fqn): \Generator
     {
         foreach ($this->getIndexes() as $index) {
-            yield from $index->getDescendantDefinitionsForFqn($fqn);
+            yield from $index->getChildDefinitionsForFqn($fqn);
         }
     }
 

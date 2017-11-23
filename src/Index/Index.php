@@ -107,12 +107,12 @@ class Index implements ReadableIndex, \Serializable
     }
 
     /**
-     * Returns a Generator that yields all the descendant Definitions of a given FQN
+     * Returns a Generator that yields all the direct child Definitions of a given FQN
      *
      * @param string $fqn
      * @return \Generator yields Definition
      */
-    public function getDescendantDefinitionsForFqn(string $fqn): \Generator
+    public function getChildDefinitionsForFqn(string $fqn): \Generator
     {
         $parts = $this->splitFqn($fqn);
         if ('' === end($parts)) {
@@ -122,11 +122,15 @@ class Index implements ReadableIndex, \Serializable
         }
 
         $result = $this->getIndexValue($parts, $this->definitions);
-
-        if ($result instanceof Definition) {
-            yield $fqn => $result;
-        } elseif (is_array($result)) {
-            yield from $this->yieldDefinitionsRecursively($result, $fqn);
+        if (!$result) {
+            return;
+        }
+        foreach ($result as $name => $item) {
+            // Don't yield the parent
+            if ($name === '') {
+                continue;
+            }
+            yield $fqn.$name => $item;
         }
     }
 
@@ -374,7 +378,7 @@ class Index implements ReadableIndex, \Serializable
 
         $parts = array_slice($parts, 1);
         // we've reached the last provided part
-        if (0 === count($parts)) {
+        if (empty($parts)) {
             return $storage[$part];
         }
 

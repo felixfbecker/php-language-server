@@ -38,12 +38,12 @@ interface ReadableIndex extends EmitterInterface
     public function getDefinitions(): \Generator;
 
     /**
-     * Returns a Generator that yields all the descendant Definitions of a given FQN
+     * Returns a Generator that yields all the direct child Definitions of a given FQN
      *
      * @param string $fqn
      * @return \Generator yields Definition
      */
-    public function getDescendantDefinitionsForFqn(string $fqn): \Generator;
+    public function getChildDefinitionsForFqn(string $fqn): \Generator;
 
     /**
      * Returns the Definition object by a specific FQN

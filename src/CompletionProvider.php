@@ -220,11 +220,12 @@ class CompletionProvider
 
             // The FQNs of the symbol and its parents (eg the implemented interfaces)
             foreach ($this->expandParentFqns($fqns) as $parentFqn) {
+                // Add the object access operator to only get members of all parents
+                $prefix = $parentFqn . '->';
+                $prefixLen = strlen($prefix);
                 // Collect fqn definitions
-                foreach ($this->index->getDescendantDefinitionsForFqn($parentFqn) as $fqn => $def) {
-                    // Add the object access operator to only get members of all parents
-                    $prefix = $parentFqn . '->';
-                    if (substr($fqn, 0, strlen($prefix)) === $prefix && $def->isMember) {
+                foreach ($this->index->getChildDefinitionsForFqn($parentFqn) as $fqn => $def) {
+                    if (substr($fqn, 0, $prefixLen) === $prefix && $def->isMember) {
                         $list->items[] = CompletionItem::fromDefinition($def);
                     }
                 }
@@ -250,11 +251,12 @@ class CompletionProvider
 
             // The FQNs of the symbol and its parents (eg the implemented interfaces)
             foreach ($this->expandParentFqns($fqns) as $parentFqn) {
+                // Append :: operator to only get static members of all parents
+                $prefix = strtolower($parentFqn . '::');
+                $prefixLen = strlen($prefix);
                 // Collect fqn definitions
-                foreach ($this->index->getDescendantDefinitionsForFqn($parentFqn) as $fqn => $def) {
-                    // Append :: operator to only get static members of all parents
-                    $prefix = strtolower($parentFqn . '::');
-                    if (substr(strtolower($fqn), 0, strlen($prefix)) === $prefix && $def->isMember) {
+                foreach ($this->index->getChildDefinitionsForFqn($parentFqn) as $fqn => $def) {
+                    if (substr(strtolower($fqn), 0, $prefixLen) === $prefix && $def->isMember) {
                         $list->items[] = CompletionItem::fromDefinition($def);
                     }
                 }
