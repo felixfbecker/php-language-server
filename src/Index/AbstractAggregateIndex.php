@@ -102,13 +102,12 @@ abstract class AbstractAggregateIndex implements ReadableIndex
      * Returns a Generator providing an associative array [string => Definition]
      * that maps fully qualified symbol names to Definitions (global or not)
      *
-     * @param boolean|null $member Indicates if we want member or non-member definitions (null for both, default null)
      * @return \Generator yields Definition
      */
-    public function getDefinitions(bool $member = null): \Generator
+    public function getDefinitions(): \Generator
     {
         foreach ($this->getIndexes() as $index) {
-            yield from $index->getDefinitions($member);
+            yield from $index->getDefinitions();
         }
     }
 
@@ -116,13 +115,12 @@ abstract class AbstractAggregateIndex implements ReadableIndex
      * Returns a Generator that yields all the descendant Definitions of a given FQN
      *
      * @param string $fqn
-     * @param boolean|null $member Indicates if we want member or non-member definitions (null for both, default null)
      * @return \Generator yields Definition
      */
-    public function getDescendantDefinitionsForFqn(string $fqn, bool $member = null): \Generator
+    public function getDescendantDefinitionsForFqn(string $fqn): \Generator
     {
         foreach ($this->getIndexes() as $index) {
-            yield from $index->getDescendantDefinitionsForFqn($fqn, $member);
+            yield from $index->getDescendantDefinitionsForFqn($fqn);
         }
     }
 

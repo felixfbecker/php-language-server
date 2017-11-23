@@ -221,10 +221,10 @@ class CompletionProvider
             // The FQNs of the symbol and its parents (eg the implemented interfaces)
             foreach ($this->expandParentFqns($fqns) as $parentFqn) {
                 // Collect fqn definitions
-                foreach ($this->index->getDescendantDefinitionsForFqn($parentFqn, true) as $fqn => $def) {
+                foreach ($this->index->getDescendantDefinitionsForFqn($parentFqn) as $fqn => $def) {
                     // Add the object access operator to only get members of all parents
                     $prefix = $parentFqn . '->';
-                    if (substr($fqn, 0, strlen($prefix)) === $prefix) {
+                    if (substr($fqn, 0, strlen($prefix)) === $prefix && $def->isMember) {
                         $list->items[] = CompletionItem::fromDefinition($def);
                     }
                 }
@@ -251,10 +251,10 @@ class CompletionProvider
             // The FQNs of the symbol and its parents (eg the implemented interfaces)
             foreach ($this->expandParentFqns($fqns) as $parentFqn) {
                 // Collect fqn definitions
-                foreach ($this->index->getDescendantDefinitionsForFqn($parentFqn, true) as $fqn => $def) {
+                foreach ($this->index->getDescendantDefinitionsForFqn($parentFqn) as $fqn => $def) {
                     // Append :: operator to only get static members of all parents
                     $prefix = strtolower($parentFqn . '::');
-                    if (substr(strtolower($fqn), 0, strlen($prefix)) === $prefix) {
+                    if (substr(strtolower($fqn), 0, strlen($prefix)) === $prefix && $def->isMember) {
                         $list->items[] = CompletionItem::fromDefinition($def);
                     }
                 }
@@ -321,12 +321,14 @@ class CompletionProvider
             // Suggest global (ie non member) symbols that either
             //  - start with the current namespace + prefix, if the Name node is not fully qualified
             //  - start with just the prefix, if the Name node is fully qualified
-            foreach ($this->index->getDefinitions(false) as $fqn => $def) {
+            foreach ($this->index->getDefinitions() as $fqn => $def) {
 
                 $fqnStartsWithPrefix = substr($fqn, 0, $prefixLen) === $prefix;
 
                 if (
-                    (
+                    // Exclude methods, properties etc.
+                    !$def->isMember
+                    && (
                         !$prefix
                         || (
                             // Either not qualified, but a matching prefix with global fallback
