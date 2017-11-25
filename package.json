@@ -12,7 +12,7 @@
     "cz-conventional-changelog": "^2.0.0",
     "husky": "^0.14.3",
     "last-release-git": "0.0.3",
-    "semantic-release": "^10.0.0",
+    "semantic-release": "11.0.0",
     "semantic-release-docker": "^1.0.0",
     "validate-commit-msg": "^2.14.0"
   },
