@@ -8,7 +8,7 @@
   },
   "devDependencies": {
     "@semantic-release/github": "^1.0.0",
-    "@semantic-release/last-release-git-tag": "^1.0.0",
+    "@semantic-release/last-release-git-tag": "2.0.0",
     "cz-conventional-changelog": "^2.0.0",
     "husky": "^0.14.3",
     "last-release-git": "0.0.3",
