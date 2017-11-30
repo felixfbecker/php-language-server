@@ -76,11 +76,11 @@ class InvalidThisUsageTest extends TestCase
         $diagnostics = $this->collectDiagnostics(
             __DIR__ . '/../../fixtures/diagnostics/errors/this_in_function.php'
         );
-
+        
         $this->assertCount(1, $diagnostics);
         $this->assertDiagnostic(
             $diagnostics[0],
-            '$this can only be used in an object context.',
+            '$this can only be used in an object context or non-static anonymous functions.',
             DiagnosticSeverity::ERROR,
             new Range(
                 new Position(4, 11),
@@ -98,7 +98,7 @@ class InvalidThisUsageTest extends TestCase
         $this->assertCount(1, $diagnostics);
         $this->assertDiagnostic(
             $diagnostics[0],
-            '$this can only be used in an object context.',
+            '$this can only be used in an object context or non-static anonymous functions.',
             DiagnosticSeverity::ERROR,
             new Range(
                 new Position(2, 5),
@@ -114,5 +114,95 @@ class InvalidThisUsageTest extends TestCase
         );
 
         $this->assertCount(0, $diagnostics);
+    }
+
+    public function testThisInMethodInAnonymousFunctionWithNoCheckProducesNoError()
+    {
+        $diagnostics = $this->collectDiagnostics(
+            __DIR__ . '/../../fixtures/diagnostics/baselines/this_in_method_in_anonymous_function.php'
+        );
+
+        $this->assertCount(0, $diagnostics);
+    }
+
+    public function testThisInMethodInAnonymousFunctionWithCheckProducesNoError()
+    {
+        $diagnostics = $this->collectDiagnostics(
+            __DIR__ . '/../../fixtures/diagnostics/baselines/this_in_method_in_anonymous_function_check.php'
+        );
+
+        $this->assertCount(0, $diagnostics);
+    }
+
+    public function testThisInAnonymousFunctionWithCheckProducesNoError()
+    {
+        $diagnostics = $this->collectDiagnostics(
+            __DIR__ . '/../../fixtures/diagnostics/baselines/this_in_anonymous_function_check.php'
+        );
+
+        $this->assertCount(0, $diagnostics);
+    }
+
+    public function testThisInStaticMethodInAnonymousFunctionWithCheckProducesWarning()
+    {
+        $diagnostics = $this->collectDiagnostics(
+            __DIR__ . '/../../fixtures/diagnostics/baselines/this_in_static_method_in_anonymous_function_check.php'
+        );
+
+        $this->assertCount(0, $diagnostics);
+    }
+
+    public function testThisInStaticAnonymousFunctionProducesError()
+    {
+        $diagnostics = $this->collectDiagnostics(
+            __DIR__ . '/../../fixtures/diagnostics/errors/this_in_static_anonymous_function.php'
+        );
+
+        $this->assertCount(1, $diagnostics);
+        $this->assertDiagnostic(
+            $diagnostics[0],
+            '$this can not be used in static anonymous functions.',
+            DiagnosticSeverity::ERROR,
+            new Range(
+                new Position(3, 11),
+                new Position(3, 16)
+            )
+        );
+    }
+
+    public function testThisInAnonymousFunctionWithNoCheckProducesWarning()
+    {
+        $diagnostics = $this->collectDiagnostics(
+            __DIR__ . '/../../fixtures/diagnostics/warnings/this_in_anonymous_function.php'
+        );
+
+        $this->assertCount(1, $diagnostics);
+        $this->assertDiagnostic(
+            $diagnostics[0],
+            '$this might not be bound by invoker of callable or might be bound to object of any class. Consider adding instance class check.',
+            DiagnosticSeverity::WARNING,
+            new Range(
+                new Position(3, 11),
+                new Position(3, 16)
+            )
+        );
+    }
+
+    public function testThisInStaticMethodInAnonymousFunctionWithNoCheckProducesWarning()
+    {
+        $diagnostics = $this->collectDiagnostics(
+            __DIR__ . '/../../fixtures/diagnostics/warnings/this_in_static_method_in_anonymous_function.php'
+        );
+
+        $this->assertCount(1, $diagnostics);
+        $this->assertDiagnostic(
+            $diagnostics[0],
+            '$this might not be bound by invoker of callable or might be bound to object of any class. Consider adding instance class check.',
+            DiagnosticSeverity::WARNING,
+            new Range(
+                new Position(7, 19),
+                new Position(7, 24)
+            )
+        );
     }
 }
