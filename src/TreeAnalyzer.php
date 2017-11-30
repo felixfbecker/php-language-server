@@ -96,66 +96,19 @@ class TreeAnalyzer
 
         // Check for invalid usage of $this.
         if ($node instanceof Node\Expression\Variable && $node->getName() === 'this') {
-            // Find the first ancestor that's a class method or anonymous function.
-            // Return an error if there is none, or if the method or anonymous function is static
-            // Return a warning if there is no class check, for ex. if ($this instanceof [class]) { /*use $this*/}
-            $methodOrAnnonFunc = $node->getFirstAncestor(Node\MethodDeclaration::class, Node\Expression\AnonymousFunctionCreationExpression::class);
-            if ($methodOrAnnonFunc === null){
+            // Find the first ancestor that's a class method. Return an error
+            // if there is none, or if the method is static.
+            $method = $node->getFirstAncestor(Node\MethodDeclaration::class);
+            if ($method === null || $method->isStatic()) {
                 $this->diagnostics[] = new Diagnostic(
-                    "\$this can only be used in an object context or non-static anonymous functions.",
+                    $method === null
+                        ? "\$this can only be used in an object context."
+                        : "\$this can not be used in static methods.",
                     Range::fromNode($node),
                     null,
                     DiagnosticSeverity::ERROR,
                     'php'
                 );
-            } else if ($methodOrAnnonFunc instanceof Node\MethodDeclaration){
-                $method = $methodOrAnnonFunc;
-                if ($method->isStatic()) {
-                    $this->diagnostics[] = new Diagnostic(
-                        "\$this can not be used in static methods.",
-                        Range::fromNode($node),
-                        null,
-                        DiagnosticSeverity::ERROR,
-                        'php'
-                    );
-                }
-            } else if ($methodOrAnnonFunc instanceof Node\Expression\AnonymousFunctionCreationExpression){
-                $anonFunc = $methodOrAnnonFunc;
-                if ($anonFunc->staticModifier){
-                    $this->diagnostics[] = new Diagnostic(
-                        "\$this can not be used in static anonymous functions.",
-                        Range::fromNode($node),
-                        null,
-                        DiagnosticSeverity::ERROR,
-                        'php'
-                    );
-                } else {
-                    // IfStatementNode must be in AnonymousFunctionCreationExpression so get what was first
-                    $ifStatement = $node->getFirstAncestor(Node\Statement\IfStatementNode::class, Node\Expression\AnonymousFunctionCreationExpression::class);
-                    // naive check for Node\Expression\BinaryExpression $ifStatement->expression "$this instanceof [class]":
-                    // checks
-                    //     leftOperand Node\Expression\Variable is current node ($this node) or is any $this node in ifStatement
-                    //     operator kind PhpParser\TokenKind $ifStatement->expression->operator->kind equal to InstanceOfKeyword
-                    // for information: class is in PhpParser\Node\QualifiedName $ifStatement->expression->rightOperand
-                    if (!($ifStatement 
-                        && $ifStatement instanceof Node\Statement\IfStatementNode
-                        && ($expression = $ifStatement->expression)
-                        && $expression instanceof Node\Expression\BinaryExpression
-                        && ($expression->leftOperand = $node 
-                            || $expression->leftOperand instanceof Node\Expression\Variable && $expression->leftOperand->getName() === 'this')
-                        && $expression->operator->kind === PhpParser\TokenKind::InstanceOfKeyword
-                        )){
-                            if (($method = $node->getFirstAncestor(Node\MethodDeclaration::class))===null || $method->isStatic()){
-                                $this->diagnostics[] = new Diagnostic(
-                                        "\$this might not be bound by invoker of callable or might be bound to object of any class. Consider adding instance class check.",
-                                        Range::fromNode($node),
-                                        null,
-                                        DiagnosticSeverity::WARNING,
-                                        'php'
-                                );
-                            }//else we should warn here that invoker can bind $this to object of any class. Should we?
-                    }
-                }
             }
         }
     }
