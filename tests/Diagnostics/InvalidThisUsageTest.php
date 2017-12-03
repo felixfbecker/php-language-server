@@ -71,42 +71,6 @@ class InvalidThisUsageTest extends TestCase
         );
     }
 
-    public function testThisInFunctionProducesError()
-    {
-        $diagnostics = $this->collectDiagnostics(
-            __DIR__ . '/../../fixtures/diagnostics/errors/this_in_function.php'
-        );
-
-        $this->assertCount(1, $diagnostics);
-        $this->assertDiagnostic(
-            $diagnostics[0],
-            '$this can only be used in an object context.',
-            DiagnosticSeverity::ERROR,
-            new Range(
-                new Position(4, 11),
-                new Position(4, 16)
-            )
-        );
-    }
-
-    public function testThisInRoot()
-    {
-        $diagnostics = $this->collectDiagnostics(
-            __DIR__ . '/../../fixtures/diagnostics/errors/this_in_root.php'
-        );
-
-        $this->assertCount(1, $diagnostics);
-        $this->assertDiagnostic(
-            $diagnostics[0],
-            '$this can only be used in an object context.',
-            DiagnosticSeverity::ERROR,
-            new Range(
-                new Position(2, 5),
-                new Position(2, 10)
-            )
-        );
-    }
-
     public function testThisInMethodProducesNoError()
     {
         $diagnostics = $this->collectDiagnostics(

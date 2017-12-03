@@ -99,11 +99,9 @@ class TreeAnalyzer
             // Find the first ancestor that's a class method. Return an error
             // if there is none, or if the method is static.
             $method = $node->getFirstAncestor(Node\MethodDeclaration::class);
-            if ($method === null || $method->isStatic()) {
+            if ($method->isStatic()) {
                 $this->diagnostics[] = new Diagnostic(
-                    $method === null
-                        ? "\$this can only be used in an object context."
-                        : "\$this can not be used in static methods.",
+                    "\$this can not be used in static methods.",
                     Range::fromNode($node),
                     null,
                     DiagnosticSeverity::ERROR,
