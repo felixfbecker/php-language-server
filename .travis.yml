@@ -34,7 +34,8 @@ jobs:
         - brew tap homebrew/homebrew-php
         - brew install php71
         - brew install homebrew/php/php71-xdebug
-        - curl https://getcomposer.org/installer | php
+        - php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+        - php composer-setup.php
         - ln -s "`pwd`/composer.phar" /usr/local/bin/composer
     - stage: release
       php: '7.0'
