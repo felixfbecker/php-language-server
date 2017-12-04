@@ -234,7 +234,7 @@ class SignatureHelpProvider
                 ++$i;
             }
         }
-        if (is_null($found)) {
+        if ($found === null) {
             $found = $i;
         }
         return $found;
