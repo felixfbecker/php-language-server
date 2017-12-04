@@ -1,0 +1,54 @@
+version: '{build}'
+
+image: Visual Studio 2017
+platform:
+  - x64
+
+skip_tags: true
+skip_branch_with_pr: true
+clone_depth: 1
+max_jobs: 3
+
+cache:
+  - '%LOCALAPPDATA%\Composer'
+  - '%LOCALAPPDATA%\Temp\Chocolatey'
+
+environment:
+  ANSICON: 121x90 (121x90)
+  matrix:
+    - { PHP_VERSION: '7.1.11', VC_VERSION: '14', XDEBUG_VERSION: '2.5.5' }
+
+install:
+  # Enable Windows Update service, needed to install vcredist2015 (dependency of php)
+  - ps: Set-Service wuauserv -StartupType Manual
+  - choco config set cacheLocation %LOCALAPPDATA%\Temp\Chocolatey
+  - choco install -y php --version %PHP_VERSION%
+  - choco install -y composer
+  - refreshenv
+  - composer install --no-interaction --no-progress --prefer-dist
+  # Install XDebug for code coverage
+  - ps: |
+      $client = New-Object System.Net.WebClient
+      $phpMinorVersion = $env:PHP_VERSION -replace '\.\d+$'
+      $xdebugUrl = "https://xdebug.org/files/php_xdebug-$env:XDEBUG_VERSION-$phpMinorVersion-vc14-nts-x86_64.dll"
+      $phpDir = (Get-Item (Get-Command php).Source).Directory.FullName
+      $xdebugPath = Join-Path $phpDir ext\xdebug.dll
+      $client.DownloadFile($xdebugUrl, $xdebugPath)
+      $phpIniPath = Join-Path $phpDir php.ini
+      Add-Content $phpIniPath @"
+      zend_extension=$xdebugPath
+      "@
+
+build: off
+
+test_script:
+  - vendor\bin\phpunit --coverage-clover=coverage/coverage.xml
+
+after_test:
+  - ps: |
+      # Delete vendor because it causes problems with codecovs report search
+      # https://github.com/codecov/codecov-bash/issues/96
+      Remove-Item -Recurse -Force vendor
+      $env:PATH = 'C:\msys64\usr\bin;' + $env:PATH
+      Invoke-WebRequest -Uri 'https://codecov.io/bash' -OutFile codecov.sh
+      bash codecov.sh -f 'coverage/coverage.xml'

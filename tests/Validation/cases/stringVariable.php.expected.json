@@ -1,10 +1,14 @@
 {
-    "references": [],
+    "references": {
+        "B->hi": [
+            "./stringVariable.php"
+        ]
+    },
     "definitions": {
         "B": {
             "fqn": "B",
             "extends": [],
-            "isGlobal": true,
+            "isMember": false,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": true,
@@ -23,7 +27,7 @@
         "B->hi": {
             "fqn": "B->hi",
             "extends": [],
-            "isGlobal": false,
+            "isMember": true,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
@@ -43,7 +47,7 @@
         "B->a()": {
             "fqn": "B->a()",
             "extends": [],
-            "isGlobal": false,
+            "isMember": true,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,

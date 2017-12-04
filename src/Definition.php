@@ -39,12 +39,13 @@ class Definition
     public $extends;
 
     /**
-     * Only true for classes, interfaces, traits, functions and non-class constants
+     * False for classes, interfaces, traits, functions and non-class constants
+     * True for methods, properties and class constants
      * This is so methods and properties are not suggested in the global scope
      *
      * @var bool
      */
-    public $isGlobal;
+    public $isMember;
 
     /**
      * True if this definition is affected by global namespace fallback (global function or global constant)
@@ -78,7 +79,7 @@ class Definition
      * For functions and methods, this is the return type.
      * For any other declaration it will be null.
      * Can also be a compound type.
-     * If it is unknown, will be Types\Mixed.
+     * If it is unknown, will be Types\Mixed_.
      *
      * @var \phpDocumentor\Type|null
      */

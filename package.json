@@ -1,0 +1,41 @@
+{
+  "name": "php-language-server",
+  "version": "0.0.0-development",
+  "private": true,
+  "scripts": {
+    "commitmsg": "validate-commit-msg",
+    "semantic-release": "semantic-release"
+  },
+  "devDependencies": {
+    "@semantic-release/github": "^2.0.0",
+    "@semantic-release/last-release-git-tag": "^2.0.0",
+    "cz-conventional-changelog": "^2.0.0",
+    "husky": "^0.14.3",
+    "semantic-release": "^11.0.0",
+    "semantic-release-docker": "^2.0.0",
+    "validate-commit-msg": "^2.14.0"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  },
+  "release": {
+    "verifyConditions": [
+      "@semantic-release/github",
+      "semantic-release-docker"
+    ],
+    "getLastRelease": "@semantic-release/last-release-git-tag",
+    "publish": [
+      "@semantic-release/github",
+      {
+        "path": "semantic-release-docker",
+        "name": "felixfbecker/php-language-server"
+      }
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/felixfbecker/php-language-server.git"
+  }
+}

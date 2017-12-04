@@ -123,6 +123,7 @@ class Workspace
      */
     public function xreferences($query, array $files = null): Promise
     {
+        // TODO: $files is unused in the coroutine
         return coroutine(function () use ($query, $files) {
             if ($this->composerLock === null) {
                 return [];

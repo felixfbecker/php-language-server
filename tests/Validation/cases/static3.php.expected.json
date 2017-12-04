@@ -3,10 +3,10 @@
         "MyNamespace\\B": [
             "./static3.php"
         ],
-        "MyNamespace\\b()": [
+        "static->b()": [
             "./static3.php"
         ],
-        "b()": [
+        "MyNamespace\\A": [
             "./static3.php"
         ]
     },
@@ -14,7 +14,7 @@
         "MyNamespace": {
             "fqn": "MyNamespace",
             "extends": [],
-            "isGlobal": true,
+            "isMember": false,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
@@ -33,7 +33,7 @@
         "MyNamespace\\B": {
             "fqn": "MyNamespace\\B",
             "extends": [],
-            "isGlobal": true,
+            "isMember": false,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": true,
@@ -52,7 +52,7 @@
         "MyNamespace\\B->b()": {
             "fqn": "MyNamespace\\B->b()",
             "extends": [],
-            "isGlobal": false,
+            "isMember": true,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
@@ -74,7 +74,7 @@
             "extends": [
                 "MyNamespace\\B"
             ],
-            "isGlobal": true,
+            "isMember": false,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": true,
@@ -93,7 +93,7 @@
         "MyNamespace\\A->a()": {
             "fqn": "MyNamespace\\A->a()",
             "extends": [],
-            "isGlobal": false,
+            "isMember": true,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,

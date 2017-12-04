@@ -11,7 +11,7 @@
         "TestNamespace": {
             "fqn": "TestNamespace",
             "extends": [],
-            "isGlobal": true,
+            "isMember": false,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
@@ -30,7 +30,7 @@
         "TestNamespace\\whatever()": {
             "fqn": "TestNamespace\\whatever()",
             "extends": [],
-            "isGlobal": true,
+            "isMember": false,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,

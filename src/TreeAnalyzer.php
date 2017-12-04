@@ -9,11 +9,18 @@ use phpDocumentor\Reflection\DocBlockFactory;
 use Sabre\Uri;
 use Microsoft\PhpParser;
 use Microsoft\PhpParser\Node;
+use Microsoft\PhpParser\Token;
 
 class TreeAnalyzer
 {
     /** @var PhpParser\Parser */
     private $parser;
+
+    /** @var DocBlockFactory */
+    private $docBlockFactory;
+
+    /** @var DefinitionResolver */
+    private $definitionResolver;
 
     /** @var Node\SourceFileNode */
     private $sourceFileNode;
@@ -49,40 +56,53 @@ class TreeAnalyzer
 
         // TODO - docblock errors
 
-        $this->collectDefinitionsAndReferences($this->sourceFileNode);
+        $this->traverse($this->sourceFileNode);
     }
 
-    private function collectDefinitionsAndReferences(Node $sourceFileNode)
+    /**
+     * Collects Parser diagnostic messages for the Node/Token
+     * and transforms them into LSP Format
+     *
+     * @param Node|Token $node
+     * @return void
+     */
+    private function collectDiagnostics($node)
     {
-        foreach ($sourceFileNode::CHILD_NAMES as $name) {
-            $node = $sourceFileNode->$name;
+        // Get errors from the parser.
+        if (($error = PhpParser\DiagnosticsProvider::checkDiagnostics($node)) !== null) {
+            $range = PhpParser\PositionUtilities::getRangeFromPosition($error->start, $error->length, $this->sourceFileNode->fileContents);
 
-            if ($node === null) {
-                continue;
+            switch ($error->kind) {
+                case PhpParser\DiagnosticKind::Error:
+                    $severity = DiagnosticSeverity::ERROR;
+                    break;
+                case PhpParser\DiagnosticKind::Warning:
+                default:
+                    $severity = DiagnosticSeverity::WARNING;
+                    break;
             }
 
-            if (\is_array($node)) {
-                foreach ($node as $child) {
-                    if ($child instanceof Node) {
-                        $this->update($child);
-                    }
-                }
-                continue;
-            }
+            $this->diagnostics[] = new Diagnostic(
+                $error->message,
+                new Range(
+                    new Position($range->start->line, $range->start->character),
+                    new Position($range->end->line, $range->start->character)
+                ),
+                null,
+                $severity,
+                'php'
+            );
+        }
 
-            if ($node instanceof Node) {
-                $this->update($node);
-            }
-
-            if (($error = PhpParser\DiagnosticsProvider::checkDiagnostics($node)) !== null) {
-                $range = PhpParser\PositionUtilities::getRangeFromPosition($error->start, $error->length, $this->sourceFileNode->fileContents);
-
+        // Check for invalid usage of $this.
+        if ($node instanceof Node\Expression\Variable && $node->getName() === 'this') {
+            // Find the first ancestor that's a class method. Return an error
+            // if there is none, or if the method is static.
+            $method = $node->getFirstAncestor(Node\MethodDeclaration::class);
+            if ($method && $method->isStatic()) {
                 $this->diagnostics[] = new Diagnostic(
-                    $error->message,
-                    new Range(
-                        new Position($range->start->line, $range->start->character),
-                        new Position($range->end->line, $range->start->character)
-                    ),
+                    "\$this can not be used in static methods.",
+                    Range::fromNode($node),
                     null,
                     DiagnosticSeverity::ERROR,
                     'php'
@@ -92,11 +112,44 @@ class TreeAnalyzer
     }
 
     /**
+     * Recursive AST traversal to collect definitions/references and diagnostics
+     *
+     * @param Node|Token $currentNode The node/token to process
+     */
+    private function traverse($currentNode)
+    {
+        $this->collectDiagnostics($currentNode);
+
+        // Only update/descend into Nodes, Tokens are leaves
+        if ($currentNode instanceof Node) {
+            $this->collectDefinitionsAndReferences($currentNode);
+
+            foreach ($currentNode::CHILD_NAMES as $name) {
+                $child = $currentNode->$name;
+
+                if ($child === null) {
+                    continue;
+                }
+
+                if (\is_array($child)) {
+                    foreach ($child as $actualChild) {
+                        if ($actualChild !== null) {
+                            $this->traverse($actualChild);
+                        }
+                    }
+                } else {
+                    $this->traverse($child);
+                }
+            }
+        }
+    }
+
+    /**
      * Collect definitions and references for the given node
      *
      * @param Node $node
      */
-    private function update(Node $node)
+    private function collectDefinitionsAndReferences(Node $node)
     {
         $fqn = ($this->definitionResolver)::getDefinedFqn($node);
         // Only index definitions with an FQN (no variables)
@@ -104,8 +157,9 @@ class TreeAnalyzer
             $this->definitionNodes[$fqn] = $node;
             $this->definitions[$fqn] = $this->definitionResolver->createDefinitionFromNode($node, $fqn);
         } else {
+
             $parent = $node->parent;
-            if (!(
+            if (
                 (
                     // $node->parent instanceof Node\Expression\ScopedPropertyAccessExpression ||
                     ($node instanceof Node\Expression\ScopedPropertyAccessExpression ||
@@ -114,45 +168,71 @@ class TreeAnalyzer
                         $node->parent instanceof Node\Expression\CallExpression ||
                         $node->memberName instanceof PhpParser\Token
                     ))
-                || ($parent instanceof Node\Statement\NamespaceDefinition && $parent->name !== null && $parent->name->getStart() === $node->getStart()))
+                || ($parent instanceof Node\Statement\NamespaceDefinition && $parent->name !== null && $parent->name->getStart() === $node->getStart())
             ) {
-                $fqn = $this->definitionResolver->resolveReferenceNodeToFqn($node);
-                if ($fqn !== null) {
-                    $this->addReference($fqn, $node);
+                return;
+            }
 
-                    if (
-                        $node instanceof Node\QualifiedName
-                        && ($node->isQualifiedName() || $node->parent instanceof Node\NamespaceUseClause)
-                        && !($parent instanceof Node\Statement\NamespaceDefinition && $parent->name->getStart() === $node->getStart()
-                        )
-                    ) {
-                        // Add references for each referenced namespace
-                        $ns = $fqn;
-                        while (($pos = strrpos($ns, '\\')) !== false) {
-                            $ns = substr($ns, 0, $pos);
-                            $this->addReference($ns, $node);
-                        }
-                    }
+            $fqn = $this->definitionResolver->resolveReferenceNodeToFqn($node);
+            if (!$fqn) {
+                return;
+            }
 
-                    // Namespaced constant access and function calls also need to register a reference
-                    // to the global version because PHP falls back to global at runtime
-                    // http://php.net/manual/en/language.namespaces.fallback.php
-                    if (ParserHelpers\isConstantFetch($node) ||
-                        ($parent instanceof Node\Expression\CallExpression
-                            && !(
-                                $node instanceof Node\Expression\ScopedPropertyAccessExpression ||
-                                $node instanceof Node\Expression\MemberAccessExpression
-                            ))) {
-                        $parts = explode('\\', $fqn);
-                        if (count($parts) > 1) {
-                            $globalFqn = end($parts);
-                            $this->addReference($globalFqn, $node);
-                        }
-                    }
+            if ($fqn === 'self' || $fqn === 'static') {
+                // Resolve self and static keywords to the containing class
+                // (This is not 100% correct for static but better than nothing)
+                $classNode = $node->getFirstAncestor(Node\Statement\ClassDeclaration::class);
+                if (!$classNode) {
+                    return;
+                }
+                $fqn = (string)$classNode->getNamespacedName();
+                if (!$fqn) {
+                    return;
+                }
+            } else if ($fqn === 'parent') {
+                // Resolve parent keyword to the base class FQN
+                $classNode = $node->getFirstAncestor(Node\Statement\ClassDeclaration::class);
+                if (!$classNode || !$classNode->classBaseClause || !$classNode->classBaseClause->baseClass) {
+                    return;
+                }
+                $fqn = (string)$classNode->classBaseClause->baseClass->getResolvedName();
+                if (!$fqn) {
+                    return;
+                }
+            }
+
+            $this->addReference($fqn, $node);
+
+            if (
+                $node instanceof Node\QualifiedName
+                && ($node->isQualifiedName() || $node->parent instanceof Node\NamespaceUseClause)
+                && !($parent instanceof Node\Statement\NamespaceDefinition && $parent->name->getStart() === $node->getStart()
+                )
+            ) {
+                // Add references for each referenced namespace
+                $ns = $fqn;
+                while (($pos = strrpos($ns, '\\')) !== false) {
+                    $ns = substr($ns, 0, $pos);
+                    $this->addReference($ns, $node);
+                }
+            }
+
+            // Namespaced constant access and function calls also need to register a reference
+            // to the global version because PHP falls back to global at runtime
+            // http://php.net/manual/en/language.namespaces.fallback.php
+            if (ParserHelpers\isConstantFetch($node) ||
+                ($parent instanceof Node\Expression\CallExpression
+                    && !(
+                        $node instanceof Node\Expression\ScopedPropertyAccessExpression ||
+                        $node instanceof Node\Expression\MemberAccessExpression
+                    ))) {
+                $parts = explode('\\', $fqn);
+                if (count($parts) > 1) {
+                    $globalFqn = end($parts);
+                    $this->addReference($globalFqn, $node);
                 }
             }
         }
-        $this->collectDefinitionsAndReferences($node);
     }
 
     /**
@@ -175,7 +255,7 @@ class TreeAnalyzer
     }
 
     /**
-     * @return Definition
+     * @return Definition[]
      */
     public function getDefinitions()
     {

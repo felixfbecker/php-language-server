@@ -1,10 +1,14 @@
 {
-    "references": [],
+    "references": {
+        "A": [
+            "./nameToken.php"
+        ]
+    },
     "definitions": {
         "A": {
             "fqn": "A",
             "extends": [],
-            "isGlobal": true,
+            "isMember": false,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": true,
@@ -23,7 +27,7 @@
         "A->b()": {
             "fqn": "A->b()",
             "extends": [],
-            "isGlobal": false,
+            "isMember": true,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,

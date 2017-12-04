@@ -181,10 +181,8 @@ class DefinitionResolver
         );
 
         // Interfaces, classes, traits, namespaces, functions, and global const elements
-        $def->isGlobal = (
-            $node instanceof Node\Statement\InterfaceDeclaration ||
-            $node instanceof Node\Statement\ClassDeclaration ||
-            $node instanceof Node\Statement\TraitDeclaration ||
+        $def->isMember = !(
+            $node instanceof PhpParser\ClassLike ||
 
             ($node instanceof Node\Statement\NamespaceDefinition && $node->name !== null) ||
 
@@ -266,13 +264,38 @@ class DefinitionResolver
         // Other references are references to a global symbol that have an FQN
         // Find out the FQN
         $fqn = $this->resolveReferenceNodeToFqn($node);
-        if ($fqn === null) {
+        if (!$fqn) {
             return null;
         }
+
+        if ($fqn === 'self' || $fqn === 'static') {
+            // Resolve self and static keywords to the containing class
+            // (This is not 100% correct for static but better than nothing)
+            $classNode = $node->getFirstAncestor(Node\Statement\ClassDeclaration::class);
+            if (!$classNode) {
+                return;
+            }
+            $fqn = (string)$classNode->getNamespacedName();
+            if (!$fqn) {
+                return;
+            }
+        } else if ($fqn === 'parent') {
+            // Resolve parent keyword to the base class FQN
+            $classNode = $node->getFirstAncestor(Node\Statement\ClassDeclaration::class);
+            if (!$classNode || !$classNode->classBaseClause || !$classNode->classBaseClause->baseClass) {
+                return;
+            }
+            $fqn = (string)$classNode->classBaseClause->baseClass->getResolvedName();
+            if (!$fqn) {
+                return;
+            }
+        }
+
         // If the node is a function or constant, it could be namespaced, but PHP falls back to global
         // http://php.net/manual/en/language.namespaces.fallback.php
         // TODO - verify that this is not a method
         $globalFallback = ParserHelpers\isConstantFetch($node) || $parent instanceof Node\Expression\CallExpression;
+
         // Return the Definition object from the index index
         return $this->index->getDefinition($fqn, $globalFallback);
     }
@@ -280,6 +303,7 @@ class DefinitionResolver
     /**
      * Given any node, returns the FQN of the symbol that is referenced
      * Returns null if the FQN could not be resolved or the reference node references a variable
+     * May also return "static", "self" or "parent"
      *
      * @param Node $node
      * @return string|null
@@ -511,7 +535,7 @@ class DefinitionResolver
         // Traverse the AST up
         do {
             // If a function is met, check the parameters and use statements
-            if (ParserHelpers\isFunctionLike($n)) {
+            if ($n instanceof PhpParser\FunctionLike) {
                 if ($n->parameters !== null) {
                     foreach ($n->parameters->getElements() as $param) {
                         if ($param->getName() === $name) {
@@ -551,7 +575,7 @@ class DefinitionResolver
 
     /**
      * Given an expression node, resolves that expression recursively to a type.
-     * If the type could not be resolved, returns Types\Mixed.
+     * If the type could not be resolved, returns Types\Mixed_.
      *
      * @param Node\Expression $expr
      * @return \phpDocumentor\Reflection\Type|null
@@ -567,7 +591,7 @@ class DefinitionResolver
         if ($expr == null || $expr instanceof PhpParser\MissingToken || $expr instanceof PhpParser\SkippedToken) {
             // TODO some members are null or Missing/SkippedToken
             // How do we handle this more generally?
-            return new Types\Mixed;
+            return new Types\Mixed_;
         }
 
         // VARIABLE
@@ -597,7 +621,7 @@ class DefinitionResolver
             // Find the function definition
             if ($expr->callableExpression instanceof Node\Expression) {
                 // Cannot get type for dynamic function call
-                return new Types\Mixed;
+                return new Types\Mixed_;
             }
 
             if ($expr->callableExpression instanceof Node\QualifiedName) {
@@ -646,7 +670,7 @@ class DefinitionResolver
         // MEMBER ACCESS EXPRESSION
         if ($expr instanceof Node\Expression\MemberAccessExpression) {
             if ($expr->memberName instanceof Node\Expression) {
-                return new Types\Mixed;
+                return new Types\Mixed_;
             }
             $var = $expr->dereferencableExpression;
 
@@ -659,10 +683,10 @@ class DefinitionResolver
                 if ($t instanceof Types\This) {
                     $classFqn = self::getContainingClassFqn($expr);
                     if ($classFqn === null) {
-                        return new Types\Mixed;
+                        return new Types\Mixed_;
                     }
                 } else if (!($t instanceof Types\Object_) || $t->getFqsen() === null) {
-                    return new Types\Mixed;
+                    return new Types\Mixed_;
                 } else {
                     $classFqn = substr((string)$t->getFqsen(), 1);
                 }
@@ -689,7 +713,7 @@ class DefinitionResolver
         if ($expr instanceof Node\Expression\ScopedPropertyAccessExpression) {
             $classType = $this->resolveClassNameToType($expr->scopeResolutionQualifier);
             if (!($classType instanceof Types\Object_) || $classType->getFqsen() === null) {
-                return new Types\Mixed;
+                return new Types\Mixed_;
             }
             $fqn = substr((string)$classType->getFqsen(), 1) . '::';
 
@@ -701,7 +725,7 @@ class DefinitionResolver
 
             $def = $this->index->getDefinition($fqn);
             if ($def === null) {
-                return new Types\Mixed;
+                return new Types\Mixed_;
             }
             return $def->type;
         }
@@ -888,7 +912,7 @@ class DefinitionResolver
         if ($expr instanceof Node\Expression\SubscriptExpression) {
             $varType = $this->resolveExpressionNodeToType($expr->postfixExpression);
             if (!($varType instanceof Types\Array_)) {
-                return new Types\Mixed;
+                return new Types\Mixed_;
             }
             return $varType->getValueType();
         }
@@ -897,14 +921,14 @@ class DefinitionResolver
         //   include, require, include_once, require_once
         if ($expr instanceof Node\Expression\ScriptInclusionExpression) {
             // TODO: resolve path to PhpDocument and find return statement
-            return new Types\Mixed;
+            return new Types\Mixed_;
         }
 
         if ($expr instanceof Node\QualifiedName) {
             return $this->resolveClassNameToType($expr);
         }
 
-        return new Types\Mixed;
+        return new Types\Mixed_;
     }
 
 
@@ -918,7 +942,7 @@ class DefinitionResolver
     public function resolveClassNameToType($class): Type
     {
         if ($class instanceof Node\Expression) {
-            return new Types\Mixed;
+            return new Types\Mixed_;
         }
         if ($class instanceof PhpParser\Token && $class->kind === PhpParser\TokenKind::ClassKeyword) {
             // Anonymous class
@@ -958,7 +982,7 @@ class DefinitionResolver
      * For classes and interfaces, this is the class type (object).
      * For variables / assignments, this is the documented type or type the assignment resolves to.
      * Can also be a compound type.
-     * If it is unknown, will be Types\Mixed.
+     * If it is unknown, will be Types\Mixed_.
      * Returns null if the node does not have a type.
      *
      * @param Node $node
@@ -1012,7 +1036,7 @@ class DefinitionResolver
                 }
                 $type = $defaultType;
             }
-            return $type ?? new Types\Mixed;
+            return $type ?? new Types\Mixed_;
         }
 
         // FUNCTIONS AND METHODS
@@ -1020,7 +1044,7 @@ class DefinitionResolver
         //   1. doc block
         //   2. return type hint
         //   3. TODO: infer from return statements
-        if (ParserHelpers\isFunctionLike($node)) {
+        if ($node instanceof PhpParser\FunctionLike) {
             // Functions/methods
             $docBlock = $this->getDocBlock($node);
             if (
@@ -1040,7 +1064,7 @@ class DefinitionResolver
                 return new Types\Object_(new Fqsen('\\' . (string)$node->returnType->getResolvedName()));
             }
             // Unknown return type
-            return new Types\Mixed;
+            return new Types\Mixed_;
         }
 
         // PROPERTIES, CONSTS, CLASS CONSTS, ASSIGNMENT EXPRESSIONS
@@ -1077,7 +1101,7 @@ class DefinitionResolver
             // TODO: read @property tags of class
             // TODO: Try to infer the type from default value / constant value
             // Unknown
-            return new Types\Mixed;
+            return new Types\Mixed_;
         }
 
         // The node does not have a type
@@ -1101,9 +1125,7 @@ class DefinitionResolver
         // interface C { }          A\B\C
         // trait C { }              A\B\C
         if (
-            $node instanceof Node\Statement\ClassDeclaration ||
-            $node instanceof Node\Statement\InterfaceDeclaration ||
-            $node instanceof Node\Statement\TraitDeclaration
+            $node instanceof PhpParser\ClassLike
         ) {
             return (string) $node->getNamespacedName();
         }
@@ -1134,9 +1156,7 @@ class DefinitionResolver
             // Class method: use ClassName->methodName() as name
             $class = $node->getFirstAncestor(
                 Node\Expression\ObjectCreationExpression::class,
-                Node\Statement\ClassDeclaration::class,
-                Node\Statement\InterfaceDeclaration::class,
-                Node\Statement\TraitDeclaration::class
+                PhpParser\ClassLike::class
             );
             if (!isset($class->name)) {
                 // Ignore anonymous classes
@@ -1160,9 +1180,7 @@ class DefinitionResolver
             ($classDeclaration =
                 $node->getFirstAncestor(
                     Node\Expression\ObjectCreationExpression::class,
-                    Node\Statement\ClassDeclaration::class,
-                    Node\Statement\InterfaceDeclaration::class,
-                    Node\Statement\TraitDeclaration::class
+                    PhpParser\ClassLike::class
                 )
             ) !== null && isset($classDeclaration->name)) {
             $name = $node->getName();
@@ -1190,9 +1208,7 @@ class DefinitionResolver
             // Class constant: use ClassName::CONSTANT_NAME as name
             $classDeclaration = $constDeclaration->getFirstAncestor(
                 Node\Expression\ObjectCreationExpression::class,
-                Node\Statement\ClassDeclaration::class,
-                Node\Statement\InterfaceDeclaration::class,
-                Node\Statement\TraitDeclaration::class
+                PhpParser\ClassLike::class
             );
 
             if (!isset($classDeclaration->name)) {

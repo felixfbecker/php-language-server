@@ -17,7 +17,7 @@
         "MyNamespace1": {
             "fqn": "MyNamespace1",
             "extends": [],
-            "isGlobal": true,
+            "isMember": false,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
@@ -36,7 +36,7 @@
         "MyNamespace1\\B": {
             "fqn": "MyNamespace1\\B",
             "extends": [],
-            "isGlobal": true,
+            "isMember": false,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": true,
@@ -55,7 +55,7 @@
         "MyNamespace1\\B->b()": {
             "fqn": "MyNamespace1\\B->b()",
             "extends": [],
-            "isGlobal": false,
+            "isMember": true,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
@@ -75,7 +75,7 @@
         "MyNamespace2": {
             "fqn": "MyNamespace2",
             "extends": [],
-            "isGlobal": true,
+            "isMember": false,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
@@ -96,7 +96,7 @@
             "extends": [
                 "MyNamespace2\\MyNamespace1\\B"
             ],
-            "isGlobal": true,
+            "isMember": false,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": true,
@@ -115,7 +115,7 @@
         "MyNamespace2\\A->a()": {
             "fqn": "MyNamespace2\\A->a()",
             "extends": [],
-            "isGlobal": false,
+            "isMember": true,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,

@@ -1,0 +1,20 @@
+collectors:
+
+# pull requests for new major versions
+- type: php-composer
+  path: /
+  actors:
+  - type: php-composer
+    versions: "Y.0.0"
+    settings:
+      commit_message_prefix: "chore: "
+- type: js-npm
+  path: /
+  settings:
+    dist_tags:
+      semantic-release: next
+  actors:
+  - type: js-npm
+    versions: "Y.0.0"
+    settings:
+      commit_message_prefix: "chore: "

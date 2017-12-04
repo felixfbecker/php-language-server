@@ -14,7 +14,7 @@
         "MyNamespace": {
             "fqn": "MyNamespace",
             "extends": [],
-            "isGlobal": true,
+            "isMember": false,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
@@ -33,7 +33,7 @@
         "MyNamespace\\ParseErrorsTest": {
             "fqn": "MyNamespace\\ParseErrorsTest",
             "extends": [],
-            "isGlobal": true,
+            "isMember": false,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": true,
@@ -52,7 +52,7 @@
         "MyNamespace\\ParseErrorsTest->setAccount()": {
             "fqn": "MyNamespace\\ParseErrorsTest->setAccount()",
             "extends": [],
-            "isGlobal": false,
+            "isMember": true,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,

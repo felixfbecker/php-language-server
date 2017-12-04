@@ -3,7 +3,7 @@
         "Fixtures\\Prophecy\\EmptyClass": [
             "./WithReturnTypehints.php"
         ],
-        "self": [
+        "Fixtures\\Prophecy\\WithReturnTypehints": [
             "./WithReturnTypehints.php"
         ],
         "Fixtures\\Prophecy\\__CLASS__": [
@@ -11,16 +11,13 @@
         ],
         "__CLASS__": [
             "./WithReturnTypehints.php"
-        ],
-        "parent": [
-            "./WithReturnTypehints.php"
         ]
     },
     "definitions": {
         "Fixtures\\Prophecy": {
             "fqn": "Fixtures\\Prophecy",
             "extends": [],
-            "isGlobal": true,
+            "isMember": false,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
@@ -41,7 +38,7 @@
             "extends": [
                 "Fixtures\\Prophecy\\EmptyClass"
             ],
-            "isGlobal": true,
+            "isMember": false,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": true,
@@ -60,7 +57,7 @@
         "Fixtures\\Prophecy\\WithReturnTypehints->getSelf()": {
             "fqn": "Fixtures\\Prophecy\\WithReturnTypehints->getSelf()",
             "extends": [],
-            "isGlobal": false,
+            "isMember": true,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
@@ -80,7 +77,7 @@
         "Fixtures\\Prophecy\\WithReturnTypehints->getName()": {
             "fqn": "Fixtures\\Prophecy\\WithReturnTypehints->getName()",
             "extends": [],
-            "isGlobal": false,
+            "isMember": true,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
@@ -100,7 +97,7 @@
         "Fixtures\\Prophecy\\WithReturnTypehints->getParent()": {
             "fqn": "Fixtures\\Prophecy\\WithReturnTypehints->getParent()",
             "extends": [],
-            "isGlobal": false,
+            "isMember": true,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
