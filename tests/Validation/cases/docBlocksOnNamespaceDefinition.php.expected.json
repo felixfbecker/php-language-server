@@ -18,7 +18,8 @@
             },
             "type": null,
             "declarationLine": "namespace MyNamespace;",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         }
     }
 }

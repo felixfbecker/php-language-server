@@ -14,7 +14,8 @@ use LanguageServer\Protocol\{
     TextDocumentIdentifier,
     InitializeResult,
     ServerCapabilities,
-    CompletionOptions
+    CompletionOptions,
+    SignatureHelpOptions
 };
 use AdvancedJsonRpc;
 use Webmozart\Glob\Glob;
@@ -40,6 +41,8 @@ class LanguageServerTest extends TestCase
         $serverCapabilities->completionProvider = new CompletionOptions;
         $serverCapabilities->completionProvider->resolveProvider = false;
         $serverCapabilities->completionProvider->triggerCharacters = ['$', '>'];
+        $serverCapabilities->signatureHelpProvider = new SignatureHelpOptions;
+        $serverCapabilities->signatureHelpProvider->triggerCharacters = ['(',','];
         $serverCapabilities->xworkspaceReferencesProvider = true;
         $serverCapabilities->xdefinitionProvider = true;
         $serverCapabilities->xdependenciesProvider = true;

@@ -5,8 +5,12 @@ namespace LanguageServer;
 
 use LanguageServer\Index\ReadableIndex;
 use LanguageServer\Protocol\SymbolInformation;
+use LanguageServer\Protocol\ParameterInformation;
 use Microsoft\PhpParser;
 use Microsoft\PhpParser\Node;
+use Microsoft\PhpParser\Node\Expression\AnonymousFunctionCreationExpression;
+use Microsoft\PhpParser\Node\MethodDeclaration;
+use Microsoft\PhpParser\Node\Statement\FunctionDeclaration;
 use phpDocumentor\Reflection\{
     DocBlock, DocBlockFactory, Fqsen, Type, TypeResolver, Types
 };
@@ -230,6 +234,20 @@ class DefinitionResolver
             $def->type = $this->getTypeFromNode($node);
             $def->declarationLine = $this->getDeclarationLineFromNode($node);
             $def->documentation = $this->getDocumentationFromNode($node);
+        }
+
+        $def->parameters = [];
+        if (($node instanceof MethodDeclaration ||
+             $node instanceof FunctionDeclaration ||
+             $node instanceof AnonymousFunctionCreationExpression) &&
+            $node->parameters !== null
+        ) {
+            foreach ($node->parameters->getElements() as $param) {
+                $def->parameters[] = new ParameterInformation(
+                    $this->getDeclarationLineFromNode($param),
+                    $this->getDocumentationFromNode($param)
+                );
+            }
         }
 
         return $def;

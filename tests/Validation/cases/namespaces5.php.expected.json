@@ -40,7 +40,8 @@
             },
             "type": null,
             "declarationLine": "namespace B;",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         }
     }
 }

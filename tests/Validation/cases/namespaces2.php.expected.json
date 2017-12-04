@@ -31,7 +31,8 @@
             },
             "type": null,
             "declarationLine": "namespace MyNamespace1;",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         }
     }
 }

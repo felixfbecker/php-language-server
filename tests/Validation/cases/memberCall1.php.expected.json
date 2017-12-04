@@ -28,7 +28,8 @@
             },
             "type": null,
             "declarationLine": "namespace MyNamespace;",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         },
         "MyNamespace\\ParseErrorsTest": {
             "fqn": "MyNamespace\\ParseErrorsTest",
@@ -47,7 +48,8 @@
             },
             "type": null,
             "declarationLine": "class ParseErrorsTest",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         },
         "MyNamespace\\ParseErrorsTest->setAccount()": {
             "fqn": "MyNamespace\\ParseErrorsTest->setAccount()",
@@ -67,7 +69,13 @@
             "type__tostring": "mixed",
             "type": {},
             "declarationLine": "public function setAccount(AccountInterface $account)",
-            "documentation": null
+            "documentation": null,
+            "parameters": [
+                {
+                    "label": "AccountInterface $account",
+                    "documentation": null
+                }
+            ]
         }
     }
 }

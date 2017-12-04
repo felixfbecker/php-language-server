@@ -22,7 +22,8 @@
             },
             "type": null,
             "declarationLine": "class A {",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         },
         "A::$deprecationsTriggered": {
             "fqn": "A::$deprecationsTriggered",
@@ -42,7 +43,8 @@
             "type__tostring": "\\__CLASS__[]",
             "type": {},
             "declarationLine": "private static $deprecationsTriggered;",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         }
     }
 }

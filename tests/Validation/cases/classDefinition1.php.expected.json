@@ -25,7 +25,8 @@
             },
             "type": null,
             "declarationLine": "namespace TestNamespace;",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         },
         "TestNamespace\\A": {
             "fqn": "TestNamespace\\A",
@@ -44,7 +45,8 @@
             },
             "type": null,
             "declarationLine": "class A {",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         },
         "TestNamespace\\A->a": {
             "fqn": "TestNamespace\\A->a",
@@ -64,7 +66,8 @@
             "type__tostring": "int",
             "type": {},
             "declarationLine": "public $a;",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         }
     }
 }

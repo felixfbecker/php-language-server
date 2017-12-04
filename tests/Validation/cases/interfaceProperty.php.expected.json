@@ -18,7 +18,8 @@
             },
             "type": null,
             "declarationLine": "interface A  {",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         }
     }
 }

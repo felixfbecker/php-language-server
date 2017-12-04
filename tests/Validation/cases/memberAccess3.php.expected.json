@@ -40,7 +40,8 @@
             },
             "type": null,
             "declarationLine": "namespace MyNamespace;",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         },
         "MyNamespace\\A": {
             "fqn": "MyNamespace\\A",
@@ -59,7 +60,8 @@
             },
             "type": null,
             "declarationLine": "class A {",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         },
         "MyNamespace\\A::getInitializer()": {
             "fqn": "MyNamespace\\A::getInitializer()",
@@ -79,7 +81,13 @@
             "type__tostring": "mixed",
             "type": {},
             "declarationLine": "public static function getInitializer(ClassLoader $loader)",
-            "documentation": null
+            "documentation": null,
+            "parameters": [
+                {
+                    "label": "ClassLoader $loader",
+                    "documentation": null
+                }
+            ]
         }
     }
 }

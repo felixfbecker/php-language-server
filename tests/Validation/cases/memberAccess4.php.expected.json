@@ -31,7 +31,8 @@
             },
             "type": null,
             "declarationLine": "namespace MyNamespace;",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         },
         "MyNamespace\\A": {
             "fqn": "MyNamespace\\A",
@@ -50,7 +51,8 @@
             },
             "type": null,
             "declarationLine": "class A {",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         },
         "MyNamespace\\A->testRequest()": {
             "fqn": "MyNamespace\\A->testRequest()",
@@ -70,7 +72,8 @@
             "type__tostring": "mixed",
             "type": {},
             "declarationLine": "public function testRequest()",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         }
     }
 }

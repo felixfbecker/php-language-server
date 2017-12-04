@@ -28,7 +28,8 @@
             },
             "type": null,
             "declarationLine": "namespace LanguageServer\\Tests\\Utils;",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         }
     }
 }

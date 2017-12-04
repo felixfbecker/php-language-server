@@ -22,7 +22,8 @@
             },
             "type": null,
             "declarationLine": "namespace MyNamespace;",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         },
         "MyNamespace\\init()": {
             "fqn": "MyNamespace\\init()",
@@ -42,7 +43,13 @@
             "type__tostring": "mixed",
             "type": {},
             "declarationLine": "function init(Hi $view)",
-            "documentation": null
+            "documentation": null,
+            "parameters": [
+                {
+                    "label": "Hi $view",
+                    "documentation": null
+                }
+            ]
         }
     }
 }

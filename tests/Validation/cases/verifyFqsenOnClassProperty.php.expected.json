@@ -25,7 +25,8 @@
             },
             "type": null,
             "declarationLine": "class Foo {",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         },
         "Foo->bar": {
             "fqn": "Foo->bar",
@@ -45,7 +46,8 @@
             "type__tostring": "\\",
             "type": {},
             "declarationLine": "protected $bar;",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         },
         "Foo->foo()": {
             "fqn": "Foo->foo()",
@@ -65,7 +67,8 @@
             "type__tostring": "mixed",
             "type": {},
             "declarationLine": "public function foo () {",
-            "documentation": null
+            "documentation": null,
+            "parameters": []
         }
     }
 }
