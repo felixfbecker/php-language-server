@@ -192,19 +192,12 @@ class SignatureHelpTest extends TestCase
     {
         $params = [];
         foreach ($info['parameters'] as $param) {
-            $paramInfo = new ParameterInformation();
-            $paramInfo->label = $param['label'];
-            $paramInfo->documentation = $param['documentation'];
+            $paramInfo = new ParameterInformation($param['label'], $param['documentation']);
             $params[] = $paramInfo;
         }
-        $signature = new SignatureInformation();
-        $signature->label = $info['label'];
-        $signature->documentation = $info['documentation'];
-        $signature->parameters = $params;
-        $help = new SignatureHelp();
-        $help->signatures = [$signature];
-        $help->activeSignature = $info['activeSignature'];
-        $help->activeParameter = $info['activeParameter'];
+        $signature = new SignatureInformation($info['label'], $params, $info['documentation']);
+        $help = new SignatureHelp([$signature], $info['activeSignature'], $info['activeParameter']);
+
         return $help;
     }
 }

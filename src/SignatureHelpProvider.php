@@ -72,14 +72,13 @@ class SignatureHelpProvider
         $params = $this->getParameters($calledNode, $calledDoc);
         $label = $this->getLabel($calledNode, $params, $calledDoc);
 
-        $signatureInformation = new SignatureInformation();
-        $signatureInformation->label = $label;
-        $signatureInformation->parameters = $params;
-        $signatureInformation->documentation = $this->definitionResolver->getDocumentationFromNode($calledNode);
-        $signatureHelp = new SignatureHelp();
-        $signatureHelp->signatures = [$signatureInformation];
-        $signatureHelp->activeSignature = 0;
-        $signatureHelp->activeParameter = $activeParam;
+        $signatureInformation = new SignatureInformation(
+            $label,
+            $params,
+            $this->definitionResolver->getDocumentationFromNode($calledNode)
+        );
+        $signatureHelp = new SignatureHelp([$signatureInformation], 0, $activeParam);
+
         return $signatureHelp;
     }
 
@@ -191,10 +190,10 @@ class SignatureHelpProvider
                 if ($element->default) {
                     $param .= ' = ' . $element->default->getText($doc->getContent());
                 }
-                $info = new ParameterInformation();
-                $info->label = $param;
-                $info->documentation = $this->definitionResolver->getDocumentationFromNode($element);
-                $params[] = $info;
+                $params[] = new ParameterInformation(
+                    $param,
+                    $this->definitionResolver->getDocumentationFromNode($element)
+                );
             }
         }
         return $params;
