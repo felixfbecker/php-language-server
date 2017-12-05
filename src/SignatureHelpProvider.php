@@ -12,6 +12,8 @@ use LanguageServer\Protocol\{
 };
 use Microsoft\PhpParser;
 use Microsoft\PhpParser\Node;
+use Sabre\Event\Promise;
+use function Sabre\Event\coroutine;
 
 class SignatureHelpProvider
 {
@@ -44,42 +46,44 @@ class SignatureHelpProvider
      * @param PhpDocument $doc      The document the position belongs to
      * @param Position    $position The position to detect a call from
      *
-     * @return SignatureHelp
+     * @return Promise <SignatureHelp>
      */
-    public function getSignatureHelp(PhpDocument $doc, Position $position): SignatureHelp
+    public function getSignatureHelp(PhpDocument $doc, Position $position): Promise
     {
-        // Find the node under the cursor
-        $node = $doc->getNodeAtPosition($position);
+        return coroutine(function () use ($doc, $position) {
+            // Find the node under the cursor
+            $node = $doc->getNodeAtPosition($position);
 
-        // Find the definition of the item being called
-        list($def, $argumentExpressionList) = $this->getCallingInfo($node);
+            // Find the definition of the item being called
+            list($def, $argumentExpressionList) = $this->getCallingInfo($node);
 
-        if (!$def) {
-            return new SignatureHelp();
-        }
+            if (!$def) {
+                return new SignatureHelp();
+            }
 
-        // Find the active parameter
-        $activeParam = $argumentExpressionList
-            ? $this->findActiveParameter($argumentExpressionList, $position, $doc)
-            : 0;
+            // Get information from the item being called to build the signature information
+            $calledDoc = yield $this->documentLoader->getOrLoad($def->symbolInformation->location->uri);
+            if (!$calledDoc) {
+                return new SignatureHelp();
+            }
+            $calledNode = $calledDoc->getNodeAtPosition($def->symbolInformation->location->range->start);
+            $params = $this->getParameters($calledNode, $calledDoc);
+            $label = $this->getLabel($calledNode, $params, $calledDoc);
 
-        // Get information from the item being called to build the signature information
-        $calledDoc = $this->documentLoader->getOrLoad($def->symbolInformation->location->uri)->wait();
-        if (!$calledDoc) {
-            return new SignatureHelp();
-        }
-        $calledNode = $calledDoc->getNodeAtPosition($def->symbolInformation->location->range->start);
-        $params = $this->getParameters($calledNode, $calledDoc);
-        $label = $this->getLabel($calledNode, $params, $calledDoc);
+            // Find the active parameter
+            $activeParam = $argumentExpressionList
+                ? $this->findActiveParameter($argumentExpressionList, $position, $doc)
+                : 0;
 
-        $signatureInformation = new SignatureInformation(
-            $label,
-            $params,
-            $this->definitionResolver->getDocumentationFromNode($calledNode)
-        );
-        $signatureHelp = new SignatureHelp([$signatureInformation], 0, $activeParam);
+            $signatureInformation = new SignatureInformation(
+                $label,
+                $params,
+                $this->definitionResolver->getDocumentationFromNode($calledNode)
+            );
+            $signatureHelp = new SignatureHelp([$signatureInformation], 0, $activeParam);
 
-        return $signatureHelp;
+            return $signatureHelp;
+        });
     }
 
     /**
