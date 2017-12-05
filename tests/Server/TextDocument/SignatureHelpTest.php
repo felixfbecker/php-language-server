@@ -62,142 +62,101 @@ class SignatureHelpTest extends TestCase
         return [
             'member call' => [
                 new Position(48, 9),
-                $this->createSignatureHelp([
-                    'label' => '(\\Foo\\SomethingElse $a, int|null $b = null)',
-                    'documentation' => 'Function doc',
-                    'parameters' => [
-                        [
-                            'label' => '\\Foo\\SomethingElse $a',
-                            'documentation' => 'A param with a different doc type',
-                        ],
-                        [
-                            'label' => 'int|null $b = null',
-                            'documentation' => 'Param with default value',
-                        ],
+                new SignatureHelp(
+                    [
+                        new SignatureInformation(
+                            '(\\Foo\\SomethingElse $a, int|null $b = null)',
+                            [
+                                new ParameterInformation('\\Foo\\SomethingElse $a', 'A param with a different doc type'),
+                                new ParameterInformation('int|null $b = null', 'Param with default value'),
+                            ],
+                            'Function doc'
+                        )
                     ],
-                    'activeSignature' => 0,
-                    'activeParameter' => 0,
-                ]),
+                    0,
+                    0
+                ),
             ],
             'member call 2nd param active' => [
                 new Position(49, 12),
-                $this->createSignatureHelp([
-                    'label' => '(\\Foo\\SomethingElse $a, int|null $b = null)',
-                    'documentation' => 'Function doc',
-                    'parameters' => [
-                        [
-                            'label' => '\\Foo\\SomethingElse $a',
-                            'documentation' => 'A param with a different doc type',
-                        ],
-                        [
-                            'label' => 'int|null $b = null',
-                            'documentation' => 'Param with default value',
-                        ],
+                new SignatureHelp(
+                    [
+                        new SignatureInformation(
+                            '(\\Foo\\SomethingElse $a, int|null $b = null)',
+                            [
+                                new ParameterInformation('\\Foo\\SomethingElse $a', 'A param with a different doc type'),
+                                new ParameterInformation('int|null $b = null', 'Param with default value'),
+                            ],
+                            'Function doc'
+                        )
                     ],
-                    'activeSignature' => 0,
-                    'activeParameter' => 1,
-                ]),
+                    0,
+                    1
+                ),
             ],
             'member call 2nd param active and closing )' => [
                 new Position(50, 11),
-                $this->createSignatureHelp([
-                    'label' => '(\\Foo\\SomethingElse $a, int|null $b = null)',
-                    'documentation' => 'Function doc',
-                    'parameters' => [
-                        [
-                            'label' => '\\Foo\\SomethingElse $a',
-                            'documentation' => 'A param with a different doc type',
-                        ],
-                        [
-                            'label' => 'int|null $b = null',
-                            'documentation' => 'Param with default value',
-                        ],
+                new SignatureHelp(
+                    [
+                        new SignatureInformation(
+                            '(\\Foo\\SomethingElse $a, int|null $b = null)',
+                            [
+                                new ParameterInformation('\\Foo\\SomethingElse $a', 'A param with a different doc type'),
+                                new ParameterInformation('int|null $b = null', 'Param with default value'),
+                            ],
+                            'Function doc'
+                        )
                     ],
-                    'activeSignature' => 0,
-                    'activeParameter' => 1,
-                ]),
+                    0,
+                    1
+                ),
             ],
             'method with no params' => [
                 new Position(51, 9),
-                $this->createSignatureHelp([
-                    'label' => '()',
-                    'documentation' => 'Method with no params',
-                    'parameters' => [],
-                    'activeSignature' => 0,
-                    'activeParameter' => 0,
-                ]),
+                new SignatureHelp([new SignatureInformation('()', [], 'Method with no params', 0, 0)]),
             ],
             'constructor' => [
                 new Position(47, 14),
-                $this->createSignatureHelp([
-                    'label' => '(string $first, int $second, \Foo\Test $third)',
-                    'documentation' => 'Constructor comment goes here',
-                    'parameters' => [
-                        [
-                            'label' => 'string $first',
-                            'documentation' => 'First param',
-
-                        ],
-                        [
-                            'label' => 'int $second',
-                            'documentation' => 'Second param',
-                        ],
-                        [
-                            'label' => '\Foo\Test $third',
-                            'documentation' => 'Third param with a longer description',
-                        ],
+                new SignatureHelp(
+                    [
+                        new SignatureInformation(
+                            '(string $first, int $second, \Foo\Test $third)',
+                            [
+                                new ParameterInformation('string $first', 'First param'),
+                                new ParameterInformation('int $second', 'Second param'),
+                                new ParameterInformation('\Foo\Test $third', 'Third param with a longer description'),
+                            ],
+                            'Constructor comment goes here'
+                        )
                     ],
-                    'activeSignature' => 0,
-                    'activeParameter' => 0,
-                ]),
+                    0,
+                    0
+                ),
             ],
             'global function' => [
                 new Position(53, 4),
-                $this->createSignatureHelp([
-                    'label' => '(int $i, bool $b = false)',
-                    'documentation' => null,
-                    'parameters' => [
-                        [
-                            'label' => 'int $i',
-                            'documentation' => 'Global function param one',
-                        ],
-                        [
-                            'label' => 'bool $b = false',
-                            'documentation' => 'Default false param',
-                        ],
+                new SignatureHelp(
+                    [
+                        new SignatureInformation(
+                            '(int $i, bool $b = false)',
+                            [
+                                new ParameterInformation('int $i', 'Global function param one'),
+                                new ParameterInformation('bool $b = false', 'Default false param'),
+                            ]
+                        ),
                     ],
-                    'activeSignature' => 0,
-                    'activeParameter' => 0,
-                ]),
+                    0,
+                    0
+                )
             ],
             'static method' => [
                 new Position(55, 10),
-                $this->createSignatureHelp([
-                    'label' => '(mixed $a)',
-                    'documentation' => null,
-                    'parameters' => [
-                        [
-                            'label' => 'mixed $a',
-                            'documentation' => null,
-                        ],
-                    ],
-                    'activeSignature' => 0,
-                    'activeParameter' => 0,
-                ]),
+                new SignatureHelp(
+                    [new SignatureInformation('(mixed $a)', [new ParameterInformation('mixed $a')])],
+                    0,
+                    0
+                ),
             ],
         ];
-    }
-
-    private function createSignatureHelp(array $info): SignatureHelp
-    {
-        $params = [];
-        foreach ($info['parameters'] as $param) {
-            $paramInfo = new ParameterInformation($param['label'], $param['documentation']);
-            $params[] = $paramInfo;
-        }
-        $signature = new SignatureInformation($info['label'], $params, $info['documentation']);
-        $help = new SignatureHelp([$signature], $info['activeSignature'], $info['activeParameter']);
-
-        return $help;
     }
 }
