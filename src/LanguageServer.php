@@ -9,7 +9,8 @@ use LanguageServer\Protocol\{
     TextDocumentSyncKind,
     Message,
     InitializeResult,
-    CompletionOptions
+    CompletionOptions,
+    WorkspaceFolder
 };
 use LanguageServer\FilesFinder\{FilesFinder, ClientFilesFinder, FileSystemFilesFinder};
 use LanguageServer\ContentRetriever\{ContentRetriever, ClientContentRetriever, FileSystemContentRetriever};
@@ -161,12 +162,26 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
      *
      * @param ClientCapabilities $capabilities The capabilities provided by the client (editor)
      * @param string|null $rootPath The rootPath of the workspace. Is null if no folder is open.
+     * @param string|null $rootUri TThe rootUri of the workspace. Is null if no folder is open. If both `rootPath` and `rootUri` are set `rootUri` wins.
+     * @param WorkspaceFolder[]|null $workspaceFolders The actual configured workspace folders.
      * @param int|null $processId The process Id of the parent process that started the server. Is null if the process has not been started by another process. If the parent process is not alive then the server should exit (see exit notification) its process.
      * @return Promise <InitializeResult>
      */
-    public function initialize(ClientCapabilities $capabilities, string $rootPath = null, int $processId = null): Promise
+    public function initialize(ClientCapabilities $capabilities, string $rootPath = null, string $rootUri = null, array $workspaceFolders = null, int $processId = null): Promise
     {
-        return coroutine(function () use ($capabilities, $rootPath, $processId) {
+        return coroutine(function () use ($capabilities, $rootPath, $rootUri, $workspaceFolders, $processId) {
+
+            /** @var string[] */
+            $rootPaths = [];
+            if ($workspaceFolders !== null) {
+                foreach ($workspaceFolders as $workspaceFolder) {
+                    $rootPaths[] = uriToPath($workspaceFolder->uri);
+                }
+            } else if ($rootUri !== null) {
+                $rootPaths[] = uriToPath($rootUri);
+            } else if ($rootPath !== null) {
+                $rootPaths[] = $rootPath;
+            }
 
             if ($capabilities->xfilesProvider) {
                 $this->filesFinder = new ClientFilesFinder($this->client);
@@ -199,23 +214,23 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                 yield $this->beforeIndex($rootPath);
 
                 // Find composer.json
-                if ($this->composerJson === null) {
-                    $composerJsonFiles = yield $this->filesFinder->find(Path::makeAbsolute('**/composer.json', $rootPath));
-                    sortUrisLevelOrder($composerJsonFiles);
-
-                    if (!empty($composerJsonFiles)) {
-                        $this->composerJson = json_decode(yield $this->contentRetriever->retrieve($composerJsonFiles[0]));
-                    }
+                if ($this->composerJsons === null) {
+                    $this->composerJsons = yield array_map(function (string $rootPath) {
+                        $composerJsonFiles = yield $this->filesFinder->find(Path::makeAbsolute('**/composer.json', $rootPath));
+                        foreach ($composerJsonFiles as $composerJsonFile) {
+                            $this->composerJsons[$composerJsonFile] = json_decode(yield $this->contentRetriever->retrieve($composerJsonFile));
+                        }
+                    }, $rootPaths);
                 }
 
                 // Find composer.lock
-                if ($this->composerLock === null) {
-                    $composerLockFiles = yield $this->filesFinder->find(Path::makeAbsolute('**/composer.lock', $rootPath));
-                    sortUrisLevelOrder($composerLockFiles);
-
-                    if (!empty($composerLockFiles)) {
-                        $this->composerLock = json_decode(yield $this->contentRetriever->retrieve($composerLockFiles[0]));
-                    }
+                if ($this->composerLocks === null) {
+                    $this->composerLocks = yield array_map(function (string $rootPath) {
+                        $composerLockFiles = yield $this->filesFinder->find(Path::makeAbsolute('**/composer.lock', $rootPath));
+                        foreach ($composerLockFiles as $composerLockFile) {
+                            $this->composerLocks[$composerLockFile] = json_decode(yield $this->contentRetriever->retrieve($composerLockFile));
+                        }
+                    }, $rootPaths);
                 }
 
                 $cache = $capabilities->xcacheProvider ? new ClientCache($this->client) : new FileSystemCache;
@@ -229,8 +244,8 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                     $dependenciesIndex,
                     $sourceIndex,
                     $this->documentLoader,
-                    $this->composerLock,
-                    $this->composerJson
+                    $this->composerLocks,
+                    $this->composerJsons
                 );
                 $indexer->index()->otherwise('\\LanguageServer\\crash');
             }
@@ -242,8 +257,8 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                     $this->definitionResolver,
                     $this->client,
                     $this->globalIndex,
-                    $this->composerJson,
-                    $this->composerLock
+                    $this->composerJsons,
+                    $this->composerLocks
                 );
             }
             if ($this->workspace === null) {
@@ -252,9 +267,9 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                     $this->projectIndex,
                     $dependenciesIndex,
                     $sourceIndex,
-                    $this->composerLock,
+                    $this->composerLocks,
                     $this->documentLoader,
-                    $this->composerJson
+                    $this->composerJsons
                 );
             }
 
