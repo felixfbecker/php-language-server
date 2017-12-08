@@ -61,7 +61,7 @@ class SignatureHelpTest extends TestCase
     {
         return [
             'member call' => [
-                new Position(48, 9),
+                new Position(49, 9),
                 new SignatureHelp(
                     [
                         new SignatureInformation(
@@ -78,7 +78,7 @@ class SignatureHelpTest extends TestCase
                 ),
             ],
             'member call 2nd param active' => [
-                new Position(49, 12),
+                new Position(50, 12),
                 new SignatureHelp(
                     [
                         new SignatureInformation(
@@ -95,7 +95,7 @@ class SignatureHelpTest extends TestCase
                 ),
             ],
             'member call 2nd param active and closing )' => [
-                new Position(50, 11),
+                new Position(51, 11),
                 new SignatureHelp(
                     [
                         new SignatureInformation(
@@ -112,11 +112,11 @@ class SignatureHelpTest extends TestCase
                 ),
             ],
             'method with no params' => [
-                new Position(51, 9),
+                new Position(52, 9),
                 new SignatureHelp([new SignatureInformation('()', [], 'Method with no params', 0, 0)]),
             ],
             'constructor' => [
-                new Position(47, 14),
+                new Position(48, 14),
                 new SignatureHelp(
                     [
                         new SignatureInformation(
@@ -134,23 +134,24 @@ class SignatureHelpTest extends TestCase
                 ),
             ],
             'global function' => [
-                new Position(53, 4),
+                new Position(56, 15),
                 new SignatureHelp(
                     [
                         new SignatureInformation(
-                            '(int $i, bool $b = false)',
+                            '(int $i, bool $b = false, \Foo\Test|null ...$things = null)',
                             [
                                 new ParameterInformation('int $i', 'Global function param one'),
                                 new ParameterInformation('bool $b = false', 'Default false param'),
+                                new ParameterInformation('\Foo\Test|null ...$things = null', 'Test things'),
                             ]
                         ),
                     ],
                     0,
-                    0
+                    2
                 )
             ],
             'static method' => [
-                new Position(55, 10),
+                new Position(59, 10),
                 new SignatureHelp(
                     [new SignatureInformation('(mixed $a)', [new ParameterInformation('mixed $a')])],
                     0,

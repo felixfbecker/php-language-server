@@ -40,8 +40,9 @@ class Test
 /**
  * @param int  $i Global function param one
  * @param bool $b Default false param
+ * @param Test|null ...$things Test things
  */
-function foo(int $i, bool $b = false)
+function foo(int $i, bool $b = false, Test ...$things = null)
 {
 }
 
@@ -51,6 +52,9 @@ $t->foo(1,
 $t->foo(1,);
 $t->baz();
 
-foo();
+foo(
+    1,
+    foo(1, 2,  
+);
 
 Test::bar();

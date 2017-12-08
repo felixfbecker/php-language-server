@@ -55,34 +55,18 @@ class SignatureHelpProvider
             $node = $doc->getNodeAtPosition($position);
 
             // Find the definition of the item being called
-            list($def, $argumentExpressionList) = $this->getCallingInfo($node);
+            list($def, $argumentExpressionList) = yield $this->getCallingInfo($node);
 
-            if (!$def) {
+            if (!$def || !$def->signatureInformation) {
                 return new SignatureHelp();
             }
-
-            // Get information from the item being called to build the signature information
-            $calledDoc = yield $this->documentLoader->getOrLoad($def->symbolInformation->location->uri);
-            if (!$calledDoc) {
-                return new SignatureHelp();
-            }
-            $calledNode = $calledDoc->getNodeAtPosition($def->symbolInformation->location->range->start);
-            $params = $this->getParameters($calledNode, $calledDoc);
-            $label = $this->getLabel($calledNode, $params, $calledDoc);
 
             // Find the active parameter
             $activeParam = $argumentExpressionList
                 ? $this->findActiveParameter($argumentExpressionList, $position, $doc)
                 : 0;
 
-            $signatureInformation = new SignatureInformation(
-                $label,
-                $params,
-                $this->definitionResolver->getDocumentationFromNode($calledNode)
-            );
-            $signatureHelp = new SignatureHelp([$signatureInformation], 0, $activeParam);
-
-            return $signatureHelp;
+            return new SignatureHelp([$def->signatureInformation], 0, $activeParam);
         });
     }
 
@@ -92,115 +76,75 @@ class SignatureHelpProvider
      *
      * @param Node $node The node to find calling information from
      *
-     * @return array|null
+     * @return Promise <array|null>
      */
     private function getCallingInfo(Node $node)
     {
-        $fqn = null;
-        $callingNode = null;
-        if ($node instanceof Node\DelimitedList\ArgumentExpressionList) {
-            // Cursor is already inside a (
-            $argumentExpressionList = $node;
-            if ($node->parent instanceof Node\Expression\ObjectCreationExpression) {
-                // Constructing something
-                $callingNode = $node->parent->classTypeDesignator;
-                if (!$callingNode instanceof Node\QualifiedName) {
-                    // We only support constructing from a QualifiedName
-                    return null;
+        return coroutine(function () use ($node) {
+            $fqn = null;
+            $callingNode = null;
+            if ($node instanceof Node\DelimitedList\ArgumentExpressionList) {
+                // Cursor is already inside a (
+                $argumentExpressionList = $node;
+                if ($node->parent instanceof Node\Expression\ObjectCreationExpression) {
+                    // Constructing something
+                    $callingNode = $node->parent->classTypeDesignator;
+                    if (!$callingNode instanceof Node\QualifiedName) {
+                        // We only support constructing from a QualifiedName
+                        return null;
+                    }
+                    $fqn = $this->definitionResolver->resolveReferenceNodeToFqn($callingNode);
+                    $fqn = "{$fqn}->__construct()";
+                } else {
+                    $callingNode = $node->parent->getFirstChildNode(
+                        Node\Expression\MemberAccessExpression::class,
+                        Node\Expression\ScopedPropertyAccessExpression::class,
+                        Node\QualifiedName::class
+                    );
                 }
-                $fqn = $this->definitionResolver->resolveReferenceNodeToFqn($callingNode);
-                $fqn = "{$fqn}->__construct()";
-            } else {
-                $callingNode = $node->parent->getFirstChildNode(
+            } elseif ($node instanceof Node\Expression\CallExpression) {
+                $argumentExpressionList = $node->getFirstChildNode(Node\DelimitedList\ArgumentExpressionList::class);
+                $callingNode = $node->getFirstChildNode(
                     Node\Expression\MemberAccessExpression::class,
                     Node\Expression\ScopedPropertyAccessExpression::class,
                     Node\QualifiedName::class
                 );
+            } elseif ($node instanceof Node\Expression\ObjectCreationExpression) {
+                $argumentExpressionList = $node->getFirstChildNode(Node\DelimitedList\ArgumentExpressionList::class);
+                $callingNode = $node->classTypeDesignator;
+                if (!$callingNode instanceof Node\QualifiedName) {
+                    // We only support constructing from a QualifiedName
+                    return null;
+                }
+                // Manually build the __construct fqn
+                $fqn = $this->definitionResolver->resolveReferenceNodeToFqn($callingNode);
+                $fqn = "{$fqn}->__construct()";
             }
-        } elseif ($node instanceof Node\Expression\CallExpression) {
-            $argumentExpressionList = $node->getFirstChildNode(Node\DelimitedList\ArgumentExpressionList::class);
-            $callingNode = $node->getFirstChildNode(
-                Node\Expression\MemberAccessExpression::class,
-                Node\Expression\ScopedPropertyAccessExpression::class,
-                Node\QualifiedName::class
-            );
-        } elseif ($node instanceof Node\Expression\ObjectCreationExpression) {
-            $argumentExpressionList = $node->getFirstChildNode(Node\DelimitedList\ArgumentExpressionList::class);
-            $callingNode = $node->classTypeDesignator;
-            if (!$callingNode instanceof Node\QualifiedName) {
-                // We only support constructing from a QualifiedName
+
+            if (!$callingNode) {
                 return null;
             }
-            // Manually build the __construct fqn
-            $fqn = $this->definitionResolver->resolveReferenceNodeToFqn($callingNode);
-            $fqn = "{$fqn}->__construct()";
-        }
 
-        if (!$callingNode) {
-            return null;
-        }
-
-        // Now find the definition of the call
-        $fqn = $fqn ?: DefinitionResolver::getDefinedFqn($callingNode);
-        if ($fqn) {
-            $def = $this->index->getDefinition($fqn);
-        } else {
-            $def = $this->definitionResolver->resolveReferenceNodeToDefinition($callingNode);
-        }
-
-        if (!$def) {
-            return null;
-        }
-        return [$def, $argumentExpressionList];
-    }
-
-    /**
-     * Creates a label for SignatureInformation
-     *
-     * @param Node\MethodDeclaration|Node\Statement\FunctionDeclaration $node   The method/function declaration node
-     *                                                                          we are building the label for
-     * @param ParameterInformation[]                                    $params Parameters that belong to the node
-     *
-     * @return string
-     */
-    private function getLabel($node, array $params): string
-    {
-        $label = '(';
-        if ($params) {
-            foreach ($params as $param) {
-                $label .= $param->label . ', ';
-            }
-            $label = substr($label, 0, -2);
-        }
-        $label .= ')';
-        return $label;
-    }
-
-    /**
-     * Builds ParameterInformation from a node
-     *
-     * @param Node\MethodDeclaration|Node\Statement\FunctionDeclaration $node The node to build parameters from
-     * @param PhpDocument                                               $doc  The document the node belongs to
-     *
-     * @return ParameterInformation[]
-     */
-    private function getParameters($node, PhpDocument $doc): array
-    {
-        $params = [];
-        if ($node->parameters) {
-            foreach ($node->parameters->getElements() as $element) {
-                $param = (string) $this->definitionResolver->getTypeFromNode($element);
-                $param .= ' ' . $element->variableName->getText($doc->getContent());
-                if ($element->default) {
-                    $param .= ' = ' . $element->default->getText($doc->getContent());
+            // Now find the definition of the call
+            $fqn = $fqn ?: DefinitionResolver::getDefinedFqn($callingNode);
+            while (true) {
+                if ($fqn) {
+                    $def = $this->index->getDefinition($fqn);
+                } else {
+                    $def = $this->definitionResolver->resolveReferenceNodeToDefinition($callingNode);
                 }
-                $params[] = new ParameterInformation(
-                    $param,
-                    $this->definitionResolver->getDocumentationFromNode($element)
-                );
+                if ($def !== null || $this->index->isComplete()) {
+                    break;
+                }
+                yield waitForEvent($this->index, 'definition-added');
             }
-        }
-        return $params;
+
+            if (!$def) {
+                return null;
+            }
+
+            return [$def, $argumentExpressionList];
+        });
     }
 
     /**

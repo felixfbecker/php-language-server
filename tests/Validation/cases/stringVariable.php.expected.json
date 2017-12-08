@@ -22,7 +22,8 @@
             },
             "type": null,
             "declarationLine": "class B",
-            "documentation": null
+            "documentation": null,
+            "signatureInformation": null
         },
         "B->hi": {
             "fqn": "B->hi",
@@ -42,7 +43,8 @@
             "type__tostring": "int",
             "type": {},
             "declarationLine": "public $hi;",
-            "documentation": null
+            "documentation": null,
+            "signatureInformation": null
         },
         "B->a()": {
             "fqn": "B->a()",
@@ -62,7 +64,12 @@
             "type__tostring": "mixed",
             "type": {},
             "declarationLine": "function a () {",
-            "documentation": null
+            "documentation": null,
+            "signatureInformation": {
+                "label": "()",
+                "documentation": null,
+                "parameters": []
+            }
         }
     }
 }
