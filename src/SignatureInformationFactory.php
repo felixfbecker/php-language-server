@@ -31,12 +31,12 @@ class SignatureInformationFactory
     public function create(FunctionLike $node): SignatureInformation
     {
         $params = $this->createParameters($node);
-		$label = $this->createLabel($params);
-		return new SignatureInformation(
-			$label,
-			$params,
-			$this->definitionResolver->getDocumentationFromNode($node)
-		);
+        $label = $this->createLabel($params);
+        return new SignatureInformation(
+            $label,
+            $params,
+            $this->definitionResolver->getDocumentationFromNode($node)
+        );
     }
 
     /**
