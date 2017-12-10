@@ -36,11 +36,13 @@ class SignatureHelpTest extends TestCase
     public function setUp()
     {
         $client = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
-        $projectIndex = new ProjectIndex(new Index, new DependenciesIndex);
+        $index = new Index();
+        $projectIndex = new ProjectIndex($index, new DependenciesIndex);
         $definitionResolver = new DefinitionResolver($projectIndex);
         $contentRetriever = new FileSystemContentRetriever;
         $this->loader = new PhpDocumentLoader($contentRetriever, $projectIndex, $definitionResolver);
         $this->textDocument = new Server\TextDocument($this->loader, $definitionResolver, $client, $projectIndex);
+        $index->setComplete();
     }
 
     /**
@@ -61,7 +63,7 @@ class SignatureHelpTest extends TestCase
     {
         return [
             'member call' => [
-                new Position(49, 9),
+                new Position(50, 9),
                 new SignatureHelp(
                     [
                         new SignatureInformation(
@@ -78,7 +80,7 @@ class SignatureHelpTest extends TestCase
                 ),
             ],
             'member call 2nd param active' => [
-                new Position(50, 12),
+                new Position(51, 12),
                 new SignatureHelp(
                     [
                         new SignatureInformation(
@@ -95,7 +97,7 @@ class SignatureHelpTest extends TestCase
                 ),
             ],
             'member call 2nd param active and closing )' => [
-                new Position(51, 11),
+                new Position(52, 11),
                 new SignatureHelp(
                     [
                         new SignatureInformation(
@@ -112,7 +114,7 @@ class SignatureHelpTest extends TestCase
                 ),
             ],
             'method with no params' => [
-                new Position(52, 9),
+                new Position(53, 9),
                 new SignatureHelp([new SignatureInformation('()', [], 'Method with no params', 0, 0)]),
             ],
             'constructor' => [
@@ -133,8 +135,26 @@ class SignatureHelpTest extends TestCase
                     0
                 ),
             ],
+            'constructor argument expression list' => [
+                new Position(49, 16),
+                new SignatureHelp(
+                    [
+                        new SignatureInformation(
+                            '(string $first, int $second, \Foo\Test $third)',
+                            [
+                                new ParameterInformation('string $first', 'First param'),
+                                new ParameterInformation('int $second', 'Second param'),
+                                new ParameterInformation('\Foo\Test $third', 'Third param with a longer description'),
+                            ],
+                            'Constructor comment goes here'
+                        )
+                    ],
+                    0,
+                    1
+                ),
+            ],
             'global function' => [
-                new Position(56, 15),
+                new Position(57, 15),
                 new SignatureHelp(
                     [
                         new SignatureInformation(
@@ -151,12 +171,28 @@ class SignatureHelpTest extends TestCase
                 )
             ],
             'static method' => [
-                new Position(59, 10),
+                new Position(60, 10),
                 new SignatureHelp(
                     [new SignatureInformation('(mixed $a)', [new ParameterInformation('mixed $a')])],
                     0,
                     0
                 ),
+            ],
+            'no signature help' => [
+                new Position(0, 0),
+                new SignatureHelp([]),
+            ],
+            'construct from non fqn (not supported)' => [
+                new Position(62, 9),
+                new SignatureHelp([]),
+            ],
+            'construct from non fqn (not supported) argument expression' => [
+                new Position(63, 11),
+                new SignatureHelp([]),
+            ],
+            'invalid var' => [
+                new Position(65, 13),
+                new SignatureHelp([]),
             ],
         ];
     }

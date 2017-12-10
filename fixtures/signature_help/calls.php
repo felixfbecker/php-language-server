@@ -47,6 +47,7 @@ function foo(int $i, bool $b = false, Test ...$things = null)
 }
 
 $t = new Test();
+$t = new Test(1, );
 $t->foo();
 $t->foo(1,  
 $t->foo(1,);
@@ -58,3 +59,8 @@ foo(
 );
 
 Test::bar();
+
+new $foo();
+new $foo(1, );
+
+new NotExist();
