@@ -588,7 +588,7 @@ class CompletionTest extends TestCase
             new CompletionItem(
                 'foo',
                 CompletionItemKind::METHOD,
-                'self',
+                '\FooClass',
                 null,
                 null,
                 null,

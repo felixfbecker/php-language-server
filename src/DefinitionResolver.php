@@ -1064,7 +1064,9 @@ class DefinitionResolver
                     // Resolve a string like "bool" to a type object
                     return $this->typeResolver->resolve($node->returnType->getText($node->getFileContents()));
                 } elseif ($node->returnType->getResolvedName() === 'self') {
-                    return new Types\Self_();
+                    $classNode = $node->getFirstAncestor(Node\Statement\ClassDeclaration::class);
+                    $classFqn = (string)$classNode->getNamespacedName();
+                    return new Types\Object_(new Fqsen('\\' . $classFqn));
                 }
                 return new Types\Object_(new Fqsen('\\' . (string)$node->returnType->getResolvedName()));
             }
