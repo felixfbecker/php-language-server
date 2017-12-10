@@ -19,6 +19,12 @@ and an [event loop](http://sabre.io/event/loop/) for concurrency.
 
 ## Features
 
+### [Completion](https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#textDocument_completion)
+![Completion search demo](images/completion.gif)
+
+### [Signature Help](https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#textDocument_signatureHelp)
+![Signature help demo](images/signatureHelp.gif)
+
 ### [Go To Definition](https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#goto-definition-request)
 ![Go To Definition demo](images/definition.gif)
 
