@@ -576,6 +576,28 @@ class CompletionTest extends TestCase
         ], true), $items);
     }
 
+    public function testMethodReturnSelf()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/method_return_self.php');
+        $this->loader->open($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(10, 6)
+        )->wait();
+        $this->assertCompletionsListSubset(new CompletionList([
+            new CompletionItem(
+                'foo',
+                CompletionItemKind::METHOD,
+                'self',
+                null,
+                null,
+                null,
+                null,
+                null
+            )
+        ], true), $items);
+    }
+
     public function testStaticMethodReturnType()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/static_method_return_type.php');

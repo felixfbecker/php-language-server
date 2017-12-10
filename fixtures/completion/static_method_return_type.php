@@ -1,7 +1,7 @@
 <?php
 
 class FooClass {
-    public static function staticFoo(): FooClass {
+    public static function staticFoo(): self {
         return new FooClass();
     }
 
