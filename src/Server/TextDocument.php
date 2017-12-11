@@ -4,7 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer\Server;
 
 use LanguageServer\{
-    CompletionProvider, LanguageClient, PhpDocument, PhpDocumentLoader, DefinitionResolver
+    CompletionProvider, SignatureHelpProvider, LanguageClient, PhpDocument, PhpDocumentLoader, DefinitionResolver
 };
 use LanguageServer\Index\ReadableIndex;
 use LanguageServer\Protocol\{
@@ -60,6 +60,11 @@ class TextDocument
     protected $completionProvider;
 
     /**
+     * @var SignatureHelpProvider
+     */
+    protected $signatureHelpProvider;
+
+    /**
      * @var ReadableIndex
      */
     protected $index;
@@ -94,6 +99,7 @@ class TextDocument
         $this->client = $client;
         $this->definitionResolver = $definitionResolver;
         $this->completionProvider = new CompletionProvider($this->definitionResolver, $index);
+        $this->signatureHelpProvider = new SignatureHelpProvider($this->definitionResolver, $index, $documentLoader);
         $this->index = $index;
         $this->composerJson = $composerJson;
         $this->composerLock = $composerLock;
@@ -234,6 +240,23 @@ class TextDocument
                 }
             }
             return $locations;
+        });
+    }
+
+    /**
+     * The signature help request is sent from the client to the server to request signature information at a given
+     * cursor position.
+     *
+     * @param TextDocumentIdentifier $textDocument The text document
+     * @param Position               $position     The position inside the text document
+     *
+     * @return Promise <SignatureHelp>
+     */
+    public function signatureHelp(TextDocumentIdentifier $textDocument, Position $position): Promise
+    {
+        return coroutine(function () use ($textDocument, $position) {
+            $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
+            return $this->signatureHelpProvider->getSignatureHelp($document, $position);
         });
     }
 

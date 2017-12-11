@@ -7,6 +7,7 @@ use LanguageServer\Index\ReadableIndex;
 use LanguageServer\Protocol\SymbolInformation;
 use Microsoft\PhpParser;
 use Microsoft\PhpParser\Node;
+use Microsoft\PhpParser\FunctionLike;
 use phpDocumentor\Reflection\{
     DocBlock, DocBlockFactory, Fqsen, Type, TypeResolver, Types
 };
@@ -35,6 +36,13 @@ class DefinitionResolver
     private $docBlockFactory;
 
     /**
+     * Creates SignatureInformation
+     *
+     * @var SignatureInformationFactory
+     */
+    private $signatureInformationFactory;
+
+    /**
      * @param ReadableIndex $index
      */
     public function __construct(ReadableIndex $index)
@@ -42,6 +50,7 @@ class DefinitionResolver
         $this->index = $index;
         $this->typeResolver = new TypeResolver;
         $this->docBlockFactory = DocBlockFactory::createInstance();
+        $this->signatureInformationFactory = new SignatureInformationFactory($this);
     }
 
     /**
@@ -230,6 +239,10 @@ class DefinitionResolver
             $def->type = $this->getTypeFromNode($node);
             $def->declarationLine = $this->getDeclarationLineFromNode($node);
             $def->documentation = $this->getDocumentationFromNode($node);
+        }
+
+        if ($node instanceof FunctionLike) {
+            $def->signatureInformation = $this->signatureInformationFactory->create($node);
         }
 
         return $def;

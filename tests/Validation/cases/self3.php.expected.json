@@ -28,7 +28,8 @@
             },
             "type": null,
             "declarationLine": "namespace MyNamespace;",
-            "documentation": null
+            "documentation": null,
+            "signatureInformation": null
         },
         "MyNamespace\\B": {
             "fqn": "MyNamespace\\B",
@@ -47,7 +48,8 @@
             },
             "type": null,
             "declarationLine": "class B {",
-            "documentation": null
+            "documentation": null,
+            "signatureInformation": null
         },
         "MyNamespace\\B->b()": {
             "fqn": "MyNamespace\\B->b()",
@@ -67,7 +69,12 @@
             "type__tostring": "mixed",
             "type": {},
             "declarationLine": "function b() {",
-            "documentation": null
+            "documentation": null,
+            "signatureInformation": {
+                "label": "()",
+                "documentation": null,
+                "parameters": []
+            }
         },
         "MyNamespace\\A": {
             "fqn": "MyNamespace\\A",
@@ -88,7 +95,8 @@
             },
             "type": null,
             "declarationLine": "class A extends B {",
-            "documentation": null
+            "documentation": null,
+            "signatureInformation": null
         },
         "MyNamespace\\A->a()": {
             "fqn": "MyNamespace\\A->a()",
@@ -108,7 +116,12 @@
             "type__tostring": "mixed",
             "type": {},
             "declarationLine": "function a () {",
-            "documentation": null
+            "documentation": null,
+            "signatureInformation": {
+                "label": "()",
+                "documentation": null,
+                "parameters": []
+            }
         }
     }
 }

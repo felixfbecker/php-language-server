@@ -25,7 +25,8 @@
             },
             "type": null,
             "declarationLine": "namespace TestNamespace;",
-            "documentation": null
+            "documentation": null,
+            "signatureInformation": null
         },
         "TestNamespace\\whatever()": {
             "fqn": "TestNamespace\\whatever()",
@@ -45,7 +46,17 @@
             "type__tostring": "\\TestNamespace\\TestClass",
             "type": {},
             "declarationLine": "function whatever(TestClass $param): TestClass2 {",
-            "documentation": "Aute duis elit reprehenderit tempor cillum proident anim laborum eu laboris reprehenderit ea incididunt."
+            "documentation": "Aute duis elit reprehenderit tempor cillum proident anim laborum eu laboris reprehenderit ea incididunt.",
+            "signatureInformation": {
+                "label": "(\\TestNamespace\\TestClass $param)",
+                "documentation": "Aute duis elit reprehenderit tempor cillum proident anim laborum eu laboris reprehenderit ea incididunt.",
+                "parameters": [
+                    {
+                        "label": "\\TestNamespace\\TestClass $param",
+                        "documentation": "Adipisicing non non cillum sint incididunt cillum enim mollit."
+                    }
+                ]
+            }
         }
     }
 }
