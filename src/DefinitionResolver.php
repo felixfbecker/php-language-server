@@ -1065,8 +1065,10 @@ class DefinitionResolver
                     return $this->typeResolver->resolve($node->returnType->getText($node->getFileContents()));
                 } elseif ($node->returnType->getResolvedName() === 'self') {
                     $classNode = $node->getFirstAncestor(Node\Statement\ClassDeclaration::class);
-                    $classFqn = (string)$classNode->getNamespacedName();
-                    return new Types\Object_(new Fqsen('\\' . $classFqn));
+                    if ($classNode) {
+                        $classFqn = (string)$classNode->getNamespacedName();
+                        return new Types\Object_(new Fqsen('\\' . $classFqn));
+                    }
                 }
                 return new Types\Object_(new Fqsen('\\' . (string)$node->returnType->getResolvedName()));
             }
