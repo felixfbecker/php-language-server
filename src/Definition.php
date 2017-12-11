@@ -100,6 +100,13 @@ class Definition
     public $documentation;
 
     /**
+     * Signature information if this definition is for a FunctionLike, for use in textDocument/signatureHelp
+     *
+     * @var SignatureInformation
+     */
+    public $signatureInformation;
+
+    /**
      * Yields the definitons of all ancestor classes (the Definition fqn is yielded as key)
      *
      * @param ReadableIndex $index the index to search for needed definitions

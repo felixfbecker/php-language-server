@@ -22,7 +22,8 @@
             },
             "type": null,
             "declarationLine": "namespace MyNamespace;",
-            "documentation": null
+            "documentation": null,
+            "signatureInformation": null
         },
         "MyNamespace\\ParseErrorsTest": {
             "fqn": "MyNamespace\\ParseErrorsTest",
@@ -41,7 +42,8 @@
             },
             "type": null,
             "declarationLine": "class ParseErrorsTest {",
-            "documentation": null
+            "documentation": null,
+            "signatureInformation": null
         },
         "MyNamespace\\ParseErrorsTest->setUp()": {
             "fqn": "MyNamespace\\ParseErrorsTest->setUp()",
@@ -61,7 +63,12 @@
             "type__tostring": "mixed",
             "type": {},
             "declarationLine": "public function setUp()",
-            "documentation": null
+            "documentation": null,
+            "signatureInformation": {
+                "label": "()",
+                "documentation": null,
+                "parameters": []
+            }
         }
     }
 }

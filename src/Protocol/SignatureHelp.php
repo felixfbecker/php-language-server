@@ -29,4 +29,18 @@ class SignatureHelp
      * @var int|null
      */
     public $activeParameter;
+
+    /**
+     * Create a SignatureHelp
+     *
+     * @param SignatureInformation[] $signatures      List of signature information
+     * @param int|null               $activeSignature The active signature, zero based
+     * @param int|null               $activeParameter The active parameter, zero based
+     */
+    public function __construct(array $signatures = [], $activeSignature = null, int $activeParameter = null)
+    {
+        $this->signatures = $signatures;
+        $this->activeSignature = $activeSignature;
+        $this->activeParameter = $activeParameter;
+    }
 }
