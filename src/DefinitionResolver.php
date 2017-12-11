@@ -727,9 +727,6 @@ class DefinitionResolver
             if ($def === null) {
                 return new Types\Mixed_;
             }
-            if ($def->type instanceof Types\Self_) {
-                return new Types\Object_($classType->getFqsen());
-            }
             return $def->type;
         }
 
