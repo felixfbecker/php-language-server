@@ -620,6 +620,28 @@ class CompletionTest extends TestCase
         ], true), $items);
     }
 
+    public function testStaticMethodReturnSelf()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/static_method_return_self.php');
+        $this->loader->open($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(11, 6)
+        )->wait();
+        $this->assertCompletionsListSubset(new CompletionList([
+            new CompletionItem(
+                'bar',
+                CompletionItemKind::METHOD,
+                'mixed',
+                null,
+                null,
+                null,
+                null,
+                null
+            )
+        ], true), $items);
+    }
+
     private function assertCompletionsListSubset(CompletionList $subsetList, CompletionList $list)
     {
         foreach ($subsetList->items as $expectedItem) {
