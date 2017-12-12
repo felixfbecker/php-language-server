@@ -1097,14 +1097,14 @@ class DefinitionResolver
             return new Types\Mixed_;
         }
 
-        // FOREACH KEY
+        // FOREACH KEY/VARIABLE
         if ($node instanceof Node\ForeachKey || $node->parent instanceof Node\ForeachKey) {
             $foreach = $node->getFirstAncestor(Node\Statement\ForeachStatement::class);
             $collectionType = $this->resolveExpressionNodeToType($foreach->forEachCollectionName);
             if ($collectionType instanceof Types\Array_) {
                 return $collectionType->getKeyType();
             }
-            return new Types\Compound([new Types\String_(), new Types\Integer()]);
+            return new Types\Mixed_();
         }
 
         // FOREACH VALUE
