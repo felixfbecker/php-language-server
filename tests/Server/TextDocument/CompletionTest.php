@@ -676,33 +676,8 @@ class CompletionTest extends TestCase
                     ),
                 ]
             ],
-            'foreach with list()' => [
-                new Position(35, 5),
-                [
-                    new CompletionItem(
-                        '$z',
-                        CompletionItemKind::VARIABLE,
-                        '\\Foo\\Bar|\\stdClass',
-                        null,
-                        null,
-                        null,
-                        null,
-                        new TextEdit(new Range(new Position(35, 5), new Position(35, 5)), 'z')
-                    ),
-                    new CompletionItem(
-                        '$y',
-                        CompletionItemKind::VARIABLE,
-                        '\\Foo\\Bar|\\stdClass',
-                        null,
-                        null,
-                        null,
-                        null,
-                        new TextEdit(new Range(new Position(35, 5), new Position(35, 5)), 'y')
-                    ),
-                ]
-            ],
             'foreach function call' => [
-                new Position(39, 5),
+                new Position(35, 5),
                 [
                     new CompletionItem(
                         '$value',
@@ -712,7 +687,7 @@ class CompletionTest extends TestCase
                         null,
                         null,
                         null,
-                        new TextEdit(new Range(new Position(39, 5), new Position(39, 5)), 'value')
+                        new TextEdit(new Range(new Position(35, 5), new Position(35, 5)), 'value')
                     ),
                 ]
             ],

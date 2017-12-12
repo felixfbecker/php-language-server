@@ -1107,8 +1107,10 @@ class DefinitionResolver
             return new Types\Mixed_();
         }
 
-        // FOREACH VALUE
-        if ($node instanceof Node\ForeachValue || $node->getFirstAncestor(Node\ForeachValue::class)) {
+        // FOREACH VALUE/VARIABLE
+        if ($node instanceof Node\ForeachValue
+            || ($node instanceof Node\Expression\Variable && $node->parent instanceof Node\ForeachValue)
+        ) {
             $foreach = $node->getFirstAncestor(Node\Statement\ForeachStatement::class);
             $collectionType = $this->resolveExpressionNodeToType($foreach->forEachCollectionName);
             if ($collectionType instanceof Types\Array_) {

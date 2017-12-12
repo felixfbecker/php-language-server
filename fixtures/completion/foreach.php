@@ -32,10 +32,6 @@ foreach ($array3 as $key => $value) {
     $
 }
 
-foreach ($array1 as list($z, $y)) {
-    $
-}
-
 foreach ($bar->test() as $value) {
     $
 }
