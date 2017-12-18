@@ -36,7 +36,7 @@
                 },
                 "containerName": "A"
             },
-            "type__tostring": "string[]",
+            "type__tostring": "bool[]",
             "type": {},
             "declarationLine": "protected $foo;",
             "documentation": null,

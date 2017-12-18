@@ -337,6 +337,7 @@ class TextDocument
             if ($def === null) {
                 return new Hover([], $range);
             }
+            $contents = [];
             if ($def->declarationLine) {
                 $contents[] = new MarkedString('php', "<?php\n" . $def->declarationLine);
             }
