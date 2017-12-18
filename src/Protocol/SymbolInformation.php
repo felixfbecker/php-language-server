@@ -83,6 +83,8 @@ class SymbolInformation
             )
             || $node instanceof Node\UseVariableName
             || $node instanceof Node\Parameter
+            || $node instanceof Node\ForeachValue
+            || $node instanceof Node\ForeachKey
         ) {
             $symbol->kind = SymbolKind::VARIABLE;
         } else {
@@ -103,6 +105,8 @@ class SymbolInformation
             } else {
                 $symbol->name = ltrim((string)$node->name->getText($node->getFileContents()), "$");
             }
+        } else if ($node instanceof Node\ForeachValue || $node instanceof Node\ForeachKey) {
+            $symbol->name = $node->expression->getName();
         } else if (isset($node->variableName)) {
             $symbol->name = $node->variableName->getText($node);
         } else if (!isset($symbol->name)) {
