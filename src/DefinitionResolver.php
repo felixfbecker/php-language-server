@@ -568,6 +568,20 @@ class DefinitionResolver
                 }
                 break;
             }
+
+            // If we get to a ForeachStatement, check the keys and values
+            if ($n instanceof Node\Statement\ForeachStatement) {
+                if ($n->foreachKey && $n->foreachKey->expression->getName() === $name) {
+                    return $n->foreachKey;
+                }
+                if ($n->foreachValue
+                    && $n->foreachValue->expression instanceof Node\Expression\Variable
+                    && $n->foreachValue->expression->getName() === $name
+                ) {
+                    return $n->foreachValue;
+                }
+            }
+
             // Check each previous sibling node for a variable assignment to that variable
             while (($prevSibling = $n->getPreviousSibling()) !== null && $n = $prevSibling) {
                 if ($n instanceof Node\Statement\ExpressionStatement) {
@@ -618,6 +632,9 @@ class DefinitionResolver
             $defNode = $this->resolveVariableToNode($expr);
             if ($defNode instanceof Node\Expression\AssignmentExpression || $defNode instanceof Node\UseVariableName) {
                 return $this->resolveExpressionNodeToType($defNode);
+            }
+            if ($defNode instanceof Node\ForeachKey || $defNode instanceof Node\ForeachValue) {
+                return $this->getTypeFromNode($defNode);
             }
             if ($defNode instanceof Node\Parameter) {
                 return $this->getTypeFromNode($defNode);
@@ -900,7 +917,7 @@ class DefinitionResolver
                     $keyTypes[] = $item->elementKey ? $this->resolveExpressionNodeToType($item->elementKey) : new Types\Integer;
                 }
             }
-            $valueTypes = array_unique($keyTypes);
+            $valueTypes = array_unique($valueTypes);
             $keyTypes = array_unique($keyTypes);
             if (empty($valueTypes)) {
                 $valueType = null;
@@ -1078,6 +1095,27 @@ class DefinitionResolver
             }
             // Unknown return type
             return new Types\Mixed_;
+        }
+
+        // FOREACH KEY/VARIABLE
+        if ($node instanceof Node\ForeachKey || $node->parent instanceof Node\ForeachKey) {
+            $foreach = $node->getFirstAncestor(Node\Statement\ForeachStatement::class);
+            $collectionType = $this->resolveExpressionNodeToType($foreach->forEachCollectionName);
+            if ($collectionType instanceof Types\Array_) {
+                return $collectionType->getKeyType();
+            }
+            return new Types\Mixed_();
+        }
+
+        // FOREACH VALUE/VARIABLE
+        if ($node instanceof Node\ForeachValue
+            || ($node instanceof Node\Expression\Variable && $node->parent instanceof Node\ForeachValue)
+        ) {
+            $foreach = $node->getFirstAncestor(Node\Statement\ForeachStatement::class);
+            $collectionType = $this->resolveExpressionNodeToType($foreach->forEachCollectionName);
+            if ($collectionType instanceof Types\Array_) {
+                return $collectionType->getValueType();
+            }
         }
 
         // PROPERTIES, CONSTS, CLASS CONSTS, ASSIGNMENT EXPRESSIONS
