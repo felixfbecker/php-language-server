@@ -186,6 +186,7 @@ Example:
  - [Eclipse Che](https://eclipse.org/che/)
  - [Eclipse IDE (LSP4E-PHP)](https://github.com/eclipselabs/lsp4e-php)
  - NeoVim: [LanguageServer-php-neovim](https://github.com/roxma/LanguageServer-php-neovim) with [LanguageClient neovim](https://github.com/autozimu/LanguageClient-neovim)
+ - Atom: [ide-php](https://github.com/atom/ide-php)
 
 ## Contributing
 
