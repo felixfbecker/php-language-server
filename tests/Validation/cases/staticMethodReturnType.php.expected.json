@@ -50,6 +50,31 @@
                 "parameters": []
             }
         },
+        "FooClass::staticSelf()": {
+            "fqn": "FooClass::staticSelf()",
+            "extends": [],
+            "isMember": true,
+            "roamed": false,
+            "isStatic": true,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "staticSelf",
+                "kind": 6,
+                "location": {
+                    "uri": "./staticMethodReturnType.php"
+                },
+                "containerName": "FooClass"
+            },
+            "type__tostring": "\\FooClass",
+            "type": {},
+            "declarationLine": "public static function staticSelf(): self { }",
+            "documentation": null,
+            "signatureInformation": {
+                "label": "()",
+                "documentation": null,
+                "parameters": []
+            }
+        },
         "FooClass->bar()": {
             "fqn": "FooClass->bar()",
             "extends": [],

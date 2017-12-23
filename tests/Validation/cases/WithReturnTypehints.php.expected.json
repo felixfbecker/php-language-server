@@ -71,7 +71,7 @@
                 },
                 "containerName": "Fixtures\\Prophecy\\WithReturnTypehints"
             },
-            "type__tostring": "\\self",
+            "type__tostring": "\\Fixtures\\Prophecy\\WithReturnTypehints",
             "type": {},
             "declarationLine": "public function getSelf(): self {",
             "documentation": null,

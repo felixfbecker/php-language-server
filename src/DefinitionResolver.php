@@ -729,7 +729,7 @@ class DefinitionResolver
                     foreach ($classDef->getAncestorDefinitions($this->index, true) as $fqn => $def) {
                         $def = $this->index->getDefinition($fqn . $add);
                         if ($def !== null) {
-                            if ($def->type instanceof Types\This) {
+                            if ($def->type instanceof Types\This || $def->type instanceof Types\Self_) {
                                 return new Types\Object_(new Fqsen('\\' . $classFqn));
                             }
                             return $def->type;
@@ -1090,6 +1090,12 @@ class DefinitionResolver
                 if ($node->returnType instanceof PhpParser\Token) {
                     // Resolve a string like "bool" to a type object
                     return $this->typeResolver->resolve($node->returnType->getText($node->getFileContents()));
+                } elseif ($node->returnType->getResolvedName() === 'self') {
+                    $classNode = $node->getFirstAncestor(Node\Statement\ClassDeclaration::class);
+                    if ($classNode) {
+                        $classFqn = (string)$classNode->getNamespacedName();
+                        return new Types\Object_(new Fqsen('\\' . $classFqn));
+                    }
                 }
                 return new Types\Object_(new Fqsen('\\' . (string)$node->returnType->getResolvedName()));
             }

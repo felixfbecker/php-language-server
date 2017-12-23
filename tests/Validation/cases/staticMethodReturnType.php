@@ -5,5 +5,7 @@ class FooClass {
         return new FooClass();
     }
 
+    public static function staticSelf(): self { }
+
     public function bar() { }
 }
