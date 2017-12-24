@@ -691,6 +691,21 @@ class CompletionTest extends TestCase
                     ),
                 ]
             ],
+            'foreach unknown type' => [
+                new Position(39, 10),
+                [
+                    new CompletionItem(
+                        '$unknown',
+                        CompletionItemKind::VARIABLE,
+                        'mixed',
+                        null,
+                        null,
+                        null,
+                        null,
+                        new TextEdit(new Range(new Position(39, 10), new Position(39, 10)), 'wn')
+                    ),
+                ]
+            ],
         ];
     }
 

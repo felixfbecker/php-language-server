@@ -1122,6 +1122,7 @@ class DefinitionResolver
             if ($collectionType instanceof Types\Array_) {
                 return $collectionType->getValueType();
             }
+            return new Types\Mixed_();
         }
 
         // PROPERTIES, CONSTS, CLASS CONSTS, ASSIGNMENT EXPRESSIONS
