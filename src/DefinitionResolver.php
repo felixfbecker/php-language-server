@@ -571,7 +571,9 @@ class DefinitionResolver
 
             // If we get to a ForeachStatement, check the keys and values
             if ($n instanceof Node\Statement\ForeachStatement) {
-                if ($n->foreachKey && $n->foreachKey->expression->getName() === $name) {
+                if ($n->foreachKey instanceof Node\Expression\Variable
+                    && $n->foreachKey->expression->getName() === $name
+                ) {
                     return $n->foreachKey;
                 }
                 if ($n->foreachValue

@@ -36,5 +36,5 @@ foreach ($bar->test() as $value) {
     $
 }
 
-foreach ($unknownArray as $unknown) {
+foreach ($unknownArray as $member->access => $unknown) {
     $unkno
