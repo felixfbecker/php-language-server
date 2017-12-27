@@ -571,10 +571,27 @@ class DefinitionResolver
 
             // If we get to a ForeachStatement, check the keys and values
             if ($n instanceof Node\Statement\ForeachStatement) {
-                if ($n->foreachKey && $n->foreachKey->expression->getName() === $name) {
+                // Only check keys and values if we did not get here from the foreach collection, otherwise code like
+                // foreach ($a as $a) will send us in circles
+                $isForeachCollection = false;
+                if ($n->forEachCollectionName) {
+                    if ($n->forEachCollectionName === $var) {
+                        $isForeachCollection = true;
+                    } else {
+                        foreach ($n->forEachCollectionName->getDescendantNodes() as $childNode) {
+                            if ($childNode === $var) {
+                                $isForeachCollection = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (!$isForeachCollection && $n->foreachKey instanceof Node\Expression\Variable
+                    && $n->foreachKey->expression->getName() === $name
+                ) {
                     return $n->foreachKey;
                 }
-                if ($n->foreachValue
+                if (!$isForeachCollection && $n->foreachValue
                     && $n->foreachValue->expression instanceof Node\Expression\Variable
                     && $n->foreachValue->expression->getName() === $name
                 ) {
