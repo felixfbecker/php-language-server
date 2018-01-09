@@ -49,6 +49,31 @@
                 "documentation": null,
                 "parameters": []
             }
+        },
+        "FooClass->bar()": {
+            "fqn": "FooClass->bar()",
+            "extends": [],
+            "isMember": true,
+            "roamed": false,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "bar",
+                "kind": 6,
+                "location": {
+                    "uri": "./methodReturnType.php"
+                },
+                "containerName": "FooClass"
+            },
+            "type__tostring": "\\FooClass",
+            "type": {},
+            "declarationLine": "public function bar() { }",
+            "documentation": "",
+            "signatureInformation": {
+                "label": "()",
+                "documentation": "",
+                "parameters": []
+            }
         }
     }
 }

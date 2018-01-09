@@ -527,6 +527,20 @@ class DefinitionResolver
     }
 
     /**
+     * Returns the type of the class a node is contained in
+     * Returns null if the class is anonymos or the node is not contained in a class
+     *
+     * @param Node $node The node used to find the containing class
+     *
+     * @return Types\Object_|null
+     */
+    private function getContainingClassType(Node $node)
+    {
+        $classFqn = $this->getContainingClassFqn($node);
+        return $classFqn ? new Types\Object_(new Fqsen('\\' . $classFqn)) : null;
+    }
+
+    /**
      * Returns the assignment or parameter node where a variable was defined
      *
      * @param Node\Expression\Variable|Node\Expression\ClosureUse $var The variable access
@@ -1110,7 +1124,14 @@ class DefinitionResolver
                 && $returnTags[0]->getType() !== null
             ) {
                 // Use @return tag
-                return $returnTags[0]->getType();
+                $returnType = $returnTags[0]->getType();
+                if ($returnType instanceof Types\Self_) {
+                    $selfType = $this->getContainingClassType($node);
+                    if ($selfType) {
+                        return $selfType;
+                    }
+                }
+                return $returnType;
             }
             if ($node->returnType !== null && !($node->returnType instanceof PhpParser\MissingToken)) {
                 // Use PHP7 return type hint
@@ -1118,10 +1139,9 @@ class DefinitionResolver
                     // Resolve a string like "bool" to a type object
                     return $this->typeResolver->resolve($node->returnType->getText($node->getFileContents()));
                 } elseif ($node->returnType->getResolvedName() === 'self') {
-                    $classNode = $node->getFirstAncestor(Node\Statement\ClassDeclaration::class);
-                    if ($classNode) {
-                        $classFqn = (string)$classNode->getNamespacedName();
-                        return new Types\Object_(new Fqsen('\\' . $classFqn));
+                    $selfType = $this->getContainingClassType($node);
+                    if ($selfType !== null) {
+                        return $selfType;
                     }
                 }
                 return new Types\Object_(new Fqsen('\\' . (string)$node->returnType->getResolvedName()));
