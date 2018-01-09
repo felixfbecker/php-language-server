@@ -545,6 +545,15 @@ class DefinitionResolver
         } else {
             throw new \InvalidArgumentException('$var must be Variable, Param or ClosureUse, not ' . get_class($var));
         }
+        if (empty($name)) {
+            return null;
+        }
+
+        $shouldDescend = function ($nodeToDescand) {
+            // Make sure not to decend into functions or classes (they represent a scope boundary)
+            return !($nodeToDescand instanceof PhpParser\FunctionLike || $nodeToDescand instanceof PhpParser\ClassLike);
+        };
+
         // Traverse the AST up
         do {
             // If a function is met, check the parameters and use statements
@@ -569,35 +578,53 @@ class DefinitionResolver
                 break;
             }
 
-            // If we get to a ForeachStatement, check the keys and values
-            if ($n instanceof Node\Statement\ForeachStatement) {
-                if ($n->foreachKey && $n->foreachKey->expression->getName() === $name) {
-                    return $n->foreachKey;
-                }
-                if ($n->foreachValue
-                    && $n->foreachValue->expression instanceof Node\Expression\Variable
-                    && $n->foreachValue->expression->getName() === $name
-                ) {
-                    return $n->foreachValue;
-                }
-            }
-
-            // Check each previous sibling node for a variable assignment to that variable
+            // Check each previous sibling node and their descendents for a variable assignment to that variable
+            // Each previous sibling could contain a declaration of the variable
             while (($prevSibling = $n->getPreviousSibling()) !== null && $n = $prevSibling) {
-                if ($n instanceof Node\Statement\ExpressionStatement) {
-                    $n = $n->expression;
-                }
-                if (
-                    // TODO - clean this up
-                    ($n instanceof Node\Expression\AssignmentExpression && $n->operator->kind === PhpParser\TokenKind::EqualsToken)
-                    && $n->leftOperand instanceof Node\Expression\Variable && $n->leftOperand->getName() === $name
-                ) {
+
+                // Check the sibling itself
+                if (self::isVariableDeclaration($n, $name)) {
                     return $n;
+                }
+
+                // Check descendant of this sibling (e.g. the children of a previous if block)
+                foreach ($n->getDescendantNodes($shouldDescend) as $descendant) {
+                    if (self::isVariableDeclaration($descendant, $name)) {
+                        return $descendant;
+                    }
                 }
             }
         } while (isset($n) && $n = $n->parent);
         // Return null if nothing was found
         return null;
+    }
+
+    /**
+     * Checks whether the given Node declares the given variable name
+     *
+     * @param Node $n The Node to check
+     * @param string $name The name of the wanted variable
+     * @return bool
+     */
+    private static function isVariableDeclaration(Node $n, string $name)
+    {
+        if (
+            // TODO - clean this up
+            ($n instanceof Node\Expression\AssignmentExpression && $n->operator->kind === PhpParser\TokenKind::EqualsToken)
+            && $n->leftOperand instanceof Node\Expression\Variable && $n->leftOperand->getName() === $name
+        ) {
+            return true;
+        }
+
+        if (
+            ($n instanceof Node\ForeachValue || $n instanceof Node\ForeachKey)
+            && $n->expression instanceof Node\Expression\Variable
+            && $n->expression->getName() === $name
+        ) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -1122,6 +1149,7 @@ class DefinitionResolver
             if ($collectionType instanceof Types\Array_) {
                 return $collectionType->getValueType();
             }
+            return new Types\Mixed_();
         }
 
         // PROPERTIES, CONSTS, CLASS CONSTS, ASSIGNMENT EXPRESSIONS

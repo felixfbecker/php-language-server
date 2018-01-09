@@ -35,3 +35,12 @@ foreach ($array3 as $key => $value) {
 foreach ($bar->test() as $value) {
     $
 }
+
+foreach ($unknownArray as $member->access => $unknown) {
+    $unkno
+
+foreach ($loop as $loop) {
+}
+ 
+foreach ($loop->getArray() as $loop) {
+}
