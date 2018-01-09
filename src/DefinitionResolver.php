@@ -528,7 +528,7 @@ class DefinitionResolver
 
     /**
      * Returns the type of the class a node is contained in
-     * Returns null if the class is anonymos or the node is not contained in a class
+     * Returns null if the class is anonymous or the node is not contained in a class
      *
      * @param Node $node The node used to find the containing class
      *
