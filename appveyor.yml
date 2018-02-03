@@ -1,5 +1,6 @@
 version: '{build}'
 
+image: Visual Studio 2017
 platform:
   - x64
 

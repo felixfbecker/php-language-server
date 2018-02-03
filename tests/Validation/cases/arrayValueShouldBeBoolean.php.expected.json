@@ -18,7 +18,8 @@
             },
             "type": null,
             "declarationLine": "class A {",
-            "documentation": null
+            "documentation": null,
+            "signatureInformation": null
         },
         "A->foo": {
             "fqn": "A->foo",
@@ -35,10 +36,11 @@
                 },
                 "containerName": "A"
             },
-            "type__tostring": "string[]",
+            "type__tostring": "bool[]",
             "type": {},
             "declarationLine": "protected $foo;",
-            "documentation": null
+            "documentation": null,
+            "signatureInformation": null
         }
     }
 }

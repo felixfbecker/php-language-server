@@ -4,7 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer\Server;
 
 use LanguageServer\{
-    CompletionProvider, LanguageClient, PhpDocument, PhpDocumentLoader, DefinitionResolver
+    CompletionProvider, SignatureHelpProvider, LanguageClient, PhpDocument, PhpDocumentLoader, DefinitionResolver
 };
 use LanguageServer\Index\ReadableIndex;
 use LanguageServer\Protocol\{
@@ -60,6 +60,11 @@ class TextDocument
     protected $completionProvider;
 
     /**
+     * @var SignatureHelpProvider
+     */
+    protected $signatureHelpProvider;
+
+    /**
      * @var ReadableIndex
      */
     protected $index;
@@ -94,6 +99,7 @@ class TextDocument
         $this->client = $client;
         $this->definitionResolver = $definitionResolver;
         $this->completionProvider = new CompletionProvider($this->definitionResolver, $index);
+        $this->signatureHelpProvider = new SignatureHelpProvider($this->definitionResolver, $index, $documentLoader);
         $this->index = $index;
         $this->composerJson = $composerJson;
         $this->composerLock = $composerLock;
@@ -239,6 +245,23 @@ class TextDocument
     }
 
     /**
+     * The signature help request is sent from the client to the server to request signature information at a given
+     * cursor position.
+     *
+     * @param TextDocumentIdentifier $textDocument The text document
+     * @param Position               $position     The position inside the text document
+     *
+     * @return Promise <SignatureHelp>
+     */
+    public function signatureHelp(TextDocumentIdentifier $textDocument, Position $position): Promise
+    {
+        return coroutine(function () use ($textDocument, $position) {
+            $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
+            return $this->signatureHelpProvider->getSignatureHelp($document, $position);
+        });
+    }
+
+    /**
      * The goto definition request is sent from the client to the server to resolve the definition location of a symbol
      * at a given text document position.
      *
@@ -315,6 +338,7 @@ class TextDocument
             if ($def === null) {
                 return new Hover([], $range);
             }
+            $contents = [];
             if ($def->declarationLine) {
                 $contents[] = new MarkedString('php', "<?php\n" . $def->declarationLine);
             }

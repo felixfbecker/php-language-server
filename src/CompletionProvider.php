@@ -482,6 +482,14 @@ class CompletionProvider
 
         if ($this->isAssignmentToVariableWithPrefix($node, $namePrefix)) {
             $vars[] = $node->leftOperand;
+        } elseif ($node instanceof Node\ForeachKey || $node instanceof Node\ForeachValue) {
+            foreach ($node->getDescendantNodes() as $descendantNode) {
+                if ($descendantNode instanceof Node\Expression\Variable
+                    && ($namePrefix === '' || strpos($descendantNode->getName(), $namePrefix) !== false)
+                ) {
+                    $vars[] = $descendantNode;
+                }
+            }
         } else {
             // Get all descendent variables, then filter to ones that start with $namePrefix.
             // Avoiding closure usage in tight loop

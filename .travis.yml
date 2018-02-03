@@ -9,10 +9,6 @@ git:
   depth: 10
   submodules: false
 
-env:
-  global:
-    - BUILD_LEADER_ID=4
-
 cache:
   directories:
     - $HOME/Library/Caches/Homebrew
@@ -38,21 +34,20 @@ jobs:
         - brew tap homebrew/homebrew-php
         - brew install php71
         - brew install homebrew/php/php71-xdebug
-        - curl https://getcomposer.org/installer | php
+        - php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+        - php composer-setup.php
         - ln -s "`pwd`/composer.phar" /usr/local/bin/composer
     - stage: release
       php: '7.0'
       services:
         - docker
       install:
-        - git config --replace-all remote.origin.fetch +refs/heads/*:refs/remotes/origin/*
-        - git fetch --tags
         - composer install --prefer-dist --no-interaction
         - nvm install 8
         - nvm use 8
         - npm install
-      script: skip
-      after_success:
+      script:
+        - docker build -t felixfbecker/php-language-server .
         - npm run semantic-release
 
 stages:
@@ -61,5 +56,5 @@ stages:
     if: branch = master AND type = push AND fork = false
 
 branches:
-  except:
-    - /^v\d+\.\d+\.\d+$/
+  only:
+    - master

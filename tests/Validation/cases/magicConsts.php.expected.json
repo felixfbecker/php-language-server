@@ -22,7 +22,8 @@
             },
             "type": null,
             "declarationLine": "class A {",
-            "documentation": null
+            "documentation": null,
+            "signatureInformation": null
         },
         "A::$deprecationsTriggered": {
             "fqn": "A::$deprecationsTriggered",
@@ -39,10 +40,11 @@
                 },
                 "containerName": "A"
             },
-            "type__tostring": "\\__CLASS__[]",
+            "type__tostring": "bool[]",
             "type": {},
             "declarationLine": "private static $deprecationsTriggered;",
-            "documentation": null
+            "documentation": null,
+            "signatureInformation": null
         }
     }
 }

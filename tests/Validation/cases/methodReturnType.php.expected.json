@@ -22,7 +22,8 @@
             },
             "type": null,
             "declarationLine": "class FooClass {",
-            "documentation": null
+            "documentation": null,
+            "signatureInformation": null
         },
         "FooClass->foo()": {
             "fqn": "FooClass->foo()",
@@ -42,7 +43,37 @@
             "type__tostring": "\\FooClass",
             "type": {},
             "declarationLine": "public function foo(): FooClass {",
-            "documentation": null
+            "documentation": null,
+            "signatureInformation": {
+                "label": "()",
+                "documentation": null,
+                "parameters": []
+            }
+        },
+        "FooClass->bar()": {
+            "fqn": "FooClass->bar()",
+            "extends": [],
+            "isMember": true,
+            "roamed": false,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "bar",
+                "kind": 6,
+                "location": {
+                    "uri": "./methodReturnType.php"
+                },
+                "containerName": "FooClass"
+            },
+            "type__tostring": "\\FooClass",
+            "type": {},
+            "declarationLine": "public function bar() { }",
+            "documentation": "",
+            "signatureInformation": {
+                "label": "()",
+                "documentation": "",
+                "parameters": []
+            }
         }
     }
 }
