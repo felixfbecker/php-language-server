@@ -218,24 +218,6 @@ class CompletionTest extends TestCase
                 null,
                 'TestClass'
             ),
-            new CompletionItem(
-                'ChildClass',
-                CompletionItemKind::CLASS_,
-                'TestNamespace',
-                null,
-                null,
-                null,
-                '\TestNamespace\ChildClass'
-            ),
-            new CompletionItem(
-                'Example',
-                CompletionItemKind::CLASS_,
-                'TestNamespace',
-                null,
-                null,
-                null,
-                '\TestNamespace\Example'
-            )
         ], true), $items);
     }
 
@@ -257,7 +239,10 @@ class CompletionTest extends TestCase
                     'laboris commodo ad commodo velit mollit qui non officia id. Nulla duis veniam' . "\n" .
                     'veniam officia deserunt et non dolore mollit ea quis eiusmod sit non. Occaecat' . "\n" .
                     'consequat sunt culpa exercitation pariatur id reprehenderit nisi incididunt Lorem' . "\n" .
-                    'sint. Officia culpa pariatur laborum nostrud cupidatat consequat mollit.'
+                    'sint. Officia culpa pariatur laborum nostrud cupidatat consequat mollit.',
+                null,
+                null,
+                'TestClass'
             )
         ], true), $items);
     }

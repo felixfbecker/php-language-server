@@ -22,7 +22,7 @@ class Index implements ReadableIndex, \Serializable
      *         '\Log' => [
      *             '\LoggerInterface' => [
      *                 ''        => $def1, // definition for 'Psr\Log\LoggerInterface' which is non-member
-     *                 '->log()' => $def2, // definition for 'Psr\Log\LoggerInterface->log()' which is a member definition
+     *                 '->log()' => $def2, // definition for 'Psr\Log\LoggerInterface->log()' which is a member
      *             ],
      *         ],
      *     ],
@@ -130,7 +130,11 @@ class Index implements ReadableIndex, \Serializable
             if ($name === '') {
                 continue;
             }
-            yield $fqn.$name => $item;
+            if ($item instanceof Definition) {
+                yield $fqn.$name => $item;
+            } elseif (is_array($item) && isset($item[''])) {
+                yield $fqn.$name => $item[''];
+            }
         }
     }
 
@@ -317,12 +321,9 @@ class Index implements ReadableIndex, \Serializable
         // split fqn at backslashes
         $parts = explode('\\', $fqn);
 
-        // write back the backslach prefix to the first part if it was present
-        if ('' === $parts[0]) {
-            if (count($parts) > 1) {
-                $parts = array_slice($parts, 1);
-            }
-
+        // write back the backslash prefix to the first part if it was present
+        if ('' === $parts[0] && count($parts) > 1) {
+            $parts = array_slice($parts, 1);
             $parts[0] = '\\' . $parts[0];
         }
 
@@ -346,7 +347,8 @@ class Index implements ReadableIndex, \Serializable
             }
         }
 
-        if (!$hasOperator) {
+        // The end($parts) === '' holds for the root namespace.
+        if (!$hasOperator && end($parts) !== '') {
             // add an empty part to store the non-member definition to avoid
             // definition collisions in the index array, eg
             // 'Psr\Log\LoggerInterface' will be stored at
@@ -364,25 +366,24 @@ class Index implements ReadableIndex, \Serializable
      * It can be an index node or a Definition if the $parts are precise
      * enough. Returns null when nothing is found.
      *
-     * @param string[] $parts         The splitted FQN
-     * @param array &$storage         The array in which to store the $definition
+     * @param string[] $path              The splitted FQN
+     * @param array|Definition &$storage  The current level to look for $path.
      * @return array|Definition|null
      */
-    private function getIndexValue(array $parts, array &$storage)
+    private function getIndexValue(array $path, &$storage)
     {
-        $part = $parts[0];
+        // Empty path returns the object itself.
+        if (empty($path)) {
+            return $storage;
+        }
+
+        $part = array_shift($path);
 
         if (!isset($storage[$part])) {
             return null;
         }
 
-        $parts = array_slice($parts, 1);
-        // we've reached the last provided part
-        if (empty($parts)) {
-            return $storage[$part];
-        }
-
-        return $this->getIndexValue($parts, $storage[$part]);
+        return $this->getIndexValue($path, $storage[$part]);
     }
 
     /**

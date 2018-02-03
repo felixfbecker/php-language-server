@@ -127,8 +127,11 @@ class CompletionProvider
      * @param CompletionContext $context The completion context
      * @return CompletionList
      */
-    public function provideCompletion(PhpDocument $doc, Position $pos, CompletionContext $context = null): CompletionList
-    {
+    public function provideCompletion(
+        PhpDocument $doc,
+        Position $pos,
+        CompletionContext $context = null
+    ): CompletionList {
         // This can be made much more performant if the tree follows specific invariants.
         $node = $doc->getNodeAtPosition($pos);
 
@@ -282,7 +285,6 @@ class CompletionProvider
             $prefix = $nameNode instanceof Node\QualifiedName
                 ? (string)PhpParser\ResolvedName::buildName($nameNode->nameParts, $nameNode->getFileContents())
                 : $nameNode->getText($node->getFileContents());
-            $prefixLen = strlen($prefix);
 
             /** Whether the prefix is qualified (contains at least one backslash) */
             $isQualified = $nameNode instanceof Node\QualifiedName && $nameNode->isQualifiedName();
@@ -293,12 +295,56 @@ class CompletionProvider
             /** The closest NamespaceDefinition Node */
             $namespaceNode = $node->getNamespaceDefinition();
 
-            /** @var string The name of the namespace */
-            $namespacedPrefix = null;
-            if ($namespaceNode) {
-                $namespacedPrefix = (string)PhpParser\ResolvedName::buildName($namespaceNode->name->nameParts, $node->getFileContents()) . '\\' . $prefix;
-                $namespacedPrefixLen = strlen($namespacedPrefix);
+            if ($nameNode instanceof Node\QualifiedName) {
+                /** @var array For Psr\Http\Mess this will be ['Psr', 'Http'] */
+                $namePartsWithoutLast = $nameNode->nameParts;
+                array_pop($namePartsWithoutLast);
+                /** @var string When typing \Foo\Bar\Fooba, this will be Foo\Bar */
+                $prefixParentNamespace = (string)PhpParser\ResolvedName::buildName(
+                    $namePartsWithoutLast,
+                    $node->getFileContents()
+                );
+            } else {
+                // Not qualified, parent namespace is root.
+                $prefixParentNamespace = '';
             }
+
+            /** @var string[] Namespaces to search completions in. */
+            $namespacesToSearch = [];
+            if ($namespaceNode && !$isFullyQualified) {
+                /** @var string Declared namespace of the file (or section) */
+                $currentNamespace = (string)PhpParser\ResolvedName::buildName(
+                    $namespaceNode->name->nameParts,
+                    $namespaceNode->getFileContents()
+                );
+
+                if ($prefixParentNamespace === '') {
+                    $namespacesToSearch[] = $currentNamespace;
+                } else {
+                    // Partially qualified, concatenate with current namespace.
+                    $namespacesToSearch[] = $currentNamespace . '\\' . $prefixParentNamespace;
+                }
+                /** @var string Prefix with namespace inferred. */
+                $namespacedPrefix = $currentNamespace . '\\' . $prefix;
+            } else {
+                // In the global namespace, prefix parent refers to global namespace,
+                // OR completing a fully qualified name, prefix parent starts from the global namespace.
+                $namespacesToSearch[] = $prefixParentNamespace;
+                $namespacedPrefix = $prefix;
+            }
+
+            if (!$isQualified && $namespacesToSearch[0] !== '' && ($prefix === '' || !isset($creation))) {
+                // Also search the global namespace for non-qualified completions, as roamed
+                // definitions may be found. Also, without a prefix, suggest completions from the global namespace.
+                // Since only functions and constants can be roamed, don't search the global namespace for creation
+                // with a prefix.
+                $namespacesToSearch[] = '';
+            }
+
+            /** @var int Length of $namespacedPrefix */
+            $namespacedPrefixLen = strlen($namespacedPrefix);
+            /** @var int Length of $prefix */
+            $prefixLen = strlen($prefix);
 
             // Get the namespace use statements
             // TODO: use function statements, use const statements
@@ -306,71 +352,63 @@ class CompletionProvider
             /** @var string[] $aliases A map from local alias to fully qualified name */
             list($aliases,,) = $node->getImportTablesForCurrentScope();
 
-            foreach ($aliases as $alias => $name) {
-                $aliases[$alias] = (string)$name;
-            }
-
             // If there is a prefix that does not start with a slash, suggest `use`d symbols
-            if ($prefix && !$isFullyQualified) {
+            if (!$isQualified) {
                 foreach ($aliases as $alias => $fqn) {
                     // Suggest symbols that have been `use`d and match the prefix
-                    if (substr($alias, 0, $prefixLen) === $prefix && ($def = $this->index->getDefinition($fqn))) {
-                        $list->items[] = CompletionItem::fromDefinition($def);
-                    }
-                }
-            }
-
-            // Suggest global (ie non member) symbols that either
-            //  - start with the current namespace + prefix, if the Name node is not fully qualified
-            //  - start with just the prefix, if the Name node is fully qualified
-            foreach ($this->index->getDefinitions() as $fqn => $def) {
-
-                $fqnStartsWithPrefix = substr($fqn, 0, $prefixLen) === $prefix;
-
-                if (
-                    // Exclude methods, properties etc.
-                    !$def->isMember
-                    && (
-                        !$prefix
-                        || (
-                            // Either not qualified, but a matching prefix with global fallback
-                            ($def->roamed && !$isQualified && $fqnStartsWithPrefix)
-                            // Or not in a namespace or a fully qualified name or AND matching the prefix
-                            || ((!$namespaceNode || $isFullyQualified) && $fqnStartsWithPrefix)
-                            // Or in a namespace, not fully qualified and matching the prefix + current namespace
-                            || (
-                                $namespaceNode
-                                && !$isFullyQualified
-                                && substr($fqn, 0, $namespacedPrefixLen) === $namespacedPrefix
-                            )
-                        )
-                    )
-                    // Only suggest classes for `new`
-                    && (!isset($creation) || $def->canBeInstantiated)
-                ) {
-                    $item = CompletionItem::fromDefinition($def);
-                    // Find the shortest name to reference the symbol
-                    if ($namespaceNode && ($alias = array_search($fqn, $aliases, true)) !== false) {
-                        // $alias is the name under which this definition is aliased in the current namespace
+                    if (substr($alias, 0, $prefixLen) === $prefix
+                        && ($def = $this->index->getDefinition((string)$fqn))) {
+                        // TODO: complete even when getDefinition($fqn) fails, e.g. complete definitions that are were
+                        // not found in the files parsed.
+                        $item = CompletionItem::fromDefinition($def);
                         $item->insertText = $alias;
-                    } else if ($namespaceNode && !($prefix && $isFullyQualified)) {
-                        // Insert the global FQN with leading backslash
-                        $item->insertText = '\\' . $fqn;
-                    } else {
-                        // Insert the FQN without leading backlash
-                        $item->insertText = $fqn;
+                        $list->items[] = $item;
                     }
-                    // Don't insert the parenthesis for functions
-                    // TODO return a snippet and put the cursor inside
-                    if (substr($item->insertText, -2) === '()') {
-                        $item->insertText = substr($item->insertText, 0, -2);
-                    }
-                    $list->items[] = $item;
                 }
             }
 
-            // If not a class instantiation, also suggest keywords
-            if (!isset($creation)) {
+            foreach ($namespacesToSearch as $namespaceToSearch) {
+                foreach ($this->index->getChildDefinitionsForFqn($namespaceToSearch) as $fqn => $def) {
+                    if (isset($creation) && !$def->canBeInstantiated) {
+                        // Only suggest classes for `new`
+                        continue;
+                    }
+
+                    $fqnStartsWithPrefix = substr($fqn, 0, $prefixLen) === $prefix;
+                    $fqnStartsWithNamespacedPrefix = substr($fqn, 0, $namespacedPrefixLen) === $namespacedPrefix;
+
+                    if (
+                        // No prefix - return all,
+                        $prefix === ''
+                        // or FQN starts with namespaced prefix,
+                        || $fqnStartsWithNamespacedPrefix
+                        // or a roamed definition (i.e. global fallback to a constant or a function) matches prefix.
+                        || ($def->roamed && $fqnStartsWithPrefix)
+                    ) {
+                        $item = CompletionItem::fromDefinition($def);
+                        // Find the shortest name to reference the symbol
+                        if ($namespaceNode && ($alias = array_search($fqn, $aliases, true)) !== false) {
+                            // $alias is the name under which this definition is aliased in the current namespace
+                            $item->insertText = $alias;
+                        } else if ($namespaceNode && !($prefix && $isFullyQualified)) {
+                            // Insert the global FQN with a leading backslash
+                            $item->insertText = '\\' . $fqn;
+                        } else {
+                            // Insert the FQN without a leading backslash
+                            $item->insertText = $fqn;
+                        }
+                        // Don't insert the parenthesis for functions
+                        // TODO return a snippet and put the cursor inside
+                        if (substr($item->insertText, -2) === '()') {
+                            $item->insertText = substr($item->insertText, 0, -2);
+                        }
+                        $list->items[] = $item;
+                    }
+                }
+            }
+
+            // Suggest keywords
+            if (!$isQualified && !isset($creation)) {
                 foreach (self::KEYWORDS as $keyword) {
                     if (substr($keyword, 0, $prefixLen) === $prefix) {
                         $item = new CompletionItem($keyword, CompletionItemKind::KEYWORD);
@@ -450,8 +488,9 @@ class CompletionProvider
                 }
             }
 
-            if ($level instanceof Node\Expression\AnonymousFunctionCreationExpression && $level->anonymousFunctionUseClause !== null &&
-                $level->anonymousFunctionUseClause->useVariableNameList !== null) {
+            if ($level instanceof Node\Expression\AnonymousFunctionCreationExpression
+                && $level->anonymousFunctionUseClause !== null
+                && $level->anonymousFunctionUseClause->useVariableNameList !== null) {
                 foreach ($level->anonymousFunctionUseClause->useVariableNameList->getValues() as $use) {
                     $useName = $use->getName();
                     if (empty($namePrefix) || strpos($useName, $namePrefix) !== false) {
