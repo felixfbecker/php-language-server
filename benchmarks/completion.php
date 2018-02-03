@@ -65,11 +65,17 @@ foreach ($testProviderArray as $idx => $testCaseFile) {
 
 echo "Getting completion". PHP_EOL;
 
+// Completion in $this->|request = new ParameterBag($request);
 $start = microtime(true);
 $list = $completionProvider->provideCompletion($completionDocument, new Position(274, 15));
 $end = microtime(true);
-
+echo 'Time ($this->|): ' . ($end - $start) . 's' . PHP_EOL;
 echo count($list->items) . ' completion items' . PHP_EOL;
 
-echo "Time: " . ($end - $start) . 's' . PHP_EOL;
-
+// Completion in $this->request = new| ParameterBag($request);
+// (this only finds ParameterBag though.)
+$start = microtime(true);
+$list = $completionProvider->provideCompletion($completionDocument, new Position(274, 28));
+$end = microtime(true);
+echo 'Time (new|): ' . ($end - $start) . 's' . PHP_EOL;
+echo count($list->items) . ' completion items' . PHP_EOL;
