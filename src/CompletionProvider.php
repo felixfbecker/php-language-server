@@ -162,10 +162,12 @@ class CompletionProvider
             || (
                 $node instanceof Node\Statement\InlineHtml
                 && (
-                    $context === null
+                    $context !== null
                     // Make sure to not suggest on the > trigger character in HTML
-                    || $context->triggerKind === CompletionTriggerKind::INVOKED
-                    || $context->triggerCharacter === '<'
+                    && (
+                        $context->triggerKind === CompletionTriggerKind::INVOKED
+                        || $context->triggerCharacter === '<'
+                    )
                 )
             )
             || $pos == new Position(0, 0)
