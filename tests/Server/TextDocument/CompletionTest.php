@@ -444,7 +444,7 @@ class CompletionTest extends TestCase
         ], true), $items);
     }
 
-    public function testHtmlWithPrefix()
+    public function testHtmlWontBeProposedWithoutCompletionContext()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/html_with_prefix.php');
         $this->loader->open($completionUri, file_get_contents($completionUri));
@@ -452,7 +452,21 @@ class CompletionTest extends TestCase
             new TextDocumentIdentifier($completionUri),
             new Position(0, 1)
         )->wait();
-        $this->assertCompletionsListSubset(new CompletionList([
+
+        $this->assertEquals(new CompletionList([], true), $items);
+    }
+
+    public function testHtmlWontBeProposedWithPrefixWithCompletionContext()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/html_with_prefix.php');
+        $this->loader->open($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(0, 1),
+            new CompletionContext(CompletionTriggerKind::TRIGGER_CHARACTER, '<')
+        )->wait();
+
+        $this->assertEquals(new CompletionList([
             new CompletionItem(
                 '<?php',
                 CompletionItemKind::KEYWORD,
