@@ -213,10 +213,7 @@ class CompletionTest extends TestCase
                 'laboris commodo ad commodo velit mollit qui non officia id. Nulla duis veniam' . "\n" .
                 'veniam officia deserunt et non dolore mollit ea quis eiusmod sit non. Occaecat' . "\n" .
                 'consequat sunt culpa exercitation pariatur id reprehenderit nisi incididunt Lorem' . "\n" .
-                'sint. Officia culpa pariatur laborum nostrud cupidatat consequat mollit.',
-                null,
-                null,
-                'TestClass'
+                'sint. Officia culpa pariatur laborum nostrud cupidatat consequat mollit.'
             ),
         ], true), $items);
     }
@@ -239,10 +236,28 @@ class CompletionTest extends TestCase
                     'laboris commodo ad commodo velit mollit qui non officia id. Nulla duis veniam' . "\n" .
                     'veniam officia deserunt et non dolore mollit ea quis eiusmod sit non. Occaecat' . "\n" .
                     'consequat sunt culpa exercitation pariatur id reprehenderit nisi incididunt Lorem' . "\n" .
-                    'sint. Officia culpa pariatur laborum nostrud cupidatat consequat mollit.',
+                    'sint. Officia culpa pariatur laborum nostrud cupidatat consequat mollit.'
+            )
+        ], true), $items);
+    }
+
+    public function testUsedNamespace()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/used_namespace.php');
+        $this->loader->open($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(6, 16)
+        )->wait();
+        $this->assertCompletionsListSubset(new CompletionList([
+            new CompletionItem(
+                'InnerClass',
+                CompletionItemKind::CLASS_,
+                'TestNamespace\\InnerNamespace',
                 null,
                 null,
-                'TestClass'
+                null,
+                'AliasNamespace\\InnerClass'
             )
         ], true), $items);
     }

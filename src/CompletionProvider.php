@@ -16,6 +16,7 @@ use LanguageServer\Protocol\{
 };
 use Microsoft\PhpParser;
 use Microsoft\PhpParser\Node;
+use Microsoft\PhpParser\ResolvedName;
 use Generator;
 
 class CompletionProvider
@@ -281,10 +282,32 @@ class CompletionProvider
             // The name Node under the cursor
             $nameNode = isset($creation) ? $creation->classTypeDesignator : $node;
 
-            /** The typed name */
-            $prefix = $nameNode instanceof Node\QualifiedName
-                ? (string)PhpParser\ResolvedName::buildName($nameNode->nameParts, $nameNode->getFileContents())
-                : $nameNode->getText($node->getFileContents());
+            $filterNameTokens = static function ($tokens) {
+                return array_values(
+                    array_filter(
+                        $tokens,
+                        static function ($token): bool {
+                            return $token->kind === PhpParser\TokenKind::Name;
+                        }
+                    )
+                );
+            };
+
+            /** @var string[] The written name, exploded by \ */
+            $prefix = array_map(
+                static function ($part) use ($node) : string {
+                    return $part->getText($node->getFileContents());
+                },
+                $filterNameTokens(
+                    $nameNode instanceof Node\QualifiedName
+                    ? $nameNode->nameParts
+                    : [$nameNode]
+                )
+            );
+
+            if ($prefix === ['']) {
+                $prefix = [];
+            }
 
             /** Whether the prefix is qualified (contains at least one backslash) */
             $isQualified = $nameNode instanceof Node\QualifiedName && $nameNode->isQualifiedName();
@@ -295,103 +318,100 @@ class CompletionProvider
             /** The closest NamespaceDefinition Node */
             $namespaceNode = $node->getNamespaceDefinition();
 
-            if ($nameNode instanceof Node\QualifiedName) {
-                /** @var array For Psr\Http\Mess this will be ['Psr', 'Http'] */
-                $namePartsWithoutLast = $nameNode->nameParts;
-                array_pop($namePartsWithoutLast);
-                /** @var string When typing \Foo\Bar\Fooba, this will be Foo\Bar */
-                $prefixParentNamespace = (string)PhpParser\ResolvedName::buildName(
-                    $namePartsWithoutLast,
-                    $node->getFileContents()
-                );
-            } else {
-                // Not qualified, parent namespace is root.
-                $prefixParentNamespace = '';
-            }
-
-            /** @var string[] Namespaces to search completions in. */
-            $namespacesToSearch = [];
-            if ($namespaceNode && !$isFullyQualified) {
-                /** @var string Declared namespace of the file (or section) */
-                $currentNamespace = (string)PhpParser\ResolvedName::buildName(
-                    $namespaceNode->name->nameParts,
-                    $namespaceNode->getFileContents()
-                );
-
-                if ($prefixParentNamespace === '') {
-                    $namespacesToSearch[] = $currentNamespace;
-                } else {
-                    // Partially qualified, concatenate with current namespace.
-                    $namespacesToSearch[] = $currentNamespace . '\\' . $prefixParentNamespace;
-                }
-                /** @var string Prefix with namespace inferred. */
-                $namespacedPrefix = $currentNamespace . '\\' . $prefix;
-            } else {
-                // In the global namespace, prefix parent refers to global namespace,
-                // OR completing a fully qualified name, prefix parent starts from the global namespace.
-                $namespacesToSearch[] = $prefixParentNamespace;
-                $namespacedPrefix = $prefix;
-            }
-
-            if (!$isQualified && $namespacesToSearch[0] !== '' && ($prefix === '' || !isset($creation))) {
-                // Also search the global namespace for non-qualified completions, as roamed
-                // definitions may be found. Also, without a prefix, suggest completions from the global namespace.
-                // Since only functions and constants can be roamed, don't search the global namespace for creation
-                // with a prefix.
-                $namespacesToSearch[] = '';
-            }
-
-            /** @var int Length of $namespacedPrefix */
-            $namespacedPrefixLen = strlen($namespacedPrefix);
-            /** @var int Length of $prefix */
-            $prefixLen = strlen($prefix);
-
             // Get the namespace use statements
             // TODO: use function statements, use const statements
 
             /** @var string[] $aliases A map from local alias to fully qualified name */
             list($aliases,,) = $node->getImportTablesForCurrentScope();
 
-            // If there is a prefix that does not start with a slash, suggest `use`d symbols
+            /** @var array Array of [fqn=string, requiresRoaming=bool] the prefix may represent. */
+            $possibleFqns = [];
+
+            if ($isFullyQualified) {
+                // Case \Microsoft\PhpParser\Res|
+                $possibleFqns[] = [$prefix, false];
+            } else if ($fqnAfterAlias = $this->tryApplyAlias($aliases, $prefix)) {
+                // Cases handled here: (i.e. all namespaces involving use clauses)
+                //
+                //   use Microsoft\PhpParser\Node; //Note that Node is both a class and a namespace.
+                //   Nod|
+                //   Node\Qual|
+                //
+                //   use Microsoft\PhpParser as TheParser;
+                //   TheParser\Nod|
+                $possibleFqns[] = [$fqnAfterAlias, false];
+            } else if ($namespaceNode) {
+                // Cases handled here:
+                //
+                //    namespace Foo;
+                //    Microsoft\PhpParser\Nod| // Can refer only to \Foo\Microsoft, not to \Microsoft.
+                //
+                //    namespace Foo;
+                //    Test| // Can refer either to functions or constants at the global scope, or to
+                //          // everything below \Foo. (Global fallback / roaming)
+                /** @var \Microsoft\PhpParser\ResolvedName Declared namespace of the file (or section) */
+                $namespacedFqn = array_merge(
+                    array_map(
+                        static function ($token) use ($namespaceNode): string {
+                            return $token->getText($namespaceNode->getFileContents());
+                        },
+                        $filterNameTokens($namespaceNode->name->nameParts)
+                    ),
+                    $prefix
+                );
+                $possibleFqns[] = [$namespacedFqn, false];
+                if (!$isQualified) {
+                    // Case of global fallback. If nothing is entered, also complete for root-level classnames.
+                    // If something has been entered, complete root-level roamed symbols only.
+                    $possibleFqns[] = [$prefix, !empty($prefix)];
+                }
+            } else {
+                // Case handled here: (no namespace declaration in file)
+                //
+                // Microsoft\PhpParser\N|
+                $possibleFqns[] = [$prefix, false];
+            }
+
+            $prefixStr = implode('\\', $prefix);
+            /** @var int Length of $prefix */
+            $prefixLen = strlen($prefixStr);
+
+            // If there is a prefix that does not contain a slash, suggest used names.
             if (!$isQualified) {
                 foreach ($aliases as $alias => $fqn) {
                     // Suggest symbols that have been `use`d and match the prefix
-                    if (substr($alias, 0, $prefixLen) === $prefix
+                    if (substr($alias, 0, $prefixLen) === $prefixStr
                         && ($def = $this->index->getDefinition((string)$fqn))) {
-                        // TODO: complete even when getDefinition($fqn) fails, e.g. complete definitions that are were
-                        // not found in the files parsed.
-                        $item = CompletionItem::fromDefinition($def);
-                        $item->insertText = $alias;
-                        $list->items[] = $item;
+                        $list->items[] = CompletionItem::fromDefinition($def);
                     }
                 }
             }
 
-            foreach ($namespacesToSearch as $namespaceToSearch) {
+            foreach ($possibleFqns as list ($fqnToSearch, $requiresRoaming)) {
+                $namespaceToSearch = $fqnToSearch;
+                array_pop($namespaceToSearch);
+                $namespaceToSearch = implode('\\', $namespaceToSearch);
+                $fqnToSearch = implode('\\', $fqnToSearch);
+                $fqnToSearchLen = strlen($fqnToSearch);
                 foreach ($this->index->getChildDefinitionsForFqn($namespaceToSearch) as $fqn => $def) {
                     if (isset($creation) && !$def->canBeInstantiated) {
                         // Only suggest classes for `new`
                         continue;
                     }
+                    if ($requiresRoaming && !$def->roamed) {
+                        continue;
+                    }
 
-                    $fqnStartsWithPrefix = substr($fqn, 0, $prefixLen) === $prefix;
-                    $fqnStartsWithNamespacedPrefix = substr($fqn, 0, $namespacedPrefixLen) === $namespacedPrefix;
-
-                    if (
-                        // No prefix - return all,
-                        $prefix === ''
-                        // or FQN starts with namespaced prefix,
-                        || $fqnStartsWithNamespacedPrefix
-                        // or a roamed definition (i.e. global fallback to a constant or a function) matches prefix.
-                        || ($def->roamed && $fqnStartsWithPrefix)
-                    ) {
+                    if (substr($fqn, 0, $fqnToSearchLen) === $fqnToSearch) {
                         $item = CompletionItem::fromDefinition($def);
-                        // Find the shortest name to reference the symbol
-                        if ($namespaceNode && ($alias = array_search($fqn, $aliases, true)) !== false) {
-                            // $alias is the name under which this definition is aliased in the current namespace
-                            $item->insertText = $alias;
-                        } else if ($namespaceNode && !($prefix && $isFullyQualified)) {
-                            // Insert the global FQN with a leading backslash
+                        if (($aliasMatch = $this->tryMatchAlias($aliases, $fqn)) !== null) {
+                            $item->insertText = $aliasMatch;
+                        } else if ($namespaceNode && (empty($prefix) || $requiresRoaming)) {
+                            // Insert the global FQN with a leading backslash.
+                            // For empty prefix: Assume that the user wants an FQN. They have not
+                            // started writing anything yet, so we are not second-guessing.
+                            // For roaming: Second-guess that the user doesn't want to depend on
+                            // roaming.
                             $item->insertText = '\\' . $fqn;
                         } else {
                             // Insert the FQN without a leading backslash
@@ -410,7 +430,7 @@ class CompletionProvider
             // Suggest keywords
             if (!$isQualified && !isset($creation)) {
                 foreach (self::KEYWORDS as $keyword) {
-                    if (substr($keyword, 0, $prefixLen) === $prefix) {
+                    if (substr($keyword, 0, $prefixLen) === $prefixStr) {
                         $item = new CompletionItem($keyword, CompletionItemKind::KEYWORD);
                         $item->insertText = $keyword;
                         $list->items[] = $item;
@@ -420,6 +440,62 @@ class CompletionProvider
         }
 
         return $list;
+    }
+
+    private function tryMatchAlias(
+        array $aliases,
+        string $fullyQualifiedName
+    ): ?string {
+        $fullyQualifiedName = explode('\\', $fullyQualifiedName);
+        $aliasMatch = null;
+        $aliasMatchLength = null;
+        foreach ($aliases as $alias => $aliasFqn) {
+            $aliasFqn = $aliasFqn->getNameParts();
+            $aliasFqnLength = count($aliasFqn);
+            if ($aliasMatchLength && $aliasFqnLength < $aliasFqnLength) {
+                // Find the longest possible match. This one won't do.
+                continue;
+            }
+            $fqnStart = array_slice($fullyQualifiedName, 0, $aliasFqnLength);
+            if ($fqnStart === $aliasFqn) {
+                $aliasMatch = $alias;
+                $aliasMatchLength = $aliasFqnLength;
+            }
+        }
+
+        if ($aliasMatch === null) {
+            return null;
+        }
+
+        $fqnNoAlias = array_slice($fullyQualifiedName, $aliasMatchLength);
+        return join('\\', array_merge([$aliasMatch], $fqnNoAlias));
+    }
+
+    /**
+     * Tries to convert a partially qualified name to an FQN using aliases.
+     *
+     * Example:
+     *
+     * use Microsoft\PhpParser as TheParser;
+     * "TheParser\Node" will convert to "Microsoft\PhpParser\Node"
+     *
+     * @param \Microsoft\PhpParser\ResolvedName[] $aliases
+     *   Aliases available in the scope of resolution. Keyed by alias.
+     * @param string[] $partiallyQualifiedName
+     **/
+    private function tryApplyAlias(
+        array $aliases,
+        array $partiallyQualifiedName
+    ): ?array {
+        if (empty($partiallyQualifiedName)) {
+            return null;
+        }
+        $head = $partiallyQualifiedName[0];
+        $tail = array_slice($partiallyQualifiedName, 1);
+        if (!isset($aliases[$head])) {
+            return null;
+        }
+        return array_merge($aliases[$head]->getNameParts(), $tail);
     }
 
     /**
