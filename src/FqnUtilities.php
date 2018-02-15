@@ -41,7 +41,7 @@ function getFqnsFromType($type): array
  *
  * @return string
  */
-function nameGetParent(string $name): ?string
+function nameGetParent(string $name): string
 {
     if ($name === '') { // Special-case handling for the root namespace.
         return '';
