@@ -326,6 +326,54 @@ class CompletionTest extends TestCase
     }
 
     /**
+     * Tests completion at `namespace\|`
+     */
+    public function testRelativeNoPrefix()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/relative.php');
+        $this->loader->open($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(7, 10)
+        )->wait();
+        $this->assertEquals(
+            new CompletionList([
+                new CompletionItem(
+                    'InnerClass',
+                    CompletionItemKind::CLASS_,
+                    'TestNamespace\InnerNamespace',
+                    ''
+                ),
+            ], true),
+            $items
+        );
+    }
+
+    /**
+     * Tests completion at `namespace\TestCla|`
+     */
+    public function testRelativeWithPrefix()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/relative.php');
+        $this->loader->open($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(8, 17)
+        )->wait();
+        $this->assertEquals(
+            new CompletionList([
+                new CompletionItem(
+                    'InnerClass',
+                    CompletionItemKind::CLASS_,
+                    'TestNamespace\InnerNamespace',
+                    ''
+                ),
+            ], true),
+            $items
+        );
+    }
+
+    /**
      * Tests completion at `TestClass::$st|`
      */
     public function testStaticPropertyWithPrefix()

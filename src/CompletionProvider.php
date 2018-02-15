@@ -277,6 +277,7 @@ class CompletionProvider
 
         } elseif (
             ParserHelpers\isConstantFetch($node)
+            || $node instanceof Node\RelativeSpecifier
             // Creation gets set in case of an instantiation (`new` expression)
             || ($creation = $node->parent) instanceof Node\Expression\ObjectCreationExpression
             || (($creation = $node) instanceof Node\Expression\ObjectCreationExpression)
@@ -288,13 +289,19 @@ class CompletionProvider
             //    MY_CONS|
             //    MyCla|
             //    \MyCla|
+            //    namespace\| // This is the special case when Node\RelativeSpecifier is matched.
+            //    namespace\MyC|
 
             // The name Node under the cursor
             $nameNode = isset($creation) ? $creation->classTypeDesignator : $node;
 
             if ($nameNode instanceof Node\QualifiedName) {
-                /** @var string The typed name. */
+                /** @var string The typed name. If relative, without the namespace\. */
                 $prefix = (string)PhpParser\ResolvedName::buildName($nameNode->nameParts, $nameNode->getFileContents());
+            } else if ($nameNode instanceof Node\RelativeSpecifier) {
+                // The prefix is supposed to not have the leading namespace\ specifier. The token at point is
+                // "namespace\", so prefix should be empty.
+                $prefix = '';
             } else {
                 $prefix = $nameNode->getText($node->getFileContents());
             }
@@ -305,13 +312,16 @@ class CompletionProvider
 
             /** @var bool Whether the prefix is qualified (contains at least one backslash) */
             $isFullyQualified = false;
-
-            /** @var bool Whether the prefix is qualified (contains at least one backslash) */
+            /** @var bool|null Whether the prefix is qualified (contains at least one backslash) */
             $isQualified = false;
-
+            /** @var bool Whether the prefix starts with namespace\ */
+            $isRelative = false;
             if ($nameNode instanceof Node\QualifiedName) {
                 $isFullyQualified = $nameNode->isFullyQualifiedName();
                 $isQualified = $nameNode->isQualifiedName();
+                $isRelative = $nameNode->isRelativeName();
+            } else if ($nameNode instanceof Node\RelativeSpecifier) {
+                $isRelative = true;
             }
 
             /** @var bool Whether we are in a new expression */
@@ -324,6 +334,9 @@ class CompletionProvider
                 // \Prefix\Goes\Here| - Only return completions from the root namespace.
                 /** @var $items \Generator|CompletionItem[] Generator yielding CompletionItems indexed by their FQN */
                 $items = $this->getCompletionsForFqnPrefix($prefix, $isCreation, false);
+            } else if ($isRelative) {
+                // namespace\Something| - Only return completions from the current namespace.
+                $items = $this->getCompletionsForFqnPrefix(nameConcat($currentNamespace, $prefix), $isCreation, false);
             } else if ($isQualified) {
                 // Prefix\Goes\Here|
                 $items = $this->getPartiallyQualifiedCompletions(
