@@ -563,9 +563,6 @@ class DefinitionResolver
         //   $myVariable -> type of corresponding assignment expression
         if ($expr instanceof Node\Expression\Variable || $expr instanceof Node\UseVariableName) {
             $name = $expr->getName();
-            if ($name === 'this') {
-                return $scope->thisVariable === null ? new Types\Mixed_ : $scope->thisVariable->type;
-            }
             return isset($scope->variables[$name])
                 ? $scope->variables[$name]->type
                 : new Types\Mixed_;

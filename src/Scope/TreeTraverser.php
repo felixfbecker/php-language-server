@@ -102,8 +102,8 @@ class TreeTraverser
             $childScope->currentClassLikeVariable = $scope->currentClassLikeVariable;
             $childScope->resolvedNameCache = $scope->resolvedNameCache;
             $isStatic = $node instanceof Node\MethodDeclaration ? $node->isStatic() : !empty($node->staticModifier);
-            if (!$isStatic) {
-                $childScope->thisVariable = $scope->thisVariable;
+            if (!$isStatic && isset($scope->variables['this'])) {
+                $childScope->variables['this'] = $scope->variables['this'];
             }
 
             if ($node->parameters !== null) {
@@ -138,11 +138,12 @@ class TreeTraverser
         ) {
             $childScope = new Scope;
             $childScope->resolvedNameCache = $scope->resolvedNameCache;
-            $childScope->thisVariable = new Variable(
+            $thisVar = new Variable(
                 new Types\Object_(new Fqsen('\\' . (string)$node->getNamespacedName())),
                 $node
             );
-            $childScope->currentClassLikeVariable = $childScope->thisVariable;
+            $childScope->variables['this'] = $thisVar;
+            $childScope->currentClassLikeVariable = $thisVar;
             return $childScope;
         }
 

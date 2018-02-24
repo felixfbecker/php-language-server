@@ -201,9 +201,6 @@ class CompletionProvider
             $prefixLen = strlen($namePrefix);
             $scope = getScopeAtNode($this->definitionResolver, $node);
             $variables = $scope->variables;
-            if ($scope->thisVariable !== null) {
-                $variables['this'] = $scope->thisVariable;
-            }
             foreach ($variables as $name => $var) {
                 if (substr($name, 0, $prefixLen) !== $namePrefix) {
                     continue;

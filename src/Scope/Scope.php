@@ -10,13 +10,6 @@ use Microsoft\PhpParser\Node\QualifiedName;
 class Scope
 {
     /**
-     * @var Variable|null $this
-     *
-     * Note that this will be set when a class is entered. It is unset again when entering a static function.
-     */
-    public $thisVariable;
-
-    /**
      * @var Variable|null $this, except also set in static contexts.
      */
     public $currentClassLikeVariable;

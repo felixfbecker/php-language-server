@@ -106,8 +106,8 @@ class TreeAnalyzer
         }
 
         // Check for invalid usage of $this.
-        if ($scope->thisVariable === null &&
-            $node instanceof Node\Expression\Variable &&
+        if ($node instanceof Node\Expression\Variable &&
+            !isset($scope->variables['this']) &&
             $node->getName() === 'this'
         ) {
             $this->diagnostics[] = new Diagnostic(
