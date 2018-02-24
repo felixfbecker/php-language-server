@@ -99,20 +99,29 @@ abstract class AbstractAggregateIndex implements ReadableIndex
     }
 
     /**
-     * Returns an associative array [string => Definition] that maps fully qualified symbol names
-     * to Definitions
+     * Returns a Generator providing an associative array [string => Definition]
+     * that maps fully qualified symbol names to Definitions (global or not)
      *
-     * @return Definition[]
+     * @return \Generator yields Definition
      */
-    public function getDefinitions(): array
+    public function getDefinitions(): \Generator
     {
-        $defs = [];
         foreach ($this->getIndexes() as $index) {
-            foreach ($index->getDefinitions() as $fqn => $def) {
-                $defs[$fqn] = $def;
-            }
+            yield from $index->getDefinitions();
         }
-        return $defs;
+    }
+
+    /**
+     * Returns a Generator that yields all the direct child Definitions of a given FQN
+     *
+     * @param string $fqn
+     * @return \Generator yields Definition
+     */
+    public function getChildDefinitionsForFqn(string $fqn): \Generator
+    {
+        foreach ($this->getIndexes() as $index) {
+            yield from $index->getChildDefinitionsForFqn($fqn);
+        }
     }
 
     /**
@@ -132,19 +141,15 @@ abstract class AbstractAggregateIndex implements ReadableIndex
     }
 
     /**
-     * Returns all URIs in this index that reference a symbol
+     * Returns a Generator providing all URIs in this index that reference a symbol
      *
      * @param string $fqn The fully qualified name of the symbol
-     * @return string[]
+     * @return \Generator yields string
      */
-    public function getReferenceUris(string $fqn): array
+    public function getReferenceUris(string $fqn): \Generator
     {
-        $refs = [];
         foreach ($this->getIndexes() as $index) {
-            foreach ($index->getReferenceUris($fqn) as $ref) {
-                $refs[] = $ref;
-            }
+            yield from $index->getReferenceUris($fqn);
         }
-        return $refs;
     }
 }
