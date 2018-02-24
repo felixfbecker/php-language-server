@@ -22,17 +22,17 @@ class TreeTraverser
     /**
      * Descend into the node being parsed. The default action.
      */
-    public const ACTION_CONTINUE = 0;
+    const ACTION_CONTINUE = 0;
 
     /**
      * Do not descend into the node being parsed. Traversal will continue after the node.
      */
-    public const ACTION_SKIP = 1;
+    const ACTION_SKIP = 1;
 
     /**
      * Stop parsing entirely. `traverse` will return immediately.
      */
-    public const ACTION_END = 2;
+    const ACTION_END = 2;
 
     private $definitionResolver;
 
