@@ -24,7 +24,8 @@ class CachingDocBlockFactory
     private $docBlockFactory;
 
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->docBlockFactory = DocBlockFactory::createInstance();
     }
 
@@ -41,7 +42,8 @@ class CachingDocBlockFactory
         return $this->cache[$cacheKey] = $text === null ? null : $this->createDocBlockFromNodeAndText($node, $text);
     }
 
-    public function clearCache() {
+    public function clearCache()
+    {
         $this->cache = [];
     }
 
