@@ -45,11 +45,11 @@
             "declarationLine": "function b ($a = MY_CONSTANT);",
             "documentation": null,
             "signatureInformation": {
-                "label": "(\\MY_CONSTANT $a = MY_CONSTANT)",
+                "label": "(mixed $a = MY_CONSTANT)",
                 "documentation": null,
                 "parameters": [
                     {
-                        "label": "\\MY_CONSTANT $a = MY_CONSTANT",
+                        "label": "mixed $a = MY_CONSTANT",
                         "documentation": null
                     }
                 ]

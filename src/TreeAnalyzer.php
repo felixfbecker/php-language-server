@@ -5,6 +5,8 @@ namespace LanguageServer;
 
 use LanguageServer\Protocol\{Diagnostic, DiagnosticSeverity, Range, Position, TextEdit};
 use LanguageServer\Index\Index;
+use LanguageServer\Scope\Scope;
+use LanguageServer\Scope\TreeTraverser;
 use phpDocumentor\Reflection\DocBlockFactory;
 use Sabre\Uri;
 use Microsoft\PhpParser;
@@ -56,7 +58,16 @@ class TreeAnalyzer
 
         // TODO - docblock errors
 
-        $this->traverse($this->sourceFileNode);
+        $traverser = new TreeTraverser($definitionResolver);
+        $traverser->traverse(
+            $this->sourceFileNode,
+            function ($nodeOrToken, Scope $scope) {
+                $this->collectDiagnostics($nodeOrToken, $scope);
+                if ($nodeOrToken instanceof Node) {
+                    $this->collectDefinitionsAndReferences($nodeOrToken, $scope);
+                }
+            }
+        );
     }
 
     /**
@@ -66,7 +77,7 @@ class TreeAnalyzer
      * @param Node|Token $node
      * @return void
      */
-    private function collectDiagnostics($node)
+    private function collectDiagnostics($node, Scope $scope)
     {
         // Get errors from the parser.
         if (($error = PhpParser\DiagnosticsProvider::checkDiagnostics($node)) !== null) {
@@ -95,52 +106,17 @@ class TreeAnalyzer
         }
 
         // Check for invalid usage of $this.
-        if ($node instanceof Node\Expression\Variable && $node->getName() === 'this') {
-            // Find the first ancestor that's a class method. Return an error
-            // if there is none, or if the method is static.
-            $method = $node->getFirstAncestor(Node\MethodDeclaration::class);
-            if ($method && $method->isStatic()) {
-                $this->diagnostics[] = new Diagnostic(
-                    "\$this can not be used in static methods.",
-                    Range::fromNode($node),
-                    null,
-                    DiagnosticSeverity::ERROR,
-                    'php'
-                );
-            }
-        }
-    }
-
-    /**
-     * Recursive AST traversal to collect definitions/references and diagnostics
-     *
-     * @param Node|Token $currentNode The node/token to process
-     */
-    private function traverse($currentNode)
-    {
-        $this->collectDiagnostics($currentNode);
-
-        // Only update/descend into Nodes, Tokens are leaves
-        if ($currentNode instanceof Node) {
-            $this->collectDefinitionsAndReferences($currentNode);
-
-            foreach ($currentNode::CHILD_NAMES as $name) {
-                $child = $currentNode->$name;
-
-                if ($child === null) {
-                    continue;
-                }
-
-                if (\is_array($child)) {
-                    foreach ($child as $actualChild) {
-                        if ($actualChild !== null) {
-                            $this->traverse($actualChild);
-                        }
-                    }
-                } else {
-                    $this->traverse($child);
-                }
-            }
+        if ($scope->thisVariable === null &&
+            $node instanceof Node\Expression\Variable &&
+            $node->getName() === 'this'
+        ) {
+            $this->diagnostics[] = new Diagnostic(
+                "\$this can not be used in static methods.",
+                Range::fromNode($node),
+                null,
+                DiagnosticSeverity::ERROR,
+                'php'
+            );
         }
     }
 
@@ -149,13 +125,13 @@ class TreeAnalyzer
      *
      * @param Node $node
      */
-    private function collectDefinitionsAndReferences(Node $node)
+    private function collectDefinitionsAndReferences(Node $node, Scope $scope)
     {
-        $fqn = ($this->definitionResolver)::getDefinedFqn($node);
+        $fqn = $this->definitionResolver->getDefinedFqn($node, $scope);
         // Only index definitions with an FQN (no variables)
         if ($fqn !== null) {
             $this->definitionNodes[$fqn] = $node;
-            $this->definitions[$fqn] = $this->definitionResolver->createDefinitionFromNode($node, $fqn);
+            $this->definitions[$fqn] = $this->definitionResolver->createDefinitionFromNode($node, $fqn, $scope);
         } else {
 
             $parent = $node->parent;
@@ -165,7 +141,7 @@ class TreeAnalyzer
                     ($node instanceof Node\Expression\ScopedPropertyAccessExpression ||
                     $node instanceof Node\Expression\MemberAccessExpression)
                     && !(
-                        $node->parent instanceof Node\Expression\CallExpression ||
+                        $parent instanceof Node\Expression\CallExpression ||
                         $node->memberName instanceof PhpParser\Token
                     ))
                 || ($parent instanceof Node\Statement\NamespaceDefinition && $parent->name !== null && $parent->name->getStart() === $node->getStart())
@@ -173,7 +149,7 @@ class TreeAnalyzer
                 return;
             }
 
-            $fqn = $this->definitionResolver->resolveReferenceNodeToFqn($node);
+            $fqn = $this->definitionResolver->resolveReferenceNodeToFqn($node, $scope);
             if (!$fqn) {
                 return;
             }
@@ -181,21 +157,22 @@ class TreeAnalyzer
             if ($fqn === 'self' || $fqn === 'static') {
                 // Resolve self and static keywords to the containing class
                 // (This is not 100% correct for static but better than nothing)
-                $classNode = $node->getFirstAncestor(Node\Statement\ClassDeclaration::class);
-                if (!$classNode) {
+                if (!$scope->currentClassLikeVariable) {
                     return;
                 }
-                $fqn = (string)$classNode->getNamespacedName();
-                if (!$fqn) {
-                    return;
-                }
+                $fqn = substr((string)$scope->currentClassLikeVariable->type->getFqsen(), 1);
             } else if ($fqn === 'parent') {
                 // Resolve parent keyword to the base class FQN
-                $classNode = $node->getFirstAncestor(Node\Statement\ClassDeclaration::class);
-                if (!$classNode || !$classNode->classBaseClause || !$classNode->classBaseClause->baseClass) {
+                if ($scope->currentClassLikeVariable === null) {
                     return;
                 }
-                $fqn = (string)$classNode->classBaseClause->baseClass->getResolvedName();
+                $classNode = $scope->currentClassLikeVariable->definitionNode;
+                if (empty($classNode->classBaseClause)
+                    || !$classNode->classBaseClause->baseClass instanceof Node\QualifiedName
+                ) {
+                    return;
+                }
+                $fqn = $scope->getResolvedName($classNode->classBaseClause->baseClass);
                 if (!$fqn) {
                     return;
                 }

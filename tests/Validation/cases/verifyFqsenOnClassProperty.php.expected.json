@@ -43,7 +43,7 @@
                 },
                 "containerName": "Foo"
             },
-            "type__tostring": "\\",
+            "type__tostring": "mixed",
             "type": {},
             "declarationLine": "protected $bar;",
             "documentation": null,

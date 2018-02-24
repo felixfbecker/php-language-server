@@ -126,7 +126,7 @@ class SignatureHelpProvider
             }
 
             // Now find the definition of the call
-            $fqn = $fqn ?: DefinitionResolver::getDefinedFqn($callingNode);
+            $fqn = $fqn ?: $this->definitionResolver->getDefinedFqn($callingNode);
             while (true) {
                 if ($fqn) {
                     $def = $this->index->getDefinition($fqn);
