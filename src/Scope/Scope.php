@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 namespace LanguageServer\Scope;
+
 use Microsoft\PhpParser\Node\QualifiedName;
 
 /**
@@ -24,14 +25,16 @@ class Scope
      */
     public $resolvedNameCache = [];
 
-    public function clearResolvedNameCache() {
+    public function clearResolvedNameCache()
+    {
         $this->resolvedNameCache = [];
     }
 
     /**
      * @return string|null
      */
-    public function getResolvedName(QualifiedName $name) {
+    public function getResolvedName(QualifiedName $name)
+    {
         $nameStr = (string)$name;
         if (array_key_exists($nameStr, $this->resolvedNameCache)) {
             return $this->resolvedNameCache[$nameStr];

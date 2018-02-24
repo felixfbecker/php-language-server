@@ -410,7 +410,8 @@ class DefinitionResolver
         return $name;
     }
 
-    private function resolveMemberAccessExpressionNodeToFqn(Node\Expression\MemberAccessExpression $access, Scope $scope) {
+    private function resolveMemberAccessExpressionNodeToFqn(Node\Expression\MemberAccessExpression $access, Scope $scope)
+    {
         if ($access->memberName instanceof Node\Expression) {
             // Cannot get definition if right-hand side is expression
             return null;

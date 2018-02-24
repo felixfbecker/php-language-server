@@ -25,7 +25,10 @@ function getScopeAtNode(DefinitionResolver $definitionResolver, Node $targetNode
     $resultScope = null;
     $traverser->traverse(
         $sourceFile,
-        function ($nodeOrToken, Scope $scope) use (
+        function (
+            $nodeOrToken,
+            Scope $scope
+        ) use (
             &$resultScope,
             $targetNode,
             $nearestFunctionDeclarationParent,
