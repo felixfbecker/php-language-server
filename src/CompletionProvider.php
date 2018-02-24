@@ -408,7 +408,8 @@ class CompletionProvider
         yield from $this->getCompletionsForAliases(
             $prefix,
             $namespaceAliases,
-            $requireCanBeInstantiated
+            $requireCanBeInstantiated,
+            CompletionItemKind::CLASS_
         );
 
         // Completions from the current namespace
@@ -471,13 +472,15 @@ class CompletionProvider
      *
      * @param string $prefix Non-qualified name being completed for
      * @param QualifiedName[] $aliases Array of alias FQNs indexed by the alias.
+     * @param int $defaultSymbolKind The SymbolKind:: constant to use when the definition for the alias is not found.
      * @return \Generator|CompletionItem[]
      *   Yields CompletionItems.
      */
     private function getCompletionsForAliases(
         string $prefix,
         array $aliases,
-        bool $requireCanBeInstantiated
+        bool $requireCanBeInstantiated,
+        int $defaultCompletionItemKind
     ): \Generator {
         foreach ($aliases as $alias => $aliasFqn) {
             if (!nameStartsWith($alias, $prefix)) {
@@ -490,6 +493,11 @@ class CompletionProvider
                 }
                 $completionItem = CompletionItem::fromDefinition($definition);
                 $completionItem->insertText = $alias;
+                yield (string)$aliasFqn => $completionItem;
+            } else {
+                // Use clause referred to a symbol which was not indexed.
+                $completionItem = new CompletionItem($alias, $defaultCompletionItemKind);
+                $completionItem->detail = nameGetParent((string)$aliasFqn);
                 yield (string)$aliasFqn => $completionItem;
             }
         }

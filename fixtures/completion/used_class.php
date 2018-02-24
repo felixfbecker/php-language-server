@@ -2,8 +2,10 @@
 
 namespace Whatever;
 
-use TestNamespace\{TestClass, TestInterface};
+use TestNamespace\{TestClass, TestInterface, IDontExist};
 
-TestC
+TestC;
+
+IDont;
 
 class OtherClass {}
