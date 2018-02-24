@@ -389,6 +389,8 @@ class CompletionProvider
      *
      * Yields
      *  - Aliased classes
+     *  - Aliased functions (when not creating)
+     *  - Aliased constants (when not creating)
      *  - Completions from current namespace
      *  - Roamed completions from the global namespace (when not creating and not already in root NS)
      *  - PHP keywords (when not creating)
@@ -403,7 +405,7 @@ class CompletionProvider
         bool $requireCanBeInstantiated
     ): \Generator {
         // Aliases
-        list($namespaceAliases,,) = $importTables;
+        list($namespaceAliases, $functionAliases, $constAliases) = $importTables;
         // use Foo\Bar
         yield from $this->getCompletionsForAliases(
             $prefix,
@@ -411,6 +413,12 @@ class CompletionProvider
             $requireCanBeInstantiated,
             CompletionItemKind::CLASS_
         );
+        if (!$requireCanBeInstantiated) {
+            // use function Foo\createBar
+            yield from $this->getCompletionsForAliases($prefix, $functionAliases, false, CompletionItemKind::FUNCTION);
+            // use const Foo\BAR_TYPE_COCKTAIL
+            yield from $this->getCompletionsForAliases($prefix, $constAliases, false, CompletionItemKind::VARIABLE);
+        }
 
         // Completions from the current namespace
         yield from $this->getCompletionsForFqnPrefix(

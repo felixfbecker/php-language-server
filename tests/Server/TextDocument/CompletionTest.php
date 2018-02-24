@@ -315,7 +315,16 @@ class CompletionTest extends TestCase
                     null,
                     null,
                     'AliasNamespace\\InnerClass'
-                )
+                ),
+                new CompletionItem(
+                    'INNER_CONST',
+                    CompletionItemKind::VARIABLE,
+                    'int',
+                    null,
+                    null,
+                    null,
+                    'AliasNamespace\\INNER_CONST'
+                ),
             ], true),
             $items
         );
@@ -342,6 +351,180 @@ class CompletionTest extends TestCase
                     null,
                     null,
                     'AliasNamespace\InnerClass'
+                ),
+                new CompletionItem(
+                    'INNER_CONST',
+                    CompletionItemKind::VARIABLE,
+                    'int',
+                    null,
+                    null,
+                    null,
+                    'AliasNamespace\INNER_CONST'
+                ),
+                new CompletionItem(
+                    'inner_function',
+                    CompletionItemKind::FUNCTION,
+                    'mixed',
+                    null,
+                    null,
+                    null,
+                    'AliasNamespace\inner_function'
+                ),
+                new CompletionItem(
+                    'inner_function2',
+                    CompletionItemKind::FUNCTION,
+                    'mixed',
+                    null,
+                    null,
+                    null,
+                    'AliasNamespace\inner_function2'
+                ),
+            ], true),
+            $items
+        );
+    }
+
+    /**
+     * Tests completion with `use function ..inner_function`.
+     */
+    public function testUseFunction()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/used_function.php');
+        $this->loader->open($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(8, 7)
+        )->wait();
+        $this->assertEquals(
+            new CompletionList([
+                new CompletionItem(
+                    'inner_function',
+                    CompletionItemKind::FUNCTION,
+                    'TestNamespace\InnerNamespace'
+                ),
+            ], true),
+            $items
+        );
+    }
+
+    /**
+     * Tests completion with `use function .. as second_function;`.
+     */
+    public function testUseFunctionAs()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/used_function.php');
+        $this->loader->open($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(9, 8)
+        )->wait();
+        $this->assertEquals(
+            new CompletionList([
+                new CompletionItem(
+                    'second_function',
+                    CompletionItemKind::FUNCTION,
+                    'TestNamespace\InnerNamespace'
+                ),
+            ], true),
+            $items
+        );
+    }
+
+    /**
+     * Tests completion with `use function .. as second_function;`.
+     */
+    public function testUseFunctionNotExists()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/used_function.php');
+        $this->loader->open($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(10, 9)
+        )->wait();
+        $this->assertEquals(
+            new CompletionList([
+                new CompletionItem(
+                    'i_dont_exist',
+                    CompletionItemKind::FUNCTION,
+                    'TestNamespace\InnerNamespace',
+                    ''
+                ),
+            ], true),
+            $items
+        );
+    }
+
+    /**
+     * Tests completion with `use const ..INNER_CONST`
+     */
+    public function testUseConst()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/used_const.php');
+        $this->loader->open($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(8, 7)
+        )->wait();
+        $this->assertEquals(
+            new CompletionList([
+                new CompletionItem(
+                    'INNER_CONST',
+                    CompletionItemKind::VARIABLE,
+                    'int',
+                    null,
+                    null,
+                    null,
+                    'INNER_CONST'
+                ),
+            ], true),
+            $items
+        );
+    }
+
+    /**
+     * Tests completion with `use const .. as ALIASED_CONST;`.
+     */
+    public function testUseConsttAs()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/used_const.php');
+        $this->loader->open($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(10, 9)
+        )->wait();
+        $this->assertEquals(
+            new CompletionList([
+                new CompletionItem(
+                    'INNER_CONST',
+                    CompletionItemKind::VARIABLE,
+                    'int',
+                    null,
+                    null,
+                    null,
+                    'ALIASED_CONST'
+                ),
+            ], true),
+            $items
+        );
+    }
+
+    /**
+     * Tests completion with `use const NON_EXISTENT_CONST`
+     */
+    public function testUseConsttNonExistent()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/used_const.php');
+        $this->loader->open($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(12, 14)
+        )->wait();
+        $this->assertEquals(
+            new CompletionList([
+                new CompletionItem(
+                    'NON_EXISTENT_CONST',
+                    CompletionItemKind::VARIABLE,
+                    'TestNamespace\InnerNamespace'
                 ),
             ], true),
             $items

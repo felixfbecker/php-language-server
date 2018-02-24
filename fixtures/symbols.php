@@ -108,3 +108,8 @@ namespace TestNamespace\InnerNamespace;
 
 class InnerClass {
 }
+
+const INNER_CONST = 333;
+
+function inner_function(InnerClass $i) {}
+function inner_function2(InnerClass $i) {}
