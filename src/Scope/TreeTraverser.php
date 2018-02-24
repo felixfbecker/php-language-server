@@ -178,7 +178,7 @@ class TreeTraverser
                 $this->definitionResolver->getTypeFromNode($node, $scope),
                 $node
             );
-        } else if ($node instanceof Statement\NamespaceDefinition) {
+        } else if ($node instanceof Node\Statement\NamespaceDefinition) {
             // After a new namespace A\B;, the current alias table is flushed.
             $scope->clearResolvedNameCache();
         }
