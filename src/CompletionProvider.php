@@ -14,6 +14,7 @@ use LanguageServer\Protocol\{
     CompletionContext,
     CompletionTriggerKind
 };
+use function LanguageServer\Scope\getScopeAtNode;
 use Microsoft\PhpParser;
 use Microsoft\PhpParser\Node;
 use Generator;
@@ -193,15 +194,25 @@ class CompletionProvider
             //
             //    $|
             //    $a|
+            //
+            // TODO: Superglobals
 
-            // Find variables, parameters and use statements in the scope
             $namePrefix = $node->getName() ?? '';
-            foreach ($this->suggestVariablesAtNode($node, $namePrefix) as $var) {
+            $prefixLen = strlen($namePrefix);
+            $scope = getScopeAtNode($this->definitionResolver, $node);
+            $variables = $scope->variables;
+            if ($scope->thisVariable !== null) {
+                $variables['this'] = $scope->thisVariable;
+            }
+            foreach ($variables as $name => $var) {
+                if (substr($name, 0, $prefixLen) !== $namePrefix) {
+                    continue;
+                }
                 $item = new CompletionItem;
                 $item->kind = CompletionItemKind::VARIABLE;
-                $item->label = '$' . $var->getName();
-                $item->documentation = $this->definitionResolver->getDocumentationFromNode($var);
-                $item->detail = (string)$this->definitionResolver->getTypeFromNode($var);
+                $item->label = '$' . $name;
+                $item->documentation = $this->definitionResolver->getDocumentationFromNode($var->definitionNode);
+                $item->detail = (string)$var->type;
                 $item->textEdit = new TextEdit(
                     new Range($pos, $pos),
                     stripStringOverlap($doc->getRange(new Range(new Position(0, 0), $pos)), $item->label)
@@ -407,112 +418,5 @@ class CompletionProvider
                 }
             }
         }
-    }
-
-    /**
-     * Will walk the AST upwards until a function-like node is met
-     * and at each level walk all previous siblings and their children to search for definitions
-     * of that variable
-     *
-     * @param Node $node
-     * @param string $namePrefix Prefix to filter
-     * @return array <Node\Expr\Variable|Node\Param|Node\Expr\ClosureUse>
-     */
-    private function suggestVariablesAtNode(Node $node, string $namePrefix = ''): array
-    {
-        $vars = [];
-
-        // Find variables in the node itself
-        // When getting completion in the middle of a function, $node will be the function node
-        // so we need to search it
-        foreach ($this->findVariableDefinitionsInNode($node, $namePrefix) as $var) {
-            // Only use the first definition
-            if (!isset($vars[$var->name])) {
-                $vars[$var->name] = $var;
-            }
-        }
-
-        // Walk the AST upwards until a scope boundary is met
-        $level = $node;
-        while ($level && !($level instanceof PhpParser\FunctionLike)) {
-            // Walk siblings before the node
-            $sibling = $level;
-            while ($sibling = $sibling->getPreviousSibling()) {
-                // Collect all variables inside the sibling node
-                foreach ($this->findVariableDefinitionsInNode($sibling, $namePrefix) as $var) {
-                    $vars[$var->getName()] = $var;
-                }
-            }
-            $level = $level->parent;
-        }
-
-        // If the traversal ended because a function was met,
-        // also add its parameters and closure uses to the result list
-        if ($level && $level instanceof PhpParser\FunctionLike && $level->parameters !== null) {
-            foreach ($level->parameters->getValues() as $param) {
-                $paramName = $param->getName();
-                if (empty($namePrefix) || strpos($paramName, $namePrefix) !== false) {
-                    $vars[$paramName] = $param;
-                }
-            }
-
-            if ($level instanceof Node\Expression\AnonymousFunctionCreationExpression && $level->anonymousFunctionUseClause !== null &&
-                $level->anonymousFunctionUseClause->useVariableNameList !== null) {
-                foreach ($level->anonymousFunctionUseClause->useVariableNameList->getValues() as $use) {
-                    $useName = $use->getName();
-                    if (empty($namePrefix) || strpos($useName, $namePrefix) !== false) {
-                        $vars[$useName] = $use;
-                    }
-                }
-            }
-        }
-
-        return array_values($vars);
-    }
-
-    /**
-     * Searches the subnodes of a node for variable assignments
-     *
-     * @param Node $node
-     * @param string $namePrefix Prefix to filter
-     * @return Node\Expression\Variable[]
-     */
-    private function findVariableDefinitionsInNode(Node $node, string $namePrefix = ''): array
-    {
-        $vars = [];
-        // If the child node is a variable assignment, save it
-
-        $isAssignmentToVariable = function ($node) {
-            return $node instanceof Node\Expression\AssignmentExpression;
-        };
-
-        if ($this->isAssignmentToVariableWithPrefix($node, $namePrefix)) {
-            $vars[] = $node->leftOperand;
-        } elseif ($node instanceof Node\ForeachKey || $node instanceof Node\ForeachValue) {
-            foreach ($node->getDescendantNodes() as $descendantNode) {
-                if ($descendantNode instanceof Node\Expression\Variable
-                    && ($namePrefix === '' || strpos($descendantNode->getName(), $namePrefix) !== false)
-                ) {
-                    $vars[] = $descendantNode;
-                }
-            }
-        } else {
-            // Get all descendent variables, then filter to ones that start with $namePrefix.
-            // Avoiding closure usage in tight loop
-            foreach ($node->getDescendantNodes($isAssignmentToVariable) as $descendantNode) {
-                if ($this->isAssignmentToVariableWithPrefix($descendantNode, $namePrefix)) {
-                    $vars[] = $descendantNode->leftOperand;
-                }
-            }
-        }
-
-        return $vars;
-    }
-
-    private function isAssignmentToVariableWithPrefix(Node $node, string $namePrefix): bool
-    {
-        return $node instanceof Node\Expression\AssignmentExpression
-            && $node->leftOperand instanceof Node\Expression\Variable
-            && ($namePrefix === '' || strpos($node->leftOperand->getName(), $namePrefix) !== false);
     }
 }
