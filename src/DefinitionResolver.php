@@ -277,10 +277,10 @@ class DefinitionResolver
             $name = $node->getName();
             // Resolve $this to the containing class definition.
             if ($name === 'this') {
-                if ($scope->currentClassLikeVariable === null) {
+                if ($scope->currentSelf === null) {
                     return null;
                 }
-                $fqn = substr((string)$scope->currentClassLikeVariable->type->getFqsen(), 1);
+                $fqn = substr((string)$scope->currentSelf->type->getFqsen(), 1);
                 return $this->index->getDefinition($fqn, false);
             }
 
@@ -297,16 +297,16 @@ class DefinitionResolver
         if ($fqn === 'self' || $fqn === 'static') {
             // Resolve self and static keywords to the containing class
             // (This is not 100% correct for static but better than nothing)
-            if ($scope->currentClassLikeVariable === null) {
+            if ($scope->currentSelf === null) {
                 return null;
             }
-            $fqn = substr((string)$scope->currentClassLikeVariable->type->getFqsen(), 1);
+            $fqn = substr((string)$scope->currentSelf->type->getFqsen(), 1);
         } else if ($fqn === 'parent') {
-            if ($scope->currentClassLikeVariable === null) {
+            if ($scope->currentSelf === null) {
                 return null;
             }
             // Resolve parent keyword to the base class FQN
-            $classNode = $scope->currentClassLikeVariable->definitionNode;
+            $classNode = $scope->currentSelf->definitionNode;
             if (!$classNode->classBaseClause || !$classNode->classBaseClause->baseClass) {
                 return null;
             }
@@ -439,10 +439,10 @@ class DefinitionResolver
             || $varType instanceof Types\Self_
         ) {
             // $this/static/self is resolved to the containing class
-            if ($scope->currentClassLikeVariable === null) {
+            if ($scope->currentSelf === null) {
                 return null;
             }
-            $classFqn = substr((string)$scope->currentClassLikeVariable->type->getFqsen(), 1);
+            $classFqn = substr((string)$scope->currentSelf->type->getFqsen(), 1);
         } else if (!($varType instanceof Types\Object_) || $varType->getFqsen() === null) {
             // Left-hand expression could not be resolved to a class
             return null;
@@ -498,7 +498,7 @@ class DefinitionResolver
 
         if ($className === 'self' || $className === 'static' || $className === 'parent') {
             // self and static are resolved to the containing class
-            $classNode = $scope->currentClassLikeVariable->definitionNode ?? null;
+            $classNode = $scope->currentSelf->definitionNode ?? null;
             if ($classNode === null) {
                 return null;
             }
@@ -509,7 +509,7 @@ class DefinitionResolver
                 }
                 $className = $scope->getResolvedName($classNode->extends);
             } else {
-                $className = substr((string)$scope->currentClassLikeVariable->type->getFqsen(), 1);
+                $className = substr((string)$scope->currentSelf->type->getFqsen(), 1);
             }
         } elseif ($scoped->scopeResolutionQualifier instanceof Node\QualifiedName) {
             $className = $scope->getResolvedName($scoped->scopeResolutionQualifier);
@@ -643,10 +643,10 @@ class DefinitionResolver
             }
             for ($i = 0; $t = $objType->get($i); $i++) {
                 if ($t instanceof Types\This) {
-                    if ($scope->currentClassLikeVariable === null) {
+                    if ($scope->currentSelf === null) {
                         return new Types\Mixed_;
                     }
-                    $classFqn = substr((string)$scope->currentClassLikeVariable->type->getFqsen(), 1);
+                    $classFqn = substr((string)$scope->currentSelf->type->getFqsen(), 1);
                 } else if (!($t instanceof Types\Object_) || $t->getFqsen() === null) {
                     return new Types\Mixed_;
                 } else {
@@ -920,15 +920,15 @@ class DefinitionResolver
         $className = $scope->getResolvedName($class);
 
         if ($className === 'self') {
-            if ($scope->currentClassLikeVariable === null) {
+            if ($scope->currentSelf === null) {
                 return new Types\Self_;
             }
-            return $scope->currentClassLikeVariable->type;
+            return $scope->currentSelf->type;
         } else if ($className === 'parent') {
-            if ($scope->currentClassLikeVariable === null) {
+            if ($scope->currentSelf === null) {
                 return new Types\Object_;
             }
-            $classNode = $scope->currentClassLikeVariable->definitionNode;
+            $classNode = $scope->currentSelf->definitionNode;
             if (empty($classNode->classBaseClause)
                 || !$classNode->classBaseClause->baseClass instanceof Node\QualifiedName
             ) {
@@ -1027,8 +1027,8 @@ class DefinitionResolver
                 && ($returnType = $returnTags[0]->getType()) !== null
             ) {
                 // Use @return tag
-                if ($returnType instanceof Types\Self_ && null !== $scope->currentClassLikeVariable) {
-                    return $scope->currentClassLikeVariable->type;
+                if ($returnType instanceof Types\Self_ && null !== $scope->currentSelf) {
+                    return $scope->currentSelf->type;
                 }
                 return $returnType;
             }
@@ -1037,8 +1037,8 @@ class DefinitionResolver
                 if ($node->returnType instanceof PhpParser\Token) {
                     // Resolve a string like "bool" to a type object
                     return $this->typeResolver->resolve($node->returnType->getText($node->getFileContents()));
-                } else if ($scope->currentClassLikeVariable !== null && $scope->getResolvedName($node->returnType) === 'self') {
-                    return $scope->currentClassLikeVariable->type;
+                } else if ($scope->currentSelf !== null && $scope->getResolvedName($node->returnType) === 'self') {
+                    return $scope->currentSelf->type;
                 }
                 return new Types\Object_(new Fqsen('\\' . $scope->getResolvedName($node->returnType)));
             }
@@ -1160,10 +1160,10 @@ class DefinitionResolver
         // }
         if ($node instanceof Node\MethodDeclaration) {
             // Class method: use ClassName->methodName() as name
-            if ($scope->currentClassLikeVariable === null) {
+            if ($scope->currentSelf === null) {
                 return;
             }
-            $className = substr((string)$scope->currentClassLikeVariable->type->getFqsen(), 1);
+            $className = substr((string)$scope->currentSelf->type->getFqsen(), 1);
             if (!$className) {
                 // Ignore anonymous classes
                 return null;
@@ -1183,10 +1183,10 @@ class DefinitionResolver
         // }
         if (
             ($propertyDeclaration = ParserHelpers\tryGetPropertyDeclaration($node)) !== null &&
-            $scope->currentClassLikeVariable !== null &&
-            isset($scope->currentClassLikeVariable->definitionNode->name)
+            $scope->currentSelf !== null &&
+            isset($scope->currentSelf->definitionNode->name)
         ) {
-            $className = substr((string)$scope->currentClassLikeVariable->type->getFqsen(), 1);
+            $className = substr((string)$scope->currentSelf->type->getFqsen(), 1);
             $name = $node->getName();
             if ($propertyDeclaration->isStatic()) {
                 // Static Property: use ClassName::$propertyName as name
@@ -1209,13 +1209,12 @@ class DefinitionResolver
                 return (string)$node->getNamespacedName();
             }
 
-            if ($scope->currentClassLikeVariable === null
-                || !isset($scope->currentClassLikeVariable->definitionNode->name)
+            if ($scope->currentSelf === null || !isset($scope->currentSelf->definitionNode->name)
             ) {
                 // Class constant: use ClassName::CONSTANT_NAME as name
                 return null;
             }
-            $className = substr((string)$scope->currentClassLikeVariable->type->getFqsen(), 1);
+            $className = substr((string)$scope->currentSelf->type->getFqsen(), 1);
             return $className . '::' . $node->getName();
         }
 

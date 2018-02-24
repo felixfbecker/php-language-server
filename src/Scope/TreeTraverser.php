@@ -99,7 +99,7 @@ class TreeTraverser
             && $node->compoundStatementOrSemicolon instanceof Node\Statement\CompoundStatementNode
         ) {
             $childScope = new Scope;
-            $childScope->currentClassLikeVariable = $scope->currentClassLikeVariable;
+            $childScope->currentSelf = $scope->currentSelf;
             $childScope->resolvedNameCache = $scope->resolvedNameCache;
             $isStatic = $node instanceof Node\MethodDeclaration ? $node->isStatic() : !empty($node->staticModifier);
             if (!$isStatic && isset($scope->variables['this'])) {
@@ -143,7 +143,7 @@ class TreeTraverser
                 $node
             );
             $childScope->variables['this'] = $thisVar;
-            $childScope->currentClassLikeVariable = $thisVar;
+            $childScope->currentSelf = $thisVar;
             return $childScope;
         }
 

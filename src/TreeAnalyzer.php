@@ -157,16 +157,16 @@ class TreeAnalyzer
             if ($fqn === 'self' || $fqn === 'static') {
                 // Resolve self and static keywords to the containing class
                 // (This is not 100% correct for static but better than nothing)
-                if (!$scope->currentClassLikeVariable) {
+                if (!$scope->currentSelf) {
                     return;
                 }
-                $fqn = substr((string)$scope->currentClassLikeVariable->type->getFqsen(), 1);
+                $fqn = substr((string)$scope->currentSelf->type->getFqsen(), 1);
             } else if ($fqn === 'parent') {
                 // Resolve parent keyword to the base class FQN
-                if ($scope->currentClassLikeVariable === null) {
+                if ($scope->currentSelf === null) {
                     return;
                 }
-                $classNode = $scope->currentClassLikeVariable->definitionNode;
+                $classNode = $scope->currentSelf->definitionNode;
                 if (empty($classNode->classBaseClause)
                     || !$classNode->classBaseClause->baseClass instanceof Node\QualifiedName
                 ) {

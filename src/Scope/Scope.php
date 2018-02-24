@@ -10,9 +10,9 @@ use Microsoft\PhpParser\Node\QualifiedName;
 class Scope
 {
     /**
-     * @var Variable|null $this, except also set in static contexts.
+     * @var Variable|null "Variable" representing this/self
      */
-    public $currentClassLikeVariable;
+    public $currentSelf;
 
     /**
      * @var Variable[] Variables in the scope, indexed by their names (without the dollar) and excluding $this.
