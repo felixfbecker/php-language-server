@@ -164,6 +164,8 @@ class PhpDocument
         }
 
         $this->sourceFileNode = $treeAnalyzer->getSourceFileNode();
+
+        $this->definitionResolver->clearCache();
     }
 
     /**

@@ -8,9 +8,7 @@ use LanguageServer\Protocol\SymbolInformation;
 use Microsoft\PhpParser;
 use Microsoft\PhpParser\Node;
 use Microsoft\PhpParser\FunctionLike;
-use phpDocumentor\Reflection\{
-    DocBlock, DocBlockFactory, Fqsen, Type, TypeResolver, Types
-};
+use phpDocumentor\Reflection\{DocBlock, Fqsen, Type, TypeResolver, Types};
 
 class DefinitionResolver
 {
@@ -29,11 +27,11 @@ class DefinitionResolver
     private $typeResolver;
 
     /**
-     * Parses Doc Block comments given the DocBlock text and import tables at a position.
+     * Parses and caches Doc Block comments given Node.
      *
-     * @var DocBlockFactory
+     * @var CachingDocBlockFactory
      */
-    private $docBlockFactory;
+    private $cachingDocBlockFactory;
 
     /**
      * Creates SignatureInformation
@@ -49,7 +47,7 @@ class DefinitionResolver
     {
         $this->index = $index;
         $this->typeResolver = new TypeResolver;
-        $this->docBlockFactory = DocBlockFactory::createInstance();
+        $this->cachingDocBlockFactory = new CachingDocBlockFactory;
         $this->signatureInformationFactory = new SignatureInformationFactory($this);
     }
 
@@ -114,14 +112,14 @@ class DefinitionResolver
             $variableName = $node->getName();
 
             $functionLikeDeclaration = ParserHelpers\getFunctionLikeDeclarationFromParameter($node);
-            $docBlock = $this->getDocBlock($functionLikeDeclaration);
+            $docBlock = $this->cachingDocBlockFactory->getDocBlock($functionLikeDeclaration);
 
             $parameterDocBlockTag = $this->tryGetDocBlockTagForParameter($docBlock, $variableName);
             return $parameterDocBlockTag !== null ? $parameterDocBlockTag->getDescription()->render() : null;
         }
 
         // For everything else, get the doc block summary corresponding to the current node.
-        $docBlock = $this->getDocBlock($node);
+        $docBlock = $this->cachingDocBlockFactory->getDocBlock($node);
         if ($docBlock !== null) {
             // check whether we have a description, when true, add a new paragraph
             // with the description
@@ -132,40 +130,6 @@ class DefinitionResolver
             }
 
             return $docBlock->getSummary() . "\n\n" . $description;
-        }
-        return null;
-    }
-
-    /**
-     * Gets Doc Block with resolved names for a Node
-     *
-     * @param Node $node
-     * @return DocBlock|null
-     */
-    private function getDocBlock(Node $node)
-    {
-        // TODO make more efficient (caching, ensure import table is in right format to begin with)
-        $docCommentText = $node->getDocCommentText();
-        if ($docCommentText !== null) {
-            list($namespaceImportTable,,) = $node->getImportTablesForCurrentScope();
-            foreach ($namespaceImportTable as $alias => $name) {
-                $namespaceImportTable[$alias] = (string)$name;
-            }
-            $namespaceDefinition = $node->getNamespaceDefinition();
-            if ($namespaceDefinition !== null && $namespaceDefinition->name !== null) {
-                $namespaceName = (string)$namespaceDefinition->name->getNamespacedName();
-            } else {
-                $namespaceName = 'global';
-            }
-            $context = new Types\Context($namespaceName, $namespaceImportTable);
-
-            try {
-                // create() throws when it thinks the doc comment has invalid fields.
-                // For example, a @see tag that is followed by something that doesn't look like a valid fqsen will throw.
-                return $this->docBlockFactory->create($docCommentText, $context);
-            } catch (\InvalidArgumentException $e) {
-                return null;
-            }
         }
         return null;
     }
@@ -344,6 +308,11 @@ class DefinitionResolver
         }
 
         return null;
+    }
+
+    public function clearCache()
+    {
+        $this->cachingDocBlockFactory->clearCache();
     }
 
     private function resolveQualifiedNameNodeToFqn(Node\QualifiedName $node)
@@ -1080,7 +1049,7 @@ class DefinitionResolver
             //  function foo($a)
             $functionLikeDeclaration = ParserHelpers\getFunctionLikeDeclarationFromParameter($node);
             $variableName = $node->getName();
-            $docBlock = $this->getDocBlock($functionLikeDeclaration);
+            $docBlock = $this->cachingDocBlockFactory->getDocBlock($functionLikeDeclaration);
 
             $parameterDocBlockTag = $this->tryGetDocBlockTagForParameter($docBlock, $variableName);
             if ($parameterDocBlockTag !== null && ($type = $parameterDocBlockTag->getType())) {
@@ -1117,7 +1086,7 @@ class DefinitionResolver
         //   3. TODO: infer from return statements
         if ($node instanceof PhpParser\FunctionLike) {
             // Functions/methods
-            $docBlock = $this->getDocBlock($node);
+            $docBlock = $this->cachingDocBlockFactory->getDocBlock($node);
             if (
                 $docBlock !== null
                 && !empty($returnTags = $docBlock->getTagsByName('return'))
@@ -1185,7 +1154,7 @@ class DefinitionResolver
             // Property, constant or variable
             // Use @var tag
             if (
-                ($docBlock = $this->getDocBlock($declarationNode))
+                ($docBlock = $this->cachingDocBlockFactory->getDocBlock($declarationNode))
                 && !empty($varTags = $docBlock->getTagsByName('var'))
                 && ($type = $varTags[0]->getType())
             ) {
@@ -1302,7 +1271,7 @@ class DefinitionResolver
         // namespace A\B;
         // const FOO = 5;               A\B\FOO
         // class C {
-        //   const $a, $b = 4           A\B\C::$a(), A\B\C::$b
+        //   const $a, $b = 4           A\B\C::$a, A\B\C::$b
         // }
         if (($constDeclaration = ParserHelpers\tryGetConstOrClassConstDeclaration($node)) !== null) {
             if ($constDeclaration instanceof Node\Statement\ConstDeclaration) {
