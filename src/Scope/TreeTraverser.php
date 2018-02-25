@@ -185,8 +185,8 @@ class TreeTraverser
 
 
         // TODO: Handle use (&$x) when $x is not defined in scope.
-        // TODO: Handle list(...) = $a;
-        // TODO: Handle foreach ($a as list(...))
+        // TODO: Handle list(...) = $a; and [...] = $a;
+        // TODO: Handle foreach ($a as list(...)) and foreach ($a as [...])
         // TODO: Handle unset($var)
         // TODO: Handle global $var
     }
