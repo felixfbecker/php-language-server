@@ -35,9 +35,15 @@ class DefinitionCollectorTest extends TestCase
             'TestNamespace\\ChildClass',
             'TestNamespace\\Example',
             'TestNamespace\\Example->__construct()',
-            'TestNamespace\\Example->__destruct()'
+            'TestNamespace\\Example->__destruct()',
+            'TestNamespace\\InnerNamespace',
+            'TestNamespace\\InnerNamespace\\InnerClass',
+            'TestNamespace\\InnerNamespace\\INNER_CONST',
+            'TestNamespace\\InnerNamespace\\inner_function()',
+            'TestNamespace\\InnerNamespace\\inner_function2()',
         ], array_keys($defNodes));
 
+        // @codingStandardsIgnoreStart
         $this->assertInstanceOf(Node\ConstElement::class, $defNodes['TestNamespace\\TEST_CONST']);
         $this->assertInstanceOf(Node\Statement\ClassDeclaration::class, $defNodes['TestNamespace\\TestClass']);
         $this->assertInstanceOf(Node\ConstElement::class, $defNodes['TestNamespace\\TestClass::TEST_CLASS_CONST']);
@@ -53,6 +59,11 @@ class DefinitionCollectorTest extends TestCase
         $this->assertInstanceOf(Node\Statement\ClassDeclaration::class, $defNodes['TestNamespace\\Example']);
         $this->assertInstanceOf(Node\MethodDeclaration::class, $defNodes['TestNamespace\\Example->__construct()']);
         $this->assertInstanceOf(Node\MethodDeclaration::class, $defNodes['TestNamespace\\Example->__destruct()']);
+        $this->assertInstanceOf(Node\Statement\ClassDeclaration::class, $defNodes['TestNamespace\\InnerNamespace\\InnerClass']);
+        $this->assertInstanceOf(Node\ConstElement::class, $defNodes['TestNamespace\InnerNamespace\INNER_CONST']);
+        $this->assertInstanceOf(Node\Statement\FunctionDeclaration::class, $defNodes['TestNamespace\InnerNamespace\inner_function()']);
+        $this->assertInstanceOf(Node\Statement\FunctionDeclaration::class, $defNodes['TestNamespace\InnerNamespace\inner_function2()']);
+        // @codingStandardsIgnoreEnd
     }
 
     public function testDoesNotCollectReferences()
