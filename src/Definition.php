@@ -6,7 +6,6 @@ namespace LanguageServer;
 use LanguageServer\Index\ReadableIndex;
 use phpDocumentor\Reflection\{Types, Type, Fqsen, TypeResolver};
 use LanguageServer\Protocol\SymbolInformation;
-use Exception;
 use Generator;
 
 /**
@@ -69,7 +68,7 @@ class Definition
     public $canBeInstantiated;
 
     /**
-     * @var Protocol\SymbolInformation
+     * @var SymbolInformation
      */
     public $symbolInformation;
 

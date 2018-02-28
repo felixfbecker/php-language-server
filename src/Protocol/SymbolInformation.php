@@ -4,7 +4,6 @@ namespace LanguageServer\Protocol;
 
 use Microsoft\PhpParser;
 use Microsoft\PhpParser\Node;
-use Exception;
 
 /**
  * Represents information about programming constructs like variables, classes,

@@ -23,7 +23,6 @@ use LanguageServer\Protocol\{
     VersionedTextDocumentIdentifier,
     CompletionContext
 };
-use Microsoft\PhpParser;
 use Microsoft\PhpParser\Node;
 use Sabre\Event\Promise;
 use Sabre\Uri;
