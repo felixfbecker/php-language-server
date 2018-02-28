@@ -3,10 +3,8 @@ declare(strict_types = 1);
 
 namespace LanguageServer;
 
-use LanguageServer\Protocol\{Diagnostic, DiagnosticSeverity, Range, Position, TextEdit};
-use LanguageServer\Index\Index;
+use LanguageServer\Protocol\{Diagnostic, DiagnosticSeverity, Range, Position};
 use phpDocumentor\Reflection\DocBlockFactory;
-use Sabre\Uri;
 use Microsoft\PhpParser;
 use Microsoft\PhpParser\Node;
 use Microsoft\PhpParser\Token;
