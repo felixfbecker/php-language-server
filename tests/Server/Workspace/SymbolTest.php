@@ -30,7 +30,7 @@ class SymbolTest extends ServerTestCase
 
         // @codingStandardsIgnoreStart
         $this->assertEquals([
-            new SymbolInformation('TestNamespace',      SymbolKind::NAMESPACE, new Location($referencesUri, new Range(new Position(2, 0), new Position(2, 24))), ''),
+            new SymbolInformation('TestNamespace',          SymbolKind::NAMESPACE,   new Location($referencesUri, new Range(new Position(2, 0), new Position(2, 24))), ''),
             // Namespaced
             new SymbolInformation('TEST_CONST',             SymbolKind::CONSTANT,    $this->getDefinitionLocation('TestNamespace\\TEST_CONST'),                    'TestNamespace'),
             new SymbolInformation('TestClass',              SymbolKind::CLASS_,      $this->getDefinitionLocation('TestNamespace\\TestClass'),                     'TestNamespace'),
@@ -46,6 +46,8 @@ class SymbolTest extends ServerTestCase
             new SymbolInformation('Example',                SymbolKind::CLASS_,      $this->getDefinitionLocation('TestNamespace\\Example'),                       'TestNamespace'),
             new SymbolInformation('__construct',            SymbolKind::CONSTRUCTOR, $this->getDefinitionLocation('TestNamespace\\Example::__construct'),          'TestNamespace\\Example'),
             new SymbolInformation('__destruct',             SymbolKind::CONSTRUCTOR, $this->getDefinitionLocation('TestNamespace\\Example::__destruct'),           'TestNamespace\\Example'),
+            new SymbolInformation('TestNamespace\\InnerNamespace', SymbolKind::NAMESPACE, $this->getDefinitionLocation('TestNamespace\\InnerNamespace'),           'TestNamespace'),
+            new SymbolInformation('InnerClass',             SymbolKind::CLASS_,      $this->getDefinitionLocation('TestNamespace\\InnerNamespace\\InnerClass'),    'TestNamespace\\InnerNamespace'),
             new SymbolInformation('whatever',               SymbolKind::FUNCTION,    $this->getDefinitionLocation('TestNamespace\\whatever()'),                    'TestNamespace'),
             // Global
             new SymbolInformation('TEST_CONST',             SymbolKind::CONSTANT,    $this->getDefinitionLocation('TEST_CONST'),                                   ''),

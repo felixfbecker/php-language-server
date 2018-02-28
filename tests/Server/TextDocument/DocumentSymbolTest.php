@@ -32,7 +32,9 @@ class DocumentSymbolTest extends ServerTestCase
             new SymbolInformation('ChildClass',         SymbolKind::CLASS_,      $this->getDefinitionLocation('TestNamespace\\ChildClass'),                    'TestNamespace'),
             new SymbolInformation('Example',            SymbolKind::CLASS_,      $this->getDefinitionLocation('TestNamespace\\Example'),                       'TestNamespace'),
             new SymbolInformation('__construct',        SymbolKind::CONSTRUCTOR, $this->getDefinitionLocation('TestNamespace\\Example::__construct'),          'TestNamespace\\Example'),
-            new SymbolInformation('__destruct',         SymbolKind::CONSTRUCTOR, $this->getDefinitionLocation('TestNamespace\\Example::__destruct'),           'TestNamespace\\Example')
+            new SymbolInformation('__destruct',         SymbolKind::CONSTRUCTOR, $this->getDefinitionLocation('TestNamespace\\Example::__destruct'),           'TestNamespace\\Example'),
+            new SymbolInformation('TestNamespace\\InnerNamespace', SymbolKind::NAMESPACE, $this->getDefinitionLocation('TestNamespace\\InnerNamespace'),       'TestNamespace'),
+            new SymbolInformation('InnerClass',         SymbolKind::CLASS_,      $this->getDefinitionLocation('TestNamespace\\InnerNamespace\\InnerClass'),    'TestNamespace\\InnerNamespace'),
         ], $result);
         // @codingStandardsIgnoreEnd
     }
