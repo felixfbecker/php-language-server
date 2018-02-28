@@ -214,7 +214,7 @@ class TextDocument
                 }
             } else {
                 // Definition with a global FQN
-                $fqn = DefinitionResolver::getDefinedFqn($node);
+                $fqn = $this->definitionResolver->getDefinedFqn($node);
 
                 // Wait until indexing finished
                 if (!$this->index->isComplete()) {
@@ -277,7 +277,7 @@ class TextDocument
                 return [];
             }
             // Handle definition nodes
-            $fqn = DefinitionResolver::getDefinedFqn($node);
+            $fqn = $this->definitionResolver->getDefinedFqn($node);
             while (true) {
                 if ($fqn) {
                     $def = $this->index->getDefinition($fqn);
@@ -318,7 +318,7 @@ class TextDocument
             if ($node === null) {
                 return new Hover([]);
             }
-            $definedFqn = DefinitionResolver::getDefinedFqn($node);
+            $definedFqn = $this->definitionResolver->getDefinedFqn($node);
             while (true) {
                 if ($definedFqn) {
                     // Support hover for definitions
@@ -392,7 +392,7 @@ class TextDocument
                 return [];
             }
             // Handle definition nodes
-            $fqn = DefinitionResolver::getDefinedFqn($node);
+            $fqn = $this->definitionResolver->getDefinedFqn($node);
             while (true) {
                 if ($fqn) {
                     $def = $this->index->getDefinition($fqn);

@@ -4,6 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer;
 
 use LanguageServer\Protocol\{SignatureInformation, ParameterInformation};
+use LanguageServer\Scope\Scope;
 use Microsoft\PhpParser\FunctionLike;
 
 class SignatureInformationFactory
@@ -28,9 +29,9 @@ class SignatureInformationFactory
      *
      * @return SignatureInformation
      */
-    public function create(FunctionLike $node): SignatureInformation
+    public function create(FunctionLike $node, Scope $scope = null): SignatureInformation
     {
-        $params = $this->createParameters($node);
+        $params = $this->createParameters($node, $scope);
         $label = $this->createLabel($params);
         return new SignatureInformation(
             $label,
@@ -46,12 +47,12 @@ class SignatureInformationFactory
      *
      * @return ParameterInformation[]
      */
-    private function createParameters(FunctionLike $node): array
+    private function createParameters(FunctionLike $node, Scope $scope = null): array
     {
         $params = [];
         if ($node->parameters) {
             foreach ($node->parameters->getElements() as $element) {
-                $param = (string) $this->definitionResolver->getTypeFromNode($element);
+                $param = (string) $this->definitionResolver->getTypeFromNode($element, $scope);
                 $param .= ' ';
                 if ($element->dotDotDotToken) {
                     $param .= '...';
