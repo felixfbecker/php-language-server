@@ -3,18 +3,16 @@ declare(strict_types = 1);
 
 namespace LanguageServer\Server;
 
-use LanguageServer\{LanguageClient, Project, PhpDocumentLoader};
+use LanguageServer\{LanguageClient, PhpDocumentLoader};
 use LanguageServer\Index\{ProjectIndex, DependenciesIndex, Index};
 use LanguageServer\Protocol\{
     FileChangeType,
     FileEvent,
     SymbolInformation,
     SymbolDescriptor,
-    PackageDescriptor,
     ReferenceInformation,
     DependencyReference,
-    Location,
-    MessageType
+    Location
 };
 use Sabre\Event\Promise;
 use function Sabre\Event\coroutine;

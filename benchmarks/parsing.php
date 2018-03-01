@@ -51,11 +51,7 @@ foreach($frameworks as $framework) {
         $definitionResolver = new DefinitionResolver($index);
         $parser = new PhpParser\Parser();
 
-        try {
-            $document = new PhpDocument($testCaseFile, $fileContents, $index, $parser, $docBlockFactory, $definitionResolver);
-        } catch (\Throwable $e) {
-            continue;
-        }
+        $document = new PhpDocument($testCaseFile, $fileContents, $index, $parser, $docBlockFactory, $definitionResolver);
     }
 
     echo "------------------------------\n";

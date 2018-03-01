@@ -8,7 +8,6 @@ use Sabre\Event\{
     Loop,
     Promise
 };
-use RuntimeException;
 
 class ProtocolStreamWriter implements ProtocolWriter
 {

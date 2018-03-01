@@ -7,10 +7,8 @@ use LanguageServer\Index\ReadableIndex;
 use LanguageServer\Protocol\{
     Position,
     SignatureHelp,
-    SignatureInformation,
     ParameterInformation
 };
-use Microsoft\PhpParser;
 use Microsoft\PhpParser\Node;
 use Sabre\Event\Promise;
 use function Sabre\Event\coroutine;
