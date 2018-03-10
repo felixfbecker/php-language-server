@@ -1,8 +1,8 @@
 <?php
 
-use LanguageServer\{LanguageServer, ProtocolStreamReader, ProtocolStreamWriter};
+use LanguageServer\{LanguageServer, ProtocolStreamReader, ProtocolStreamWriter, StderrLogger};
 use Sabre\Event\Loop;
-use Composer\{Factory, XdebugHandler};
+use Composer\XdebugHandler\XdebugHandler;
 
 $options = getopt('', ['tcp::', 'tcp-server::', 'memory-limit::']);
 
@@ -24,22 +24,27 @@ set_error_handler(function (int $severity, string $message, string $file, int $l
     throw new \ErrorException($message, 0, $severity, $file, $line);
 });
 
+$logger = new StderrLogger();
+
 // Only write uncaught exceptions to STDERR, not STDOUT
-set_exception_handler(function (\Throwable $e) {
-    fwrite(STDERR, (string)$e);
+set_exception_handler(function (\Throwable $e) use ($logger) {
+    $logger->critical((string)$e);
 });
 
 @cli_set_process_title('PHP Language Server');
 
 // If XDebug is enabled, restart without it
-(new XdebugHandler(Factory::createOutput()))->check();
+$xdebugHandler = new XdebugHandler('PHPLS');
+$xdebugHandler->setLogger($logger);
+$xdebugHandler->check();
+unset($xdebugHandler);
 
 if (!empty($options['tcp'])) {
     // Connect to a TCP server
     $address = $options['tcp'];
     $socket = stream_socket_client('tcp://' . $address, $errno, $errstr);
     if ($socket === false) {
-        fwrite(STDERR, "Could not connect to language client. Error $errno\n$errstr");
+        $logger->critical("Could not connect to language client. Error $errno\n$errstr");
         exit(1);
     }
     stream_set_blocking($socket, false);
@@ -53,29 +58,30 @@ if (!empty($options['tcp'])) {
     $address = $options['tcp-server'];
     $tcpServer = stream_socket_server('tcp://' . $address, $errno, $errstr);
     if ($tcpServer === false) {
-        fwrite(STDERR, "Could not listen on $address. Error $errno\n$errstr");
+        $logger->critical("Could not listen on $address. Error $errno\n$errstr");
         exit(1);
     }
-    fwrite(STDOUT, "Server listening on $address\n");
-    if (!extension_loaded('pcntl')) {
-        fwrite(STDERR, "PCNTL is not available. Only a single connection will be accepted\n");
+    $logger->debug("Server listening on $address");
+    $pcntlAvailable = extension_loaded('pcntl');
+    if (!$pcntlAvailable) {
+        $logger->notice('PCNTL is not available. Only a single connection will be accepted');
     }
     while ($socket = stream_socket_accept($tcpServer, -1)) {
-        fwrite(STDOUT, "Connection accepted\n");
+        $logger->debug('Connection accepted');
         stream_set_blocking($socket, false);
-        if (extension_loaded('pcntl')) {
+        if ($pcntlAvailable) {
             // If PCNTL is available, fork a child process for the connection
             // An exit notification will only terminate the child process
             $pid = pcntl_fork();
             if ($pid === -1) {
-                fwrite(STDERR, "Could not fork\n");
+                $logger->critical('Could not fork');
                 exit(1);
             } else if ($pid === 0) {
                 // Child process
                 $reader = new ProtocolStreamReader($socket);
                 $writer = new ProtocolStreamWriter($socket);
-                $reader->on('close', function () {
-                    fwrite(STDOUT, "Connection closed\n");
+                $reader->on('close', function () use ($logger) {
+                    $logger->debug('Connection closed');
                 });
                 $ls = new LanguageServer($reader, $writer);
                 Loop\run();
@@ -94,6 +100,7 @@ if (!empty($options['tcp'])) {
     }
 } else {
     // Use STDIO
+    $logger->debug('Listening on STDIN');
     stream_set_blocking(STDIN, false);
     $ls = new LanguageServer(
         new ProtocolStreamReader(STDIN),
