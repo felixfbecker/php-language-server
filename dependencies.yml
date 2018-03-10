@@ -10,9 +10,6 @@ collectors:
       commit_message_prefix: "chore: "
 - type: js-npm
   path: /
-  settings:
-    dist_tags:
-      semantic-release: next
   actors:
   - type: js-npm
     versions: "Y.0.0"

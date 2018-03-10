@@ -3,7 +3,6 @@ declare(strict_types = 1);
 
 namespace LanguageServer\Cache;
 
-use LanguageServer\LanguageClient;
 use Sabre\Event\Promise;
 
 /**

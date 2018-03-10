@@ -160,7 +160,9 @@ class PhpDocument
 
         // Register this document on the project for references
         foreach ($this->referenceNodes as $fqn => $nodes) {
-            $this->index->addReferenceUri($fqn, $this->uri);
+            // Cast the key to string. If (string)'2' is set as an array index, it will read out as (int)2. We must
+            // deal with incorrect code, so this is a valid scenario.
+            $this->index->addReferenceUri((string)$fqn, $this->uri);
         }
 
         $this->sourceFileNode = $treeAnalyzer->getSourceFileNode();

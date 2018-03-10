@@ -3,7 +3,6 @@
 namespace LanguageServer\FqnUtilities;
 
 use phpDocumentor\Reflection\{Type, Types};
-use Microsoft\PhpParser;
 
 /**
  * Returns all possible FQNs in a type
