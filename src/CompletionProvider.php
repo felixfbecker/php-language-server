@@ -341,7 +341,7 @@ class CompletionProvider
             foreach ($list->items as $item) {
                 // Remove ()
                 if (is_string($item->insertText) && substr($item->insertText, strlen($item->insertText) - 2) === '()') {
-                    $item->insertText = substr($item->insertText, 0, strlen($item->insertText) - 2);
+                    $item->insertText = substr($item->insertText, 0, -2);
                 }
             }
 

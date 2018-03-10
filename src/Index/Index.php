@@ -280,7 +280,7 @@ class Index implements ReadableIndex, \Serializable
     public function serialize()
     {
         return serialize([
-            'definitions' => iterator_to_array($this->getDefinitions(), true),
+            'definitions' => iterator_to_array($this->getDefinitions()),
             'references' => $this->references,
             'complete' => $this->complete,
             'staticComplete' => $this->staticComplete
