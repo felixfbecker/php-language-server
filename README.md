@@ -25,10 +25,6 @@ and an [event loop](http://sabre.io/event/loop/) for concurrency.
   - [Versioning](#versioning)
   - [Installation](#installation)
   - [Running](#running)
-    - [Command line arguments](#command-line-arguments)
-      - [`--tcp=host:port` (optional)](#tcphostport-optional)
-      - [`--tcp-server=host:port` (optional)](#tcp-serverhostport-optional)
-      - [`--memory-limit=integer` (optional)](#memory-limitinteger-optional)
   - [Used by](#used-by)
   - [Contributing](#contributing)
 
