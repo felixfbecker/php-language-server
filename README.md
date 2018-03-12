@@ -17,7 +17,7 @@ Uses the great [Tolerant PHP Parser](https://github.com/Microsoft/tolerant-php-p
 [phpDocumentor's DocBlock reflection](https://github.com/phpDocumentor/ReflectionDocBlock)
 and an [event loop](http://sabre.io/event/loop/) for concurrency.
 
-**[Table of Contents](http://tableofcontent.eu)**
+**Table of Contents**
   - [Features](#features)
   - [Performance](#performance)
   - [Versioning](#versioning)
