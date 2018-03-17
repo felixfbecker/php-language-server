@@ -151,8 +151,13 @@ class Indexer
                     // Check if package name matches and version is absolute
                     // Dynamic constraints are not cached, because they can change every time
                     $packageVersion = ltrim($package->version, 'v');
-                    if ($package->name === $packageName && strpos($packageVersion, 'dev') === false) {
+                    if ($package->name === $packageName) {
                         $packageKey = $packageName . ':' . $packageVersion;
+                        if (strpos($packageVersion, 'dev') !== false) {
+                            $packageKey = $packageName . ':' . (isset($package->source) && isset($package->source->reference) ? 
+                                $package->source->reference : (isset($package->dist) && isset($package->dist->reference) ? 
+                                    $package->source->reference : $packageVersion));
+                        }
                         $cacheKey = self::CACHE_VERSION . ':' . $packageKey;
                         // Check cache
                         $index = yield $this->cache->get($cacheKey);
