@@ -63,7 +63,7 @@ class PhpDocument
     /**
      * Map from fully qualified name (FQN) to Node
      *
-     * @var Node
+     * @var Node[]
      */
     private $definitionNodes;
 

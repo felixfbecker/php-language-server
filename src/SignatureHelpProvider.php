@@ -6,8 +6,7 @@ namespace LanguageServer;
 use LanguageServer\Index\ReadableIndex;
 use LanguageServer\Protocol\{
     Position,
-    SignatureHelp,
-    ParameterInformation
+    SignatureHelp
 };
 use Microsoft\PhpParser\Node;
 use Sabre\Event\Promise;

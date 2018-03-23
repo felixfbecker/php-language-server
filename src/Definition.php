@@ -4,7 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer;
 
 use LanguageServer\Index\ReadableIndex;
-use phpDocumentor\Reflection\{Types, Type, Fqsen, TypeResolver};
+use phpDocumentor\Reflection\{Types, Type, TypeResolver};
 use LanguageServer\Protocol\SymbolInformation;
 use Generator;
 
@@ -80,7 +80,7 @@ class Definition
      * Can also be a compound type.
      * If it is unknown, will be Types\Mixed_.
      *
-     * @var \phpDocumentor\Type|null
+     * @var Type|null
      */
     public $type;
 
