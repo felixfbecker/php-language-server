@@ -159,7 +159,7 @@ Before installing php-language-server, make sure your ~/.config/composer/compose
     "prefer-stable": true
 }
 ```
-After editing your composer.json, you can install felixfbecker/php-language-server. The following instructions have been adapted from the installation section of php-language-server
+After editing your composer.json, you can install felixfbecker/php-language-server.
 
 ```
 composer global require felixfbecker/language-server
