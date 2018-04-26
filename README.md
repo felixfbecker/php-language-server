@@ -133,18 +133,9 @@ All classes are considered internal and are not subject to semver.
 ## Installation
 
 The recommended installation method is through [Composer](https://getcomposer.org/).
-Simply run
 
-    composer require felixfbecker/language-server
 
-and you will get the latest stable release and all dependencies.  
-Running `composer update` will update the server to the latest non-breaking version.
-
-After installing the language server and its dependencies,
-you must parse the stubs for standard PHP symbols and save the index for fast initialization.
-
-     composer run-script --working-dir=vendor/felixfbecker/language-server parse-stubs
-# Local installation
+### Local Installation
 Create a directory for php-language-server. Create a composer.json file in it, with the following contents:
 
 ```
@@ -176,7 +167,15 @@ composer global require felixfbecker/language-server
 composer global run-script --working-dir=vendor/felixfbecker/language-server parse-stubs
 ```
 
-Slightly altered from a guide found [here ](https://github.com/emacs-lsp/lsp-php). 
+
+and you will get the latest stable release and all dependencies.  
+Running `composer update` will update the server to the latest non-breaking version.
+
+After installing the language server and its dependencies,
+you must parse the stubs for standard PHP symbols and save the index for fast initialization.
+
+     composer run-script --working-dir=vendor/felixfbecker/language-server parse-stubs
+
 ## Running
 
 Start the language server with
