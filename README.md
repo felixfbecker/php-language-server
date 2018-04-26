@@ -132,9 +132,7 @@ All classes are considered internal and are not subject to semver.
 
 ## Installation
 
-The recommended installation method is through [Composer](https://getcomposer.org/).
-
-```composer require felixfbecker/language-server```
+The recommended installation method is through [Composer](https://getcomposer.org/).  Follow the following installation instructions for local or global installation after installing composer on your system.
 
 ### Local Installation
 Create a directory for php-language-server. Create a composer.json file in it, with the following contents:
@@ -152,7 +150,7 @@ composer require felixfbecker/language-server
 composer run-script --working-dir=vendor/felixfbecker/language-server parse-stubs
 ```
 
-# Global installation
+### Global installation
 Before installing php-language-server, make sure your ~/.config/composer/composer.json includes the lines below. The settings apply to all globally installed Composer packages, so proceed with caution. If you do not want to edit your global Composer configuration, see the section for local installation above.
 
 ```
@@ -167,15 +165,6 @@ After editing your composer.json, you can install felixfbecker/php-language-serv
 composer global require felixfbecker/language-server
 composer global run-script --working-dir=vendor/felixfbecker/language-server parse-stubs
 ```
-
-
-and you will get the latest stable release and all dependencies.  
-Running `composer update` will update the server to the latest non-breaking version.
-
-After installing the language server and its dependencies,
-you must parse the stubs for standard PHP symbols and save the index for fast initialization.
-
-     composer run-script --working-dir=vendor/felixfbecker/language-server parse-stubs
 
 ## Running
 
