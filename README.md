@@ -134,6 +134,7 @@ All classes are considered internal and are not subject to semver.
 
 The recommended installation method is through [Composer](https://getcomposer.org/).
 
+```composer require felixfbecker/language-server```
 
 ### Local Installation
 Create a directory for php-language-server. Create a composer.json file in it, with the following contents:
