@@ -144,7 +144,39 @@ After installing the language server and its dependencies,
 you must parse the stubs for standard PHP symbols and save the index for fast initialization.
 
      composer run-script --working-dir=vendor/felixfbecker/language-server parse-stubs
+# Local installation
+Create a directory for php-language-server. Create a composer.json file in it, with the following contents:
 
+```
+{
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
+```
+Then, in the directory, run the following commands:
+
+```
+composer require felixfbecker/language-server
+composer run-script --working-dir=vendor/felixfbecker/language-server parse-stubs
+```
+
+# Global installation
+Before installing php-language-server, make sure your ~/.config/composer/composer.json includes the lines below. The settings apply to all globally installed Composer packages, so proceed with caution. If you do not want to edit your global Composer configuration, see the section for local installation above.
+
+```
+{
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
+```
+After editing your composer.json, you can install felixfbecker/php-language-server. The following instructions have been adapted from the installation section of php-language-server
+
+```
+composer global require felixfbecker/language-server
+composer global run-script --working-dir=vendor/felixfbecker/language-server parse-stubs
+```
+
+Slightly altered from a guide found [here ](https://github.com/emacs-lsp/lsp-php). 
 ## Running
 
 Start the language server with
