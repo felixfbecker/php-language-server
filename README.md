@@ -140,14 +140,21 @@ Create a directory for php-language-server. Create a composer.json file in it, w
 ```
 {
     "minimum-stability": "dev",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "require": {
+        "felixfbecker/language-server": "v5.4.0"
+    },
+    "scripts": {
+        "parse-stubs": "LanguageServer\\ComposerScripts::parseStubs",
+        "post-update-cmd": "@parse-stubs",
+        "post-install-cmd": "@parse-stubs"
+    }
 }
 ```
 Then, in the directory, run the following commands:
 
 ```
 composer require felixfbecker/language-server
-composer run-script --working-dir=vendor/felixfbecker/language-server parse-stubs
 ```
 
 ### Global installation
@@ -156,14 +163,22 @@ Before installing php-language-server, make sure your ~/.config/composer/compose
 ```
 {
     "minimum-stability": "dev",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "require": {
+        "felixfbecker/language-server": "v5.4.0"
+    },
+    "scripts": {
+        "parse-stubs": "LanguageServer\\ComposerScripts::parseStubs",
+        "post-update-cmd": "@parse-stubs",
+        "post-install-cmd": "@parse-stubs"
+    }
 }
+
 ```
 After editing your composer.json, you can install felixfbecker/php-language-server.
 
 ```
 composer global require felixfbecker/language-server
-composer global run-script --working-dir=vendor/felixfbecker/language-server parse-stubs
 ```
 
 ## Running
