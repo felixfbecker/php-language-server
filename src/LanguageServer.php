@@ -215,10 +215,18 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                     sortUrisLevelOrder($composerLockFiles);
 
                     if (!empty($composerLockFiles)) {
-                        $this->composerLock = json_decode(yield $this->contentRetriever->retrieve($composerLockFiles[0]));
+                        $packages = [];
+                        $packagesDev = [];
+                        foreach($composerLockFiles as $composerLockFile) {
+                            $composerLock = json_decode(yield $this->contentRetriever->retrieve($composerLockFile));
+                            $packages = array_merge($packages, $composerLock->packages);
+                            $packagesDev = array_merge($packagesDev, $composerLock->{'packages-dev'});
+                        }
+                        $this->composerLock = $composerLock;
+                        $this->composerLock->packages = $packages;
+                        $this->composerLock->{'packages-dev'} = $packagesDev;
                     }
                 }
-
                 $cache = $capabilities->xcacheProvider ? new ClientCache($this->client) : new FileSystemCache;
 
                 // Index in background
