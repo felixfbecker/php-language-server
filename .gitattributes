@@ -3,7 +3,6 @@
 /.vscode export-ignore
 /fixtures export-ignore
 /images export-ignore
-/tests export-ignore
 /validation export-ignore
 /.dockerignore export-ignore
 /.editorconfig export-ignore
