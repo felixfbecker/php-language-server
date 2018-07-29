@@ -3,7 +3,7 @@ declare(strict_types = 1);
 
 namespace LanguageServer;
 
-use LanguageServer\Protocol\Message;
+use LanguageServer\ProtocolBridge\Message;
 use Sabre\Event\Promise;
 
 interface ProtocolWriter

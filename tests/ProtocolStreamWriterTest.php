@@ -5,7 +5,7 @@ namespace LanguageServer\Tests;
 
 use PHPUnit\Framework\TestCase;
 use LanguageServer\ProtocolStreamWriter;
-use LanguageServer\Protocol\Message;
+use LanguageServer\ProtocolBridge\Message;
 use AdvancedJsonRpc\{Request as RequestBody};
 use Sabre\Event\Loop;
 

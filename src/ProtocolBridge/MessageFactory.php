@@ -3,7 +3,7 @@
 namespace LanguageServer\ProtocolBridge;
 
 use AdvancedJsonRpc\Message as AdvancedJsonRpcMessage;
-use LanguageServer\Protocol\Message;
+use LanguageServer\ProtocolBridge\Message;
 
 class MessageFactory
 {

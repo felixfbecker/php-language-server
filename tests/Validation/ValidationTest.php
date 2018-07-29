@@ -13,7 +13,7 @@ use phpDocumentor\Reflection\DocBlock;
 use phpDocumentor\Reflection\DocBlockFactory;
 use PHPUnit\Framework\TestCase;
 use LanguageServer\ClientHandler;
-use LanguageServer\Protocol\Message;
+use LanguageServer\ProtocolBridge\Message;
 use AdvancedJsonRpc;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
