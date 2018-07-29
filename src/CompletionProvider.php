@@ -4,6 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer;
 
 use LanguageServer\Index\ReadableIndex;
+use LanguageServer\ProtocolBridge\CompletionItemFactory;
 use LanguageServer\Protocol\{
     TextEdit,
     Range,
@@ -246,7 +247,7 @@ class CompletionProvider
             foreach ($this->index->getDefinitions() as $fqn => $def) {
                 foreach ($prefixes as $prefix) {
                     if (substr($fqn, 0, strlen($prefix)) === $prefix && $def->isMember) {
-                        $list->items[] = CompletionItem::fromDefinition($def);
+                        $list->items[] = CompletionItemFactory::fromDefinition($def);
                     }
                 }
             }
@@ -279,7 +280,7 @@ class CompletionProvider
             foreach ($this->index->getDefinitions() as $fqn => $def) {
                 foreach ($prefixes as $prefix) {
                     if (substr(strtolower($fqn), 0, strlen($prefix)) === strtolower($prefix) && $def->isMember) {
-                        $list->items[] = CompletionItem::fromDefinition($def);
+                        $list->items[] = CompletionItemFactory::fromDefinition($def);
                     }
                 }
             }
@@ -337,7 +338,7 @@ class CompletionProvider
                 foreach ($aliases as $alias => $fqn) {
                     // Suggest symbols that have been `use`d and match the prefix
                     if (substr($alias, 0, $prefixLen) === $prefix && ($def = $this->index->getDefinition($fqn))) {
-                        $list->items[] = CompletionItem::fromDefinition($def);
+                        $list->items[] = CompletionItemFactory::fromDefinition($def);
                     }
                 }
             }
@@ -370,7 +371,7 @@ class CompletionProvider
                     // Only suggest classes for `new`
                     && (!isset($creation) || $def->canBeInstantiated)
                 ) {
-                    $item = CompletionItem::fromDefinition($def);
+                    $item = CompletionItemFactory::fromDefinition($def);
                     // Find the shortest name to reference the symbol
                     if ($namespaceNode && ($alias = array_search($fqn, $aliases, true)) !== false) {
                         // $alias is the name under which this definition is aliased in the current namespace

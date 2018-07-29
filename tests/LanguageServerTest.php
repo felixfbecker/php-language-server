@@ -5,8 +5,8 @@ namespace LanguageServer\Tests;
 
 use PHPUnit\Framework\TestCase;
 use LanguageServer\LanguageServer;
+use LanguageServer\ProtocolBridge\Message;
 use LanguageServer\Protocol\{
-    Message,
     ClientCapabilities,
     TextDocumentSyncKind,
     MessageType,

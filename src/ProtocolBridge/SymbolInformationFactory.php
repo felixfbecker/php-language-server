@@ -5,6 +5,8 @@ namespace LanguageServer\ProtocolBridge;
 use LanguageServer\Protocol\Location;
 use LanguageServer\Protocol\SymbolInformation;
 use LanguageServer\Protocol\SymbolKind;
+use Microsoft\PhpParser\Node;
+use Microsoft\PhpParser\ResolvedName;
 
 class SymbolInformationFactory
 {
@@ -15,7 +17,7 @@ class SymbolInformationFactory
      * @param string $fqn If given, $containerName will be extracted from it
      * @return SymbolInformation|null
      */
-    public function fromNode($node, string $fqn = null)
+    public function fromNode($node, string $fqn = null):? SymbolInformation
     {
         $symbol = new SymbolInformation();
         if ($node instanceof Node\Statement\ClassDeclaration) {
@@ -67,7 +69,7 @@ class SymbolInformationFactory
             $symbol->name = $node->getName();
         } else if (isset($node->name)) {
             if ($node->name instanceof Node\QualifiedName) {
-                $symbol->name = (string)PhpParser\ResolvedName::buildName($node->name->nameParts, $node->getFileContents());
+                $symbol->name = (string)ResolvedName::buildName($node->name->nameParts, $node->getFileContents());
             } else {
                 $symbol->name = ltrim((string)$node->name->getText($node->getFileContents()), "$");
             }
