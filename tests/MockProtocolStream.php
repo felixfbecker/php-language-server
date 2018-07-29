@@ -4,7 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer\Tests;
 
 use LanguageServer\{ProtocolReader, ProtocolWriter};
-use LanguageServer\Factory\Message;
+use LanguageServer\Message;
 use Sabre\Event\{Loop, Emitter, Promise};
 
 /**

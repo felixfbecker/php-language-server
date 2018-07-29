@@ -3,7 +3,7 @@ declare(strict_types = 1);
 
 namespace LanguageServer;
 
-use LanguageServer\Factory\Message;
+use LanguageServer\Message;
 use Sabre\Event\{
     Loop,
     Promise

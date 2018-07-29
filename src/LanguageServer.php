@@ -11,7 +11,7 @@ use LanguageServer\Protocol\{
     CompletionOptions,
     SignatureHelpOptions
 };
-use LanguageServer\Factory\Message;
+use LanguageServer\Message;
 use LanguageServer\FilesFinder\{FilesFinder, ClientFilesFinder, FileSystemFilesFinder};
 use LanguageServer\ContentRetriever\{ContentRetriever, ClientContentRetriever, FileSystemContentRetriever};
 use LanguageServer\Index\{DependenciesIndex, GlobalIndex, Index, ProjectIndex, StubsIndex};

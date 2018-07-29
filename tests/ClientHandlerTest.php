@@ -5,7 +5,7 @@ namespace LanguageServer\Tests;
 
 use PHPUnit\Framework\TestCase;
 use LanguageServer\ClientHandler;
-use LanguageServer\Factory\Message;
+use LanguageServer\Message;
 use AdvancedJsonRpc;
 use Sabre\Event\Loop;
 

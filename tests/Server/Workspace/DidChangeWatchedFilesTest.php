@@ -7,7 +7,7 @@ use LanguageServer\ContentRetriever\FileSystemContentRetriever;
 use LanguageServer\{DefinitionResolver, LanguageClient, PhpDocumentLoader, Server};
 use LanguageServer\Index\{DependenciesIndex, Index, ProjectIndex};
 use LanguageServer\Protocol\{FileChangeType, FileEvent};
-use LanguageServer\Factory\Message;
+use LanguageServer\Message;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\Tests\Server\ServerTestCase;
 use LanguageServer\Server\Workspace;

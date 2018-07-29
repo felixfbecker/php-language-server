@@ -1,10 +1,10 @@
 <?php
 declare(strict_types = 1);
 
-namespace LanguageServer\Factory;
+namespace LanguageServer;
 
 use AdvancedJsonRpc\Message as MessageBody;
-use LanguageServer\Factory\Message;
+use LanguageServer\Message;
 
 class Message
 {
