@@ -18,7 +18,7 @@ class SymbolInformationFactory
      * @param string $fqn If given, $containerName will be extracted from it
      * @return SymbolInformation|null
      */
-    public static function fromNode($node, string $fqn = null):? SymbolInformation
+    public static function fromNode($node, string $fqn = null)
     {
         $symbol = new SymbolInformation();
         if ($node instanceof Node\Statement\ClassDeclaration) {
