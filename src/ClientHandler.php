@@ -5,7 +5,7 @@ namespace LanguageServer;
 
 use AdvancedJsonRpc;
 use Sabre\Event\Promise;
-use LanguageServer\ProtocolBridge\Message;
+use LanguageServer\Factory\Message;
 
 class ClientHandler
 {
@@ -42,12 +42,12 @@ class ClientHandler
     {
         $id = $this->idGenerator->generate();
         return $this->protocolWriter->write(
-            new ProtocolBridge\Message(
+            new Factory\Message(
                 new AdvancedJsonRpc\Request($id, $method, (object)$params)
             )
         )->then(function () use ($id) {
             $promise = new Promise;
-            $listener = function (ProtocolBridge\Message $msg) use ($id, $promise, &$listener) {
+            $listener = function (Factory\Message $msg) use ($id, $promise, &$listener) {
                 if (AdvancedJsonRpc\Response::isResponse($msg->body) && $msg->body->id === $id) {
                     // Received a response
                     $this->protocolReader->removeListener('message', $listener);
@@ -73,7 +73,7 @@ class ClientHandler
     public function notify(string $method, $params): Promise
     {
         return $this->protocolWriter->write(
-            new ProtocolBridge\Message(
+            new Factory\Message(
                 new AdvancedJsonRpc\Notification($method, (object)$params)
             )
         );

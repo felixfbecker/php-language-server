@@ -1,12 +1,13 @@
 <?php
 
-namespace LanguageServer\ProtocolBridge;
+namespace LanguageServer\Factory;
 
 use LanguageServer\Protocol\Location;
 use LanguageServer\Protocol\SymbolInformation;
 use LanguageServer\Protocol\SymbolKind;
 use Microsoft\PhpParser\Node;
 use Microsoft\PhpParser\ResolvedName;
+use LanguageServer\Factory\LocationFactory;
 
 class SymbolInformationFactory
 {

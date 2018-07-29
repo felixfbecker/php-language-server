@@ -1,6 +1,6 @@
 <?php
 
-namespace LanguageServer\ProtocolBridge;
+namespace LanguageServer\Factory;
 
 use LanguageServer\Definition;
 use LanguageServer\Protocol\CompletionItem;

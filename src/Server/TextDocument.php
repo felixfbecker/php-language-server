@@ -7,8 +7,8 @@ use LanguageServer\{
     CompletionProvider, SignatureHelpProvider, LanguageClient, PhpDocument, PhpDocumentLoader, DefinitionResolver
 };
 use LanguageServer\Index\ReadableIndex;
-use LanguageServer\ProtocolBridge\LocationFactory;
-use LanguageServer\ProtocolBridge\RangeFactory;
+use LanguageServer\Factory\LocationFactory;
+use LanguageServer\Factory\RangeFactory;
 use LanguageServer\Protocol\{
     FormattingOptions,
     Hover,

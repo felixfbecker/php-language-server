@@ -2,7 +2,7 @@
 
 namespace LanguageServer\Protocol;
 
-use LanguageServer\ProtocolBridge\LocationFactory;
+use LanguageServer\Factory\LocationFactory;
 use Microsoft\PhpParser;
 use Microsoft\PhpParser\Node;
 

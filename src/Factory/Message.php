@@ -1,10 +1,10 @@
 <?php
 declare(strict_types = 1);
 
-namespace LanguageServer\ProtocolBridge;
+namespace LanguageServer\Factory;
 
 use AdvancedJsonRpc\Message as MessageBody;
-use LanguageServer\ProtocolBridge\Message;
+use LanguageServer\Factory\Message;
 
 class Message
 {

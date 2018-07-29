@@ -4,7 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer;
 
 use LanguageServer\Index\ReadableIndex;
-use LanguageServer\ProtocolBridge\SymbolInformationFactory;
+use LanguageServer\Factory\SymbolInformationFactory;
 use LanguageServer\Protocol\SymbolInformation;
 use Microsoft\PhpParser;
 use Microsoft\PhpParser\Node;

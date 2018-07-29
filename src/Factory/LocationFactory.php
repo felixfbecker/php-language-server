@@ -1,21 +1,22 @@
 <?php
 
-namespace LanguageServer\ProtocolBridge;
+namespace LanguageServer\Factory;
 
+use LanguageServer\Protocol\Location;
 use LanguageServer\Protocol\Position;
 use LanguageServer\Protocol\Range;
 use Microsoft\PhpParser\Node;
 use Microsoft\PhpParser\PositionUtilities;
 
-class RangeFactory
+class LocationFactory
 {
     /**
-     * Returns the range the node spans
+     * Returns the location of the node
      *
      * @param Node $node
      * @return self
      */
-    public static function fromNode(Node $node)
+    public static function fromNode(Node $node): Location
     {
         $range = PositionUtilities::getRangeFromPosition(
             $node->getStart(),
@@ -23,9 +24,9 @@ class RangeFactory
             $node->getFileContents()
         );
 
-        return new Range(
+        return new Location($node->getUri(), new Range(
             new Position($range->start->line, $range->start->character),
             new Position($range->end->line, $range->end->character)
-        );
+        ));
     }
 }
