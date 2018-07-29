@@ -42,7 +42,7 @@ class ClientHandler
         $id = $this->idGenerator->generate();
         return $this->protocolWriter->write(
             new Protocol\Message(
-                new AdvancedJsonRpc\Request($id, $method, (object)$params)
+                (new AdvancedJsonRpc\Request($id, $method, (object)$params))->__toString()
             )
         )->then(function () use ($id) {
             $promise = new Promise;

@@ -4,6 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer\Tests;
 
 use LanguageServer\{ProtocolReader, ProtocolWriter};
+use LanguageServer\ProtocolBridge\MessageFactory;
 use LanguageServer\Protocol\Message;
 use Sabre\Event\{Loop, Emitter, Promise};
 
@@ -21,7 +22,7 @@ class MockProtocolStream extends Emitter implements ProtocolReader, ProtocolWrit
     public function write(Message $msg): Promise
     {
         Loop\nextTick(function () use ($msg) {
-            $this->emit('message', [Message::parse((string)$msg)]);
+            $this->emit('message', [MessageFactory::fromRawMessage((string)$msg)]);
         });
         return Promise\resolve(null);
     }
