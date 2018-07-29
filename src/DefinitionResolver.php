@@ -44,13 +44,6 @@ class DefinitionResolver
     private $signatureInformationFactory;
 
     /**
-     * Creates SymbolInformation instances
-     *
-     * @var SymbolInformationFactory
-     */
-    private $symbolInformationFactory;
-
-    /**
      * @param ReadableIndex $index
      */
     public function __construct(ReadableIndex $index)
@@ -59,7 +52,6 @@ class DefinitionResolver
         $this->typeResolver = new TypeResolver;
         $this->docBlockFactory = DocBlockFactory::createInstance();
         $this->signatureInformationFactory = new SignatureInformationFactory($this);
-        $this->symbolInformationFactory = new SymbolInformationFactory();
     }
 
     /**
@@ -242,7 +234,7 @@ class DefinitionResolver
             }
         }
 
-        $def->symbolInformation = $this->symbolInformationFactory->fromNode($node, $fqn);
+        $def->symbolInformation = SymbolInformationFactory::fromNode($node, $fqn);
 
         if ($def->symbolInformation !== null) {
             $def->type = $this->getTypeFromNode($node);
