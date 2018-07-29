@@ -4,6 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer;
 
 use LanguageServer\Index\ReadableIndex;
+use LanguageServer\ProtocolBridge\SymbolInformationFactory;
 use LanguageServer\Protocol\SymbolInformation;
 use Microsoft\PhpParser;
 use Microsoft\PhpParser\Node;
@@ -36,11 +37,18 @@ class DefinitionResolver
     private $docBlockFactory;
 
     /**
-     * Creates SignatureInformation
+     * Creates SignatureInformation instances
      *
      * @var SignatureInformationFactory
      */
     private $signatureInformationFactory;
+
+    /**
+     * Creates SymbolInformation instances
+     *
+     * @var SymbolInformationFactory
+     */
+    private $symbolInformationFactory;
 
     /**
      * @param ReadableIndex $index
@@ -51,6 +59,7 @@ class DefinitionResolver
         $this->typeResolver = new TypeResolver;
         $this->docBlockFactory = DocBlockFactory::createInstance();
         $this->signatureInformationFactory = new SignatureInformationFactory($this);
+        $this->symbolInformationFactory = new SymbolInformationFactory();
     }
 
     /**
@@ -233,7 +242,7 @@ class DefinitionResolver
             }
         }
 
-        $def->symbolInformation = SymbolInformation::fromNode($node, $fqn);
+        $def->symbolInformation = $this->symbolInformationFactory->fromNode($node, $fqn);
 
         if ($def->symbolInformation !== null) {
             $def->type = $this->getTypeFromNode($node);

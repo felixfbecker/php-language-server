@@ -3,6 +3,7 @@ declare(strict_types = 1);
 
 namespace LanguageServer;
 
+use LanguageServer\ProtocolBridge\RangeFactory;
 use LanguageServer\Protocol\{Diagnostic, DiagnosticSeverity, Range, Position};
 use phpDocumentor\Reflection\DocBlockFactory;
 use Microsoft\PhpParser;
@@ -100,7 +101,7 @@ class TreeAnalyzer
             if ($method && $method->isStatic()) {
                 $this->diagnostics[] = new Diagnostic(
                     "\$this can not be used in static methods.",
-                    Range::fromNode($node),
+                    RangeFactory::fromNode($node),
                     null,
                     DiagnosticSeverity::ERROR,
                     'php'

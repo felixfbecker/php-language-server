@@ -7,6 +7,8 @@ use LanguageServer\{
     CompletionProvider, SignatureHelpProvider, LanguageClient, PhpDocument, PhpDocumentLoader, DefinitionResolver
 };
 use LanguageServer\Index\ReadableIndex;
+use LanguageServer\ProtocolBridge\LocationFactory;
+use LanguageServer\ProtocolBridge\RangeFactory;
 use LanguageServer\Protocol\{
     FormattingOptions,
     Hover,
@@ -233,7 +235,7 @@ class TextDocument
                     $refs = $document->getReferenceNodesByFqn($fqn);
                     if ($refs !== null) {
                         foreach ($refs as $ref) {
-                            $locations[] = Location::fromNode($ref);
+                            $locations[] = LocationFactory::fromNode($ref);
                         }
                     }
                 }
@@ -332,7 +334,7 @@ class TextDocument
                 }
                 yield waitForEvent($this->index, 'definition-added');
             }
-            $range = Range::fromNode($node);
+            $range = RangeFactory::fromNode($node);
             if ($def === null) {
                 return new Hover([], $range);
             }

@@ -7,11 +7,11 @@ use LanguageServer\Protocol\{
     ServerCapabilities,
     ClientCapabilities,
     TextDocumentSyncKind,
-    Message,
     InitializeResult,
     CompletionOptions,
     SignatureHelpOptions
 };
+use LanguageServer\ProtocolBridge\Message;
 use LanguageServer\FilesFinder\{FilesFinder, ClientFilesFinder, FileSystemFilesFinder};
 use LanguageServer\ContentRetriever\{ContentRetriever, ClientContentRetriever, FileSystemContentRetriever};
 use LanguageServer\Index\{DependenciesIndex, GlobalIndex, Index, ProjectIndex, StubsIndex};
