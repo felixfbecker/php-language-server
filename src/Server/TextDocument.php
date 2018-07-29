@@ -210,7 +210,7 @@ class TextDocument
                     if ($descendantNode instanceof Node\Expression\Variable &&
                         $descendantNode->getName() === $node->getName()
                     ) {
-                        $locations[] = Location::fromNode($descendantNode);
+                        $locations[] = LocationFactory::fromNode($descendantNode);
                     }
                 }
             } else {

@@ -2,6 +2,7 @@
 
 namespace LanguageServer\Protocol;
 
+use LanguageServer\ProtocolBridge\LocationFactory;
 use Microsoft\PhpParser;
 use Microsoft\PhpParser\Node;
 
@@ -108,7 +109,7 @@ class SymbolInformation
             return null;
         }
 
-        $symbol->location = Location::fromNode($node);
+        $symbol->location = LocationFactory::fromNode($node);
         if ($fqn !== null) {
             $parts = preg_split('/(::|->|\\\\)/', $fqn);
             array_pop($parts);
