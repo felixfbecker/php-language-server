@@ -169,7 +169,7 @@ class Workspace
             return [];
         }
         $dependencyReferences = [];
-        foreach (array_merge($this->composerLock->packages, $this->composerLock->{'packages-dev'}) as $package) {
+        foreach (array_merge($this->composerLock->packages, (array)$this->composerLock->{'packages-dev'}) as $package) {
             $dependencyReferences[] = new DependencyReference($package);
         }
         return $dependencyReferences;
