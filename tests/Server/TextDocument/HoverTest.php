@@ -21,7 +21,7 @@ class HoverTest extends ServerTestCase
             $reference->range->start
         )->wait();
         $this->assertEquals(new Hover([
-            new MarkedString('php', "<?php\nclass TestClass implements TestInterface"),
+            new MarkedString('php', "class TestClass implements TestInterface"),
             'Pariatur ut laborum tempor voluptate consequat ea deserunt.' . "\n\n" .
             'Deserunt enim minim sunt sint ea nisi. Deserunt excepteur tempor id nostrud' . "\n" .
             'laboris commodo ad commodo velit mollit qui non officia id. Nulla duis veniam' . "\n" .
@@ -41,7 +41,7 @@ class HoverTest extends ServerTestCase
             $definition->range->start
         )->wait();
         $this->assertEquals(new Hover([
-            new MarkedString('php', "<?php\nclass TestClass implements TestInterface"),
+            new MarkedString('php', "class TestClass implements TestInterface"),
             'Pariatur ut laborum tempor voluptate consequat ea deserunt.' . "\n\n" .
             'Deserunt enim minim sunt sint ea nisi. Deserunt excepteur tempor id nostrud' . "\n" .
             'laboris commodo ad commodo velit mollit qui non officia id. Nulla duis veniam' . "\n" .
@@ -61,7 +61,7 @@ class HoverTest extends ServerTestCase
             $reference->range->end
         )->wait();
         $this->assertEquals(new Hover([
-            new MarkedString('php', "<?php\npublic function testMethod(\$testParameter): TestInterface"),
+            new MarkedString('php', "public function testMethod(\$testParameter): TestInterface"),
             'Non culpa nostrud mollit esse sunt laboris in irure ullamco cupidatat amet.'
         ], $reference->range), $result);
     }
@@ -76,7 +76,7 @@ class HoverTest extends ServerTestCase
             $reference->range->end
         )->wait();
         $this->assertEquals(new Hover([
-            new MarkedString('php', "<?php\npublic \$testProperty;"),
+            new MarkedString('php', "public \$testProperty;"),
             'Reprehenderit magna velit mollit ipsum do.'
         ], $reference->range), $result);
     }
@@ -91,7 +91,7 @@ class HoverTest extends ServerTestCase
             $reference->range->end
         )->wait();
         $this->assertEquals(new Hover([
-            new MarkedString('php', "<?php\npublic static function staticTestMethod()"),
+            new MarkedString('php', "public static function staticTestMethod()"),
             'Do magna consequat veniam minim proident eiusmod incididunt aute proident.'
         ], $reference->range), $result);
     }
@@ -106,7 +106,7 @@ class HoverTest extends ServerTestCase
             $reference->range->end
         )->wait();
         $this->assertEquals(new Hover([
-            new MarkedString('php', "<?php\npublic static \$staticTestProperty;"),
+            new MarkedString('php', "public static \$staticTestProperty;"),
             'Lorem excepteur officia sit anim velit veniam enim.'
         ], $reference->range), $result);
     }
@@ -121,7 +121,7 @@ class HoverTest extends ServerTestCase
             $reference->range->end
         )->wait();
         $this->assertEquals(new Hover([
-            new MarkedString('php', "<?php\nconst TEST_CLASS_CONST = 123;"),
+            new MarkedString('php', "const TEST_CLASS_CONST = 123;"),
             'Anim labore veniam consectetur laboris minim quis aute aute esse nulla ad.'
         ], $reference->range), $result);
     }
@@ -136,7 +136,7 @@ class HoverTest extends ServerTestCase
             $reference->range->end
         )->wait();
         $this->assertEquals(new Hover([
-            new MarkedString('php', "<?php\nfunction test_function()"),
+            new MarkedString('php', "function test_function()"),
             'Officia aliquip adipisicing et nulla et laboris dolore labore.'
         ], $reference->range), $result);
     }
@@ -151,7 +151,7 @@ class HoverTest extends ServerTestCase
             $reference->range->end
         )->wait();
         $this->assertEquals(new Hover([
-            new MarkedString('php', "<?php\nconst TEST_CONST = 123;"),
+            new MarkedString('php', "const TEST_CONST = 123;"),
             'Esse commodo excepteur pariatur Lorem est aute incididunt reprehenderit.'
         ], $reference->range), $result);
     }
@@ -167,7 +167,7 @@ class HoverTest extends ServerTestCase
         )->wait();
         // TODO - should pretty print with fqns, like \define, \false. Not yet supported by tolerant-php-parser
         $this->assertEquals(new Hover([
-            new MarkedString('php', "<?php\ndefine('TEST_DEFINE_CONSTANT', false)"),
+            new MarkedString('php', "define('TEST_DEFINE_CONSTANT', false)"),
             'Lorem ipsum dolor sit amet, consectetur.'
         ], $reference->range), $result);
     }
@@ -179,7 +179,7 @@ class HoverTest extends ServerTestCase
         $uri = pathToUri(realpath(__DIR__ . '/../../../fixtures/references.php'));
         $result = $this->textDocument->hover(new TextDocumentIdentifier($uri), new Position(13, 7))->wait();
         $this->assertEquals(new Hover(
-            [new MarkedString('php', "<?php\n\$var = 123")],
+            [new MarkedString('php', "\$var = 123")],
             new Range(new Position(13, 5), new Position(13, 9))
         ), $result);
     }
@@ -192,7 +192,7 @@ class HoverTest extends ServerTestCase
         $result = $this->textDocument->hover(new TextDocumentIdentifier($uri), new Position(22, 11))->wait();
         $this->assertEquals(new Hover(
             [
-                new MarkedString('php', "<?php\nTestClass \$param"),
+                new MarkedString('php', "TestClass \$param"),
                 'Adipisicing non non cillum sint incididunt cillum enim mollit.'
             ],
             new Range(new Position(22, 9), new Position(22, 15))
@@ -206,7 +206,7 @@ class HoverTest extends ServerTestCase
         $uri = pathToUri(realpath(__DIR__ . '/../../../fixtures/global_symbols.php'));
         $result = $this->textDocument->hover(new TextDocumentIdentifier($uri), new Position(59, 11))->wait();
         $this->assertEquals(new Hover([
-            new MarkedString('php', "<?php\nclass TestClass implements TestInterface"),
+            new MarkedString('php', "class TestClass implements TestInterface"),
             'Pariatur ut laborum tempor voluptate consequat ea deserunt.' . "\n\n" .
             'Deserunt enim minim sunt sint ea nisi. Deserunt excepteur tempor id nostrud' . "\n" .
             'laboris commodo ad commodo velit mollit qui non officia id. Nulla duis veniam' . "\n" .

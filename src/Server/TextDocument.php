@@ -338,7 +338,7 @@ class TextDocument
             }
             $contents = [];
             if ($def->declarationLine) {
-                $contents[] = new MarkedString('php', "<?php\n" . $def->declarationLine);
+                $contents[] = new MarkedString('php', $def->declarationLine);
             }
             if ($def->documentation) {
                 $contents[] = $def->documentation;
