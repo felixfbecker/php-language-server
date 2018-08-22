@@ -1,31 +1,25 @@
 {
-  "name": "php-language-server",
-  "version": "0.0.0-development",
   "private": true,
-  "scripts": {
-    "commitmsg": "validate-commit-msg",
-    "semantic-release": "semantic-release"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/felixfbecker/php-language-server.git"
   },
   "devDependencies": {
-    "@semantic-release/github": "^2.0.0",
-    "@semantic-release/last-release-git-tag": "^2.0.0",
-    "cz-conventional-changelog": "^2.0.0",
-    "husky": "^0.14.3",
-    "semantic-release": "^11.0.0",
-    "semantic-release-docker": "^2.0.0",
-    "validate-commit-msg": "^2.14.0"
-  },
-  "config": {
-    "commitizen": {
-      "path": "./node_modules/cz-conventional-changelog"
-    }
+    "@semantic-release/exec": "^3.1.0",
+    "semantic-release": "^15.9.9",
+    "semantic-release-docker": "^2.1.0"
   },
   "release": {
     "verifyConditions": [
       "@semantic-release/github",
       "semantic-release-docker"
     ],
-    "getLastRelease": "@semantic-release/last-release-git-tag",
+    "prepare": [
+      {
+        "path": "@semantic-release/exec",
+        "cmd": "composer install --prefer-dist --no-interaction && docker build -t felixfbecker/php-language-server ."
+      }
+    ],
     "publish": [
       "@semantic-release/github",
       {
@@ -33,9 +27,5 @@
         "name": "felixfbecker/php-language-server"
       }
     ]
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/felixfbecker/php-language-server.git"
   }
 }
