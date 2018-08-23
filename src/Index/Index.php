@@ -210,7 +210,6 @@ class Index implements ReadableIndex, \Serializable
     }
 
     /**
-     * @param string $serialized
      * @return string
      */
     public function serialize()
