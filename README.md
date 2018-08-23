@@ -86,7 +86,7 @@ Definitions resolved just-in-time when needed:
 Not supported yet:
  - constants with `define()`
 
-Namespaces are not considerd a declaration by design because they only make up a part of the fully qualified name
+Namespaces are not considered a declaration by design because they only make up a part of the fully qualified name
 and don't map to one unique declaration.
 
 ### What is considered a reference?
