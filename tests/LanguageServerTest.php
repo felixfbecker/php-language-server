@@ -61,14 +61,14 @@ class LanguageServerTest extends TestCase
                 if ($msg->body->params->type === MessageType::ERROR) {
                     $promise->reject(new Exception($msg->body->params->message));
                 } else if (preg_match('/All \d+ PHP files parsed/', $msg->body->params->message)) {
-                    $promise->fulfill();
+                    $promise->fulfill(true);
                 }
             }
         });
         $server = new LanguageServer($input, $output);
         $capabilities = new ClientCapabilities;
         $server->initialize($capabilities, realpath(__DIR__ . '/../fixtures'), getmypid(), new Options);
-        $promise->wait();
+        $this->assertTrue($promise->wait());
     }
 
     public function testIndexingWithFilesAndContentRequests()
