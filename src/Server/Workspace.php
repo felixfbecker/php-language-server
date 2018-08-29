@@ -3,7 +3,7 @@ declare(strict_types = 1);
 
 namespace LanguageServer\Server;
 
-use LanguageServer\{LanguageClient, Project, PhpDocumentLoader, Options, Indexer};
+use LanguageServer\{LanguageClient, PhpDocumentLoader};
 use LanguageServer\Index\{ProjectIndex, DependenciesIndex, Index};
 use LanguageServer\Protocol\{
     FileChangeType,
@@ -16,7 +16,7 @@ use LanguageServer\Protocol\{
 };
 use Sabre\Event\Promise;
 use function Sabre\Event\coroutine;
-use function LanguageServer\{waitForEvent, getPackageName};
+use function LanguageServer\waitForEvent;
 
 /**
  * Provides method handlers for all workspace/* methods
@@ -33,7 +33,7 @@ class Workspace
      *
      * @var ProjectIndex
      */
-    private $index;
+    private $projectIndex;
 
     /**
      * @var DependenciesIndex
@@ -44,16 +44,6 @@ class Workspace
      * @var Index
      */
     private $sourceIndex;
-
-    /**
-     * @var Options
-     */
-    private $options;
-
-    /**
-     * @var Indexer
-     */
-    private $indexer;
 
     /**
      * @var \stdClass
@@ -67,25 +57,21 @@ class Workspace
 
     /**
      * @param LanguageClient    $client            LanguageClient instance used to signal updated results
-     * @param ProjectIndex      $index             Index that is searched on a workspace/symbol request
+     * @param ProjectIndex      $projectIndex      Index that is used to wait for full index completeness
      * @param DependenciesIndex $dependenciesIndex Index that is used on a workspace/xreferences request
      * @param DependenciesIndex $sourceIndex       Index that is used on a workspace/xreferences request
      * @param \stdClass         $composerLock      The parsed composer.lock of the project, if any
      * @param PhpDocumentLoader $documentLoader    PhpDocumentLoader instance to load documents
-     * @param Indexer           $indexer
-     * @param Options            $options
      */
-    public function __construct(LanguageClient $client, ProjectIndex $index, DependenciesIndex $dependenciesIndex, Index $sourceIndex, \stdClass $composerLock = null, PhpDocumentLoader $documentLoader, \stdClass $composerJson = null, Indexer $indexer = null, Options $options = null)
+    public function __construct(LanguageClient $client, ProjectIndex $projectIndex, DependenciesIndex $dependenciesIndex, Index $sourceIndex, \stdClass $composerLock = null, PhpDocumentLoader $documentLoader, \stdClass $composerJson = null)
     {
         $this->client = $client;
         $this->sourceIndex = $sourceIndex;
-        $this->index = $index;
+        $this->projectIndex = $projectIndex;
         $this->dependenciesIndex = $dependenciesIndex;
         $this->composerLock = $composerLock;
         $this->documentLoader = $documentLoader;
         $this->composerJson = $composerJson;
-        $this->indexer = $indexer;
-        $this->options = $options;
     }
 
     /**
@@ -98,11 +84,11 @@ class Workspace
     {
         return coroutine(function () use ($query) {
             // Wait until indexing for definitions finished
-            if (!$this->index->isStaticComplete()) {
-                yield waitForEvent($this->index, 'static-complete');
+            if (!$this->sourceIndex->isStaticComplete()) {
+                yield waitForEvent($this->sourceIndex, 'static-complete');
             }
             $symbols = [];
-            foreach ($this->index->getDefinitions() as $fqn => $definition) {
+            foreach ($this->sourceIndex->getDefinitions() as $fqn => $definition) {
                 if ($query === '' || stripos($fqn, $query) !== false) {
                     $symbols[] = $definition->symbolInformation;
                 }
@@ -135,13 +121,14 @@ class Workspace
      */
     public function xreferences($query, array $files = null): Promise
     {
+        // TODO: $files is unused in the coroutine
         return coroutine(function () use ($query, $files) {
             if ($this->composerLock === null) {
                 return [];
             }
             // Wait until indexing finished
-            if (!$this->index->isComplete()) {
-                yield waitForEvent($this->index, 'complete');
+            if (!$this->projectIndex->isComplete()) {
+                yield waitForEvent($this->projectIndex, 'complete');
             }
             /** Map from URI to array of referenced FQNs in dependencies */
             $refs = [];
@@ -160,38 +147,11 @@ class Workspace
             $refInfos = [];
             foreach ($refs as $uri => $fqns) {
                 foreach ($fqns as $fqn) {
-                    $def = $this->dependenciesIndex->getDefinition($fqn);
-                    $symbol = new SymbolDescriptor;
-                    $symbol->fqsen = $fqn;
-                    foreach (get_object_vars($def->symbolInformation) as $prop => $val) {
-                        $symbol->$prop = $val;
-                    }
-                    // Find out package name
-                    $packageName = getPackageName($def->symbolInformation->location->uri, $this->composerJson);
-                    foreach (array_merge($this->composerLock->packages, $this->composerLock->{'packages-dev'}) as $package) {
-                        if ($package->name === $packageName) {
-                            $symbol->package = $package;
-                            break;
-                        }
-                    }
-                    // If there was no FQSEN provided, check if query attributes match
-                    if (!isset($query->fqsen)) {
-                        $matches = true;
-                        foreach (get_object_vars($query) as $prop => $val) {
-                            if ($query->$prop != $symbol->$prop) {
-                                $matches = false;
-                                break;
-                            }
-                        }
-                        if (!$matches) {
-                            continue;
-                        }
-                    }
                     $doc = yield $this->documentLoader->getOrLoad($uri);
                     foreach ($doc->getReferenceNodesByFqn($fqn) as $node) {
                         $refInfo = new ReferenceInformation;
                         $refInfo->reference = Location::fromNode($node);
-                        $refInfo->symbol = $symbol;
+                        $refInfo->symbol = $query;
                         $refInfos[] = $refInfo;
                     }
                 }
@@ -209,80 +169,9 @@ class Workspace
             return [];
         }
         $dependencyReferences = [];
-        foreach (array_merge($this->composerLock->packages, $this->composerLock->{'packages-dev'}) as $package) {
+        foreach (array_merge($this->composerLock->packages, (array)$this->composerLock->{'packages-dev'}) as $package) {
             $dependencyReferences[] = new DependencyReference($package);
         }
         return $dependencyReferences;
-    }
-
-    /**
-     * A notification sent from the client to the server to signal the change of configuration settings.
-     *
-     * The default paramter type is Options but it also accepts different types
-     * which will be transformed on demand.
-     *
-     * Currently only the vscode format is supported
-     *
-     * @param mixed|null $settings
-     * @return bool
-     * @throws \Exception Settings format not valid
-     */
-    public function didChangeConfiguration($settings = null): bool
-    {
-        // List of options that affect the indexer
-        $indexerOptions = ['fileTypes'];
-
-        if ($settings === null) {
-            return false;
-        }
-
-        // VSC sends the settings with the config section as main key
-        if ($settings instanceof \stdClass && $settings->phpIntelliSense) {
-            $mapper = new \JsonMapper();
-            $settings = $mapper->map($settings->phpIntelliSense, new Options);
-        }
-
-        if (!($settings instanceof Options)) {
-            throw new \Exception('Settings format not valid.');
-        }
-
-        $changedOptions = $this->getChangedOptions($settings);
-
-        if (empty($changedOptions)) {
-            return false;
-        }
-
-        foreach (get_object_vars($settings) as $prop => $val) {
-            $this->options->$prop = $val;
-        }
-
-        if ($this->indexer && !empty(array_intersect($changedOptions, $indexerOptions))) {
-            // check list of options that changed since last time against the list of valid indexer options
-
-            // wipe main index and start reindexing
-            $this->index->wipe();
-            $this->indexer->index()->otherwise('\\LanguageServer\\crash');
-        }
-
-        return true;
-    }
-
-    /**
-     * Get a list with all options that changed since last time
-     *
-     * @param Options $settings
-     * @return array List with changed options
-     */
-    private function getChangedOptions(Options $settings): array
-    {
-        $old = get_object_vars($this->options);
-        $new = get_object_vars($settings);
-        $changed = array_udiff($old, $new, function ($a, $b) {
-            // custom callback since array_diff uses strings for comparison
-
-            return $a <=> $b;
-        });
-
-        return array_keys($changed);
     }
 }

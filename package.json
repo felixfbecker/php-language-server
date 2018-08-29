@@ -1,0 +1,31 @@
+{
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/felixfbecker/php-language-server.git"
+  },
+  "devDependencies": {
+    "@semantic-release/exec": "^3.1.0",
+    "semantic-release": "^15.9.9",
+    "semantic-release-docker": "^2.1.0"
+  },
+  "release": {
+    "verifyConditions": [
+      "@semantic-release/github",
+      "semantic-release-docker"
+    ],
+    "prepare": [
+      {
+        "path": "@semantic-release/exec",
+        "cmd": "composer install --prefer-dist --no-interaction && docker build -t felixfbecker/php-language-server ."
+      }
+    ],
+    "publish": [
+      "@semantic-release/github",
+      {
+        "path": "semantic-release-docker",
+        "name": "felixfbecker/php-language-server"
+      }
+    ]
+  }
+}

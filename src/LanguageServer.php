@@ -8,23 +8,19 @@ use LanguageServer\Protocol\{
     ClientCapabilities,
     TextDocumentSyncKind,
     Message,
-    MessageType,
     InitializeResult,
-    SymbolInformation,
-    TextDocumentIdentifier,
-    CompletionOptions
+    CompletionOptions,
+    SignatureHelpOptions
 };
 use LanguageServer\FilesFinder\{FilesFinder, ClientFilesFinder, FileSystemFilesFinder};
 use LanguageServer\ContentRetriever\{ContentRetriever, ClientContentRetriever, FileSystemContentRetriever};
 use LanguageServer\Index\{DependenciesIndex, GlobalIndex, Index, ProjectIndex, StubsIndex};
 use LanguageServer\Cache\{FileSystemCache, ClientCache};
 use AdvancedJsonRpc;
-use Sabre\Event\{Loop, Promise};
+use Sabre\Event\Promise;
 use function Sabre\Event\coroutine;
-use Exception;
 use Throwable;
 use Webmozart\PathUtil\Path;
-use Sabre\Uri;
 
 class LanguageServer extends AdvancedJsonRpc\Dispatcher
 {
@@ -111,7 +107,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     protected $definitionResolver;
 
     /**
-     * @param PotocolReader  $reader
+     * @param ProtocolReader  $reader
      * @param ProtocolWriter $writer
      */
     public function __construct(ProtocolReader $reader, ProtocolWriter $writer)
@@ -137,7 +133,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                     // If a ResponseError is thrown, send it back in the Response
                     $error = $e;
                 } catch (Throwable $e) {
-                    // If an unexpected error occured, send back an INTERNAL_ERROR error response
+                    // If an unexpected error occurred, send back an INTERNAL_ERROR error response
                     $error = new AdvancedJsonRpc\Error(
                         (string)$e,
                         AdvancedJsonRpc\ErrorCode::INTERNAL_ERROR,
@@ -275,8 +271,6 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
             $serverCapabilities->documentSymbolProvider = true;
             // Support "Find all symbols in workspace"
             $serverCapabilities->workspaceSymbolProvider = true;
-            // Support "Format Code"
-            $serverCapabilities->documentFormattingProvider = true;
             // Support "Go to definition"
             $serverCapabilities->definitionProvider = true;
             // Support "Find all references"
@@ -287,6 +281,10 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
             $serverCapabilities->completionProvider = new CompletionOptions;
             $serverCapabilities->completionProvider->resolveProvider = false;
             $serverCapabilities->completionProvider->triggerCharacters = ['$', '>'];
+
+            $serverCapabilities->signatureHelpProvider = new SignatureHelpOptions();
+            $serverCapabilities->signatureHelpProvider->triggerCharacters = ['(', ','];
+
             // Support global references
             $serverCapabilities->xworkspaceReferencesProvider = true;
             $serverCapabilities->xdefinitionProvider = true;

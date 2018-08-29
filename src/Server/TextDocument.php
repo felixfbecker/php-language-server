@@ -3,34 +3,33 @@ declare(strict_types = 1);
 
 namespace LanguageServer\Server;
 
-use PhpParser\PrettyPrinter\Standard as PrettyPrinter;
-use PhpParser\{Node, NodeTraverser};
-use LanguageServer\{LanguageClient, PhpDocumentLoader, PhpDocument, DefinitionResolver, CompletionProvider};
-use LanguageServer\NodeVisitor\VariableReferencesCollector;
-use LanguageServer\Protocol\{
-    SymbolLocationInformation,
-    SymbolDescriptor,
-    TextDocumentItem,
-    TextDocumentIdentifier,
-    VersionedTextDocumentIdentifier,
-    Position,
-    Range,
-    FormattingOptions,
-    TextEdit,
-    Location,
-    SymbolInformation,
-    ReferenceContext,
-    Hover,
-    MarkedString,
-    SymbolKind,
-    CompletionItem,
-    CompletionItemKind
+use LanguageServer\{
+    CompletionProvider, SignatureHelpProvider, LanguageClient, PhpDocument, PhpDocumentLoader, DefinitionResolver
 };
 use LanguageServer\Index\ReadableIndex;
+use LanguageServer\Protocol\{
+    FormattingOptions,
+    Hover,
+    Location,
+    MarkedString,
+    Position,
+    Range,
+    ReferenceContext,
+    SymbolDescriptor,
+    PackageDescriptor,
+    SymbolLocationInformation,
+    TextDocumentIdentifier,
+    TextDocumentItem,
+    VersionedTextDocumentIdentifier,
+    CompletionContext
+};
+use Microsoft\PhpParser\Node;
 use Sabre\Event\Promise;
 use Sabre\Uri;
+use function LanguageServer\{
+    isVendored, waitForEvent, getPackageName
+};
 use function Sabre\Event\coroutine;
-use function LanguageServer\{waitForEvent, isVendored};
 
 /**
  * Provides method handlers for all textDocument/* methods
@@ -50,11 +49,6 @@ class TextDocument
     protected $project;
 
     /**
-     * @var PrettyPrinter
-     */
-    protected $prettyPrinter;
-
-    /**
      * @var DefinitionResolver
      */
     protected $definitionResolver;
@@ -63,6 +57,11 @@ class TextDocument
      * @var CompletionProvider
      */
     protected $completionProvider;
+
+    /**
+     * @var SignatureHelpProvider
+     */
+    protected $signatureHelpProvider;
 
     /**
      * @var ReadableIndex
@@ -80,12 +79,12 @@ class TextDocument
     protected $composerLock;
 
     /**
-     * @param PhpDocumentLoader  $documentLoader
+     * @param PhpDocumentLoader $documentLoader
      * @param DefinitionResolver $definitionResolver
-     * @param LanguageClient     $client
-     * @param ReadableIndex      $index
-     * @param \stdClass          $composerJson
-     * @param \stdClass          $composerLock
+     * @param LanguageClient $client
+     * @param ReadableIndex $index
+     * @param \stdClass $composerJson
+     * @param \stdClass $composerLock
      */
     public function __construct(
         PhpDocumentLoader $documentLoader,
@@ -97,9 +96,9 @@ class TextDocument
     ) {
         $this->documentLoader = $documentLoader;
         $this->client = $client;
-        $this->prettyPrinter = new PrettyPrinter();
         $this->definitionResolver = $definitionResolver;
         $this->completionProvider = new CompletionProvider($this->definitionResolver, $index);
+        $this->signatureHelpProvider = new SignatureHelpProvider($this->definitionResolver, $index, $documentLoader);
         $this->index = $index;
         $this->composerJson = $composerJson;
         $this->composerLock = $composerLock;
@@ -158,26 +157,12 @@ class TextDocument
      * The document's truth now exists where the document's uri points to (e.g. if the document's uri is a file uri the
      * truth now exists on disk).
      *
-     * @param \LanguageServer\Protocol\TextDocumentItem $textDocument The document that was closed
+     * @param \LanguageServer\Protocol\TextDocumentIdentifier $textDocument The document that was closed
      * @return void
      */
     public function didClose(TextDocumentIdentifier $textDocument)
     {
         $this->documentLoader->close($textDocument->uri);
-    }
-
-    /**
-     * The document formatting request is sent from the server to the client to format a whole document.
-     *
-     * @param TextDocumentIdentifier $textDocument The document to format
-     * @param FormattingOptions $options The format options
-     * @return Promise <TextEdit[]>
-     */
-    public function formatting(TextDocumentIdentifier $textDocument, FormattingOptions $options)
-    {
-        return $this->documentLoader->getOrLoad($textDocument->uri)->then(function (PhpDocument $document) {
-            return $document->getFormattedText();
-        });
     }
 
     /**
@@ -202,31 +187,34 @@ class TextDocument
             // Variables always stay in the boundary of the file and need to be searched inside their function scope
             // by traversing the AST
             if (
-                $node instanceof Node\Expr\Variable
-                || $node instanceof Node\Param
-                || $node instanceof Node\Expr\ClosureUse
+
+            ($node instanceof Node\Expression\Variable && !($node->getParent()->getParent() instanceof Node\PropertyDeclaration))
+                || $node instanceof Node\Parameter
+                || $node instanceof Node\UseVariableName
             ) {
-                if ($node->name instanceof Node\Expr) {
+                if (isset($node->name) && $node->name instanceof Node\Expression) {
                     return null;
                 }
                 // Find function/method/closure scope
                 $n = $node;
-                while (isset($n) && !($n instanceof Node\FunctionLike)) {
-                    $n = $n->getAttribute('parentNode');
+
+                $n = $n->getFirstAncestor(Node\Statement\FunctionDeclaration::class, Node\MethodDeclaration::class, Node\Expression\AnonymousFunctionCreationExpression::class, Node\SourceFileNode::class);
+
+                if ($n === null) {
+                    $n = $node->getFirstAncestor(Node\Statement\ExpressionStatement::class)->getParent();
                 }
-                if (!isset($n)) {
-                    $n = $node->getAttribute('ownerDocument');
-                }
-                $traverser = new NodeTraverser;
-                $refCollector = new VariableReferencesCollector($node->name);
-                $traverser->addVisitor($refCollector);
-                $traverser->traverse($n->getStmts());
-                foreach ($refCollector->nodes as $ref) {
-                    $locations[] = Location::fromNode($ref);
+
+                foreach ($n->getDescendantNodes() as $descendantNode) {
+                    if ($descendantNode instanceof Node\Expression\Variable &&
+                        $descendantNode->getName() === $node->getName()
+                    ) {
+                        $locations[] = Location::fromNode($descendantNode);
+                    }
                 }
             } else {
                 // Definition with a global FQN
                 $fqn = DefinitionResolver::getDefinedFqn($node);
+
                 // Wait until indexing finished
                 if (!$this->index->isComplete()) {
                     yield waitForEvent($this->index, 'complete');
@@ -251,6 +239,23 @@ class TextDocument
                 }
             }
             return $locations;
+        });
+    }
+
+    /**
+     * The signature help request is sent from the client to the server to request signature information at a given
+     * cursor position.
+     *
+     * @param TextDocumentIdentifier $textDocument The text document
+     * @param Position               $position     The position inside the text document
+     *
+     * @return Promise <SignatureHelp>
+     */
+    public function signatureHelp(TextDocumentIdentifier $textDocument, Position $position): Promise
+    {
+        return coroutine(function () use ($textDocument, $position) {
+            $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
+            return $this->signatureHelpProvider->getSignatureHelp($document, $position);
         });
     }
 
@@ -331,6 +336,7 @@ class TextDocument
             if ($def === null) {
                 return new Hover([], $range);
             }
+            $contents = [];
             if ($def->declarationLine) {
                 $contents[] = new MarkedString('php', "<?php\n" . $def->declarationLine);
             }
@@ -353,13 +359,14 @@ class TextDocument
      *
      * @param TextDocumentIdentifier The text document
      * @param Position $position The position
+     * @param CompletionContext|null $context The completion context
      * @return Promise <CompletionItem[]|CompletionList>
      */
-    public function completion(TextDocumentIdentifier $textDocument, Position $position): Promise
+    public function completion(TextDocumentIdentifier $textDocument, Position $position, CompletionContext $context = null): Promise
     {
-        return coroutine(function () use ($textDocument, $position) {
+        return coroutine(function () use ($textDocument, $position, $context) {
             $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
-            return $this->completionProvider->provideCompletion($document, $position);
+            return $this->completionProvider->provideCompletion($document, $position, $context);
         });
     }
 
@@ -384,9 +391,10 @@ class TextDocument
                 return [];
             }
             // Handle definition nodes
+            $fqn = DefinitionResolver::getDefinedFqn($node);
             while (true) {
                 if ($fqn) {
-                    $def = $this->index->getDefinition($definedFqn);
+                    $def = $this->index->getDefinition($fqn);
                 } else {
                     // Handle reference nodes
                     $def = $this->definitionResolver->resolveReferenceNodeToDefinition($node);
@@ -404,25 +412,14 @@ class TextDocument
             ) {
                 return [];
             }
-            $symbol = new SymbolDescriptor;
-            foreach (get_object_vars($def->symbolInformation) as $prop => $val) {
-                $symbol->$prop = $val;
-            }
-            $symbol->fqsen = $def->fqn;
+            // if Definition is inside a dependency, use the package name
             $packageName = getPackageName($def->symbolInformation->location->uri, $this->composerJson);
-            if ($packageName && $this->composerLock !== null) {
-                // Definition is inside a dependency
-                foreach (array_merge($this->composerLock->packages, $this->composerLock->{'packages-dev'}) as $package) {
-                    if ($package->name === $packageName) {
-                        $symbol->package = $package;
-                        break;
-                    }
-                }
-            } else if ($this->composerJson !== null) {
-                // Definition belongs to a root package
-                $symbol->package = $this->composerJson;
+            // else use the package name of the root package (if exists)
+            if (!$packageName && $this->composerJson !== null) {
+                $packageName = $this->composerJson->name;
             }
-            return [new SymbolLocationInformation($symbol, $symbol->location)];
+            $descriptor = new SymbolDescriptor($def->fqn, new PackageDescriptor($packageName));
+            return [new SymbolLocationInformation($descriptor, $def->symbolInformation->location)];
         });
     }
 }

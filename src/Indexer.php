@@ -8,16 +8,15 @@ use LanguageServer\FilesFinder\FilesFinder;
 use LanguageServer\Index\{DependenciesIndex, Index};
 use LanguageServer\Protocol\MessageType;
 use Webmozart\PathUtil\Path;
-use Composer\Semver\VersionParser;
 use Sabre\Event\Promise;
 use function Sabre\Event\coroutine;
 
 class Indexer
 {
     /**
-     * @var The prefix for every cache item
+     * @var int The prefix for every cache item
      */
-    const CACHE_VERSION = 1;
+    const CACHE_VERSION = 2;
 
     /**
      * @var FilesFinder
@@ -156,7 +155,7 @@ class Indexer
                 $packageKey = null;
                 $cacheKey = null;
                 $index = null;
-                foreach (array_merge($this->composerLock->packages, $this->composerLock->{'packages-dev'}) as $package) {
+                foreach (array_merge($this->composerLock->packages, (array)$this->composerLock->{'packages-dev'}) as $package) {
                     // Check if package name matches and version is absolute
                     // Dynamic constraints are not cached, because they can change every time
                     $packageVersion = ltrim($package->version, 'v');

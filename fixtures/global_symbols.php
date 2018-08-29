@@ -98,3 +98,22 @@ new class {
 };
 
 class ChildClass extends TestClass {}
+
+/**
+ * Lorem ipsum dolor sit amet, consectetur.
+ */
+define('TEST_DEFINE_CONSTANT', false);
+
+print TEST_DEFINE_CONSTANT ? 'true' : 'false';
+
+/**
+ * Neither this class nor its members are referenced anywhere
+ */
+class UnusedClass
+{
+    public $unusedProperty;
+
+    public function unusedMethod()
+    {        
+    }
+}

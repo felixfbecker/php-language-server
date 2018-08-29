@@ -151,12 +151,51 @@ class GlobalTest extends ServerTestCase
     {
         // $obj = new TestClass();
         // Get references for TestClass
-        $reference = $this->getReferenceLocations('TestClass')[0];
+        $reference = $this->getReferenceLocations('TestClass')[1];
         $result = $this->textDocument->references(
             new ReferenceContext,
             new TextDocumentIdentifier($reference->uri),
             $reference->range->start
         )->wait();
         $this->assertEquals($this->getReferenceLocations('TestClass'), $result);
+    }
+
+    public function testReferencesForUnusedClass()
+    {
+        // class UnusedClass
+        // Get references for UnusedClass
+        $symbolsUri = pathToUri(realpath(__DIR__ . '/../../../../fixtures/global_symbols.php'));
+        $result = $this->textDocument->references(
+            new ReferenceContext,
+            new TextDocumentIdentifier($symbolsUri),
+            new Position(111, 10)
+        )->wait();
+        $this->assertEquals([], $result);
+    }
+
+    public function testReferencesForUnusedProperty()
+    {
+        // public $unusedProperty
+        // Get references for unusedProperty
+        $symbolsUri = pathToUri(realpath(__DIR__ . '/../../../../fixtures/global_symbols.php'));
+        $result = $this->textDocument->references(
+            new ReferenceContext,
+            new TextDocumentIdentifier($symbolsUri),
+            new Position(113, 18)
+        )->wait();
+        $this->assertEquals([], $result);
+    }
+
+    public function testReferencesForUnusedMethod()
+    {
+        // public function unusedMethod()
+        // Get references for unusedMethod
+        $symbolsUri = pathToUri(realpath(__DIR__ . '/../../../../fixtures/global_symbols.php'));
+        $result = $this->textDocument->references(
+            new ReferenceContext,
+            new TextDocumentIdentifier($symbolsUri),
+            new Position(115, 26)
+        )->wait();
+        $this->assertEquals([], $result);
     }
 }

@@ -4,7 +4,6 @@ declare(strict_types = 1);
 namespace LanguageServer\Client;
 
 use LanguageServer\ClientHandler;
-use LanguageServer\Protocol\Message;
 use Sabre\Event\Promise;
 
 /**

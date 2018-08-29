@@ -3,10 +3,10 @@ declare(strict_types = 1);
 
 namespace LanguageServer;
 
-use PhpParser\Node;
+use LanguageServer\Index\ReadableIndex;
 use phpDocumentor\Reflection\{Types, Type, Fqsen, TypeResolver};
 use LanguageServer\Protocol\SymbolInformation;
-use Exception;
+use Generator;
 
 /**
  * Class used to represent symbols
@@ -38,12 +38,20 @@ class Definition
     public $extends;
 
     /**
-     * Only true for classes, interfaces, traits, functions and non-class constants
+     * False for classes, interfaces, traits, functions and non-class constants
+     * True for methods, properties and class constants
      * This is so methods and properties are not suggested in the global scope
      *
      * @var bool
      */
-    public $isGlobal;
+    public $isMember;
+
+    /**
+     * True if this definition is affected by global namespace fallback (global function or global constant)
+     *
+     * @var bool
+     */
+    public $roamed;
 
     /**
      * False for instance methods and properties
@@ -60,7 +68,7 @@ class Definition
     public $canBeInstantiated;
 
     /**
-     * @var Protocol\SymbolInformation
+     * @var SymbolInformation
      */
     public $symbolInformation;
 
@@ -70,7 +78,7 @@ class Definition
      * For functions and methods, this is the return type.
      * For any other declaration it will be null.
      * Can also be a compound type.
-     * If it is unknown, will be Types\Mixed.
+     * If it is unknown, will be Types\Mixed_.
      *
      * @var \phpDocumentor\Type|null
      */
@@ -89,4 +97,40 @@ class Definition
      * @var string
      */
     public $documentation;
+
+    /**
+     * Signature information if this definition is for a FunctionLike, for use in textDocument/signatureHelp
+     *
+     * @var SignatureInformation
+     */
+    public $signatureInformation;
+
+    /**
+     * Yields the definitons of all ancestor classes (the Definition fqn is yielded as key)
+     *
+     * @param ReadableIndex $index the index to search for needed definitions
+     * @param bool $includeSelf should the first yielded value be the current definition itself
+     * @return Generator
+     */
+    public function getAncestorDefinitions(ReadableIndex $index, bool $includeSelf = false): Generator
+    {
+        if ($includeSelf) {
+            yield $this->fqn => $this;
+        }
+        if ($this->extends !== null) {
+            // iterating once, storing the references and iterating again
+            // guarantees that closest definitions are yielded first
+            $definitions = [];
+            foreach ($this->extends as $fqn) {
+                $def = $index->getDefinition($fqn);
+                if ($def !== null) {
+                    yield $def->fqn => $def;
+                    $definitions[] = $def;
+                }
+            }
+            foreach ($definitions as $def) {
+                yield from $def->getAncestorDefinitions($index);
+            }
+        }
+    }
 }

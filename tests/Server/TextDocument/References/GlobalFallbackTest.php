@@ -3,12 +3,17 @@ declare(strict_types = 1);
 
 namespace LanguageServer\Tests\Server\TextDocument\References;
 
-use PHPUnit\Framework\TestCase;
-use LanguageServer\Tests\MockProtocolStream;
-use LanguageServer\{Server, LanguageClient, PhpDocumentLoader, DefinitionResolver};
-use LanguageServer\Index\{Index, ProjectIndex, DependenciesIndex};
+use LanguageServer\{
+    LanguageClient, PhpDocumentLoader, Server, DefinitionResolver
+};
 use LanguageServer\ContentRetriever\FileSystemContentRetriever;
-use LanguageServer\Protocol\{TextDocumentIdentifier, Position, ReferenceContext, Location, Range, ClientCapabilities};
+use LanguageServer\Index\{
+    DependenciesIndex, Index, ProjectIndex
+};
+use LanguageServer\Protocol\{
+    Location, Position, Range, ReferenceContext, TextDocumentIdentifier
+};
+use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\Tests\Server\ServerTestCase;
 
 class GlobalFallbackTest extends ServerTestCase

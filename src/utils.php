@@ -5,7 +5,6 @@ namespace LanguageServer;
 
 use Throwable;
 use InvalidArgumentException;
-use PhpParser\Node;
 use Sabre\Event\{Loop, Promise, EmitterInterface};
 use Sabre\Uri;
 
@@ -95,23 +94,6 @@ function waitForEvent(EmitterInterface $emitter, string $event): Promise
 }
 
 /**
- * Returns the closest node of a specific type
- *
- * @param Node $node
- * @param string $type The node class name
- * @return Node|null $type
- */
-function getClosestNode(Node $node, string $type)
-{
-    $n = $node;
-    while ($n = $n->getAttribute('parentNode')) {
-        if ($n instanceof $type) {
-            return $n;
-        }
-    }
-}
-
-/**
  * Returns the part of $b that is not overlapped by $a
  * Example:
  *
@@ -166,9 +148,8 @@ function isVendored(PhpDocument $document, \stdClass $composerJson = null): bool
  * Check a given URI against the composer.json to see if it
  * is a vendored URI
  *
- * @param \stdClass|null $composerJson
  * @param string         $uri
- * @param array          $matches
+ * @param \stdClass|null $composerJson
  * @return string|null
  */
 function getPackageName(string $uri, \stdClass $composerJson = null)

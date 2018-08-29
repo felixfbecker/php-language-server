@@ -1,0 +1,47 @@
+{
+    "references": {
+        "LanguageServer\\Protocol": [
+            "./namespaces5.php"
+        ],
+        "LanguageServer": [
+            "./namespaces5.php"
+        ],
+        "LanguageServer\\Protocol\\TextDocumentIdentifier": [
+            "./namespaces5.php"
+        ],
+        "LanguageServer\\Protocol\\Position": [
+            "./namespaces5.php"
+        ],
+        "LanguageServer\\Protocol\\ReferenceContext": [
+            "./namespaces5.php"
+        ],
+        "LanguageServer\\Protocol\\Location": [
+            "./namespaces5.php"
+        ],
+        "LanguageServer\\Protocol\\Range": [
+            "./namespaces5.php"
+        ]
+    },
+    "definitions": {
+        "B": {
+            "fqn": "B",
+            "extends": [],
+            "isMember": false,
+            "roamed": false,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "B",
+                "kind": 3,
+                "location": {
+                    "uri": "./namespaces5.php"
+                },
+                "containerName": ""
+            },
+            "type": null,
+            "declarationLine": "namespace B;",
+            "documentation": null,
+            "signatureInformation": null
+        }
+    }
+}

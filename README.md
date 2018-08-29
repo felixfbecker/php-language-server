@@ -1,9 +1,11 @@
 # PHP Language Server
 
 [![Version](https://img.shields.io/packagist/v/felixfbecker/language-server.svg)](https://packagist.org/packages/felixfbecker/language-server)
-[![Build Status](https://travis-ci.org/felixfbecker/php-language-server.svg?branch=master)](https://travis-ci.org/felixfbecker/php-language-server)
+[![Linux Build Status](https://travis-ci.org/felixfbecker/php-language-server.svg?branch=master)](https://travis-ci.org/felixfbecker/php-language-server)
+[![Windows Build status](https://ci.appveyor.com/api/projects/status/2sp5ll052wdjqmdm/branch/master?svg=true)](https://ci.appveyor.com/project/felixfbecker/php-language-server/branch/master)
 [![Coverage](https://codecov.io/gh/felixfbecker/php-language-server/branch/master/graph/badge.svg)](https://codecov.io/gh/felixfbecker/php-language-server)
 [![Dependency Status](https://gemnasium.com/badges/github.com/felixfbecker/php-language-server.svg)](https://gemnasium.com/github.com/felixfbecker/php-language-server)
+[![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg)](https://github.com/semantic-release/semantic-release)
 [![Minimum PHP Version](https://img.shields.io/badge/php-%3E%3D%207.0-8892BF.svg)](https://php.net/)
 [![License](https://img.shields.io/packagist/l/felixfbecker/language-server.svg)](https://github.com/felixfbecker/php-language-server/blob/master/LICENSE.txt)
 [![Gitter](https://badges.gitter.im/felixfbecker/php-language-server.svg)](https://gitter.im/felixfbecker/php-language-server?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
@@ -11,11 +13,27 @@
 A pure PHP implementation of the open [Language Server Protocol](https://github.com/Microsoft/language-server-protocol).
 Provides static code analysis for PHP for any IDE.
 
-Uses the great [PHP-Parser](https://github.com/nikic/PHP-Parser),
+Uses the great [Tolerant PHP Parser](https://github.com/Microsoft/tolerant-php-parser),
 [phpDocumentor's DocBlock reflection](https://github.com/phpDocumentor/ReflectionDocBlock)
 and an [event loop](http://sabre.io/event/loop/) for concurrency.
 
+**Table of Contents**
+  - [Features](#features)
+  - [Performance](#performance)
+  - [Versioning](#versioning)
+  - [Installation](#installation)
+  - [Running](#running)
+  - [Used by](#used-by)
+  - [Contributing](#contributing)
+
+
 ## Features
+
+### [Completion](https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#textDocument_completion)
+![Completion search demo](images/completion.gif)
+
+### [Signature Help](https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#textDocument_signatureHelp)
+![Signature help demo](images/signatureHelp.gif)
 
 ### [Go To Definition](https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#goto-definition-request)
 ![Go To Definition demo](images/definition.gif)
@@ -39,9 +57,6 @@ For Parameters, it will return the `@param` tag.
 
 The query is matched case-insensitively against the fully qualified name of the symbol.  
 Non-Standard: An empty query will return _all_ symbols found in the workspace.
-
-### [Document Formatting](https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#document-formatting-request)
-![Document Formatting demo](images/formatDocument.gif)
 
 ### Error reporting through [Publish Diagnostics](https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#publishdiagnostics-notification)
 ![Error reporting demo](images/publishDiagnostics.png)
@@ -170,7 +185,7 @@ Example:
 #### `--memory-limit=integer` (optional)
 Sets memory limit for language server.
 Equivalent to [memory-limit](http://php.net/manual/en/ini.core.php#ini.memory-limit) php.ini directive.
-By default there is no memory limit.
+The default is 4GB (which is way more than needed).
 
 Example:
 
@@ -180,7 +195,8 @@ Example:
  - [VS Code PHP IntelliSense](https://github.com/felixfbecker/vscode-php-intellisense)
  - [Eclipse Che](https://eclipse.org/che/)
  - [Eclipse IDE (LSP4E-PHP)](https://github.com/eclipselabs/lsp4e-php)
- - [Neovim (nvim-cm-php-language-server)](https://github.com/roxma/nvim-cm-php-language-server)
+ - NeoVim: [LanguageServer-php-neovim](https://github.com/roxma/LanguageServer-php-neovim) with [LanguageClient neovim](https://github.com/autozimu/LanguageClient-neovim)
+ - Atom: [ide-php](https://github.com/atom/ide-php)
 
 ## Contributing
 
@@ -190,14 +206,21 @@ Clone the repository and run
     composer install
 
 to install dependencies.
-Then parse the stubs with
-
-    composer run-script parse-stubs
 
 Run the tests with 
 
-    vendor/bin/phpunit
+    composer test
 
 Lint with
 
-    vendor/bin/phpcs
+    composer lint
+    
+The project parses PHPStorm's PHP stubs to get support for PHP builtins. It re-parses them as needed after Composer processes, but after some code changes (such as ones involving the index or parsing) you may have to explicitly re-parse them:
+
+    composer run-script parse-stubs
+    
+To debug with xDebug ensure that you have this set as an environment variable
+
+    PHPLS_ALLOW_XDEBUG=1
+
+This tells the Language Server to not restart without XDebug if it detects that XDebug is enabled (XDebug has a high performance impact).

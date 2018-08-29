@@ -34,7 +34,7 @@ class NamespacedTest extends GlobalTest
     {
         // use TestNamespace\TestClass;
         // Get definition for TestClass
-        $reference = $this->getReferenceLocations('TestClass')[6];
+        $reference = $this->getReferenceLocations('TestClass')[7];
         $result = $this->textDocument->definition(
             new TextDocumentIdentifier($reference->uri),
             $reference->range->start
@@ -46,7 +46,7 @@ class NamespacedTest extends GlobalTest
     {
         // use TestNamespace\{TestTrait, TestInterface};
         // Get definition for TestInterface
-        $reference = $this->getReferenceLocations('TestClass')[0];
+        $reference = $this->getReferenceLocations('TestClass')[1];
         $result = $this->textDocument->definition(
             new TextDocumentIdentifier($reference->uri),
             $reference->range->start
