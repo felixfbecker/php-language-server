@@ -221,7 +221,7 @@ class Indexer
                 yield timeout();
                 $this->client->window->logMessage(MessageType::LOG, "Parsing $uri");
                 try {
-                    $document = yield $this->documentLoader->load($uri);
+                    $document = yield $this->documentLoader->load($uri, $this->options->fileSizeLimit);
                     if (!isVendored($document, $this->composerJson)) {
                         $this->client->textDocument->publishDiagnostics($uri, $document->getDiagnostics());
                     }
