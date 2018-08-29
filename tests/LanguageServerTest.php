@@ -30,7 +30,7 @@ class LanguageServerTest extends TestCase
     public function testInitialize()
     {
         $server = new LanguageServer(new MockProtocolStream, new MockProtocolStream);
-        $result = $server->initialize(new ClientCapabilities, __DIR__, getmypid())->wait();
+        $result = $server->initialize(new ClientCapabilities, __DIR__, getmypid(), new Options)->wait();
 
         $serverCapabilities = new ServerCapabilities();
         $serverCapabilities->textDocumentSync = TextDocumentSyncKind::FULL;
@@ -67,7 +67,7 @@ class LanguageServerTest extends TestCase
         });
         $server = new LanguageServer($input, $output);
         $capabilities = new ClientCapabilities;
-        $server->initialize($capabilities, realpath(__DIR__ . '/../fixtures'), getmypid());
+        $server->initialize($capabilities, realpath(__DIR__ . '/../fixtures'), getmypid(), new Options);
         $promise->wait();
     }
 
@@ -115,7 +115,7 @@ class LanguageServerTest extends TestCase
         $capabilities = new ClientCapabilities;
         $capabilities->xfilesProvider = true;
         $capabilities->xcontentProvider = true;
-        $server->initialize($capabilities, $rootPath, getmypid());
+        $server->initialize($capabilities, $rootPath, getmypid(), new Options);
         $promise->wait();
         $this->assertTrue($filesCalled);
         $this->assertTrue($contentCalled);
@@ -127,24 +127,22 @@ class LanguageServerTest extends TestCase
         $input = new MockProtocolStream;
         $output = new MockProtocolStream;
         $options = new Options;
-
         $options->setFileTypes([
             '.php',
             '.inc'
         ]);
-
-        $output->on('message', function (Message $msg) use ($promise, &$foundFiles) {
+        $output->on('message', function (Message $msg) use ($promise, &$allFilesParsed) {
             if ($msg->body->method === 'window/logMessage' && $promise->state === Promise::PENDING) {
                 if ($msg->body->params->type === MessageType::ERROR) {
                     $promise->reject(new Exception($msg->body->params->message));
-                } else if (strpos($msg->body->params->message, 'All 27 PHP files parsed') !== false) {
-                    $promise->fulfill();
+                } elseif (preg_match('/All \d+ PHP files parsed/', $msg->body->params->message)) {
+                    $promise->fulfill(true);
                 }
             }
         });
         $server = new LanguageServer($input, $output);
         $capabilities = new ClientCapabilities;
         $server->initialize($capabilities, realpath(__DIR__ . '/../fixtures'), getmypid(), $options);
-        $promise->wait();
+        $this->assertTrue($promise->wait());
     }
 }

@@ -147,14 +147,4 @@ abstract class AbstractAggregateIndex implements ReadableIndex
         }
         return $refs;
     }
-
-    /**
-     * Wipe all indexes for a reindex
-     */
-    public function wipe()
-    {
-        foreach ($this->getIndexes() as $index) {
-            $index->wipe();
-        }
-    }
 }

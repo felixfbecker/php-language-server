@@ -54,6 +54,11 @@ class Indexer
     private $documentLoader;
 
     /**
+     * @var Options
+     */
+    private $options;
+
+    /**
      * @var \stdClasss
      */
     private $composerLock;
@@ -64,20 +69,15 @@ class Indexer
     private $composerJson;
 
     /**
-     * @var Options
-     */
-    private $options;
-
-    /**
-     * @param FilesFinder            $filesFinder
-     * @param string                 $rootPath
-     * @param LanguageClient         $client
-     * @param Cache                  $cache
-     * @param DependenciesIndex      $dependenciesIndex
-     * @param Index                  $sourceIndex
-     * @param PhpDocumentLoader      $documentLoader
-     * @param \stdClass|null         $composerLock
-     * @param Options|null           $options
+     * @param FilesFinder       $filesFinder
+     * @param string            $rootPath
+     * @param LanguageClient    $client
+     * @param Cache             $cache
+     * @param DependenciesIndex $dependenciesIndex
+     * @param Index             $sourceIndex
+     * @param Options           $options
+     * @param PhpDocumentLoader $documentLoader
+     * @param \stdClass|null    $composerLock
      */
     public function __construct(
         FilesFinder $filesFinder,
@@ -87,9 +87,9 @@ class Indexer
         DependenciesIndex $dependenciesIndex,
         Index $sourceIndex,
         PhpDocumentLoader $documentLoader,
+        Options $options,
         \stdClass $composerLock = null,
-        \stdClass $composerJson = null,
-        Options $options = null
+        \stdClass $composerJson = null
     ) {
         $this->filesFinder = $filesFinder;
         $this->rootPath = $rootPath;
@@ -98,9 +98,9 @@ class Indexer
         $this->dependenciesIndex = $dependenciesIndex;
         $this->sourceIndex = $sourceIndex;
         $this->documentLoader = $documentLoader;
+        $this->options = $options;
         $this->composerLock = $composerLock;
         $this->composerJson = $composerJson;
-        $this->options = $options;
     }
 
     /**

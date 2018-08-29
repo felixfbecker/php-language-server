@@ -1,11 +1,12 @@
 <?php
+declare(strict_types = 1);
 
 namespace LanguageServer;
 
 class Options
 {
     /**
-     * Filetypes the indexer should process
+     * File types the indexer should process
      *
      * @var string[]
      */
@@ -14,14 +15,14 @@ class Options
     /**
      * Validate/Filter input and set options for file types
      *
-     * @param array $fileTypes List of file types
+     * @param string[] $fileTypes List of file types
      */
     public function setFileTypes(array $fileTypes)
     {
         $fileTypes = filter_var_array($fileTypes, FILTER_SANITIZE_STRING);
-        $fileTypes =  filter_var($fileTypes, FILTER_CALLBACK, ['options' => [$this, 'filterFileTypes']]); // validate file type format
-        $fileTypes = array_filter($fileTypes, 'strlen'); // filter empty items
-        $fileTypes = array_values($fileTypes); //rebase indexes
+        $fileTypes =  filter_var($fileTypes, FILTER_CALLBACK, ['options' => [$this, 'filterFileTypes']]);
+        $fileTypes = array_filter($fileTypes, 'strlen');
+        $fileTypes = array_values($fileTypes);
 
         $this->fileTypes = !empty($fileTypes) ? $fileTypes : $this->fileTypes;
     }
