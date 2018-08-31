@@ -85,7 +85,6 @@ class Indexer
      * @param Cache             $cache
      * @param DependenciesIndex $dependenciesIndex
      * @param Index             $sourceIndex
-     * @param Options           $options
      * @param PhpDocumentLoader $documentLoader
      * @param \stdClass|null    $composerLock
      */
@@ -97,7 +96,6 @@ class Indexer
         DependenciesIndex $dependenciesIndex,
         Index $sourceIndex,
         PhpDocumentLoader $documentLoader,
-        Options $options,
         \stdClass $composerLock = null,
         \stdClass $composerJson = null
     ) {
@@ -108,11 +106,24 @@ class Indexer
         $this->dependenciesIndex = $dependenciesIndex;
         $this->sourceIndex = $sourceIndex;
         $this->documentLoader = $documentLoader;
-        $this->options = $options;
         $this->composerLock = $composerLock;
         $this->composerJson = $composerJson;
         $this->hasCancellationSignal = false;
         $this->isIndexing = false;
+        $this->options = new Options();
+    }
+
+    /**
+     * @param Options $options
+     */
+    public function setOptions(Options $options)
+    {
+        $this->options = $options;
+    }
+
+    public function getOptions(): Options
+    {
+        return $this->options;
     }
 
     /**
@@ -156,6 +167,7 @@ class Indexer
             $this->client->window->logMessage(MessageType::INFO, 'Indexing project for definitions and static references');
             yield $this->indexFiles($source);
             $this->sourceIndex->setStaticComplete();
+
             // Dynamic references
             $this->client->window->logMessage(MessageType::INFO, 'Indexing project for dynamic references');
             yield $this->indexFiles($source);
@@ -243,6 +255,7 @@ class Indexer
             }
 
             $this->hasCancellationSignal = false;
+            $this->client->window->logMessage(MessageType::INFO, 'Indexing project canceled');
         });
     }
 
@@ -254,6 +267,7 @@ class Indexer
     {
         return coroutine(function () use ($files) {
             foreach ($files as $i => $uri) {
+                // abort current running indexing
                 if ($this->hasCancellationSignal) {
                     return;
                 }

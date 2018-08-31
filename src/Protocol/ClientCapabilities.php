@@ -24,4 +24,9 @@ class ClientCapabilities
      * @var bool|null
      */
     public $xcacheProvider;
+
+    /**
+     * @var WorkspaceClientCapabilities
+     */
+    public $workspace;
 }

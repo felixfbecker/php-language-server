@@ -47,11 +47,6 @@ class Workspace
     private $sourceIndex;
 
     /**
-     * @var Options
-     */
-    private $options;
-
-    /**
      * @var Indexer
      */
     private $indexer;
@@ -71,7 +66,6 @@ class Workspace
      * @param ProjectIndex      $projectIndex      Index that is used to wait for full index completeness
      * @param DependenciesIndex $dependenciesIndex Index that is used on a workspace/xreferences request
      * @param DependenciesIndex $sourceIndex       Index that is used on a workspace/xreferences request
-     * @param Options           $options           Initialization options that are used on a workspace/didChangeConfiguration
      * @param Indexer           $indexer
      * @param \stdClass         $composerLock      The parsed composer.lock of the project, if any
      * @param PhpDocumentLoader $documentLoader    PhpDocumentLoader instance to load documents
@@ -81,7 +75,6 @@ class Workspace
         ProjectIndex $projectIndex,
         DependenciesIndex $dependenciesIndex,
         Index $sourceIndex,
-        Options $options,
         Indexer $indexer,
         \stdClass $composerLock = null,
         PhpDocumentLoader $documentLoader,
@@ -94,7 +87,6 @@ class Workspace
         $this->composerLock = $composerLock;
         $this->documentLoader = $documentLoader;
         $this->composerJson = $composerJson;
-        $this->options = $options;
         $this->indexer = $indexer;
     }
 
@@ -205,36 +197,32 @@ class Workspace
     /**
      * A notification sent from the client to the server to signal the change of configuration settings.
      *
-     * @param \stdClass $settings Settings as JSON object structure with php as primary key
+     * @param mixed $settings Settings as JSON object structure with php as primary key
      * @return Promise
      */
-    public function didChangeConfiguration(\stdClass $settings): Promise
+    public function didChangeConfiguration($settings): Promise
     {
-        xdebug_break();
         return coroutine(function () use ($settings) {
+            if (!property_exists($settings, 'php') || $settings->php === new \stdClass()) {
+                return;
+            }
+
             try {
-                xdebug_break();
                 $mapper = new \JsonMapper();
-                $settings = $mapper->map($settings->php, new Options);
+                $options = $mapper->map($settings->php, new Options);
 
-                if ($this->options == $settings) {
-                    return;
+                // handle options for indexer
+                $currentIndexerOptions = $this->indexer->getOptions();
+                $this->indexer->setOptions($options);
+
+                if ($this->hasIndexerOptionsChanged($currentIndexerOptions, $options)) {
+                    if ($this->indexer->isIndexing()) {
+                        yield $this->indexer->cancel();
+                    }
+
+                    $this->projectIndex->wipe();
+                    $this->indexer->index()->otherwise('\\LanguageServer\\crash');
                 }
-
-                // @TODO: get changed settings and apply them
-                // @TODO: check settings that affect the indexer
-
-                if ($this->indexer->isIndexing()) {
-                    yield $this->indexer->cancel();
-                }
-
-                $this->projectIndex->wipe();
-                $this->indexer->index();
-
-                $this->client->window->showMessage(
-                    MessageType::INFO,
-                    'Reindexing with new settings.'
-                );
             } catch (\JsonMapper_Exception $exception) {
                 $this->client->window->showMessage(
                     MessageType::ERROR,
@@ -243,5 +231,28 @@ class Workspace
                 $this->client->window->logMessage(MessageType::ERROR, $exception->getMessage());
             }
         });
+    }
+
+    /**
+     * Compare current options with new
+     *
+     * When the new options differ from the current, then we need start
+     * to reindex the project folder.
+     *
+     * @param Options $current
+     * @param Options $new
+     * @return bool
+     */
+    private function hasIndexerOptionsChanged(Options $current, Options $new): bool
+    {
+        $properties = ['fileTypes'];
+
+        foreach ($properties as $property) {
+            if ($current->{$property} !== $new->{$property}) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

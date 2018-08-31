@@ -118,6 +118,16 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     protected $cache;
 
     /**
+     * @var ClientCapabilities
+     */
+    protected $clientCapabilities;
+
+    /**
+     * @var Indexer
+     */
+    protected $indexer;
+
+    /**
      * @param ProtocolReader  $reader
      * @param ProtocolWriter $writer
      */
@@ -203,6 +213,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
             $stubsIndex = StubsIndex::read();
             $this->globalIndex = new GlobalIndex($stubsIndex, $this->projectIndex);
             $this->rootPath = $rootPath;
+            $this->clientCapabilities = $capabilities;
 
             // The DefinitionResolver should look in stubs, the project source and dependencies
             $this->definitionResolver = new DefinitionResolver($this->globalIndex);
@@ -244,6 +255,43 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                 }
 
                 $this->cache = $capabilities->xcacheProvider ? new ClientCache($this->client) : new FileSystemCache;
+
+                // Index in background
+                $this->indexer = new Indexer(
+                    $this->filesFinder,
+                    $this->rootPath,
+                    $this->client,
+                    $this->cache,
+                    $dependenciesIndex,
+                    $sourceIndex,
+                    $this->documentLoader,
+                    $this->composerLock,
+                    $this->composerJson
+                );
+            }
+
+            if ($this->textDocument === null) {
+                $this->textDocument = new Server\TextDocument(
+                    $this->documentLoader,
+                    $this->definitionResolver,
+                    $this->client,
+                    $this->globalIndex,
+                    $this->composerJson,
+                    $this->composerLock
+                );
+            }
+
+            if ($this->workspace === null) {
+                $this->workspace = new Server\Workspace(
+                    $this->client,
+                    $this->projectIndex,
+                    $dependenciesIndex,
+                    $sourceIndex,
+                    $this->indexer,
+                    $this->composerLock,
+                    $this->documentLoader,
+                    $this->composerJson
+                );
             }
 
             $serverCapabilities = new ServerCapabilities();
@@ -286,55 +334,31 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     public function initialized(): Promise
     {
         return coroutine(function () {
-            list($sourceIndex, $dependenciesIndex) = $this->projectIndex->getIndexes();
-            $mapper = new \JsonMapper();
-            $configurationitem = new ConfigurationItem();
-            $configurationitem->section = 'php';
-            $configuration = yield $this->client->workspace->configuration([$configurationitem]);
-            $options = $mapper->map($configuration[0], new Options());
-
-            if ($this->rootPath) {
-                // Index in background
-                $indexer = new Indexer(
-                    $this->filesFinder,
-                    $this->rootPath,
-                    $this->client,
-                    $this->cache,
-                    $dependenciesIndex,
-                    $sourceIndex,
-                    $this->documentLoader,
-                    $options,
-                    $this->composerLock,
-                    $this->composerJson
-                );
-
-                $indexer->index()->otherwise('\\LanguageServer\\crash');
+            if (!$this->rootPath) {
+                return;
             }
 
-            if ($this->textDocument === null) {
-                $this->textDocument = new Server\TextDocument(
-                    $this->documentLoader,
-                    $this->definitionResolver,
-                    $this->client,
-                    $this->globalIndex,
-                    $this->composerJson,
-                    $this->composerLock
-                );
+            // request configuration if it is supported
+            // support comes with protocol version 3.6.0
+            if ($this->clientCapabilities->workspace->configuration) {
+                $configurationitem = new ConfigurationItem();
+                $configurationitem->section = 'php';
+                $configuration = yield $this->client->workspace->configuration([$configurationitem]);
+                $options = $this->mapper->map($configuration[0], new Options());
             }
 
-            if ($this->workspace === null) {
-                $this->workspace = new Server\Workspace(
-                    $this->client,
-                    $this->projectIndex,
-                    $dependenciesIndex,
-                    $sourceIndex,
-                    $options,
-                    $indexer,
-                    $this->composerLock,
-                    $this->documentLoader,
-                    $this->composerJson
-                );
+            // depending on the implementation of the client
+            // the workspace/didChangeConfiguration can be invoked before
+            // the response from the workspace/configuration request is resolved
+            if ($this->indexer->isIndexing()) {
+                return;
             }
+
+            if ($options) {
+                $this->indexer->setOptions($options);
+            }
+
+            $this->indexer->index()->otherwise('\\LanguageServer\\crash');
         });
     }
 
