@@ -54,6 +54,11 @@ class Indexer
     private $documentLoader;
 
     /**
+     * @var Options
+     */
+    private $options;
+
+    /**
      * @var \stdClasss
      */
     private $composerLock;
@@ -62,6 +67,16 @@ class Indexer
      * @var \stdClasss
      */
     private $composerJson;
+
+    /**
+     * @var bool
+     */
+    private $hasCancellationSignal;
+
+    /**
+     * @var bool
+     */
+    private $isIndexing;
 
     /**
      * @param FilesFinder       $filesFinder
@@ -93,6 +108,22 @@ class Indexer
         $this->documentLoader = $documentLoader;
         $this->composerLock = $composerLock;
         $this->composerJson = $composerJson;
+        $this->hasCancellationSignal = false;
+        $this->isIndexing = false;
+        $this->options = new Options();
+    }
+
+    /**
+     * @param Options $options
+     */
+    public function setOptions(Options $options)
+    {
+        $this->options = $options;
+    }
+
+    public function getOptions(): Options
+    {
+        return $this->options;
     }
 
     /**
@@ -103,13 +134,14 @@ class Indexer
     public function index(): Promise
     {
         return coroutine(function () {
-
-            $pattern = Path::makeAbsolute('**/*.php', $this->rootPath);
+            $fileTypes = implode(',', $this->options->fileTypes);
+            $pattern = Path::makeAbsolute('**/*{' . $fileTypes . '}', $this->rootPath);
             $uris = yield $this->filesFinder->find($pattern);
 
             $count = count($uris);
             $startTime = microtime(true);
             $this->client->window->logMessage(MessageType::INFO, "$count files total");
+            $this->isIndexing = true;
 
             /** @var string[] */
             $source = [];
@@ -135,6 +167,7 @@ class Indexer
             $this->client->window->logMessage(MessageType::INFO, 'Indexing project for definitions and static references');
             yield $this->indexFiles($source);
             $this->sourceIndex->setStaticComplete();
+
             // Dynamic references
             $this->client->window->logMessage(MessageType::INFO, 'Indexing project for dynamic references');
             yield $this->indexFiles($source);
@@ -187,12 +220,42 @@ class Indexer
                 }
             }
 
+            $this->isIndexing = false;
             $duration = (int)(microtime(true) - $startTime);
             $mem = (int)(memory_get_usage(true) / (1024 * 1024));
             $this->client->window->logMessage(
                 MessageType::INFO,
                 "All $count PHP files parsed in $duration seconds. $mem MiB allocated."
             );
+        });
+    }
+
+    /**
+     * Return current indexing state
+     *
+     * @return bool
+     */
+    public function isIndexing(): bool
+    {
+        return $this->isIndexing;
+    }
+
+    /**
+     * Cancel all running indexing processes
+     *
+     * @return Promise
+     */
+    public function cancel(): Promise
+    {
+        return coroutine(function () {
+            $this->hasCancellationSignal = true;
+
+            while ($this->isIndexing()) {
+                yield timeout();
+            }
+
+            $this->hasCancellationSignal = false;
+            $this->client->window->logMessage(MessageType::INFO, 'Indexing project canceled');
         });
     }
 
@@ -204,6 +267,11 @@ class Indexer
     {
         return coroutine(function () use ($files) {
             foreach ($files as $i => $uri) {
+                // abort current running indexing
+                if ($this->hasCancellationSignal) {
+                    return;
+                }
+
                 // Skip open documents
                 if ($this->documentLoader->isOpen($uri)) {
                     continue;

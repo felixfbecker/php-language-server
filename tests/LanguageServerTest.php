@@ -5,6 +5,7 @@ namespace LanguageServer\Tests;
 
 use PHPUnit\Framework\TestCase;
 use LanguageServer\LanguageServer;
+use LanguageServer\Options;
 use LanguageServer\Protocol\{
     Message,
     ClientCapabilities,
@@ -55,19 +56,25 @@ class LanguageServerTest extends TestCase
         $promise = new Promise;
         $input = new MockProtocolStream;
         $output = new MockProtocolStream;
-        $output->on('message', function (Message $msg) use ($promise) {
-            if ($msg->body->method === 'window/logMessage' && $promise->state === Promise::PENDING) {
+        $output->on('message', function (Message $msg) use ($promise, $input) {
+            if ($msg->body->method === 'workspace/configuration') {
+                $result = new \stdClass();
+                $result->fileTypes = ['.php'];
+
+                $input->write(new Message(new AdvancedJsonRpc\SuccessResponse($msg->body->id, [$result])));
+            } elseif ($msg->body->method === 'window/logMessage' && $promise->state === Promise::PENDING) {
                 if ($msg->body->params->type === MessageType::ERROR) {
                     $promise->reject(new Exception($msg->body->params->message));
                 } else if (preg_match('/All \d+ PHP files parsed/', $msg->body->params->message)) {
-                    $promise->fulfill();
+                    $promise->fulfill(true);
                 }
             }
         });
         $server = new LanguageServer($input, $output);
         $capabilities = new ClientCapabilities;
         $server->initialize($capabilities, realpath(__DIR__ . '/../fixtures'), getmypid());
-        $promise->wait();
+        $server->initialized();
+        $this->assertTrue($promise->wait());
     }
 
     public function testIndexingWithFilesAndContentRequests()
@@ -80,7 +87,12 @@ class LanguageServerTest extends TestCase
         $output = new MockProtocolStream;
         $run = 1;
         $output->on('message', function (Message $msg) use ($promise, $input, $rootPath, &$filesCalled, &$contentCalled, &$run) {
-            if ($msg->body->method === 'textDocument/xcontent') {
+            if ($msg->body->method === 'workspace/configuration') {
+                $result = new \stdClass();
+                $result->fileTypes = ['.php'];
+
+                $input->write(new Message(new AdvancedJsonRpc\SuccessResponse($msg->body->id, [$result])));
+            } elseif ($msg->body->method === 'textDocument/xcontent') {
                 // Document content requested
                 $contentCalled = true;
                 $textDocumentItem = new TextDocumentItem;
@@ -114,9 +126,37 @@ class LanguageServerTest extends TestCase
         $capabilities = new ClientCapabilities;
         $capabilities->xfilesProvider = true;
         $capabilities->xcontentProvider = true;
-        $server->initialize($capabilities, $rootPath, getmypid());
+        $server->initialize($capabilities, $rootPath, getmypid())->wait();
+        $server->initialized();
         $promise->wait();
         $this->assertTrue($filesCalled);
         $this->assertTrue($contentCalled);
+    }
+
+    public function testIndexingMultipleFileTypes()
+    {
+        $promise = new Promise;
+        $input = new MockProtocolStream;
+        $output = new MockProtocolStream;
+
+        $output->on('message', function (Message $msg) use ($promise, $input) {
+            if ($msg->body->method === 'workspace/configuration') {
+                $result = new \stdClass();
+                $result->fileTypes = ['.php', '.inc'];
+
+                $input->write(new Message(new AdvancedJsonRpc\SuccessResponse($msg->body->id, [$result])));
+            } elseif ($msg->body->method === 'window/logMessage' && $promise->state === Promise::PENDING) {
+                if ($msg->body->params->type === MessageType::ERROR) {
+                    $promise->reject(new Exception($msg->body->params->message));
+                } elseif (preg_match('/All \d+ PHP files parsed/', $msg->body->params->message)) {
+                    $promise->fulfill(true);
+                }
+            }
+        });
+        $server = new LanguageServer($input, $output);
+        $capabilities = new ClientCapabilities;
+        $server->initialize($capabilities, realpath(__DIR__ . '/../fixtures'), getmypid());
+        $server->initialized();
+        $this->assertTrue($promise->wait());
     }
 }

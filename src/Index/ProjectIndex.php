@@ -35,7 +35,7 @@ class ProjectIndex extends AbstractAggregateIndex
     /**
      * @return ReadableIndex[]
      */
-    protected function getIndexes(): array
+    public function getIndexes(): array
     {
         return [$this->sourceIndex, $this->dependenciesIndex];
     }

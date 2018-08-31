@@ -4,6 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer;
 
 use LanguageServer\Protocol\{
+    ConfigurationItem,
     ServerCapabilities,
     ClientCapabilities,
     TextDocumentSyncKind,
@@ -15,7 +16,7 @@ use LanguageServer\Protocol\{
 use LanguageServer\FilesFinder\{FilesFinder, ClientFilesFinder, FileSystemFilesFinder};
 use LanguageServer\ContentRetriever\{ContentRetriever, ClientContentRetriever, FileSystemContentRetriever};
 use LanguageServer\Index\{DependenciesIndex, GlobalIndex, Index, ProjectIndex, StubsIndex};
-use LanguageServer\Cache\{FileSystemCache, ClientCache};
+use LanguageServer\Cache\{Cache, FileSystemCache, ClientCache};
 use AdvancedJsonRpc;
 use Sabre\Event\Promise;
 use function Sabre\Event\coroutine;
@@ -107,6 +108,26 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     protected $definitionResolver;
 
     /**
+     * @var string|null
+     */
+    protected $rootPath;
+
+    /**
+     * @var Cache
+     */
+    protected $cache;
+
+    /**
+     * @var ClientCapabilities
+     */
+    protected $clientCapabilities;
+
+    /**
+     * @var Indexer
+     */
+    protected $indexer;
+
+    /**
      * @param ProtocolReader  $reader
      * @param ProtocolWriter $writer
      */
@@ -162,13 +183,18 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
      *
      * @param ClientCapabilities $capabilities The capabilities provided by the client (editor)
      * @param string|null $rootPath The rootPath of the workspace. Is null if no folder is open.
-     * @param int|null $processId The process Id of the parent process that started the server. Is null if the process has not been started by another process. If the parent process is not alive then the server should exit (see exit notification) its process.
+     * @param int|null $processId The process Id of the parent process that started the server.
+     *                            Is null if the process has not been started by another process.
+     *                            If the parent process is not alive then the server should exit
+     *                            (see exit notification) its process.
      * @return Promise <InitializeResult>
      */
-    public function initialize(ClientCapabilities $capabilities, string $rootPath = null, int $processId = null): Promise
-    {
+    public function initialize(
+        ClientCapabilities $capabilities,
+        string $rootPath = null,
+        int $processId = null
+    ): Promise {
         return coroutine(function () use ($capabilities, $rootPath, $processId) {
-
             if ($capabilities->xfilesProvider) {
                 $this->filesFinder = new ClientFilesFinder($this->client);
             } else {
@@ -186,56 +212,63 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
             $this->projectIndex = new ProjectIndex($sourceIndex, $dependenciesIndex, $this->composerJson);
             $stubsIndex = StubsIndex::read();
             $this->globalIndex = new GlobalIndex($stubsIndex, $this->projectIndex);
+            $this->rootPath = $rootPath;
+            $this->clientCapabilities = $capabilities;
 
             // The DefinitionResolver should look in stubs, the project source and dependencies
             $this->definitionResolver = new DefinitionResolver($this->globalIndex);
-
             $this->documentLoader = new PhpDocumentLoader(
                 $this->contentRetriever,
                 $this->projectIndex,
                 $this->definitionResolver
             );
 
-            if ($rootPath !== null) {
-                yield $this->beforeIndex($rootPath);
+            if ($this->rootPath !== null) {
+                yield $this->beforeIndex($this->rootPath);
 
                 // Find composer.json
                 if ($this->composerJson === null) {
-                    $composerJsonFiles = yield $this->filesFinder->find(Path::makeAbsolute('**/composer.json', $rootPath));
+                    $composerJsonFiles = yield $this->filesFinder->find(
+                        Path::makeAbsolute('**/composer.json', $this->rootPath)
+                    );
                     sortUrisLevelOrder($composerJsonFiles);
 
                     if (!empty($composerJsonFiles)) {
-                        $this->composerJson = json_decode(yield $this->contentRetriever->retrieve($composerJsonFiles[0]));
+                        $this->composerJson = json_decode(
+                            yield $this->contentRetriever->retrieve($composerJsonFiles[0])
+                        );
                     }
                 }
 
                 // Find composer.lock
                 if ($this->composerLock === null) {
-                    $composerLockFiles = yield $this->filesFinder->find(Path::makeAbsolute('**/composer.lock', $rootPath));
+                    $composerLockFiles = yield $this->filesFinder->find(
+                        Path::makeAbsolute('**/composer.lock', $this->rootPath)
+                    );
                     sortUrisLevelOrder($composerLockFiles);
 
                     if (!empty($composerLockFiles)) {
-                        $this->composerLock = json_decode(yield $this->contentRetriever->retrieve($composerLockFiles[0]));
+                        $this->composerLock = json_decode(
+                            yield $this->contentRetriever->retrieve($composerLockFiles[0])
+                        );
                     }
                 }
 
-                $cache = $capabilities->xcacheProvider ? new ClientCache($this->client) : new FileSystemCache;
+                $this->cache = $capabilities->xcacheProvider ? new ClientCache($this->client) : new FileSystemCache;
 
                 // Index in background
-                $indexer = new Indexer(
+                $this->indexer = new Indexer(
                     $this->filesFinder,
-                    $rootPath,
+                    $this->rootPath,
                     $this->client,
-                    $cache,
+                    $this->cache,
                     $dependenciesIndex,
                     $sourceIndex,
                     $this->documentLoader,
                     $this->composerLock,
                     $this->composerJson
                 );
-                $indexer->index()->otherwise('\\LanguageServer\\crash');
             }
-
 
             if ($this->textDocument === null) {
                 $this->textDocument = new Server\TextDocument(
@@ -247,12 +280,14 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                     $this->composerLock
                 );
             }
+
             if ($this->workspace === null) {
                 $this->workspace = new Server\Workspace(
                     $this->client,
                     $this->projectIndex,
                     $dependenciesIndex,
                     $sourceIndex,
+                    $this->indexer,
                     $this->composerLock,
                     $this->documentLoader,
                     $this->composerJson
@@ -290,9 +325,45 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     }
 
     /**
+     * The initialized notification is sent from the client to the server after
+     * the client received the result of the initialize request but before the
+     * client is sending any other request or notification to the server.
+     *
+     * @return Promise
+     */
+    public function initialized(): Promise
+    {
+        return coroutine(function () {
+            if (!$this->rootPath) {
+                return;
+            }
+
+            // request configuration if it is supported
+            // support comes with protocol version 3.6.0
+            if ($this->clientCapabilities->workspace->configuration) {
+                $configuration = yield $this->client->workspace->configuration([new ConfigurationItem('php')]);
+                $options = $this->mapper->map($configuration[0], new Options());
+            }
+
+            // depending on the implementation of the client
+            // the workspace/didChangeConfiguration can be invoked before
+            // the response from the workspace/configuration request is resolved
+            if ($this->indexer->isIndexing()) {
+                return;
+            }
+
+            if ($options) {
+                $this->indexer->setOptions($options);
+            }
+
+            $this->indexer->index()->otherwise('\\LanguageServer\\crash');
+        });
+    }
+
+    /**
      * The shutdown request is sent from the client to the server. It asks the server to shut down, but to not exit
-     * (otherwise the response might not be delivered correctly to the client). There is a separate exit notification that
-     * asks the server to exit.
+     * (otherwise the response might not be delivered correctly to the client). There is a separate exit notification
+     * that asks the server to exit.
      *
      * @return void
      */

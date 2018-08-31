@@ -4,6 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer\Client;
 
 use LanguageServer\ClientHandler;
+use LanguageServer\Protocol\ConfigurationItem;
 use LanguageServer\Protocol\TextDocumentIdentifier;
 use Sabre\Event\Promise;
 use JsonMapper;
@@ -43,5 +44,25 @@ class Workspace
         )->then(function (array $textDocuments) {
             return $this->mapper->mapArray($textDocuments, [], TextDocumentIdentifier::class);
         });
+    }
+
+    /**
+     * The workspace/configuration request is sent from the server to the
+     * client to fetch configuration settings from the client.
+     *
+     * The request can fetch n configuration settings in one roundtrip.
+     * The order of the returned configuration settings correspond to the order
+     * of the passed ConfigurationItems (e.g. the first item in the response is
+     * the result for the first configuration item in the params).
+     *
+     * @param ConfigurationItem[] $items
+     * @return Promise <mixed[]>
+     */
+    public function configuration(array $items): Promise
+    {
+        return $this->handler->request(
+            'workspace/configuration',
+            ['items' => $items]
+        );
     }
 }
