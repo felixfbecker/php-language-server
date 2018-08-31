@@ -452,7 +452,9 @@ class DefinitionResolver
             // Repeat for parent class
             if ($implementorDef->extends) {
                 foreach ($implementorDef->extends as $extends) {
-                    $implementorFqns[] = $extends;
+                    if ($extends !== $implementorFqn) {
+                        $implementorFqns[] = $extends;
+                    }
                 }
             }
         }
