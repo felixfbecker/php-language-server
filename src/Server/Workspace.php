@@ -3,11 +3,12 @@ declare(strict_types = 1);
 
 namespace LanguageServer\Server;
 
-use LanguageServer\{LanguageClient, PhpDocumentLoader};
+use LanguageServer\{Indexer, LanguageClient, Options, PhpDocumentLoader};
 use LanguageServer\Index\{ProjectIndex, DependenciesIndex, Index};
 use LanguageServer\Protocol\{
     FileChangeType,
     FileEvent,
+    MessageType,
     SymbolInformation,
     SymbolDescriptor,
     ReferenceInformation,
@@ -46,6 +47,16 @@ class Workspace
     private $sourceIndex;
 
     /**
+     * @var Options
+     */
+    private $options;
+
+    /**
+     * @var Indexer
+     */
+    private $indexer;
+
+    /**
      * @var \stdClass
      */
     public $composerLock;
@@ -60,11 +71,22 @@ class Workspace
      * @param ProjectIndex      $projectIndex      Index that is used to wait for full index completeness
      * @param DependenciesIndex $dependenciesIndex Index that is used on a workspace/xreferences request
      * @param DependenciesIndex $sourceIndex       Index that is used on a workspace/xreferences request
+     * @param Options           $options           Initialization options that are used on a workspace/didChangeConfiguration
+     * @param Indexer           $indexer
      * @param \stdClass         $composerLock      The parsed composer.lock of the project, if any
      * @param PhpDocumentLoader $documentLoader    PhpDocumentLoader instance to load documents
      */
-    public function __construct(LanguageClient $client, ProjectIndex $projectIndex, DependenciesIndex $dependenciesIndex, Index $sourceIndex, \stdClass $composerLock = null, PhpDocumentLoader $documentLoader, \stdClass $composerJson = null)
-    {
+    public function __construct(
+        LanguageClient $client,
+        ProjectIndex $projectIndex,
+        DependenciesIndex $dependenciesIndex,
+        Index $sourceIndex,
+        Options $options,
+        Indexer $indexer,
+        \stdClass $composerLock = null,
+        PhpDocumentLoader $documentLoader,
+        \stdClass $composerJson = null
+    ) {
         $this->client = $client;
         $this->sourceIndex = $sourceIndex;
         $this->projectIndex = $projectIndex;
@@ -72,10 +94,13 @@ class Workspace
         $this->composerLock = $composerLock;
         $this->documentLoader = $documentLoader;
         $this->composerJson = $composerJson;
+        $this->options = $options;
+        $this->indexer = $indexer;
     }
 
     /**
-     * The workspace symbol request is sent from the client to the server to list project-wide symbols matching the query string.
+     * The workspace symbol request is sent from the client to the server to list
+     * project-wide symbols matching the query string.
      *
      * @param string $query
      * @return Promise <SymbolInformation[]>
@@ -98,7 +123,8 @@ class Workspace
     }
 
     /**
-     * The watched files notification is sent from the client to the server when the client detects changes to files watched by the language client.
+     * The watched files notification is sent from the client to the server when
+     * the client detects changes to files watched by the language client.
      *
      * @param FileEvent[] $changes
      * @return void
@@ -113,7 +139,8 @@ class Workspace
     }
 
     /**
-     * The workspace references request is sent from the client to the server to locate project-wide references to a symbol given its description / metadata.
+     * The workspace references request is sent from the client to the server to
+     * locate project-wide references to a symbol given its description / metadata.
      *
      * @param SymbolDescriptor $query Partial metadata about the symbol that is being searched for.
      * @param string[]         $files An optional list of files to restrict the search to.
@@ -173,5 +200,48 @@ class Workspace
             $dependencyReferences[] = new DependencyReference($package);
         }
         return $dependencyReferences;
+    }
+
+    /**
+     * A notification sent from the client to the server to signal the change of configuration settings.
+     *
+     * @param \stdClass $settings Settings as JSON object structure with php as primary key
+     * @return Promise
+     */
+    public function didChangeConfiguration(\stdClass $settings): Promise
+    {
+        xdebug_break();
+        return coroutine(function () use ($settings) {
+            try {
+                xdebug_break();
+                $mapper = new \JsonMapper();
+                $settings = $mapper->map($settings->php, new Options);
+
+                if ($this->options == $settings) {
+                    return;
+                }
+
+                // @TODO: get changed settings and apply them
+                // @TODO: check settings that affect the indexer
+
+                if ($this->indexer->isIndexing()) {
+                    yield $this->indexer->cancel();
+                }
+
+                $this->projectIndex->wipe();
+                $this->indexer->index();
+
+                $this->client->window->showMessage(
+                    MessageType::INFO,
+                    'Reindexing with new settings.'
+                );
+            } catch (\JsonMapper_Exception $exception) {
+                $this->client->window->showMessage(
+                    MessageType::ERROR,
+                    'Settings could not be applied. For more information see logs.'
+                );
+                $this->client->window->logMessage(MessageType::ERROR, $exception->getMessage());
+            }
+        });
     }
 }

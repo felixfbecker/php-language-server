@@ -222,4 +222,15 @@ class Index implements ReadableIndex, \Serializable
             'staticComplete' => $this->staticComplete
         ]);
     }
+
+    /**
+     * Clear indexed references and definitions
+     */
+    public function wipe()
+    {
+        $this->definitions = [];
+        $this->references = [];
+        $this->complete = false;
+        $this->staticComplete = false;
+    }
 }
