@@ -341,9 +341,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
             // request configuration if it is supported
             // support comes with protocol version 3.6.0
             if ($this->clientCapabilities->workspace->configuration) {
-                $configurationitem = new ConfigurationItem();
-                $configurationitem->section = 'php';
-                $configuration = yield $this->client->workspace->configuration([$configurationitem]);
+                $configuration = yield $this->client->workspace->configuration([new ConfigurationItem('php')]);
                 $options = $this->mapper->map($configuration[0], new Options());
             }
 

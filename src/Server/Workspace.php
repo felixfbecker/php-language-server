@@ -221,7 +221,7 @@ class Workspace
                     }
 
                     $this->projectIndex->wipe();
-                    $this->indexer->index()->otherwise('\\LanguageServer\\crash');
+                    yield $this->indexer->index();
                 }
             } catch (\JsonMapper_Exception $exception) {
                 $this->client->window->showMessage(

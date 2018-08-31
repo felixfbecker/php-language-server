@@ -56,7 +56,7 @@ class Workspace
      * the result for the first configuration item in the params).
      *
      * @param ConfigurationItem[] $items
-     * @return Promise
+     * @return Promise <mixed[]>
      */
     public function configuration(array $items): Promise
     {

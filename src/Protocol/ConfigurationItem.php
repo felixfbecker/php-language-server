@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 namespace LanguageServer\Protocol;
 
@@ -17,4 +18,10 @@ class ConfigurationItem
      * @var string|null
      */
     public $section;
+
+    public function __construct(string $section = null, string $scopeUri = null)
+    {
+        $this->section = $section;
+        $this->scopeUri = $scopeUri;
+    }
 }
