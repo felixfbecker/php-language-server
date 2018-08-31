@@ -30,7 +30,7 @@ class LanguageServerTest extends TestCase
     public function testInitialize()
     {
         $server = new LanguageServer(new MockProtocolStream, new MockProtocolStream);
-        $result = $server->initialize(new ClientCapabilities, __DIR__, getmypid(), new Options)->wait();
+        $result = $server->initialize(new ClientCapabilities, __DIR__, getmypid())->wait();
 
         $serverCapabilities = new ServerCapabilities();
         $serverCapabilities->textDocumentSync = TextDocumentSyncKind::FULL;
@@ -56,8 +56,13 @@ class LanguageServerTest extends TestCase
         $promise = new Promise;
         $input = new MockProtocolStream;
         $output = new MockProtocolStream;
-        $output->on('message', function (Message $msg) use ($promise) {
-            if ($msg->body->method === 'window/logMessage' && $promise->state === Promise::PENDING) {
+        $output->on('message', function (Message $msg) use ($promise, $input) {
+            if ($msg->body->method === 'workspace/configuration') {
+                $result = new \stdClass();
+                $result->fileTypes = ['.php'];
+
+                $input->write(new Message(new AdvancedJsonRpc\SuccessResponse($msg->body->id, [$result])));
+            } elseif ($msg->body->method === 'window/logMessage' && $promise->state === Promise::PENDING) {
                 if ($msg->body->params->type === MessageType::ERROR) {
                     $promise->reject(new Exception($msg->body->params->message));
                 } else if (preg_match('/All \d+ PHP files parsed/', $msg->body->params->message)) {
@@ -67,7 +72,8 @@ class LanguageServerTest extends TestCase
         });
         $server = new LanguageServer($input, $output);
         $capabilities = new ClientCapabilities;
-        $server->initialize($capabilities, realpath(__DIR__ . '/../fixtures'), getmypid(), new Options);
+        $server->initialize($capabilities, realpath(__DIR__ . '/../fixtures'), getmypid());
+        $server->initialized();
         $this->assertTrue($promise->wait());
     }
 
@@ -81,7 +87,12 @@ class LanguageServerTest extends TestCase
         $output = new MockProtocolStream;
         $run = 1;
         $output->on('message', function (Message $msg) use ($promise, $input, $rootPath, &$filesCalled, &$contentCalled, &$run) {
-            if ($msg->body->method === 'textDocument/xcontent') {
+            if ($msg->body->method === 'workspace/configuration') {
+                $result = new \stdClass();
+                $result->fileTypes = ['.php'];
+
+                $input->write(new Message(new AdvancedJsonRpc\SuccessResponse($msg->body->id, [$result])));
+            } elseif ($msg->body->method === 'textDocument/xcontent') {
                 // Document content requested
                 $contentCalled = true;
                 $textDocumentItem = new TextDocumentItem;
@@ -115,7 +126,8 @@ class LanguageServerTest extends TestCase
         $capabilities = new ClientCapabilities;
         $capabilities->xfilesProvider = true;
         $capabilities->xcontentProvider = true;
-        $server->initialize($capabilities, $rootPath, getmypid(), new Options);
+        $server->initialize($capabilities, $rootPath, getmypid())->wait();
+        $server->initialized();
         $promise->wait();
         $this->assertTrue($filesCalled);
         $this->assertTrue($contentCalled);
@@ -126,13 +138,14 @@ class LanguageServerTest extends TestCase
         $promise = new Promise;
         $input = new MockProtocolStream;
         $output = new MockProtocolStream;
-        $options = new Options;
-        $options->setFileTypes([
-            '.php',
-            '.inc'
-        ]);
-        $output->on('message', function (Message $msg) use ($promise, &$allFilesParsed) {
-            if ($msg->body->method === 'window/logMessage' && $promise->state === Promise::PENDING) {
+
+        $output->on('message', function (Message $msg) use ($promise, $input) {
+            if ($msg->body->method === 'workspace/configuration') {
+                $result = new \stdClass();
+                $result->fileTypes = ['.php', '.inc'];
+
+                $input->write(new Message(new AdvancedJsonRpc\SuccessResponse($msg->body->id, [$result])));
+            } elseif ($msg->body->method === 'window/logMessage' && $promise->state === Promise::PENDING) {
                 if ($msg->body->params->type === MessageType::ERROR) {
                     $promise->reject(new Exception($msg->body->params->message));
                 } elseif (preg_match('/All \d+ PHP files parsed/', $msg->body->params->message)) {
@@ -142,7 +155,8 @@ class LanguageServerTest extends TestCase
         });
         $server = new LanguageServer($input, $output);
         $capabilities = new ClientCapabilities;
-        $server->initialize($capabilities, realpath(__DIR__ . '/../fixtures'), getmypid(), $options);
+        $server->initialize($capabilities, realpath(__DIR__ . '/../fixtures'), getmypid());
+        $server->initialized();
         $this->assertTrue($promise->wait());
     }
 }
