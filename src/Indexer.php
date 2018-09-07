@@ -54,6 +54,11 @@ class Indexer
     private $documentLoader;
 
     /**
+     * @var Options
+     */
+    private $options;
+
+    /**
      * @var \stdClasss
      */
     private $composerLock;
@@ -70,6 +75,7 @@ class Indexer
      * @param Cache             $cache
      * @param DependenciesIndex $dependenciesIndex
      * @param Index             $sourceIndex
+     * @param Options           $options
      * @param PhpDocumentLoader $documentLoader
      * @param \stdClass|null    $composerLock
      */
@@ -81,6 +87,7 @@ class Indexer
         DependenciesIndex $dependenciesIndex,
         Index $sourceIndex,
         PhpDocumentLoader $documentLoader,
+        Options $options,
         \stdClass $composerLock = null,
         \stdClass $composerJson = null
     ) {
@@ -91,6 +98,7 @@ class Indexer
         $this->dependenciesIndex = $dependenciesIndex;
         $this->sourceIndex = $sourceIndex;
         $this->documentLoader = $documentLoader;
+        $this->options = $options;
         $this->composerLock = $composerLock;
         $this->composerJson = $composerJson;
     }
@@ -103,8 +111,8 @@ class Indexer
     public function index(): Promise
     {
         return coroutine(function () {
-
-            $pattern = Path::makeAbsolute('**/*.php', $this->rootPath);
+            $fileTypes = implode(',', $this->options->fileTypes);
+            $pattern = Path::makeAbsolute('**/*{' . $fileTypes . '}', $this->rootPath);
             $uris = yield $this->filesFinder->find($pattern);
 
             $count = count($uris);
@@ -213,7 +221,7 @@ class Indexer
                 yield timeout();
                 $this->client->window->logMessage(MessageType::LOG, "Parsing $uri");
                 try {
-                    $document = yield $this->documentLoader->load($uri);
+                    $document = yield $this->documentLoader->load($uri, $this->options->fileSizeLimit);
                     if (!isVendored($document, $this->composerJson)) {
                         $this->client->textDocument->publishDiagnostics($uri, $document->getDiagnostics());
                     }

@@ -100,13 +100,12 @@ class PhpDocumentLoader
      * The document is NOT added to the list of open documents, but definitions are registered.
      *
      * @param string $uri
+     * @param int $limit
      * @return Promise <PhpDocument>
      */
-    public function load(string $uri): Promise
+    public function load(string $uri, int $limit): Promise
     {
-        return coroutine(function () use ($uri) {
-
-            $limit = 150000;
+        return coroutine(function () use ($uri, $limit) {
             $content = yield $this->contentRetriever->retrieve($uri);
             $size = strlen($content);
             if ($size > $limit) {

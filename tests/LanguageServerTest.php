@@ -5,6 +5,7 @@ namespace LanguageServer\Tests;
 
 use PHPUnit\Framework\TestCase;
 use LanguageServer\LanguageServer;
+use LanguageServer\Options;
 use LanguageServer\Protocol\{
     Message,
     ClientCapabilities,
@@ -29,7 +30,7 @@ class LanguageServerTest extends TestCase
     public function testInitialize()
     {
         $server = new LanguageServer(new MockProtocolStream, new MockProtocolStream);
-        $result = $server->initialize(new ClientCapabilities, __DIR__, getmypid())->wait();
+        $result = $server->initialize(new ClientCapabilities, __DIR__, getmypid(), new Options)->wait();
 
         $serverCapabilities = new ServerCapabilities();
         $serverCapabilities->textDocumentSync = TextDocumentSyncKind::FULL;
@@ -60,14 +61,14 @@ class LanguageServerTest extends TestCase
                 if ($msg->body->params->type === MessageType::ERROR) {
                     $promise->reject(new Exception($msg->body->params->message));
                 } else if (preg_match('/All \d+ PHP files parsed/', $msg->body->params->message)) {
-                    $promise->fulfill();
+                    $promise->fulfill(true);
                 }
             }
         });
         $server = new LanguageServer($input, $output);
         $capabilities = new ClientCapabilities;
-        $server->initialize($capabilities, realpath(__DIR__ . '/../fixtures'), getmypid());
-        $promise->wait();
+        $server->initialize($capabilities, realpath(__DIR__ . '/../fixtures'), getmypid(), new Options);
+        $this->assertTrue($promise->wait());
     }
 
     public function testIndexingWithFilesAndContentRequests()
@@ -114,9 +115,34 @@ class LanguageServerTest extends TestCase
         $capabilities = new ClientCapabilities;
         $capabilities->xfilesProvider = true;
         $capabilities->xcontentProvider = true;
-        $server->initialize($capabilities, $rootPath, getmypid());
+        $server->initialize($capabilities, $rootPath, getmypid(), new Options);
         $promise->wait();
         $this->assertTrue($filesCalled);
         $this->assertTrue($contentCalled);
+    }
+
+    public function testIndexingMultipleFileTypes()
+    {
+        $promise = new Promise;
+        $input = new MockProtocolStream;
+        $output = new MockProtocolStream;
+        $options = new Options;
+        $options->setFileTypes([
+            '.php',
+            '.inc'
+        ]);
+        $output->on('message', function (Message $msg) use ($promise, &$allFilesParsed) {
+            if ($msg->body->method === 'window/logMessage' && $promise->state === Promise::PENDING) {
+                if ($msg->body->params->type === MessageType::ERROR) {
+                    $promise->reject(new Exception($msg->body->params->message));
+                } elseif (preg_match('/All \d+ PHP files parsed/', $msg->body->params->message)) {
+                    $promise->fulfill(true);
+                }
+            }
+        });
+        $server = new LanguageServer($input, $output);
+        $capabilities = new ClientCapabilities;
+        $server->initialize($capabilities, realpath(__DIR__ . '/../fixtures'), getmypid(), $options);
+        $this->assertTrue($promise->wait());
     }
 }
