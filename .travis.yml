@@ -41,13 +41,11 @@ jobs:
       services:
         - docker
       install:
-        - composer install --prefer-dist --no-interaction
         - nvm install 8
         - nvm use 8
         - npm install
       script:
-        - docker build -t felixfbecker/php-language-server .
-        - npm run semantic-release
+        - ./node_modules/.bin/semantic-release
 
 stages:
   - test

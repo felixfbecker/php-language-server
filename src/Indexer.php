@@ -147,7 +147,7 @@ class Indexer
                 $packageKey = null;
                 $cacheKey = null;
                 $index = null;
-                foreach (array_merge($this->composerLock->packages, $this->composerLock->{'packages-dev'}) as $package) {
+                foreach (array_merge($this->composerLock->packages, (array)$this->composerLock->{'packages-dev'}) as $package) {
                     // Check if package name matches and version is absolute
                     // Dynamic constraints are not cached, because they can change every time
                     $packageVersion = ltrim($package->version, 'v');
