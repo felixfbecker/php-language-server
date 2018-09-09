@@ -4,7 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer;
 
 use LanguageServer\Index\Index;
-use LanguageServer\Protocol\{
+use LanguageServerProtocol\{
     Diagnostic, Position, Range
 };
 use Microsoft\PhpParser;

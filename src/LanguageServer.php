@@ -3,15 +3,15 @@ declare(strict_types = 1);
 
 namespace LanguageServer;
 
-use LanguageServer\Protocol\{
+use LanguageServerProtocol\{
     ServerCapabilities,
     ClientCapabilities,
     TextDocumentSyncKind,
-    Message,
     InitializeResult,
     CompletionOptions,
     SignatureHelpOptions
 };
+use LanguageServer\Message;
 use LanguageServer\FilesFinder\{FilesFinder, ClientFilesFinder, FileSystemFilesFinder};
 use LanguageServer\ContentRetriever\{ContentRetriever, ClientContentRetriever, FileSystemContentRetriever};
 use LanguageServer\Index\{DependenciesIndex, GlobalIndex, Index, ProjectIndex, StubsIndex};

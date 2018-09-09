@@ -1,44 +1,16 @@
 <?php
 
-namespace LanguageServer\Protocol;
+namespace LanguageServer\Factory;
 
-use Microsoft\PhpParser;
+use LanguageServerProtocol\Location;
+use LanguageServerProtocol\SymbolInformation;
+use LanguageServerProtocol\SymbolKind;
 use Microsoft\PhpParser\Node;
+use Microsoft\PhpParser\ResolvedName;
+use LanguageServer\Factory\LocationFactory;
 
-/**
- * Represents information about programming constructs like variables, classes,
- * interfaces etc.
- */
-class SymbolInformation
+class SymbolInformationFactory
 {
-    /**
-     * The name of this symbol.
-     *
-     * @var string
-     */
-    public $name;
-
-    /**
-     * The kind of this symbol.
-     *
-     * @var int
-     */
-    public $kind;
-
-    /**
-     * The location of this symbol.
-     *
-     * @var Location
-     */
-    public $location;
-
-    /**
-     * The name of the symbol containing this symbol.
-     *
-     * @var string|null
-     */
-    public $containerName;
-
     /**
      * Converts a Node to a SymbolInformation
      *
@@ -48,7 +20,7 @@ class SymbolInformation
      */
     public static function fromNode($node, string $fqn = null)
     {
-        $symbol = new self;
+        $symbol = new SymbolInformation();
         if ($node instanceof Node\Statement\ClassDeclaration) {
             $symbol->kind = SymbolKind::CLASS_;
         } else if ($node instanceof Node\Statement\TraitDeclaration) {
@@ -98,7 +70,7 @@ class SymbolInformation
             $symbol->name = $node->getName();
         } else if (isset($node->name)) {
             if ($node->name instanceof Node\QualifiedName) {
-                $symbol->name = (string)PhpParser\ResolvedName::buildName($node->name->nameParts, $node->getFileContents());
+                $symbol->name = (string)ResolvedName::buildName($node->name->nameParts, $node->getFileContents());
             } else {
                 $symbol->name = ltrim((string)$node->name->getText($node->getFileContents()), "$");
             }
@@ -108,26 +80,12 @@ class SymbolInformation
             return null;
         }
 
-        $symbol->location = Location::fromNode($node);
+        $symbol->location = LocationFactory::fromNode($node);
         if ($fqn !== null) {
             $parts = preg_split('/(::|->|\\\\)/', $fqn);
             array_pop($parts);
             $symbol->containerName = implode('\\', $parts);
         }
         return $symbol;
-    }
-
-    /**
-     * @param string $name
-     * @param int $kind
-     * @param Location $location
-     * @param string $containerName
-     */
-    public function __construct($name = null, $kind = null, $location = null, $containerName = null)
-    {
-        $this->name = $name;
-        $this->kind = $kind;
-        $this->location = $location;
-        $this->containerName = $containerName;
     }
 }

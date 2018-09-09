@@ -41,12 +41,12 @@ class ClientHandler
     {
         $id = $this->idGenerator->generate();
         return $this->protocolWriter->write(
-            new Protocol\Message(
+            new Message(
                 new AdvancedJsonRpc\Request($id, $method, (object)$params)
             )
         )->then(function () use ($id) {
             $promise = new Promise;
-            $listener = function (Protocol\Message $msg) use ($id, $promise, &$listener) {
+            $listener = function (Message $msg) use ($id, $promise, &$listener) {
                 if (AdvancedJsonRpc\Response::isResponse($msg->body) && $msg->body->id === $id) {
                     // Received a response
                     $this->protocolReader->removeListener('message', $listener);
@@ -72,7 +72,7 @@ class ClientHandler
     public function notify(string $method, $params): Promise
     {
         return $this->protocolWriter->write(
-            new Protocol\Message(
+            new Message(
                 new AdvancedJsonRpc\Notification($method, (object)$params)
             )
         );

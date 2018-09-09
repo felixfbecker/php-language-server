@@ -9,7 +9,7 @@ use LanguageServer\{
 use LanguageServer\Index\{
     Index
 };
-use LanguageServer\Protocol\{
+use LanguageServerProtocol\{
     Position
 };
 use Microsoft\PhpParser;

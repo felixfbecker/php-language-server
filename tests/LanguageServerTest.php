@@ -5,8 +5,8 @@ namespace LanguageServer\Tests;
 
 use PHPUnit\Framework\TestCase;
 use LanguageServer\LanguageServer;
-use LanguageServer\Protocol\{
-    Message,
+use LanguageServer\Message;
+use LanguageServerProtocol\{
     ClientCapabilities,
     TextDocumentSyncKind,
     MessageType,

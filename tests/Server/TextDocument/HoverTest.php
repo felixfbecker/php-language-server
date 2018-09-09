@@ -6,7 +6,7 @@ namespace LanguageServer\Tests\Server\TextDocument;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\Tests\Server\ServerTestCase;
 use LanguageServer\{Server, LanguageClient, Project};
-use LanguageServer\Protocol\{TextDocumentIdentifier, Position, Range, Hover, MarkedString};
+use LanguageServerProtocol\{TextDocumentIdentifier, Position, Range, Hover, MarkedString};
 use function LanguageServer\pathToUri;
 
 class HoverTest extends ServerTestCase

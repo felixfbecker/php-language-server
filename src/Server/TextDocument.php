@@ -7,7 +7,9 @@ use LanguageServer\{
     CompletionProvider, SignatureHelpProvider, LanguageClient, PhpDocument, PhpDocumentLoader, DefinitionResolver
 };
 use LanguageServer\Index\ReadableIndex;
-use LanguageServer\Protocol\{
+use LanguageServer\Factory\LocationFactory;
+use LanguageServer\Factory\RangeFactory;
+use LanguageServerProtocol\{
     FormattingOptions,
     Hover,
     Location,
@@ -108,7 +110,7 @@ class TextDocument
      * The document symbol request is sent from the client to the server to list all symbols found in a given text
      * document.
      *
-     * @param \LanguageServer\Protocol\TextDocumentIdentifier $textDocument
+     * @param \LanguageServerProtocol\TextDocumentIdentifier $textDocument
      * @return Promise <SymbolInformation[]>
      */
     public function documentSymbol(TextDocumentIdentifier $textDocument): Promise
@@ -127,7 +129,7 @@ class TextDocument
      * document's truth is now managed by the client and the server must not try to read the document's truth using the
      * document's uri.
      *
-     * @param \LanguageServer\Protocol\TextDocumentItem $textDocument The document that was opened.
+     * @param \LanguageServerProtocol\TextDocumentItem $textDocument The document that was opened.
      * @return void
      */
     public function didOpen(TextDocumentItem $textDocument)
@@ -141,8 +143,8 @@ class TextDocument
     /**
      * The document change notification is sent from the client to the server to signal changes to a text document.
      *
-     * @param \LanguageServer\Protocol\VersionedTextDocumentIdentifier $textDocument
-     * @param \LanguageServer\Protocol\TextDocumentContentChangeEvent[] $contentChanges
+     * @param \LanguageServerProtocol\VersionedTextDocumentIdentifier $textDocument
+     * @param \LanguageServerProtocol\TextDocumentContentChangeEvent[] $contentChanges
      * @return void
      */
     public function didChange(VersionedTextDocumentIdentifier $textDocument, array $contentChanges)
@@ -157,7 +159,7 @@ class TextDocument
      * The document's truth now exists where the document's uri points to (e.g. if the document's uri is a file uri the
      * truth now exists on disk).
      *
-     * @param \LanguageServer\Protocol\TextDocumentIdentifier $textDocument The document that was closed
+     * @param \LanguageServerProtocol\TextDocumentIdentifier $textDocument The document that was closed
      * @return void
      */
     public function didClose(TextDocumentIdentifier $textDocument)
@@ -208,7 +210,7 @@ class TextDocument
                     if ($descendantNode instanceof Node\Expression\Variable &&
                         $descendantNode->getName() === $node->getName()
                     ) {
-                        $locations[] = Location::fromNode($descendantNode);
+                        $locations[] = LocationFactory::fromNode($descendantNode);
                     }
                 }
             } else {
@@ -233,7 +235,7 @@ class TextDocument
                     $refs = $document->getReferenceNodesByFqn($fqn);
                     if ($refs !== null) {
                         foreach ($refs as $ref) {
-                            $locations[] = Location::fromNode($ref);
+                            $locations[] = LocationFactory::fromNode($ref);
                         }
                     }
                 }
@@ -332,7 +334,7 @@ class TextDocument
                 }
                 yield waitForEvent($this->index, 'definition-added');
             }
-            $range = Range::fromNode($node);
+            $range = RangeFactory::fromNode($node);
             if ($def === null) {
                 return new Hover([], $range);
             }

@@ -10,7 +10,7 @@ use LanguageServer\{
 };
 use LanguageServer\Index\{Index, ProjectIndex, DependenciesIndex};
 use LanguageServer\ContentRetriever\FileSystemContentRetriever;
-use LanguageServer\Protocol\{
+use LanguageServerProtocol\{
     TextDocumentIdentifier,
     TextEdit,
     Range,
