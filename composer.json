@@ -24,7 +24,7 @@
         "php": "^7.0",
         "composer/xdebug-handler": "^1.0",
         "felixfbecker/advanced-json-rpc": "^3.0.0",
-        "felixfbecker/language-server-protocol": "dev-master",
+        "felixfbecker/language-server-protocol": "1.0.0",
         "jetbrains/phpstorm-stubs": "dev-master",
         "microsoft/tolerant-php-parser": "0.0.*",
         "netresearch/jsonmapper": "^1.0",
