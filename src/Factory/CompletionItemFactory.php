@@ -3,9 +3,9 @@
 namespace LanguageServer\Factory;
 
 use LanguageServer\Definition;
-use LanguageServer\Protocol\CompletionItem;
-use LanguageServer\Protocol\CompletionItemKind;
-use LanguageServer\Protocol\SymbolKind;
+use LanguageServerProtocol\CompletionItem;
+use LanguageServerProtocol\CompletionItemKind;
+use LanguageServerProtocol\SymbolKind;
 
 class CompletionItemFactory
 {

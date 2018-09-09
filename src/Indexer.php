@@ -6,7 +6,7 @@ namespace LanguageServer;
 use LanguageServer\Cache\Cache;
 use LanguageServer\FilesFinder\FilesFinder;
 use LanguageServer\Index\{DependenciesIndex, Index};
-use LanguageServer\Protocol\MessageType;
+use LanguageServerProtocol\MessageType;
 use Webmozart\PathUtil\Path;
 use Sabre\Event\Promise;
 use function Sabre\Event\coroutine;

@@ -6,7 +6,7 @@ namespace LanguageServer\Tests\Server\Workspace;
 use LanguageServer\ContentRetriever\FileSystemContentRetriever;
 use LanguageServer\{DefinitionResolver, LanguageClient, PhpDocumentLoader, Server};
 use LanguageServer\Index\{DependenciesIndex, Index, ProjectIndex};
-use LanguageServer\Protocol\{FileChangeType, FileEvent};
+use LanguageServerProtocol\{FileChangeType, FileEvent};
 use LanguageServer\Message;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\Tests\Server\ServerTestCase;

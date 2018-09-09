@@ -6,7 +6,7 @@ namespace LanguageServer\Server;
 use LanguageServer\{LanguageClient, PhpDocumentLoader};
 use LanguageServer\Index\{ProjectIndex, DependenciesIndex, Index};
 use LanguageServer\Factory\LocationFactory;
-use LanguageServer\Protocol\{
+use LanguageServerProtocol\{
     FileChangeType,
     FileEvent,
     SymbolInformation,

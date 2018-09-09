@@ -10,7 +10,7 @@ use LanguageServer\ContentRetriever\FileSystemContentRetriever;
 use LanguageServer\Index\{
     DependenciesIndex, Index, ProjectIndex
 };
-use LanguageServer\Protocol\{
+use LanguageServerProtocol\{
     Location, Position, Range, ReferenceContext, TextDocumentIdentifier
 };
 use LanguageServer\Tests\MockProtocolStream;

@@ -5,7 +5,7 @@ namespace LanguageServer;
 
 use LanguageServer\Index\ReadableIndex;
 use LanguageServer\Factory\CompletionItemFactory;
-use LanguageServer\Protocol\{
+use LanguageServerProtocol\{
     TextEdit,
     Range,
     Position,

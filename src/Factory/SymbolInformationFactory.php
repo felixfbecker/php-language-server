@@ -2,9 +2,9 @@
 
 namespace LanguageServer\Factory;
 
-use LanguageServer\Protocol\Location;
-use LanguageServer\Protocol\SymbolInformation;
-use LanguageServer\Protocol\SymbolKind;
+use LanguageServerProtocol\Location;
+use LanguageServerProtocol\SymbolInformation;
+use LanguageServerProtocol\SymbolKind;
 use Microsoft\PhpParser\Node;
 use Microsoft\PhpParser\ResolvedName;
 use LanguageServer\Factory\LocationFactory;

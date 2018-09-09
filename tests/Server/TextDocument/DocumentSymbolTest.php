@@ -6,7 +6,7 @@ namespace LanguageServer\Tests\Server\TextDocument;
 use LanguageServer\Tests\Server\ServerTestCase;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\{Server, LanguageClient, Project};
-use LanguageServer\Protocol\{TextDocumentIdentifier, SymbolInformation, SymbolKind, Position, Location, Range};
+use LanguageServerProtocol\{TextDocumentIdentifier, SymbolInformation, SymbolKind, Position, Location, Range};
 use function LanguageServer\pathToUri;
 
 class DocumentSymbolTest extends ServerTestCase

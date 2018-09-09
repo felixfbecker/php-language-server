@@ -4,7 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer;
 
 use LanguageServer\Factory\RangeFactory;
-use LanguageServer\Protocol\{Diagnostic, DiagnosticSeverity, Range, Position};
+use LanguageServerProtocol\{Diagnostic, DiagnosticSeverity, Range, Position};
 use phpDocumentor\Reflection\DocBlockFactory;
 use Microsoft\PhpParser;
 use Microsoft\PhpParser\Node;

@@ -3,7 +3,7 @@ declare(strict_types = 1);
 
 namespace LanguageServer;
 
-use LanguageServer\Protocol\{
+use LanguageServerProtocol\{
     ServerCapabilities,
     ClientCapabilities,
     TextDocumentSyncKind,

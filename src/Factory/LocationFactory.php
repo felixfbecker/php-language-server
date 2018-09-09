@@ -2,9 +2,9 @@
 
 namespace LanguageServer\Factory;
 
-use LanguageServer\Protocol\Location;
-use LanguageServer\Protocol\Position;
-use LanguageServer\Protocol\Range;
+use LanguageServerProtocol\Location;
+use LanguageServerProtocol\Position;
+use LanguageServerProtocol\Range;
 use Microsoft\PhpParser\Node;
 use Microsoft\PhpParser\PositionUtilities;
 
