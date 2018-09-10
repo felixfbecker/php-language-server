@@ -217,7 +217,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                     if (!empty($composerLockFiles)) {
                         $packages = [];
                         $packagesDev = [];
-                        foreach($composerLockFiles as $composerLockFile) {
+                        foreach ($composerLockFiles as $composerLockFile) {
                             $composerLock = json_decode(yield $this->contentRetriever->retrieve($composerLockFile));
                             $packages = array_merge($packages, $composerLock->packages);
                             $packagesDev = array_merge($packagesDev, $composerLock->{'packages-dev'});
