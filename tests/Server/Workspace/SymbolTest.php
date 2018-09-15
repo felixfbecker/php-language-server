@@ -6,7 +6,7 @@ namespace LanguageServer\Tests\Server\Workspace;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\Tests\Server\ServerTestCase;
 use LanguageServer\{Server, Client, LanguageClient, Project, PhpDocument};
-use LanguageServer\Protocol\{
+use LanguageServerProtocol\{
     TextDocumentItem,
     TextDocumentIdentifier,
     SymbolInformation,

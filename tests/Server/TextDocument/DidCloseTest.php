@@ -10,7 +10,7 @@ use LanguageServer\{
 };
 use LanguageServer\ContentRetriever\FileSystemContentRetriever;
 use LanguageServer\Index\{Index, ProjectIndex, DependenciesIndex};
-use LanguageServer\Protocol\{TextDocumentItem, TextDocumentIdentifier};
+use LanguageServerProtocol\{TextDocumentItem, TextDocumentIdentifier};
 
 class DidCloseTest extends TestCase
 {

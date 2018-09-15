@@ -10,7 +10,7 @@ use LanguageServer\{
 };
 use LanguageServer\Index\{Index, ProjectIndex, DependenciesIndex};
 use LanguageServer\ContentRetriever\FileSystemContentRetriever;
-use LanguageServer\Protocol\{TextDocumentItem, DiagnosticSeverity};
+use LanguageServerProtocol\{TextDocumentItem, DiagnosticSeverity};
 use Sabre\Event\Promise;
 use JsonMapper;
 
