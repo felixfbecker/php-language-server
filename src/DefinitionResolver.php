@@ -493,6 +493,7 @@ class DefinitionResolver
         } elseif ($scoped->scopeResolutionQualifier instanceof Node\QualifiedName) {
             $className = $scoped->scopeResolutionQualifier->getResolvedName();
         }
+        $origName = null;
         do {
             if ($scoped->memberName instanceof Node\Expression\Variable) {
                 if ($scoped->parent instanceof Node\Expression\CallExpression) {
@@ -509,13 +510,16 @@ class DefinitionResolver
             if ($scoped->parent instanceof Node\Expression\CallExpression) {
                 $name .= '()';
             }
+            if ($origName === null) {
+                $origName = $name;
+            }
             $definition = $this->index->getDefinition($name);
             if (!!$definition) {
                 break;
             } else {
                 $class = $this->index->getDefinition((string)$className);
                 if ($class === null || empty($class->extends)) {
-                    return null;
+                    return $origName;
                 }
                 $className = $class->extends[0];
             }
