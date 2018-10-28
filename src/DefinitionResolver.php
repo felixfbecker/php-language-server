@@ -510,11 +510,11 @@ class DefinitionResolver
                 $name .= '()';
             }
             $definition = $this->index->getDefinition($name);
-            if(!!$definition) {
+            if (!!$definition) {
                 break;
             } else {
                 $class = $this->index->getDefinition((string)$className);
-                if(!$class || empty($class->extends)) {
+                if ($class === null || empty($class->extends)) {
                     return null;
                 }
                 $className = $class->extends[0];
