@@ -514,8 +514,8 @@ class DefinitionResolver
                 break;
             } else {
                 $class = $this->index->getDefinition((string)$className);
-                if(!$class) {
-                    break;
+                if(!$class || empty($class->extends)) {
+                    return null;
                 }
                 $className = $class->extends[0];
             }
