@@ -493,21 +493,33 @@ class DefinitionResolver
         } elseif ($scoped->scopeResolutionQualifier instanceof Node\QualifiedName) {
             $className = $scoped->scopeResolutionQualifier->getResolvedName();
         }
-        if ($scoped->memberName instanceof Node\Expression\Variable) {
+        do {
+            if ($scoped->memberName instanceof Node\Expression\Variable) {
+                if ($scoped->parent instanceof Node\Expression\CallExpression) {
+                    return null;
+                }
+                $memberName = $scoped->memberName->getName();
+                if (empty($memberName)) {
+                    return null;
+                }
+                $name = (string)$className . '::$' . $memberName;
+            } else {
+                $name = (string)$className . '::' . $scoped->memberName->getText($scoped->getFileContents());
+            }
             if ($scoped->parent instanceof Node\Expression\CallExpression) {
-                return null;
+                $name .= '()';
             }
-            $memberName = $scoped->memberName->getName();
-            if (empty($memberName)) {
-                return null;
+            $definition = $this->index->getDefinition($name);
+            if(!!$definition) {
+                break;
+            } else {
+                $class = $this->index->getDefinition((string)$className);
+                if(!$class) {
+                    break;
+                }
+                $className = $class->extends[0];
             }
-            $name = (string)$className . '::$' . $memberName;
-        } else {
-            $name = (string)$className . '::' . $scoped->memberName->getText($scoped->getFileContents());
-        }
-        if ($scoped->parent instanceof Node\Expression\CallExpression) {
-            $name .= '()';
-        }
+        } while (true);
         return $name;
     }
 
