@@ -1,24 +1,21 @@
 {
     "references": {
-        "LanguageServer\\Protocol": [
+        "LanguageServerProtocol": [
             "./namespaces5.php"
         ],
-        "LanguageServer": [
+        "LanguageServerProtocol\\TextDocumentIdentifier": [
             "./namespaces5.php"
         ],
-        "LanguageServer\\Protocol\\TextDocumentIdentifier": [
+        "LanguageServerProtocol\\Position": [
             "./namespaces5.php"
         ],
-        "LanguageServer\\Protocol\\Position": [
+        "LanguageServerProtocol\\ReferenceContext": [
             "./namespaces5.php"
         ],
-        "LanguageServer\\Protocol\\ReferenceContext": [
+        "LanguageServerProtocol\\Location": [
             "./namespaces5.php"
         ],
-        "LanguageServer\\Protocol\\Location": [
-            "./namespaces5.php"
-        ],
-        "LanguageServer\\Protocol\\Range": [
+        "LanguageServerProtocol\\Range": [
             "./namespaces5.php"
         ]
     },

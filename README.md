@@ -4,7 +4,6 @@
 [![Linux Build Status](https://travis-ci.org/felixfbecker/php-language-server.svg?branch=master)](https://travis-ci.org/felixfbecker/php-language-server)
 [![Windows Build status](https://ci.appveyor.com/api/projects/status/2sp5ll052wdjqmdm/branch/master?svg=true)](https://ci.appveyor.com/project/felixfbecker/php-language-server/branch/master)
 [![Coverage](https://codecov.io/gh/felixfbecker/php-language-server/branch/master/graph/badge.svg)](https://codecov.io/gh/felixfbecker/php-language-server)
-[![Dependency Status](https://gemnasium.com/badges/github.com/felixfbecker/php-language-server.svg)](https://gemnasium.com/github.com/felixfbecker/php-language-server)
 [![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg)](https://github.com/semantic-release/semantic-release)
 [![Minimum PHP Version](https://img.shields.io/badge/php-%3E%3D%207.0-8892BF.svg)](https://php.net/)
 [![License](https://img.shields.io/packagist/l/felixfbecker/language-server.svg)](https://github.com/felixfbecker/php-language-server/blob/master/LICENSE.txt)
@@ -16,6 +15,16 @@ Provides static code analysis for PHP for any IDE.
 Uses the great [Tolerant PHP Parser](https://github.com/Microsoft/tolerant-php-parser),
 [phpDocumentor's DocBlock reflection](https://github.com/phpDocumentor/ReflectionDocBlock)
 and an [event loop](http://sabre.io/event/loop/) for concurrency.
+
+**Table of Contents**
+  - [Features](#features)
+  - [Performance](#performance)
+  - [Versioning](#versioning)
+  - [Installation](#installation)
+  - [Running](#running)
+  - [Used by](#used-by)
+  - [Contributing](#contributing)
+
 
 ## Features
 

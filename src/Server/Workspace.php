@@ -5,7 +5,8 @@ namespace LanguageServer\Server;
 
 use LanguageServer\{LanguageClient, PhpDocumentLoader};
 use LanguageServer\Index\{ProjectIndex, DependenciesIndex, Index};
-use LanguageServer\Protocol\{
+use LanguageServer\Factory\LocationFactory;
+use LanguageServerProtocol\{
     FileChangeType,
     FileEvent,
     SymbolInformation,
@@ -150,7 +151,7 @@ class Workspace
                     $doc = yield $this->documentLoader->getOrLoad($uri);
                     foreach ($doc->getReferenceNodesByFqn($fqn) as $node) {
                         $refInfo = new ReferenceInformation;
-                        $refInfo->reference = Location::fromNode($node);
+                        $refInfo->reference = LocationFactory::fromNode($node);
                         $refInfo->symbol = $query;
                         $refInfos[] = $refInfo;
                     }
@@ -169,7 +170,7 @@ class Workspace
             return [];
         }
         $dependencyReferences = [];
-        foreach (array_merge($this->composerLock->packages, $this->composerLock->{'packages-dev'}) as $package) {
+        foreach (array_merge($this->composerLock->packages, (array)$this->composerLock->{'packages-dev'}) as $package) {
             $dependencyReferences[] = new DependencyReference($package);
         }
         return $dependencyReferences;

@@ -10,7 +10,7 @@ use LanguageServer\{
 };
 use LanguageServer\Index\{ProjectIndex, DependenciesIndex, Index};
 use LanguageServer\ContentRetriever\FileSystemContentRetriever;
-use LanguageServer\Protocol\{Position, Location, Range};
+use LanguageServerProtocol\{Position, Location, Range};
 use function LanguageServer\pathToUri;
 
 abstract class ServerTestCase extends TestCase

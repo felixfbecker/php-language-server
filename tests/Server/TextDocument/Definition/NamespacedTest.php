@@ -3,7 +3,7 @@ declare(strict_types = 1);
 
 namespace LanguageServer\Tests\Server\TextDocument\Definition;
 
-use LanguageServer\Protocol\{TextDocumentIdentifier, Location};
+use LanguageServerProtocol\{TextDocumentIdentifier, Location};
 use function LanguageServer\pathToUri;
 
 class NamespacedTest extends GlobalTest

@@ -9,7 +9,7 @@ use LanguageServer\{
     DefinitionResolver, TreeAnalyzer
 };
 use LanguageServer\Index\{Index};
-use LanguageServer\Protocol\{
+use LanguageServerProtocol\{
     Diagnostic, DiagnosticSeverity, Position, Range
 };
 use function LanguageServer\pathToUri;

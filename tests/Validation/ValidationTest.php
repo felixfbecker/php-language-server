@@ -13,7 +13,7 @@ use phpDocumentor\Reflection\DocBlock;
 use phpDocumentor\Reflection\DocBlockFactory;
 use PHPUnit\Framework\TestCase;
 use LanguageServer\ClientHandler;
-use LanguageServer\Protocol\Message;
+use LanguageServer\Message;
 use AdvancedJsonRpc;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -64,7 +64,7 @@ class ValidationTest extends TestCase
 
         try {
             $this->assertEquals($expectedValues['definitions'], $actualValues['definitions']);
-            $this->assertEquals((array)$expectedValues['references'], (array)$actualValues['references'], 'references don\'t match.');
+            $this->assertEquals((array)$expectedValues['references'], (array)$actualValues['references'], sprintf('references match in "%s"', $outputFile));
         } catch (\Throwable $e) {
             $outputFile = getExpectedValuesFile($testCaseFile);
             file_put_contents($outputFile, json_encode($actualValues, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));
