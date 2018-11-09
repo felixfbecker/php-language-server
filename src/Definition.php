@@ -133,4 +133,33 @@ class Definition
             }
         }
     }
+   
+    /**
+     * Checks the definition's visibility.
+     * @return bool
+     */
+    public function isVisible(string $match, string $caller, \Microsoft\PhpParser\Node $node): bool
+    {        
+        $ancestor = $node->getFirstAncestor(\Microsoft\PhpParser\Node\MethodDeclaration::class);        
+        
+        if ($ancestor) {
+            if ($match !== $caller && $this->isPrivate()) {
+                return false;
+            }
+        } else if ($this->isProtected() || $this->isPrivate()) {
+                return false;
+        }
+        
+        return true;
+    }
+
+    private function isPrivate(): bool
+    {
+        return 'private' === substr($this->declarationLine, 0, 7);
+    }
+
+    private function isProtected(): bool
+    {
+        return 'protected' === substr($this->declarationLine, 0, 9);
+    }
 }

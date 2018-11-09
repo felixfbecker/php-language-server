@@ -246,8 +246,10 @@ class CompletionProvider
             // Collect all definitions that match any of the prefixes
             foreach ($this->index->getDefinitions() as $fqn => $def) {
                 foreach ($prefixes as $prefix) {
-                    if (substr($fqn, 0, strlen($prefix)) === $prefix && $def->isMember) {
-                        $list->items[] = CompletionItemFactory::fromDefinition($def);
+                    if (substr($fqn, 0, strlen($prefix)) === $prefix && 
+                        $def->isMember &&
+                        $def->isVisible($prefix, $prefixes[0], $node)) {
+                        $list->items[] = CompletionItem::fromDefinition($def);
                     }
                 }
             }
