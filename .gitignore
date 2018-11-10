@@ -6,3 +6,4 @@ composer.lock
 stubs
 *.ast
 node_modules/
+/nbproject/
