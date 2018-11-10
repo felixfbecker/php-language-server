@@ -72,18 +72,26 @@ class CompletionWithVisibilityTest extends TestCase
         // doesn't contain any of these properties and methods
         $this->assertCompletionsListSubsetNotContains(new CompletionList([
             new CompletionItem(
-                'privateProperty', CompletionItemKind::PROPERTY, '\TestClass',
+                'privateProperty',
+                CompletionItemKind::PROPERTY,
+                '\TestClass',
                 'Reprehenderit magna velit mollit ipsum do.'
-                ),
-            new CompletionItem(
-                'privateTestMethod', CompletionItemKind::METHOD, 'mixed' // Return type of the method
             ),
-             new CompletionItem(
-                'protectedProperty', CompletionItemKind::PROPERTY, '\TestClass',
-                'Reprehenderit magna velit mollit ipsum do.'
-                ),
             new CompletionItem(
-                'protectedTestMethod', CompletionItemKind::METHOD, 'mixed' // Return type of the method
+                'privateTestMethod',
+                CompletionItemKind::METHOD,
+                'mixed' // Return type of the method
+            ),
+            new CompletionItem(
+                'protectedProperty',
+                CompletionItemKind::PROPERTY,
+                '\TestClass',
+                'Reprehenderit magna velit mollit ipsum do.'
+            ),
+            new CompletionItem(
+                'protectedTestMethod',
+                CompletionItemKind::METHOD,
+                'mixed' // Return type of the method
             )
             ], true), $items);
     }
@@ -99,33 +107,45 @@ class CompletionWithVisibilityTest extends TestCase
         // doesn't contain any of these properties and methods
         $this->assertCompletionsListSubsetNotContains(new CompletionList([
             new CompletionItem(
-                'privateProperty', CompletionItemKind::PROPERTY, '\TestClass',
+                'privateProperty',
+                CompletionItemKind::PROPERTY,
+                '\TestClass',
                 'Reprehenderit magna velit mollit ipsum do.'
-                ),
+            ),
             new CompletionItem(
-                'privateTestMethod', CompletionItemKind::METHOD, 'mixed' // Return type of the method
+                'privateTestMethod',
+                CompletionItemKind::METHOD,
+                'mixed' // Return type of the method
             )
             ], true), $items);
     }
-    
+
     public function testVisibilityInsideClassMethod()
     {
         $items = $this->getCompletion('/global_symbols.php', 73, 15);
         // can see all properties and methods
         $this->assertCompletionsListSubset(new CompletionList([
             new CompletionItem(
-                'privateProperty', CompletionItemKind::PROPERTY, '\TestClass',
+                'privateProperty',
+                CompletionItemKind::PROPERTY,
+                '\TestClass',
                 'Reprehenderit magna velit mollit ipsum do.'
-                ),
-            new CompletionItem(
-                'privateTestMethod', CompletionItemKind::METHOD, 'mixed' // Return type of the method
             ),
-             new CompletionItem(
-                'protectedProperty', CompletionItemKind::PROPERTY, '\TestClass',
-                'Reprehenderit magna velit mollit ipsum do.'
-                ),
             new CompletionItem(
-                'protectedTestMethod', CompletionItemKind::METHOD, 'mixed' // Return type of the method
+                'privateTestMethod',
+                CompletionItemKind::METHOD,
+                'mixed' // Return type of the method
+            ),
+            new CompletionItem(
+                'protectedProperty',
+                CompletionItemKind::PROPERTY,
+                '\TestClass',
+                'Reprehenderit magna velit mollit ipsum do.'
+            ),
+            new CompletionItem(
+                'protectedTestMethod',
+                CompletionItemKind::METHOD,
+                'mixed' // Return type of the method
             ),
             new CompletionItem(
                 'testProperty',
@@ -140,7 +160,6 @@ class CompletionWithVisibilityTest extends TestCase
                 'Non culpa nostrud mollit esse sunt laboris in irure ullamco cupidatat amet.'
             )
             ], true), $items);
-
     }
 
     /**
@@ -155,8 +174,9 @@ class CompletionWithVisibilityTest extends TestCase
         $completionUri = pathToUri($this->fixturesPath . $fixtureFile);
         $this->loader->open($completionUri, file_get_contents($completionUri));
         return $this->textDocument->completion(
-                new TextDocumentIdentifier($completionUri), new Position($line, $char)
-            )->wait();
+            new TextDocumentIdentifier($completionUri),
+            new Position($line, $char)
+        )->wait();
     }
 
     private function assertCompletionsListSubset(CompletionList $subsetList, CompletionList $list)
