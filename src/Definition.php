@@ -136,13 +136,15 @@ class Definition
    
     /**
      * Checks the definition's visibility.
+     * @param string $match Owner of the FQNS
+     * @param string $caller Descendant of the FQNS owner
+     * @param bool $isInMethodDeclaration checking if the call is from inside a 
+     * method
      * @return bool
      */
-    public function isVisible(string $match, string $caller, \Microsoft\PhpParser\Node $node): bool
-    {        
-        $ancestor = $node->getFirstAncestor(\Microsoft\PhpParser\Node\MethodDeclaration::class);        
-        
-        if ($ancestor) {
+    public function isVisible(string $match, string $caller, bool $isInMethodDeclaration): bool
+    {     
+        if ($isInMethodDeclaration) {
             if ($match !== $caller && $this->isPrivate()) {
                 return false;
             }

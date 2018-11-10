@@ -237,6 +237,7 @@ class CompletionProvider
                 $this->definitionResolver->resolveExpressionNodeToType($node->dereferencableExpression)
             );
             $start = microtime(true);
+            $isInMethodDeclaration = null !== $node->getFirstAncestor(\Microsoft\PhpParser\Node\MethodDeclaration::class);
             // Add the object access operator to only get members of all parents
             $prefixes = [];
             foreach ($this->expandParentFqns($fqns) as $prefix) {
@@ -248,8 +249,8 @@ class CompletionProvider
                 foreach ($prefixes as $prefix) {
                     if (substr($fqn, 0, strlen($prefix)) === $prefix && 
                         $def->isMember &&
-                        $def->isVisible($prefix, $prefixes[0], $node)) {
-                        $list->items[] = CompletionItem::fromDefinition($def);
+                        $def->isVisible($prefix, $prefixes[0], $isInMethodDeclaration)) {
+                        $list->items[] = CompletionItemFactory::fromDefinition($def);
                     }
                 }
             }
