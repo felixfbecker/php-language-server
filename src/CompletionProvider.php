@@ -256,7 +256,7 @@ class CompletionProvider
                 // Collect fqn definitions
                 foreach ($this->index->getChildDefinitionsForFqn($parentFqn) as $fqn => $def) {
                     if (substr($fqn, 0, $prefixLen) === $prefix && $def->isMember) {
-                        $list->items[] = CompletionItem::fromDefinition($def);
+                        $list->items[] = CompletionItemFactory::fromDefinition($def);
                     }
                 }
             }
@@ -287,7 +287,7 @@ class CompletionProvider
                 // Collect fqn definitions
                 foreach ($this->index->getChildDefinitionsForFqn($parentFqn) as $fqn => $def) {
                     if (substr(strtolower($fqn), 0, $prefixLen) === $prefix && $def->isMember) {
-                        $list->items[] = CompletionItem::fromDefinition($def);
+                        $list->items[] = CompletionItemFactory::fromDefinition($def);
                     }
                 }
             }
@@ -475,7 +475,7 @@ class CompletionProvider
             if (!nameStartsWith($fqn, $prefix)) {
                 continue;
             }
-            $completion = CompletionItem::fromDefinition($def);
+            $completion = CompletionItemFactory::fromDefinition($def);
             if ($insertFullyQualified) {
                 $completion->insertText =  '\\' . $fqn;
             }
@@ -505,7 +505,7 @@ class CompletionProvider
                 if ($requireCanBeInstantiated && !$definition->canBeInstantiated) {
                     continue;
                 }
-                $completionItem = CompletionItem::fromDefinition($definition);
+                $completionItem = CompletionItemFactory::fromDefinition($definition);
                 $completionItem->insertText = $alias;
                 yield (string)$aliasFqn => $completionItem;
             }
@@ -553,7 +553,7 @@ class CompletionProvider
             if (!$def->roamed || !nameStartsWith($fqn, $prefix)) {
                 continue;
             }
-            $completionItem = CompletionItem::fromDefinition($def);
+            $completionItem = CompletionItemFactory::fromDefinition($def);
             // Second-guessing the user here - do not trust roaming to work. If the same symbol is
             // inserted in the current namespace, the code will stop working.
             $completionItem->insertText =  '\\' . $fqn;
