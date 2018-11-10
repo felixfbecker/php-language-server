@@ -58,8 +58,7 @@ class CompletionWithVisibilityTest extends TestCase
         $definitionResolver = new DefinitionResolver($projectIndex);
         $contentRetriever = new FileSystemContentRetriever;
         $this->loader = new PhpDocumentLoader($contentRetriever, $projectIndex, $definitionResolver);
-        $this->loader->load(pathToUri($this->fixturesPath . '/global_symbols.php'))->wait();
-        $this->loader->load(pathToUri($this->fixturesPath . '/symbols.php'))->wait();
+        $this->loader->load(pathToUri($this->fixturesPath . '/visibility_class.php'))->wait();
         $this->textDocument = new TextDocument($this->loader, $definitionResolver, $client, $projectIndex);
     }
 
@@ -122,7 +121,7 @@ class CompletionWithVisibilityTest extends TestCase
 
     public function testVisibilityInsideClassMethod()
     {
-        $items = $this->getCompletion('/global_symbols.php', 73, 15);
+        $items = $this->getCompletion('/visibility_class.php', 64, 15);
         // can see all properties and methods
         $this->assertCompletionsListSubset(new CompletionList([
             new CompletionItem(
