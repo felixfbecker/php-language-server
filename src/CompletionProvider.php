@@ -247,14 +247,14 @@ class CompletionProvider
             // Collect all definitions that match any of the prefixes
             foreach ($this->index->getDefinitions() as $fqn => $def) {
                 foreach ($prefixes as $prefix) {
-                    if (substr($fqn, 0, strlen($prefix)) === $prefix && 
+                    if (substr($fqn, 0, strlen($prefix)) === $prefix &&
                         $def->isMember &&
                         $def->isVisible($prefix, $prefixes[0], $isInMethodDeclaration)) {
                         $list->items[] = CompletionItemFactory::fromDefinition($def);
                     }
                 }
             }
-            
+
         } elseif (
             ($scoped = $node->parent) instanceof Node\Expression\ScopedPropertyAccessExpression ||
             ($scoped = $node) instanceof Node\Expression\ScopedPropertyAccessExpression

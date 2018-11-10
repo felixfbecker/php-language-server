@@ -3,5 +3,6 @@
   "search.exclude": {
     "**/validation": true,
     "**/tests/Validation/cases": true
-  }
+  },
+  "files.trimTrailingWhitespace": true,
 }
