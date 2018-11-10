@@ -236,7 +236,7 @@ class CompletionProvider
             $fqns = FqnUtilities\getFqnsFromType(
                 $this->definitionResolver->resolveExpressionNodeToType($node->dereferencableExpression)
             );
-            $start = microtime(true);
+
             $isInMethodDeclaration = null !== $node->getFirstAncestor(\Microsoft\PhpParser\Node\MethodDeclaration::class);
             // Add the object access operator to only get members of all parents
             $prefixes = [];
@@ -254,7 +254,7 @@ class CompletionProvider
                     }
                 }
             }
-            echo microtime(true) - $start;
+            
         } elseif (
             ($scoped = $node->parent) instanceof Node\Expression\ScopedPropertyAccessExpression ||
             ($scoped = $node) instanceof Node\Expression\ScopedPropertyAccessExpression
