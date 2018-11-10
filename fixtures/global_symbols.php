@@ -42,6 +42,20 @@ class TestClass implements TestInterface
     public $testProperty;
 
     /**
+     * Reprehenderit magna velit mollit ipsum do.
+     *
+     * @var TestClass
+     */
+    private $privateProperty;
+
+    /**
+     * Reprehenderit magna velit mollit ipsum do.
+     *
+     * @var TestClass
+     */
+    protected $protectedProperty;
+
+    /**
      * Do magna consequat veniam minim proident eiusmod incididunt aute proident.
      */
     public static function staticTestMethod()
@@ -58,6 +72,16 @@ class TestClass implements TestInterface
     public function testMethod($testParameter): TestInterface
     {
         $this->testProperty = $testParameter;
+    }
+
+    private function privateTestMethod()
+    {
+        return $this->privateProperty;
+    }
+
+    protected function protectedTestMethod()
+    {
+        return $this->protectedProperty;
     }
 }
 
@@ -114,6 +138,6 @@ class UnusedClass
     public $unusedProperty;
 
     public function unusedMethod()
-    {        
+    {
     }
 }
