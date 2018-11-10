@@ -272,7 +272,7 @@ class CompletionProvider
             $fqns = FqnUtilities\getFqnsFromType(
                 $classType = $this->definitionResolver->resolveExpressionNodeToType($scoped->scopeResolutionQualifier)
             );
-
+            $isInMethodDeclaration = null !== $node->getFirstAncestor(\Microsoft\PhpParser\Node\MethodDeclaration::class);
             // Append :: operator to only get static members of all parents
             $prefixes = [];
             foreach ($this->expandParentFqns($fqns) as $prefix) {
@@ -282,7 +282,9 @@ class CompletionProvider
             // Collect all definitions that match any of the prefixes
             foreach ($this->index->getDefinitions() as $fqn => $def) {
                 foreach ($prefixes as $prefix) {
-                    if (substr(strtolower($fqn), 0, strlen($prefix)) === strtolower($prefix) && $def->isMember) {
+                    if (substr(strtolower($fqn), 0, strlen($prefix)) === strtolower($prefix) &&
+                        $def->isMember &&
+                        $def->isVisible($prefix, $prefixes[0], $isInMethodDeclaration)) {
                         $list->items[] = CompletionItemFactory::fromDefinition($def);
                     }
                 }
