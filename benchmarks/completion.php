@@ -7,7 +7,7 @@ use Exception;
 use LanguageServer\Index\Index;
 use LanguageServer\PhpDocument;
 use LanguageServer\DefinitionResolver;
-use LanguageServer\Protocol\Position;
+use LanguageServerProtocol\Position;
 use LanguageServer\CompletionProvider;
 use Microsoft\PhpParser;
 use phpDocumentor\Reflection\DocBlockFactory;
