@@ -828,10 +828,21 @@ class CompletionTest extends TestCase
                 'Reprehenderit magna velit mollit ipsum do.'
             ),
             new CompletionItem(
+                'protectedProperty',
+                CompletionItemKind::PROPERTY,
+                '\TestClass', // Type of the property
+                'Reprehenderit magna velit mollit ipsum do.'
+            ),
+            new CompletionItem(
                 'testMethod',
                 CompletionItemKind::METHOD,
                 '\TestClass', // Return type of the method
                 'Non culpa nostrud mollit esse sunt laboris in irure ullamco cupidatat amet.'
+            ),
+            new CompletionItem(
+                'protectedTestMethod',
+                CompletionItemKind::METHOD,
+                'mixed' // Return type of the method
             ),
             new CompletionItem(
                 'foo',
