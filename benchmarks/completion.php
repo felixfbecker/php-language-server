@@ -3,16 +3,24 @@
 namespace LanguageServer\Tests;
 require __DIR__ . '/../vendor/autoload.php';
 
+use Composer\XdebugHandler\XdebugHandler;
 use Exception;
+use LanguageServer\CompletionProvider;
+use LanguageServer\DefinitionResolver;
 use LanguageServer\Index\Index;
 use LanguageServer\PhpDocument;
-use LanguageServer\DefinitionResolver;
+use LanguageServer\StderrLogger;
 use LanguageServerProtocol\Position;
-use LanguageServer\CompletionProvider;
 use Microsoft\PhpParser;
 use phpDocumentor\Reflection\DocBlockFactory;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
+
+$logger = new StderrLogger();
+$xdebugHandler = new XdebugHandler('PHPLS');
+$xdebugHandler->setLogger($logger);
+$xdebugHandler->check();
+unset($xdebugHandler);
 
 $totalSize = 0;
 
