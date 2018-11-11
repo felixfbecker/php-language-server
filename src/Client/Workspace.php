@@ -4,7 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer\Client;
 
 use LanguageServer\ClientHandler;
-use LanguageServer\Protocol\TextDocumentIdentifier;
+use LanguageServerProtocol\TextDocumentIdentifier;
 use Sabre\Event\Promise;
 use JsonMapper;
 

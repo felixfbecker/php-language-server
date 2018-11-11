@@ -4,7 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer\ContentRetriever;
 
 use LanguageServer\LanguageClient;
-use LanguageServer\Protocol\{TextDocumentIdentifier, TextDocumentItem};
+use LanguageServerProtocol\{TextDocumentIdentifier, TextDocumentItem};
 use Sabre\Event\Promise;
 
 /**

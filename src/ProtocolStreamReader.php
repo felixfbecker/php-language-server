@@ -3,7 +3,7 @@ declare(strict_types = 1);
 
 namespace LanguageServer;
 
-use LanguageServer\Protocol\Message;
+use LanguageServer\Message;
 use AdvancedJsonRpc\Message as MessageBody;
 use Sabre\Event\{Loop, Emitter};
 

@@ -4,7 +4,8 @@ declare(strict_types = 1);
 namespace LanguageServer;
 
 use LanguageServer\Index\ReadableIndex;
-use LanguageServer\Protocol\SymbolInformation;
+use LanguageServer\Factory\SymbolInformationFactory;
+use LanguageServerProtocol\SymbolInformation;
 use Microsoft\PhpParser;
 use Microsoft\PhpParser\Node;
 use Microsoft\PhpParser\FunctionLike;
@@ -36,7 +37,7 @@ class DefinitionResolver
     private $docBlockFactory;
 
     /**
-     * Creates SignatureInformation
+     * Creates SignatureInformation instances
      *
      * @var SignatureInformationFactory
      */
@@ -233,7 +234,7 @@ class DefinitionResolver
             }
         }
 
-        $def->symbolInformation = SymbolInformation::fromNode($node, $fqn);
+        $def->symbolInformation = SymbolInformationFactory::fromNode($node, $fqn);
 
         if ($def->symbolInformation !== null) {
             $def->type = $this->getTypeFromNode($node);
@@ -437,6 +438,7 @@ class DefinitionResolver
 
         // Find the right class that implements the member
         $implementorFqns = [$classFqn];
+        $visitedFqns = [];
 
         while ($implementorFqn = array_shift($implementorFqns)) {
             // If the member FQN exists, return it
@@ -449,10 +451,15 @@ class DefinitionResolver
             if ($implementorDef === null) {
                 break;
             }
+            // Note the FQN as visited
+            $visitedFqns[] = $implementorFqn;
             // Repeat for parent class
             if ($implementorDef->extends) {
                 foreach ($implementorDef->extends as $extends) {
-                    $implementorFqns[] = $extends;
+                    // Don't add the parent FQN if it's already been visited
+                    if (!\in_array($extends, $visitedFqns)) {
+                        $implementorFqns[] = $extends;
+                    }
                 }
             }
         }
@@ -1232,7 +1239,13 @@ class DefinitionResolver
         if (
             $node instanceof PhpParser\ClassLike
         ) {
-            return (string) $node->getNamespacedName();
+            $className = (string)$node->getNamespacedName();
+            // An (invalid) class declaration without a name will have an empty string as name,
+            // but should not define an FQN
+            if ($className === '') {
+                return null;
+            }
+            return $className;
         }
 
         // INPUT                   OUTPUT:

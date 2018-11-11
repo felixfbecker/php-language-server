@@ -6,7 +6,7 @@ namespace LanguageServer\Tests\Server\TextDocument;
 use LanguageServer\Tests\Server\ServerTestCase;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\{Server, LanguageClient, Project};
-use LanguageServer\Protocol\{TextDocumentIdentifier, SymbolInformation, SymbolKind, Position, Location, Range};
+use LanguageServerProtocol\{TextDocumentIdentifier, SymbolInformation, SymbolKind, Position, Location, Range};
 use function LanguageServer\pathToUri;
 
 class DocumentSymbolTest extends ServerTestCase
@@ -32,7 +32,9 @@ class DocumentSymbolTest extends ServerTestCase
             new SymbolInformation('ChildClass',         SymbolKind::CLASS_,      $this->getDefinitionLocation('TestNamespace\\ChildClass'),                    'TestNamespace'),
             new SymbolInformation('Example',            SymbolKind::CLASS_,      $this->getDefinitionLocation('TestNamespace\\Example'),                       'TestNamespace'),
             new SymbolInformation('__construct',        SymbolKind::CONSTRUCTOR, $this->getDefinitionLocation('TestNamespace\\Example::__construct'),          'TestNamespace\\Example'),
-            new SymbolInformation('__destruct',         SymbolKind::CONSTRUCTOR, $this->getDefinitionLocation('TestNamespace\\Example::__destruct'),           'TestNamespace\\Example')
+            new SymbolInformation('__destruct',         SymbolKind::CONSTRUCTOR, $this->getDefinitionLocation('TestNamespace\\Example::__destruct'),           'TestNamespace\\Example'),
+            new SymbolInformation('TestNamespace\\InnerNamespace', SymbolKind::NAMESPACE, $this->getDefinitionLocation('TestNamespace\\InnerNamespace'),       'TestNamespace'),
+            new SymbolInformation('InnerClass',         SymbolKind::CLASS_,      $this->getDefinitionLocation('TestNamespace\\InnerNamespace\\InnerClass'),    'TestNamespace\\InnerNamespace'),
         ], $result);
         // @codingStandardsIgnoreEnd
     }

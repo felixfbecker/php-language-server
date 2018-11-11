@@ -1,23 +1,31 @@
 <?php
 
 namespace LanguageServer\Tests;
-require __DIR__ . '/vendor/autoload.php';
+require __DIR__ . '/../vendor/autoload.php';
 
+use Composer\XdebugHandler\XdebugHandler;
 use Exception;
+use LanguageServer\DefinitionResolver;
 use LanguageServer\Index\Index;
 use LanguageServer\PhpDocument;
-use LanguageServer\DefinitionResolver;
+use LanguageServer\StderrLogger;
 use Microsoft\PhpParser;
 use phpDocumentor\Reflection\DocBlockFactory;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
+
+$logger = new StderrLogger();
+$xdebugHandler = new XdebugHandler('PHPLS');
+$xdebugHandler->setLogger($logger);
+$xdebugHandler->check();
+unset($xdebugHandler);
 
 $totalSize = 0;
 
 $frameworks = ["drupal", "wordpress", "php-language-server", "tolerant-php-parser", "math-php", "symfony", "codeigniter", "cakephp"];
 
 foreach($frameworks as $framework) {
-    $iterator = new RecursiveDirectoryIterator(__DIR__ . "/validation/frameworks/$framework");
+    $iterator = new RecursiveDirectoryIterator(__DIR__ . "/../validation/frameworks/$framework");
     $testProviderArray = array();
 
     foreach (new RecursiveIteratorIterator($iterator) as $file) {
@@ -37,8 +45,8 @@ foreach($frameworks as $framework) {
         if (filesize($testCaseFile) > 10000) {
             continue;
         }
-        if ($idx % 1000 === 0) {
-            echo "$idx\n";
+        if ($idx % 500 === 0) {
+            echo $idx . '/' . count($testProviderArray) . PHP_EOL;
         }
 
         $fileContents = file_get_contents($testCaseFile);

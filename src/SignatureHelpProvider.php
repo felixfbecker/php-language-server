@@ -4,7 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer;
 
 use LanguageServer\Index\ReadableIndex;
-use LanguageServer\Protocol\{
+use LanguageServerProtocol\{
     Position,
     SignatureHelp
 };

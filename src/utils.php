@@ -38,7 +38,7 @@ function pathToUri(string $filepath): string
 function uriToPath(string $uri)
 {
     $fragments = parse_url($uri);
-    if ($fragments === null || !isset($fragments['scheme']) || $fragments['scheme'] !== 'file') {
+    if ($fragments === false || !isset($fragments['scheme']) || $fragments['scheme'] !== 'file') {
         throw new InvalidArgumentException("Not a valid file URI: $uri");
     }
     $filepath = urldecode($fragments['path']);

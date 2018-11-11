@@ -3,15 +3,15 @@ declare(strict_types = 1);
 
 namespace LanguageServer;
 
-use LanguageServer\Protocol\{
+use LanguageServerProtocol\{
     ServerCapabilities,
     ClientCapabilities,
     TextDocumentSyncKind,
-    Message,
     InitializeResult,
     CompletionOptions,
     SignatureHelpOptions
 };
+use LanguageServer\Message;
 use LanguageServer\FilesFinder\{FilesFinder, ClientFilesFinder, FileSystemFilesFinder};
 use LanguageServer\ContentRetriever\{ContentRetriever, ClientContentRetriever, FileSystemContentRetriever};
 use LanguageServer\Index\{DependenciesIndex, GlobalIndex, Index, ProjectIndex, StubsIndex};
@@ -165,8 +165,11 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
      * @param int|null $processId The process Id of the parent process that started the server. Is null if the process has not been started by another process. If the parent process is not alive then the server should exit (see exit notification) its process.
      * @return Promise <InitializeResult>
      */
-    public function initialize(ClientCapabilities $capabilities, string $rootPath = null, int $processId = null): Promise
+    public function initialize(ClientCapabilities $capabilities, string $rootPath = null, int $processId = null, string $rootUri = null): Promise
     {
+        if ($rootPath === null) {
+            $rootPath = uriToPath($rootUri);
+        }
         return coroutine(function () use ($capabilities, $rootPath, $processId) {
 
             if ($capabilities->xfilesProvider) {

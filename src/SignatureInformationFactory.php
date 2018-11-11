@@ -3,7 +3,7 @@ declare(strict_types = 1);
 
 namespace LanguageServer;
 
-use LanguageServer\Protocol\{SignatureInformation, ParameterInformation};
+use LanguageServerProtocol\{SignatureInformation, ParameterInformation};
 use Microsoft\PhpParser\FunctionLike;
 
 class SignatureInformationFactory
