@@ -438,6 +438,7 @@ class DefinitionResolver
 
         // Find the right class that implements the member
         $implementorFqns = [$classFqn];
+        $visitedFqns = [];
 
         while ($implementorFqn = array_shift($implementorFqns)) {
             // If the member FQN exists, return it
@@ -450,10 +451,15 @@ class DefinitionResolver
             if ($implementorDef === null) {
                 break;
             }
+            // Note the FQN as visited
+            $visitedFqns[] = $implementorFqn;
             // Repeat for parent class
             if ($implementorDef->extends) {
                 foreach ($implementorDef->extends as $extends) {
-                    $implementorFqns[] = $extends;
+                    // Don't add the parent FQN if it's already been visited
+                    if (!\in_array($extends, $visitedFqns)) {
+                        $implementorFqns[] = $extends;
+                    }
                 }
             }
         }
@@ -1233,7 +1239,13 @@ class DefinitionResolver
         if (
             $node instanceof PhpParser\ClassLike
         ) {
-            return (string) $node->getNamespacedName();
+            $className = (string)$node->getNamespacedName();
+            // An (invalid) class declaration without a name will have an empty string as name,
+            // but should not define an FQN
+            if ($className === '') {
+                return null;
+            }
+            return $className;
         }
 
         // INPUT                   OUTPUT:
