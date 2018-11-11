@@ -1233,7 +1233,13 @@ class DefinitionResolver
         if (
             $node instanceof PhpParser\ClassLike
         ) {
-            return (string) $node->getNamespacedName();
+            $className = (string)$node->getNamespacedName();
+            // An (invalid) class declaration without a name will have an empty string as name,
+            // but should not define an FQN
+            if ($className === '') {
+                return null;
+            }
+            return $className;
         }
 
         // INPUT                   OUTPUT:

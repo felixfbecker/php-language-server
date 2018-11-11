@@ -227,10 +227,11 @@ class TextDocument
                         return [];
                     }
                 }
-                $refDocuments = yield Promise\all(array_map(
-                    [$this->documentLoader, 'getOrLoad'],
-                    $this->index->getReferenceUris($fqn)
-                ));
+                $refDocumentPromises = [];
+                foreach ($this->index->getReferenceUris($fqn) as $uri) {
+                    $refDocumentPromises[] = $this->documentLoader->getOrLoad($uri);
+                }
+                $refDocuments = yield Promise\all($refDocumentPromises);
                 foreach ($refDocuments as $document) {
                     $refs = $document->getReferenceNodesByFqn($fqn);
                     if ($refs !== null) {

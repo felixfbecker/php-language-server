@@ -47,6 +47,9 @@ class CompletionTest extends TestCase
         $this->textDocument = new Server\TextDocument($this->loader, $definitionResolver, $client, $projectIndex);
     }
 
+    /**
+     * Tests completion at `$obj->t|`
+     */
     public function testPropertyAndMethodWithPrefix()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/property_with_prefix.php');
@@ -71,6 +74,9 @@ class CompletionTest extends TestCase
         ], true), $items);
     }
 
+    /**
+     * Tests completion at `public function a() { tes| }`
+     */
     public function testGlobalFunctionInsideNamespaceAndClass()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/inside_namespace_and_method.php');
@@ -92,6 +98,9 @@ class CompletionTest extends TestCase
         ], true), $items);
     }
 
+    /**
+     * Tests completion at `$obj->|`
+     */
     public function testPropertyAndMethodWithoutPrefix()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/property.php');
@@ -116,6 +125,9 @@ class CompletionTest extends TestCase
         ], true), $items);
     }
 
+    /**
+     * Tests completion at `$|` when variables are defined
+     */
     public function testVariable()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/variable.php');
@@ -148,6 +160,9 @@ class CompletionTest extends TestCase
         ], true), $items);
     }
 
+    /**
+     * Tests completion at `$p|` when variables are defined
+     */
     public function testVariableWithPrefix()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/variable_with_prefix.php');
@@ -170,6 +185,9 @@ class CompletionTest extends TestCase
         ], true), $items);
     }
 
+    /**
+     * Tests completion at `new|` when in a namespace and have used variables.
+     */
     public function testNewInNamespace()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/used_new.php');
@@ -218,27 +236,12 @@ class CompletionTest extends TestCase
                 null,
                 'TestClass'
             ),
-            new CompletionItem(
-                'ChildClass',
-                CompletionItemKind::CLASS_,
-                'TestNamespace',
-                null,
-                null,
-                null,
-                '\TestNamespace\ChildClass'
-            ),
-            new CompletionItem(
-                'Example',
-                CompletionItemKind::CLASS_,
-                'TestNamespace',
-                null,
-                null,
-                null,
-                '\TestNamespace\Example'
-            )
         ], true), $items);
     }
 
+    /**
+     * Tests completion at `TestC|` with `use TestNamespace\TestClass`
+     */
     public function testUsedClass()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/used_class.php');
@@ -257,11 +260,74 @@ class CompletionTest extends TestCase
                     'laboris commodo ad commodo velit mollit qui non officia id. Nulla duis veniam' . "\n" .
                     'veniam officia deserunt et non dolore mollit ea quis eiusmod sit non. Occaecat' . "\n" .
                     'consequat sunt culpa exercitation pariatur id reprehenderit nisi incididunt Lorem' . "\n" .
-                    'sint. Officia culpa pariatur laborum nostrud cupidatat consequat mollit.'
+                    'sint. Officia culpa pariatur laborum nostrud cupidatat consequat mollit.',
+                null,
+                null,
+                'TestClass'
             )
         ], true), $items);
+
+        $this->assertCompletionsListDoesNotContainLabel('OtherClass', $items);
+        $this->assertCompletionsListDoesNotContainLabel('TestInterface', $items);
     }
 
+    /**
+     * Tests completion at `AliasNamespace\I|` with `use TestNamespace\InnerNamespace as AliasNamespace`
+     */
+    public function testUsedNamespaceWithPrefix()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/used_namespace.php');
+        $this->loader->open($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(8, 16)
+        )->wait();
+        $this->assertEquals(
+            new CompletionList([
+                new CompletionItem(
+                    'InnerClass',
+                    CompletionItemKind::CLASS_,
+                    'TestNamespace\\InnerNamespace',
+                    null,
+                    null,
+                    null,
+                    'AliasNamespace\\InnerClass'
+                )
+            ], true),
+            $items
+        );
+    }
+
+    /**
+     * Tests completion at `AliasNamespace\|` with `use TestNamespace\InnerNamespace as AliasNamespace`
+     */
+    public function testUsedNamespaceWithoutPrefix()
+    {
+        $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/used_namespace.php');
+        $this->loader->open($completionUri, file_get_contents($completionUri));
+        $items = $this->textDocument->completion(
+            new TextDocumentIdentifier($completionUri),
+            new Position(9, 15)
+        )->wait();
+        $this->assertEquals(
+            new CompletionList([
+                new CompletionItem(
+                    'InnerClass',
+                    CompletionItemKind::CLASS_,
+                    'TestNamespace\InnerNamespace',
+                    null,
+                    null,
+                    null,
+                    'AliasNamespace\InnerClass'
+                ),
+            ], true),
+            $items
+        );
+    }
+
+    /**
+     * Tests completion at `TestClass::$st|`
+     */
     public function testStaticPropertyWithPrefix()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/static_property_with_prefix.php');
@@ -283,6 +349,9 @@ class CompletionTest extends TestCase
         ], true), $items);
     }
 
+    /**
+     * Tests completion at `TestClass::|`
+     */
     public function testStaticWithoutPrefix()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/static.php');
@@ -316,6 +385,9 @@ class CompletionTest extends TestCase
         ], true), $items);
     }
 
+    /**
+     * Tests completion at `TestClass::st|`
+     */
     public function testStaticMethodWithPrefix()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/static_method_with_prefix.php');
@@ -326,21 +398,6 @@ class CompletionTest extends TestCase
         )->wait();
         $this->assertCompletionsListSubset(new CompletionList([
             new CompletionItem(
-                'TEST_CLASS_CONST',
-                CompletionItemKind::VARIABLE,
-                'int',
-                'Anim labore veniam consectetur laboris minim quis aute aute esse nulla ad.'
-            ),
-            new CompletionItem(
-                'staticTestProperty',
-                CompletionItemKind::PROPERTY,
-                '\TestClass[]',
-                'Lorem excepteur officia sit anim velit veniam enim.',
-                null,
-                null,
-                '$staticTestProperty'
-            ),
-            new CompletionItem(
                 'staticTestMethod',
                 CompletionItemKind::METHOD,
                 'mixed',
@@ -349,6 +406,9 @@ class CompletionTest extends TestCase
         ], true), $items);
     }
 
+    /**
+     * Tests completion at `TestClass::TE` at the root level.
+     */
     public function testClassConstWithPrefix()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/class_const_with_prefix.php');
@@ -363,25 +423,13 @@ class CompletionTest extends TestCase
                 CompletionItemKind::VARIABLE,
                 'int',
                 'Anim labore veniam consectetur laboris minim quis aute aute esse nulla ad.'
-            ),
-            new CompletionItem(
-                'staticTestProperty',
-                CompletionItemKind::PROPERTY,
-                '\TestClass[]',
-                'Lorem excepteur officia sit anim velit veniam enim.',
-                null,
-                null,
-                '$staticTestProperty'
-            ),
-            new CompletionItem(
-                'staticTestMethod',
-                CompletionItemKind::METHOD,
-                'mixed',
-                'Do magna consequat veniam minim proident eiusmod incididunt aute proident.'
             )
         ], true), $items);
     }
 
+    /**
+     * Test completion at `\TestC|` in a namespace
+     */
     public function testFullyQualifiedClass()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/fully_qualified_class.php');
@@ -400,14 +448,18 @@ class CompletionTest extends TestCase
                 'laboris commodo ad commodo velit mollit qui non officia id. Nulla duis veniam' . "\n" .
                 'veniam officia deserunt et non dolore mollit ea quis eiusmod sit non. Occaecat' . "\n" .
                 'consequat sunt culpa exercitation pariatur id reprehenderit nisi incididunt Lorem' . "\n" .
-                'sint. Officia culpa pariatur laborum nostrud cupidatat consequat mollit.',
-                null,
-                null,
-                'TestClass'
+                'sint. Officia culpa pariatur laborum nostrud cupidatat consequat mollit.'
             )
         ], true), $items);
+        // Assert that all results are non-namespaced.
+        foreach ($items->items as $item) {
+            $this->assertSame($item->detail, null);
+        }
     }
 
+    /**
+     * Tests completion at `cl|` at root level
+     */
     public function testKeywords()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/keywords.php');
@@ -422,6 +474,9 @@ class CompletionTest extends TestCase
         ], true), $items);
     }
 
+    /**
+     * Tests completion in an empty file
+     */
     public function testHtmlWithoutPrefix()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/html.php');
@@ -444,6 +499,9 @@ class CompletionTest extends TestCase
         ], true), $items);
     }
 
+    /**
+     * Tests completion in `<|` when not within `<?php` tags
+     */
     public function testHtmlWontBeProposedWithoutCompletionContext()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/html_with_prefix.php');
@@ -456,6 +514,9 @@ class CompletionTest extends TestCase
         $this->assertEquals(new CompletionList([], true), $items);
     }
 
+    /**
+     * Tests completion in `<|` when not within `<?php` tags
+     */
     public function testHtmlWontBeProposedWithPrefixWithCompletionContext()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/html_with_prefix.php');
@@ -480,6 +541,9 @@ class CompletionTest extends TestCase
         ], true), $items);
     }
 
+    /**
+     * Tests completion at `<|` when not within `<?php` tags when triggered by trigger character.
+     */
     public function testHtmlPrefixShouldNotTriggerCompletion()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/html_no_completion.php');
@@ -492,6 +556,9 @@ class CompletionTest extends TestCase
         $this->assertEquals(new CompletionList([], true), $items);
     }
 
+    /**
+     * Tests completion at `<|` when not within `<?php` tags when triggered by user input.
+     */
     public function testHtmlPrefixShouldTriggerCompletionIfManuallyInvoked()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/html_no_completion.php');
@@ -515,6 +582,9 @@ class CompletionTest extends TestCase
         ], true), $items);
     }
 
+    /**
+     * Tests completion at `SomeNa|` when namespace `SomeNamespace` is defined
+     */
     public function testNamespace()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/namespace.php');
@@ -526,17 +596,15 @@ class CompletionTest extends TestCase
         $this->assertCompletionsListSubset(new CompletionList([
             new CompletionItem(
                 'SomeNamespace',
-                CompletionItemKind::MODULE,
-                null,
-                null,
-                null,
-                null,
-                'SomeNamespace'
+                CompletionItemKind::MODULE
             )
         ], true), $items);
     }
 
-    public function testBarePhp()
+    /**
+     * Tests completion at `echo $ab|` at the root level.
+     */
+    public function testBarePhpVariable()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/bare_php.php');
         $this->loader->open($completionUri, file_get_contents($completionUri));
@@ -776,6 +844,16 @@ class CompletionTest extends TestCase
         $this->assertEquals($subsetList->isIncomplete, $list->isIncomplete);
     }
 
+    private function assertCompletionsListDoesNotContainLabel(string $label, CompletionList $list)
+    {
+        foreach ($list->items as $item) {
+            $this->assertNotSame($label, $item->label, "Completion list should not contain $label.");
+        }
+    }
+
+    /**
+     * Tests completion for `$this->|`
+     */
     public function testThisWithoutPrefix()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/this.php');
@@ -812,6 +890,9 @@ class CompletionTest extends TestCase
         ], true), $items);
     }
 
+    /**
+     * Tests completion at `$this->m|`
+     */
     public function testThisWithPrefix()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/this_with_prefix.php');
@@ -821,18 +902,6 @@ class CompletionTest extends TestCase
             new Position(12, 16)
         )->wait();
         $this->assertEquals(new CompletionList([
-            new CompletionItem(
-                'testProperty',
-                CompletionItemKind::PROPERTY,
-                '\TestClass', // Type of the property
-                'Reprehenderit magna velit mollit ipsum do.'
-            ),
-            new CompletionItem(
-                'testMethod',
-                CompletionItemKind::METHOD,
-                '\TestClass', // Return type of the method
-                'Non culpa nostrud mollit esse sunt laboris in irure ullamco cupidatat amet.'
-            ),
             new CompletionItem(
                 'foo',
                 CompletionItemKind::PROPERTY,
@@ -856,10 +925,25 @@ class CompletionTest extends TestCase
                 CompletionItemKind::METHOD,
                 'mixed', // Return type of the method
                 null
-            )
+            ),
+            new CompletionItem(
+                'testProperty',
+                CompletionItemKind::PROPERTY,
+                '\TestClass', // Type of the property
+                'Reprehenderit magna velit mollit ipsum do.'
+            ),
+            new CompletionItem(
+                'testMethod',
+                CompletionItemKind::METHOD,
+                '\TestClass', // Return type of the method
+                'Non culpa nostrud mollit esse sunt laboris in irure ullamco cupidatat amet.'
+            ),
         ], true), $items);
     }
 
+    /**
+     * Tests completion at `$this->foo()->q|`
+     */
     public function testThisReturnValue()
     {
         $completionUri = pathToUri(__DIR__ . '/../../../fixtures/completion/this_return_value.php');
@@ -870,11 +954,6 @@ class CompletionTest extends TestCase
         )->wait();
         $this->assertEquals(new CompletionList([
             new CompletionItem(
-                'foo',
-                CompletionItemKind::METHOD,
-                '$this' // Return type of the method
-            ),
-            new CompletionItem(
                 'bar',
                 CompletionItemKind::METHOD,
                 'mixed' // Return type of the method
@@ -883,7 +962,12 @@ class CompletionTest extends TestCase
                 'qux',
                 CompletionItemKind::METHOD,
                 'mixed' // Return type of the method
-            )
+            ),
+            new CompletionItem(
+                'foo',
+                CompletionItemKind::METHOD,
+                '$this' // Return type of the method
+            ),
         ], true), $items);
     }
 }
