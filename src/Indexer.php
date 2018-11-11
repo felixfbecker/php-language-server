@@ -152,12 +152,16 @@ class Indexer
                     // Dynamic constraints are not cached, because they can change every time
                     $packageVersion = ltrim($package->version, 'v');
                     if ($package->name === $packageName) {
-                        $packageKey = $packageName . ':' . $packageVersion;
                         if (strpos($packageVersion, 'dev') !== false) {
-                            $packageKey = $packageName . ':' . (isset($package->source) && isset($package->source->reference) ? 
-                                $package->source->reference : (isset($package->dist) && isset($package->dist->reference) ? 
-                                    $package->source->reference : $packageVersion));
+                            if (isset($package->source) && isset($package->source->reference)) {
+                                $packageVersion = $package->source->reference;
+                            } else {
+                                if (isset($package->dist) && isset($package->dist->reference)) {
+                                    $packageVersion = $package->source->reference;
+                                }
+                            }
                         }
+                        $packageKey = $packageName . ':' . $packageVersion;
                         $cacheKey = self::CACHE_VERSION . ':' . $packageKey;
                         // Check cache
                         $index = yield $this->cache->get($cacheKey);
