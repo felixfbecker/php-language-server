@@ -107,7 +107,9 @@ abstract class ServerTestCase extends TestCase
             'TestNamespace\\whatever()'                    => new Location($referencesUri, new Range(new Position(21,  0), new Position(23,   1))),
             'TestNamespace\\Example'                       => new Location($symbolsUri,    new Range(new Position(101, 0), new Position(104,  1))),
             'TestNamespace\\Example::__construct'          => new Location($symbolsUri,    new Range(new Position(102, 4), new Position(102, 36))),
-            'TestNamespace\\Example::__destruct'           => new Location($symbolsUri,    new Range(new Position(103, 4), new Position(103, 35)))
+            'TestNamespace\\Example::__destruct'           => new Location($symbolsUri,    new Range(new Position(103, 4), new Position(103, 35))),
+            'TestNamespace\\InnerNamespace'                => new Location($symbolsUri,    new Range(new Position(106, 0), new Position(106, 39))),
+            'TestNamespace\\InnerNamespace\\InnerClass'    => new Location($symbolsUri,    new Range(new Position(108, 0), new Position(109,  1))),
         ];
 
         $this->referenceLocations = [
