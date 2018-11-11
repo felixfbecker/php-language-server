@@ -1,6 +1,7 @@
 <?php
 
 /**
+ * Pariatur ut laborum tempor voluptate consequat ea deserunt.
  *
  * Deserunt enim minim sunt sint ea nisi. Deserunt excepteur tempor id nostrud
  * laboris commodo ad commodo velit mollit qui non officia id. Nulla duis veniam
