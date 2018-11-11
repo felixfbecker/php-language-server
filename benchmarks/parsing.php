@@ -45,8 +45,8 @@ foreach($frameworks as $framework) {
         if (filesize($testCaseFile) > 10000) {
             continue;
         }
-        if ($idx % 1000 === 0) {
-            echo "$idx\n";
+        if ($idx % 500 === 0) {
+            echo $idx . '/' . count($testProviderArray) . PHP_EOL;
         }
 
         $fileContents = file_get_contents($testCaseFile);
