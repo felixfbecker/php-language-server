@@ -12,6 +12,11 @@ use Sabre\Event\Promise;
 class ClientCache implements Cache
 {
     /**
+     * @var LanguageClient
+     */
+    public $client;
+
+    /**
      * @param LanguageClient $client
      */
     public function __construct(LanguageClient $client)
