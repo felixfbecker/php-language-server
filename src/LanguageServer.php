@@ -167,7 +167,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
      */
     public function initialize(ClientCapabilities $capabilities, string $rootPath = null, int $processId = null, string $rootUri = null): Promise
     {
-        if ($rootPath === null) {
+        if ($rootPath === null && $rootUri !== null) {
             $rootPath = uriToPath($rootUri);
         }
         return coroutine(function () use ($capabilities, $rootPath, $processId) {
