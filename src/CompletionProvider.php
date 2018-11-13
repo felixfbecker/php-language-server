@@ -159,7 +159,6 @@ class CompletionProvider
     ): CompletionList {
         // This can be made much more performant if the tree follows specific invariants.
         $node = $doc->getNodeAtPosition($pos);
-
         // Get the node at the position under the cursor
         $offset = $node === null ? -1 : $pos->toOffset($node->getFileContents());
         if (
@@ -248,18 +247,17 @@ class CompletionProvider
                 $this->definitionResolver->resolveExpressionNodeToType($node->dereferencableExpression)
             );
             $isInMethodDeclaration = null !== $node->getFirstAncestor(\Microsoft\PhpParser\Node\MethodDeclaration::class);
-            // Add the object access operator to only get members of all parents
-            $prefixes = [];
-            foreach ($this->expandParentFqns($fqns) as $prefix) {
-                $prefixes[] = $prefix . '->';
-            }
-
-            // Collect all definitions that match any of the prefixes
-            foreach ($this->index->getDefinitions() as $fqn => $def) {
-                foreach ($prefixes as $prefix) {
-                    if (substr($fqn, 0, strlen($prefix)) === $prefix &&
+            // The FQNs of the symbol and its parents (eg the implemented interfaces)
+            foreach ($this->expandParentFqns($fqns) as $parentFqn) {
+                // Add the object access operator to only get members of all parents
+                $prefix = $parentFqn . '->';
+                $prefixLen = strlen($prefix);
+                // Collect fqn definitions
+                foreach ($this->index->getChildDefinitionsForFqn($parentFqn) as $fqn => $def) {
+                    if (substr($fqn, 0, $prefixLen) === $prefix &&
                         $def->isMember &&
-                        $def->isVisible($prefix, $prefixes[0], $isInMethodDeclaration)) {
+                        $def->isVisible($prefix, $fqns[0] . '->', $isInMethodDeclaration)
+                        ) {
                         $list->items[] = CompletionItemFactory::fromDefinition($def);
                     }
                 }
