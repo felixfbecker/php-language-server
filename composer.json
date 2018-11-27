@@ -43,7 +43,7 @@
         "psr-4": {
             "LanguageServer\\": "src/"
         },
-        "files" : [
+        "files": [
             "src/utils.php",
             "src/FqnUtilities.php",
             "src/ParserHelpers.php"
@@ -62,7 +62,7 @@
         "post-install-cmd": "@parse-stubs",
         "post-update-cmd": "@parse-stubs",
         "test": "vendor/bin/phpunit",
-        "lint": "vendor/bin/phpcs"
+        "lint": "vendor/bin/phpcs -s"
     },
     "config": {
         "sort-packages": true

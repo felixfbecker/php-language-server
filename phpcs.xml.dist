@@ -4,10 +4,15 @@
     <file>tests</file>
     <exclude-pattern>tests/Validation/cases</exclude-pattern>
     <rule ref="PSR2">
-        <exclude name="PSR2.Namespaces.UseDeclaration.MultipleDeclarations"/>
-        <exclude name="PSR2.ControlStructures.ElseIfDeclaration.NotAllowed"/>
-        <exclude name="PSR2.ControlStructures.ControlStructureSpacing.SpacingAfterOpenBrace"/>
-        <exclude name="Squiz.WhiteSpace.ControlStructureSpacing.SpacingBeforeClose"/>
-        <exclude name="Squiz.WhiteSpace.ControlStructureSpacing.SpacingAfterOpen"/>
+        <exclude name="Generic.Files.LineLength.TooLong"></exclude>
+        <exclude name="PSR2.Namespaces.UseDeclaration.MultipleDeclarations" />
+        <exclude name="PSR2.ControlStructures.ElseIfDeclaration.NotAllowed" />
+        <exclude name="PSR2.ControlStructures.ControlStructureSpacing.SpacingAfterOpenBrace" />
+        <exclude name="PSR2.Methods.FunctionCallSignature.Indent" />
+        <exclude name="Squiz.WhiteSpace.ControlStructureSpacing.SpacingBeforeClose" />
+        <exclude name="Squiz.WhiteSpace.ControlStructureSpacing.SpacingAfterOpen" />
+        <exclude name="Squiz.ControlStructures.ForEachLoopDeclaration.SpaceAfterOpen" />
+        <exclude name="Squiz.ControlStructures.ForEachLoopDeclaration.SpacingBeforeAs" />
+        <exclude name="Squiz.ControlStructures.ForEachLoopDeclaration.SpaceBeforeClose" />
     </rule>
 </ruleset>

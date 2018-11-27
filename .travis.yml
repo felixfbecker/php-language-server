@@ -16,7 +16,11 @@ cache:
 
 install:
   - composer install --prefer-dist --no-interaction
+  - nvm install 10
+  - nvm use 10
+  - npm ci
 script:
+  - npm run prettier
   - vendor/bin/phpcs -n
   - vendor/bin/phpunit --coverage-clover=coverage.xml --colors=always
   - bash <(curl -s https://codecov.io/bash)
@@ -41,8 +45,8 @@ jobs:
       services:
         - docker
       install:
-        - nvm install 8
-        - nvm use 8
+        - nvm install 10
+        - nvm use 10
         - npm install
       script:
         - ./node_modules/.bin/semantic-release

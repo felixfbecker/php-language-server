@@ -4,8 +4,13 @@
     "type": "git",
     "url": "https://github.com/felixfbecker/php-language-server.git"
   },
+  "scripts": {
+    "prettier": "prettier '**/{*.php,*.json,*.yml,*.md,.prettierrc,.*.yml}' --write --list-different"
+  },
   "devDependencies": {
+    "@prettier/plugin-php": "^0.9.0",
     "@semantic-release/exec": "^3.1.0",
+    "prettier": "^1.15.2",
     "semantic-release": "^15.9.9",
     "semantic-release-docker": "^2.1.0"
   },
