@@ -1,13 +1,11 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\Tests\Server\TextDocument;
 
 use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
-use LanguageServer\{
-    Server, LanguageClient, PhpDocumentLoader, DefinitionResolver
-};
+use LanguageServer\{Server, LanguageClient, PhpDocumentLoader, DefinitionResolver};
 use LanguageServer\ContentRetriever\FileSystemContentRetriever;
 use LanguageServer\Index\{Index, ProjectIndex, DependenciesIndex};
 use LanguageServerProtocol\{TextDocumentItem, TextDocumentIdentifier};
@@ -16,10 +14,10 @@ class DidCloseTest extends TestCase
 {
     public function test()
     {
-        $projectIndex = new ProjectIndex(new Index, new DependenciesIndex);
-        $client = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
+        $projectIndex = new ProjectIndex(new Index(), new DependenciesIndex());
+        $client = new LanguageClient(new MockProtocolStream(), new MockProtocolStream());
         $definitionResolver = new DefinitionResolver($projectIndex);
-        $loader = new PhpDocumentLoader(new FileSystemContentRetriever, $projectIndex, $definitionResolver);
+        $loader = new PhpDocumentLoader(new FileSystemContentRetriever(), $projectIndex, $definitionResolver);
         $textDocument = new Server\TextDocument($loader, $definitionResolver, $client, $projectIndex);
         $phpDocument = $loader->open('whatever', "<?php\necho 'Hello, World'\n");
 

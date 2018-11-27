@@ -1,10 +1,15 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\Server;
 
 use LanguageServer\{
-    CompletionProvider, SignatureHelpProvider, LanguageClient, PhpDocument, PhpDocumentLoader, DefinitionResolver
+    CompletionProvider,
+    SignatureHelpProvider,
+    LanguageClient,
+    PhpDocument,
+    PhpDocumentLoader,
+    DefinitionResolver
 };
 use LanguageServer\Index\ReadableIndex;
 use LanguageServer\Factory\LocationFactory;
@@ -28,9 +33,7 @@ use LanguageServerProtocol\{
 use Microsoft\PhpParser\Node;
 use Sabre\Event\Promise;
 use Sabre\Uri;
-use function LanguageServer\{
-    isVendored, waitForEvent, getPackageName
-};
+use function LanguageServer\{isVendored, waitForEvent, getPackageName};
 use function Sabre\Event\coroutine;
 
 /**
@@ -180,7 +183,7 @@ class TextDocument
         Position $position
     ): Promise {
         return coroutine(function () use ($textDocument, $position) {
-            $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
+            $document = (yield $this->documentLoader->getOrLoad($textDocument->uri));
             $node = $document->getNodeAtPosition($position);
             if ($node === null) {
                 return [];
@@ -189,10 +192,10 @@ class TextDocument
             // Variables always stay in the boundary of the file and need to be searched inside their function scope
             // by traversing the AST
             if (
-
-            ($node instanceof Node\Expression\Variable && !($node->getParent()->getParent() instanceof Node\PropertyDeclaration))
-                || $node instanceof Node\Parameter
-                || $node instanceof Node\UseVariableName
+                ($node instanceof Node\Expression\Variable &&
+                    !($node->getParent()->getParent() instanceof Node\PropertyDeclaration)) ||
+                $node instanceof Node\Parameter ||
+                $node instanceof Node\UseVariableName
             ) {
                 if (isset($node->name) && $node->name instanceof Node\Expression) {
                     return null;
@@ -200,14 +203,20 @@ class TextDocument
                 // Find function/method/closure scope
                 $n = $node;
 
-                $n = $n->getFirstAncestor(Node\Statement\FunctionDeclaration::class, Node\MethodDeclaration::class, Node\Expression\AnonymousFunctionCreationExpression::class, Node\SourceFileNode::class);
+                $n = $n->getFirstAncestor(
+                    Node\Statement\FunctionDeclaration::class,
+                    Node\MethodDeclaration::class,
+                    Node\Expression\AnonymousFunctionCreationExpression::class,
+                    Node\SourceFileNode::class
+                );
 
                 if ($n === null) {
                     $n = $node->getFirstAncestor(Node\Statement\ExpressionStatement::class)->getParent();
                 }
 
                 foreach ($n->getDescendantNodes() as $descendantNode) {
-                    if ($descendantNode instanceof Node\Expression\Variable &&
+                    if (
+                        $descendantNode instanceof Node\Expression\Variable &&
                         $descendantNode->getName() === $node->getName()
                     ) {
                         $locations[] = LocationFactory::fromNode($descendantNode);
@@ -231,7 +240,7 @@ class TextDocument
                 foreach ($this->index->getReferenceUris($fqn) as $uri) {
                     $refDocumentPromises[] = $this->documentLoader->getOrLoad($uri);
                 }
-                $refDocuments = yield Promise\all($refDocumentPromises);
+                $refDocuments = (yield Promise\all($refDocumentPromises));
                 foreach ($refDocuments as $document) {
                     $refs = $document->getReferenceNodesByFqn($fqn);
                     if ($refs !== null) {
@@ -257,7 +266,7 @@ class TextDocument
     public function signatureHelp(TextDocumentIdentifier $textDocument, Position $position): Promise
     {
         return coroutine(function () use ($textDocument, $position) {
-            $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
+            $document = (yield $this->documentLoader->getOrLoad($textDocument->uri));
             return $this->signatureHelpProvider->getSignatureHelp($document, $position);
         });
     }
@@ -273,7 +282,7 @@ class TextDocument
     public function definition(TextDocumentIdentifier $textDocument, Position $position): Promise
     {
         return coroutine(function () use ($textDocument, $position) {
-            $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
+            $document = (yield $this->documentLoader->getOrLoad($textDocument->uri));
             $node = $document->getNodeAtPosition($position);
             if ($node === null) {
                 return [];
@@ -294,9 +303,9 @@ class TextDocument
                 yield waitForEvent($this->index, 'definition-added');
             }
             if (
-                $def === null
-                || $def->symbolInformation === null
-                || Uri\parse($def->symbolInformation->location->uri)['scheme'] === 'phpstubs'
+                $def === null ||
+                $def->symbolInformation === null ||
+                Uri\parse($def->symbolInformation->location->uri)['scheme'] === 'phpstubs'
             ) {
                 return [];
             }
@@ -314,7 +323,7 @@ class TextDocument
     public function hover(TextDocumentIdentifier $textDocument, Position $position): Promise
     {
         return coroutine(function () use ($textDocument, $position) {
-            $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
+            $document = (yield $this->documentLoader->getOrLoad($textDocument->uri));
             // Find the node under the cursor
             $node = $document->getNodeAtPosition($position);
             if ($node === null) {
@@ -365,10 +374,13 @@ class TextDocument
      * @param CompletionContext|null $context The completion context
      * @return Promise <CompletionItem[]|CompletionList>
      */
-    public function completion(TextDocumentIdentifier $textDocument, Position $position, CompletionContext $context = null): Promise
-    {
+    public function completion(
+        TextDocumentIdentifier $textDocument,
+        Position $position,
+        CompletionContext $context = null
+    ): Promise {
         return coroutine(function () use ($textDocument, $position, $context) {
-            $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
+            $document = (yield $this->documentLoader->getOrLoad($textDocument->uri));
             return $this->completionProvider->provideCompletion($document, $position, $context);
         });
     }
@@ -388,7 +400,7 @@ class TextDocument
     public function xdefinition(TextDocumentIdentifier $textDocument, Position $position): Promise
     {
         return coroutine(function () use ($textDocument, $position) {
-            $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
+            $document = (yield $this->documentLoader->getOrLoad($textDocument->uri));
             $node = $document->getNodeAtPosition($position);
             if ($node === null) {
                 return [];
@@ -409,9 +421,9 @@ class TextDocument
                 yield waitForEvent($this->index, 'definition-added');
             }
             if (
-                $def === null
-                || $def->symbolInformation === null
-                || Uri\parse($def->symbolInformation->location->uri)['scheme'] === 'phpstubs'
+                $def === null ||
+                $def->symbolInformation === null ||
+                Uri\parse($def->symbolInformation->location->uri)['scheme'] === 'phpstubs'
             ) {
                 return [];
             }

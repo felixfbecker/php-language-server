@@ -1,15 +1,11 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\Tests\Server;
 
-use LanguageServer\{
-    PhpDocument, PhpDocumentLoader, Project, DefinitionResolver
-};
+use LanguageServer\{PhpDocument, PhpDocumentLoader, Project, DefinitionResolver};
 use LanguageServer\ContentRetriever\FileSystemContentRetriever;
-use LanguageServer\Index\{
-    DependenciesIndex, Index, ProjectIndex
-};
+use LanguageServer\Index\{DependenciesIndex, Index, ProjectIndex};
 use PHPUnit\Framework\TestCase;
 use function LanguageServer\pathToUri;
 
@@ -22,9 +18,9 @@ class PhpDocumentLoaderTest extends TestCase
 
     public function setUp()
     {
-        $projectIndex = new ProjectIndex(new Index, new DependenciesIndex);
+        $projectIndex = new ProjectIndex(new Index(), new DependenciesIndex());
         $this->loader = new PhpDocumentLoader(
-            new FileSystemContentRetriever,
+            new FileSystemContentRetriever(),
             $projectIndex,
             new DefinitionResolver($projectIndex)
         );

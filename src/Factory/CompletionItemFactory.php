@@ -17,12 +17,12 @@ class CompletionItemFactory
      */
     public static function fromDefinition(Definition $def)
     {
-        $item = new CompletionItem;
+        $item = new CompletionItem();
         $item->label = $def->symbolInformation->name;
         $item->kind = CompletionItemKind::fromSymbolKind($def->symbolInformation->kind);
         if ($def->type) {
-            $item->detail = (string)$def->type;
-        } else if ($def->symbolInformation->containerName) {
+            $item->detail = (string) $def->type;
+        } elseif ($def->symbolInformation->containerName) {
             $item->detail = $def->symbolInformation->containerName;
         }
         if ($def->documentation) {

@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\Tests;
 
@@ -20,13 +20,13 @@ class ProtocolStreamReaderTest extends TestCase
         $reader->on('message', function (Message $message) use (&$msg) {
             $msg = $message;
         });
-        $ret = fwrite($writeHandle, (string)new Message(new RequestBody(1, 'aMethod', ['arg' => 'Hello World'])));
+        $ret = fwrite($writeHandle, (string) new Message(new RequestBody(1, 'aMethod', ['arg' => 'Hello World'])));
         Loop\tick();
         $this->assertNotNull($msg);
         $this->assertInstanceOf(Message::class, $msg);
         $this->assertInstanceOf(RequestBody::class, $msg->body);
         $this->assertEquals(1, $msg->body->id);
         $this->assertEquals('aMethod', $msg->body->method);
-        $this->assertEquals((object)['arg' => 'Hello World'], $msg->body->params);
+        $this->assertEquals((object) ['arg' => 'Hello World'], $msg->body->params);
     }
 }

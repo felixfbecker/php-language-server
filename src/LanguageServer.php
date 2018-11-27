@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer;
 
@@ -119,30 +119,30 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
             $this->exit();
         });
         $this->protocolReader->on('message', function (Message $msg) {
+            // Ignore responses, this is the handler for requests and notifications
+            // Invoke the method handler to get a result
+            // If a ResponseError is thrown, send it back in the Response
+            // If an unexpected error occurred, send back an INTERNAL_ERROR error response
+            // Only send a Response for a Request
+            // Notifications do not send Responses
             coroutine(function () use ($msg) {
-                // Ignore responses, this is the handler for requests and notifications
                 if (AdvancedJsonRpc\Response::isResponse($msg->body)) {
                     return;
                 }
                 $result = null;
                 $error = null;
                 try {
-                    // Invoke the method handler to get a result
-                    $result = yield $this->dispatch($msg->body);
+                    $result = (yield $this->dispatch($msg->body));
                 } catch (AdvancedJsonRpc\Error $e) {
-                    // If a ResponseError is thrown, send it back in the Response
                     $error = $e;
                 } catch (Throwable $e) {
-                    // If an unexpected error occurred, send back an INTERNAL_ERROR error response
                     $error = new AdvancedJsonRpc\Error(
-                        (string)$e,
+                        (string) $e,
                         AdvancedJsonRpc\ErrorCode::INTERNAL_ERROR,
                         null,
                         $e
                     );
                 }
-                // Only send a Response for a Request
-                // Notifications do not send Responses
                 if (AdvancedJsonRpc\Request::isRequest($msg->body)) {
                     if ($error !== null) {
                         $responseBody = new AdvancedJsonRpc\ErrorResponse($msg->body->id, $error);
@@ -165,27 +165,30 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
      * @param int|null $processId The process Id of the parent process that started the server. Is null if the process has not been started by another process. If the parent process is not alive then the server should exit (see exit notification) its process.
      * @return Promise <InitializeResult>
      */
-    public function initialize(ClientCapabilities $capabilities, string $rootPath = null, int $processId = null, string $rootUri = null): Promise
-    {
+    public function initialize(
+        ClientCapabilities $capabilities,
+        string $rootPath = null,
+        int $processId = null,
+        string $rootUri = null
+    ): Promise {
         if ($rootPath === null && $rootUri !== null) {
             $rootPath = uriToPath($rootUri);
         }
         return coroutine(function () use ($capabilities, $rootPath, $processId) {
-
             if ($capabilities->xfilesProvider) {
                 $this->filesFinder = new ClientFilesFinder($this->client);
             } else {
-                $this->filesFinder = new FileSystemFilesFinder;
+                $this->filesFinder = new FileSystemFilesFinder();
             }
 
             if ($capabilities->xcontentProvider) {
                 $this->contentRetriever = new ClientContentRetriever($this->client);
             } else {
-                $this->contentRetriever = new FileSystemContentRetriever;
+                $this->contentRetriever = new FileSystemContentRetriever();
             }
 
-            $dependenciesIndex = new DependenciesIndex;
-            $sourceIndex = new Index;
+            $dependenciesIndex = new DependenciesIndex();
+            $sourceIndex = new Index();
             $this->projectIndex = new ProjectIndex($sourceIndex, $dependenciesIndex, $this->composerJson);
             $stubsIndex = StubsIndex::read();
             $this->globalIndex = new GlobalIndex($stubsIndex, $this->projectIndex);
@@ -204,25 +207,33 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
 
                 // Find composer.json
                 if ($this->composerJson === null) {
-                    $composerJsonFiles = yield $this->filesFinder->find(Path::makeAbsolute('**/composer.json', $rootPath));
+                    $composerJsonFiles = (yield $this->filesFinder->find(
+                        Path::makeAbsolute('**/composer.json', $rootPath)
+                    ));
                     sortUrisLevelOrder($composerJsonFiles);
 
                     if (!empty($composerJsonFiles)) {
-                        $this->composerJson = json_decode(yield $this->contentRetriever->retrieve($composerJsonFiles[0]));
+                        $this->composerJson = json_decode(
+                            yield $this->contentRetriever->retrieve($composerJsonFiles[0])
+                        );
                     }
                 }
 
                 // Find composer.lock
                 if ($this->composerLock === null) {
-                    $composerLockFiles = yield $this->filesFinder->find(Path::makeAbsolute('**/composer.lock', $rootPath));
+                    $composerLockFiles = (yield $this->filesFinder->find(
+                        Path::makeAbsolute('**/composer.lock', $rootPath)
+                    ));
                     sortUrisLevelOrder($composerLockFiles);
 
                     if (!empty($composerLockFiles)) {
-                        $this->composerLock = json_decode(yield $this->contentRetriever->retrieve($composerLockFiles[0]));
+                        $this->composerLock = json_decode(
+                            yield $this->contentRetriever->retrieve($composerLockFiles[0])
+                        );
                     }
                 }
 
-                $cache = $capabilities->xcacheProvider ? new ClientCache($this->client) : new FileSystemCache;
+                $cache = $capabilities->xcacheProvider ? new ClientCache($this->client) : new FileSystemCache();
 
                 // Index in background
                 $indexer = new Indexer(
@@ -238,7 +249,6 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                 );
                 $indexer->index()->otherwise('\\LanguageServer\\crash');
             }
-
 
             if ($this->textDocument === null) {
                 $this->textDocument = new Server\TextDocument(
@@ -276,7 +286,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
             // Support "Hover"
             $serverCapabilities->hoverProvider = true;
             // Support "Completion"
-            $serverCapabilities->completionProvider = new CompletionOptions;
+            $serverCapabilities->completionProvider = new CompletionOptions();
             $serverCapabilities->completionProvider->resolveProvider = false;
             $serverCapabilities->completionProvider->triggerCharacters = ['$', '>'];
 

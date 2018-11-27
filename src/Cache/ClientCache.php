@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\Cache;
 
@@ -32,9 +32,12 @@ class ClientCache implements Cache
      */
     public function get(string $key): Promise
     {
-        return $this->client->xcache->get($key)->then('unserialize')->otherwise(function () {
-            // Ignore
-        });
+        return $this->client->xcache
+            ->get($key)
+            ->then('unserialize')
+            ->otherwise(function () {
+                // Ignore
+            });
     }
 
     /**

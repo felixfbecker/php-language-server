@@ -8,7 +8,10 @@ $options = getopt('', ['tcp::', 'tcp-server::', 'memory-limit::']);
 
 ini_set('memory_limit', $options['memory-limit'] ?? '4G');
 
-foreach ([__DIR__ . '/../../../autoload.php', __DIR__ . '/../autoload.php', __DIR__ . '/../vendor/autoload.php'] as $file) {
+foreach (
+    [__DIR__ . '/../../../autoload.php', __DIR__ . '/../autoload.php', __DIR__ . '/../vendor/autoload.php']
+    as $file
+) {
     if (file_exists($file)) {
         require $file;
         break;
@@ -28,7 +31,7 @@ $logger = new StderrLogger();
 
 // Only write uncaught exceptions to STDERR, not STDOUT
 set_exception_handler(function (\Throwable $e) use ($logger) {
-    $logger->critical((string)$e);
+    $logger->critical((string) $e);
 });
 
 @cli_set_process_title('PHP Language Server');
@@ -48,12 +51,9 @@ if (!empty($options['tcp'])) {
         exit(1);
     }
     stream_set_blocking($socket, false);
-    $ls = new LanguageServer(
-        new ProtocolStreamReader($socket),
-        new ProtocolStreamWriter($socket)
-    );
+    $ls = new LanguageServer(new ProtocolStreamReader($socket), new ProtocolStreamWriter($socket));
     Loop\run();
-} else if (!empty($options['tcp-server'])) {
+} elseif (!empty($options['tcp-server'])) {
     // Run a TCP Server
     $address = $options['tcp-server'];
     $tcpServer = stream_socket_server('tcp://' . $address, $errno, $errstr);
@@ -66,7 +66,7 @@ if (!empty($options['tcp'])) {
     if (!$pcntlAvailable) {
         $logger->notice('PCNTL is not available. Only a single connection will be accepted');
     }
-    while ($socket = stream_socket_accept($tcpServer, -1)) {
+    while (($socket = stream_socket_accept($tcpServer, -1))) {
         $logger->debug('Connection accepted');
         stream_set_blocking($socket, false);
         if ($pcntlAvailable) {
@@ -76,7 +76,7 @@ if (!empty($options['tcp'])) {
             if ($pid === -1) {
                 $logger->critical('Could not fork');
                 exit(1);
-            } else if ($pid === 0) {
+            } elseif ($pid === 0) {
                 // Child process
                 $reader = new ProtocolStreamReader($socket);
                 $writer = new ProtocolStreamWriter($socket);
@@ -91,10 +91,7 @@ if (!empty($options['tcp'])) {
         } else {
             // If PCNTL is not available, we only accept one connection.
             // An exit notification will terminate the server
-            $ls = new LanguageServer(
-                new ProtocolStreamReader($socket),
-                new ProtocolStreamWriter($socket)
-            );
+            $ls = new LanguageServer(new ProtocolStreamReader($socket), new ProtocolStreamWriter($socket));
             Loop\run();
         }
     }
@@ -102,9 +99,6 @@ if (!empty($options['tcp'])) {
     // Use STDIO
     $logger->debug('Listening on STDIN');
     stream_set_blocking(STDIN, false);
-    $ls = new LanguageServer(
-        new ProtocolStreamReader(STDIN),
-        new ProtocolStreamWriter(STDOUT)
-    );
+    $ls = new LanguageServer(new ProtocolStreamReader(STDIN), new ProtocolStreamWriter(STDOUT));
     Loop\run();
 }

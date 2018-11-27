@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\Tests;
 
@@ -21,7 +21,7 @@ class MockProtocolStream extends Emitter implements ProtocolReader, ProtocolWrit
     public function write(Message $msg): Promise
     {
         Loop\nextTick(function () use ($msg) {
-            $this->emit('message', [Message::parse((string)$msg)]);
+            $this->emit('message', [Message::parse((string) $msg)]);
         });
         return Promise\resolve(null);
     }

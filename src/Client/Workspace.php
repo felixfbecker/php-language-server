@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\Client;
 
@@ -37,10 +37,7 @@ class Workspace
      */
     public function xfiles(string $base = null): Promise
     {
-        return $this->handler->request(
-            'workspace/xfiles',
-            ['base' => $base]
-        )->then(function (array $textDocuments) {
+        return $this->handler->request('workspace/xfiles', ['base' => $base])->then(function (array $textDocuments) {
             return $this->mapper->mapArray($textDocuments, [], TextDocumentIdentifier::class);
         });
     }

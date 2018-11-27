@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer;
 
@@ -74,7 +74,7 @@ function crash(Throwable $err)
  */
 function timeout($seconds = 0): Promise
 {
-    $promise = new Promise;
+    $promise = new Promise();
     Loop\setTimeout([$promise, 'fulfill'], $seconds);
     return $promise;
 }
@@ -88,7 +88,7 @@ function timeout($seconds = 0): Promise
  */
 function waitForEvent(EmitterInterface $emitter, string $event): Promise
 {
-    $p = new Promise;
+    $p = new Promise();
     $emitter->once($event, [$p, 'fulfill']);
     return $p;
 }

@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\Tests\Server\Workspace;
 
@@ -17,11 +17,19 @@ class DidChangeWatchedFilesTest extends ServerTestCase
 {
     public function testDeletingFileClearsAllDiagnostics()
     {
-        $client = new LanguageClient(new MockProtocolStream(), $writer = new MockProtocolStream());
-        $projectIndex = new ProjectIndex($sourceIndex = new Index(), $dependenciesIndex = new DependenciesIndex());
+        $client = new LanguageClient(new MockProtocolStream(), ($writer = new MockProtocolStream()));
+        $projectIndex = new ProjectIndex(($sourceIndex = new Index()), ($dependenciesIndex = new DependenciesIndex()));
         $definitionResolver = new DefinitionResolver($projectIndex);
         $loader = new PhpDocumentLoader(new FileSystemContentRetriever(), $projectIndex, $definitionResolver);
-        $workspace = new Server\Workspace($client, $projectIndex, $dependenciesIndex, $sourceIndex, null, $loader, null);
+        $workspace = new Server\Workspace(
+            $client,
+            $projectIndex,
+            $dependenciesIndex,
+            $sourceIndex,
+            null,
+            $loader,
+            null
+        );
 
         $fileEvent = new FileEvent('my uri', FileChangeType::DELETED);
 

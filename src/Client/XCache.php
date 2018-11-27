@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\Client;
 
@@ -37,6 +37,9 @@ class XCache
      */
     public function set(string $key, $value): Promise
     {
-        return $this->handler->notify('xcache/set', ['key' => $key, 'value' => $value]);
+        return $this->handler->notify('xcache/set', [
+            'key' => $key,
+            'value' => $value
+        ]);
     }
 }

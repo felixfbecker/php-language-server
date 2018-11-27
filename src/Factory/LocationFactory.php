@@ -24,9 +24,12 @@ class LocationFactory
             $node->getFileContents()
         );
 
-        return new Location($node->getUri(), new Range(
-            new Position($range->start->line, $range->start->character),
-            new Position($range->end->line, $range->end->character)
-        ));
+        return new Location(
+            $node->getUri(),
+            new Range(
+                new Position($range->start->line, $range->start->character),
+                new Position($range->end->line, $range->end->character)
+            )
+        );
     }
 }

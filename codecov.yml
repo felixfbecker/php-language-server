@@ -1,4 +1,3 @@
-
 coverage:
   status:
     project:
@@ -8,9 +7,9 @@ coverage:
         base: auto
 
 comment:
-  layout: "header, diff, tree, changes"
+  layout: 'header, diff, tree, changes'
   behavior: default
-  require_changes: false  # if true: only post the comment if coverage changes
+  require_changes: false # if true: only post the comment if coverage changes
   branches: null
   flags: null
   paths: null

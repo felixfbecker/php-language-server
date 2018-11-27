@@ -16,11 +16,11 @@ function getFqnsFromType($type): array
     if ($type instanceof Types\Object_) {
         $fqsen = $type->getFqsen();
         if ($fqsen !== null) {
-            $fqns[] = substr((string)$fqsen, 1);
+            $fqns[] = substr((string) $fqsen, 1);
         }
     }
     if ($type instanceof Types\Compound) {
-        for ($i = 0; $t = $type->get($i); $i++) {
+        for ($i = 0; ($t = $type->get($i)); $i++) {
             foreach (getFqnsFromType($t) as $fqn) {
                 $fqns[] = $fqn;
             }
@@ -42,7 +42,8 @@ function getFqnsFromType($type): array
  */
 function nameGetParent(string $name): string
 {
-    if ($name === '') { // Special-case handling for the root namespace.
+    if ($name === '') {
+        // Special-case handling for the root namespace.
         return '';
     }
     $parts = explode('\\', $name);
@@ -113,6 +114,5 @@ function nameWithoutFirstPart(string $name): string
  */
 function nameStartsWith(string $name, string $prefix): bool
 {
-    return strlen($name) >= strlen($prefix)
-        && strncmp($name, $prefix, strlen($prefix)) === 0;
+    return strlen($name) >= strlen($prefix) && strncmp($name, $prefix, strlen($prefix)) === 0;
 }

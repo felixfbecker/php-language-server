@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\Index;
 
@@ -134,7 +134,7 @@ abstract class AbstractAggregateIndex implements ReadableIndex
     public function getDefinition(string $fqn, bool $globalFallback = false)
     {
         foreach ($this->getIndexes() as $index) {
-            if ($def = $index->getDefinition($fqn, $globalFallback)) {
+            if (($def = $index->getDefinition($fqn, $globalFallback))) {
                 return $def;
             }
         }

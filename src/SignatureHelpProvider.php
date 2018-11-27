@@ -1,13 +1,10 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer;
 
 use LanguageServer\Index\ReadableIndex;
-use LanguageServerProtocol\{
-    Position,
-    SignatureHelp
-};
+use LanguageServerProtocol\{Position, SignatureHelp};
 use Microsoft\PhpParser\Node;
 use Sabre\Event\Promise;
 use function Sabre\Event\coroutine;
@@ -30,8 +27,11 @@ class SignatureHelpProvider
      * @param ReadableIndex      $index
      * @param PhpDocumentLoader  $documentLoader
      */
-    public function __construct(DefinitionResolver $definitionResolver, ReadableIndex $index, PhpDocumentLoader $documentLoader)
-    {
+    public function __construct(
+        DefinitionResolver $definitionResolver,
+        ReadableIndex $index,
+        PhpDocumentLoader $documentLoader
+    ) {
         $this->definitionResolver = $definitionResolver;
         $this->index = $index;
         $this->documentLoader = $documentLoader;
@@ -52,7 +52,7 @@ class SignatureHelpProvider
             $node = $doc->getNodeAtPosition($position);
 
             // Find the definition of the item being called
-            list($def, $argumentExpressionList) = yield $this->getCallingInfo($node);
+            list($def, $argumentExpressionList) = (yield $this->getCallingInfo($node));
 
             if (!$def || !$def->signatureInformation) {
                 return new SignatureHelp();

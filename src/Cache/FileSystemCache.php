@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\Cache;
 
@@ -19,7 +19,7 @@ class FileSystemCache implements Cache
     {
         if (strtoupper(substr(php_uname('s'), 0, 3)) === 'WIN') {
             $this->cacheDir = getenv('LOCALAPPDATA') . '\\PHP Language Server\\';
-        } else if (getenv('XDG_CACHE_HOME')) {
+        } elseif (getenv('XDG_CACHE_HOME')) {
             $this->cacheDir = getenv('XDG_CACHE_HOME') . '/phpls/';
         } else {
             $this->cacheDir = getenv('HOME') . '/.phpls/';

@@ -1,12 +1,10 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer;
 
 use LanguageServer\Index\Index;
-use LanguageServerProtocol\{
-    Diagnostic, Position, Range
-};
+use LanguageServerProtocol\{Diagnostic, Position, Range};
 use Microsoft\PhpParser;
 use Microsoft\PhpParser\Node;
 use phpDocumentor\Reflection\DocBlockFactory;
@@ -144,7 +142,13 @@ class PhpDocument
         $this->definitions = null;
         $this->definitionNodes = null;
 
-        $treeAnalyzer = new TreeAnalyzer($this->parser, $content, $this->docBlockFactory, $this->definitionResolver, $this->uri);
+        $treeAnalyzer = new TreeAnalyzer(
+            $this->parser,
+            $content,
+            $this->docBlockFactory,
+            $this->definitionResolver,
+            $this->uri
+        );
 
         $this->diagnostics = $treeAnalyzer->getDiagnostics();
 
@@ -162,7 +166,7 @@ class PhpDocument
         foreach ($this->referenceNodes as $fqn => $nodes) {
             // Cast the key to string. If (string)'2' is set as an array index, it will read out as (int)2. We must
             // deal with incorrect code, so this is a valid scenario.
-            $this->index->addReferenceUri((string)$fqn, $this->uri);
+            $this->index->addReferenceUri((string) $fqn, $this->uri);
         }
 
         $this->sourceFileNode = $treeAnalyzer->getSourceFileNode();

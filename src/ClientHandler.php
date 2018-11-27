@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer;
 
@@ -27,7 +27,7 @@ class ClientHandler
     {
         $this->protocolReader = $protocolReader;
         $this->protocolWriter = $protocolWriter;
-        $this->idGenerator = new IdGenerator;
+        $this->idGenerator = new IdGenerator();
     }
 
     /**
@@ -40,26 +40,24 @@ class ClientHandler
     public function request(string $method, $params): Promise
     {
         $id = $this->idGenerator->generate();
-        return $this->protocolWriter->write(
-            new Message(
-                new AdvancedJsonRpc\Request($id, $method, (object)$params)
-            )
-        )->then(function () use ($id) {
-            $promise = new Promise;
-            $listener = function (Message $msg) use ($id, $promise, &$listener) {
-                if (AdvancedJsonRpc\Response::isResponse($msg->body) && $msg->body->id === $id) {
-                    // Received a response
-                    $this->protocolReader->removeListener('message', $listener);
-                    if (AdvancedJsonRpc\SuccessResponse::isSuccessResponse($msg->body)) {
-                        $promise->fulfill($msg->body->result);
-                    } else {
-                        $promise->reject($msg->body->error);
+        return $this->protocolWriter
+            ->write(new Message(new AdvancedJsonRpc\Request($id, $method, (object) $params)))
+            ->then(function () use ($id) {
+                $promise = new Promise();
+                $listener = function (Message $msg) use ($id, $promise, &$listener) {
+                    if (AdvancedJsonRpc\Response::isResponse($msg->body) && $msg->body->id === $id) {
+                        // Received a response
+                        $this->protocolReader->removeListener('message', $listener);
+                        if (AdvancedJsonRpc\SuccessResponse::isSuccessResponse($msg->body)) {
+                            $promise->fulfill($msg->body->result);
+                        } else {
+                            $promise->reject($msg->body->error);
+                        }
                     }
-                }
-            };
-            $this->protocolReader->on('message', $listener);
-            return $promise;
-        });
+                };
+                $this->protocolReader->on('message', $listener);
+                return $promise;
+            });
     }
 
     /**
@@ -71,10 +69,6 @@ class ClientHandler
      */
     public function notify(string $method, $params): Promise
     {
-        return $this->protocolWriter->write(
-            new Message(
-                new AdvancedJsonRpc\Notification($method, (object)$params)
-            )
-        );
+        return $this->protocolWriter->write(new Message(new AdvancedJsonRpc\Notification($method, (object) $params)));
     }
 }

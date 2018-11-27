@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer;
 
@@ -116,7 +116,7 @@ class CompletionProvider
         'from', // As in yield from
         'strict_types',
         'ticks', // As in declare(ticks=1)
-        'encoding', // As in declare(encoding='EBCDIC')
+        'encoding' // As in declare(encoding='EBCDIC')
     ];
 
     /**
@@ -163,18 +163,19 @@ class CompletionProvider
         // Get the node at the position under the cursor
         $offset = $node === null ? -1 : $pos->toOffset($node->getFileContents());
         if (
-            $node !== null
-            && $offset > $node->getEndPosition()
-            && $node->parent !== null
-            && $node->parent->getLastChild() instanceof PhpParser\MissingToken
+            $node !== null &&
+            $offset > $node->getEndPosition() &&
+            $node->parent !== null &&
+            $node->parent->getLastChild() instanceof PhpParser\MissingToken
         ) {
             $node = $node->parent;
         }
 
-        $list = new CompletionList;
+        $list = new CompletionList();
         $list->isIncomplete = true;
 
-        if ($node instanceof Node\Expression\Variable &&
+        if (
+            $node instanceof Node\Expression\Variable &&
             $node->parent instanceof Node\Expression\ObjectCreationExpression &&
             $node->name instanceof PhpParser\MissingToken
         ) {
@@ -186,19 +187,13 @@ class CompletionProvider
         $content = $doc->getContent();
         $offset = $pos->toOffset($content);
         if (
-            $node === null
-            || (
-                $node instanceof Node\Statement\InlineHtml
-                && (
-                    $context !== null
-                    // Make sure to not suggest on the > trigger character in HTML
-                    && (
-                        $context->triggerKind === CompletionTriggerKind::INVOKED
-                        || $context->triggerCharacter === '<'
-                    )
-                )
-            )
-            || $pos == new Position(0, 0)
+            // Make sure to not suggest on the > trigger character in HTML
+            $node === null ||
+            ($node instanceof Node\Statement\InlineHtml &&
+                ($context !== null &&
+                    ($context->triggerKind === CompletionTriggerKind::INVOKED ||
+                        $context->triggerCharacter === '<'))) ||
+            $pos == new Position(0, 0)
         ) {
             // HTML, beginning of file
 
@@ -209,12 +204,11 @@ class CompletionProvider
                 stripStringOverlap($doc->getRange(new Range(new Position(0, 0), $pos)), '<?php')
             );
             $list->items[] = $item;
-
         } elseif (
-            $node instanceof Node\Expression\Variable
-            && !(
-                $node->parent instanceof Node\Expression\ScopedPropertyAccessExpression
-                && $node->parent->memberName === $node
+            $node instanceof Node\Expression\Variable &&
+            !(
+                $node->parent instanceof Node\Expression\ScopedPropertyAccessExpression &&
+                $node->parent->memberName === $node
             )
         ) {
             // Variables
@@ -225,18 +219,17 @@ class CompletionProvider
             // Find variables, parameters and use statements in the scope
             $namePrefix = $node->getName() ?? '';
             foreach ($this->suggestVariablesAtNode($node, $namePrefix) as $var) {
-                $item = new CompletionItem;
+                $item = new CompletionItem();
                 $item->kind = CompletionItemKind::VARIABLE;
                 $item->label = '$' . $var->getName();
                 $item->documentation = $this->definitionResolver->getDocumentationFromNode($var);
-                $item->detail = (string)$this->definitionResolver->getTypeFromNode($var);
+                $item->detail = (string) $this->definitionResolver->getTypeFromNode($var);
                 $item->textEdit = new TextEdit(
                     new Range($pos, $pos),
                     stripStringOverlap($doc->getRange(new Range(new Position(0, 0), $pos)), $item->label)
                 );
                 $list->items[] = $item;
             }
-
         } elseif ($node instanceof Node\Expression\MemberAccessExpression) {
             // Member access expressions
             //
@@ -260,7 +253,6 @@ class CompletionProvider
                     }
                 }
             }
-
         } elseif (
             ($scoped = $node->parent) instanceof Node\Expression\ScopedPropertyAccessExpression ||
             ($scoped = $node) instanceof Node\Expression\ScopedPropertyAccessExpression
@@ -276,7 +268,7 @@ class CompletionProvider
 
             // Resolve all possible types to FQNs
             $fqns = FqnUtilities\getFqnsFromType(
-                $classType = $this->definitionResolver->resolveExpressionNodeToType($scoped->scopeResolutionQualifier)
+                ($classType = $this->definitionResolver->resolveExpressionNodeToType($scoped->scopeResolutionQualifier))
             );
 
             // The FQNs of the symbol and its parents (eg the implemented interfaces)
@@ -291,12 +283,11 @@ class CompletionProvider
                     }
                 }
             }
-
         } elseif (
-            ParserHelpers\isConstantFetch($node)
             // Creation gets set in case of an instantiation (`new` expression)
-            || ($creation = $node->parent) instanceof Node\Expression\ObjectCreationExpression
-            || (($creation = $node) instanceof Node\Expression\ObjectCreationExpression)
+            ParserHelpers\isConstantFetch($node) ||
+            ($creation = $node->parent) instanceof Node\Expression\ObjectCreationExpression ||
+            ($creation = $node) instanceof Node\Expression\ObjectCreationExpression
         ) {
             // Class instantiations, function calls, constant fetches, class names
             //
@@ -311,7 +302,10 @@ class CompletionProvider
 
             if ($nameNode instanceof Node\QualifiedName) {
                 /** @var string The typed name. */
-                $prefix = (string)PhpParser\ResolvedName::buildName($nameNode->nameParts, $nameNode->getFileContents());
+                $prefix = (string) PhpParser\ResolvedName::buildName(
+                    $nameNode->nameParts,
+                    $nameNode->getFileContents()
+                );
             } else {
                 $prefix = $nameNode->getText($node->getFileContents());
             }
@@ -341,7 +335,7 @@ class CompletionProvider
                 // \Prefix\Goes\Here| - Only return completions from the root namespace.
                 /** @var $items \Generator|CompletionItem[] Generator yielding CompletionItems indexed by their FQN */
                 $items = $this->getCompletionsForFqnPrefix($prefix, $isCreation, false);
-            } else if ($isQualified) {
+            } elseif ($isQualified) {
                 // Prefix\Goes\Here|
                 $items = $this->getPartiallyQualifiedCompletions(
                     $prefix,
@@ -361,7 +355,6 @@ class CompletionProvider
                     $item->insertText = substr($item->insertText, 0, -2);
                 }
             }
-
         }
         return $list;
     }
@@ -374,13 +367,13 @@ class CompletionProvider
     ): \Generator {
         // If the first part of the partially qualified name matches a namespace alias,
         // only definitions below that  alias can be completed.
-        list($namespaceAliases,,) = $importTables;
+        list($namespaceAliases, ,) = $importTables;
         $prefixFirstPart = nameGetFirstPart($prefix);
         $foundAlias = $foundAliasFqn = null;
         foreach ($namespaceAliases as $alias => $aliasFqn) {
             if (strcasecmp($prefixFirstPart, $alias) === 0) {
                 $foundAlias = $alias;
-                $foundAliasFqn = (string)$aliasFqn;
+                $foundAliasFqn = (string) $aliasFqn;
                 break;
             }
         }
@@ -420,20 +413,16 @@ class CompletionProvider
         bool $requireCanBeInstantiated
     ): \Generator {
         // Aliases
-        list($namespaceAliases,,) = $importTables;
+        list($namespaceAliases, ,) = $importTables;
         // use Foo\Bar
-        yield from $this->getCompletionsForAliases(
-            $prefix,
-            $namespaceAliases,
-            $requireCanBeInstantiated
-        );
+        yield from $this->getCompletionsForAliases($prefix, $namespaceAliases, $requireCanBeInstantiated);
 
         // Completions from the current namespace
         yield from $this->getCompletionsForFqnPrefix(
-            nameConcat($currentNamespace, $prefix),
-            $requireCanBeInstantiated,
-            false
-        );
+                nameConcat($currentNamespace, $prefix),
+                $requireCanBeInstantiated,
+                false
+            );
 
         if ($currentNamespace !== '' && $prefix === '') {
             // Get additional suggestions from the global namespace.
@@ -477,7 +466,7 @@ class CompletionProvider
             }
             $completion = CompletionItemFactory::fromDefinition($def);
             if ($insertFullyQualified) {
-                $completion->insertText =  '\\' . $fqn;
+                $completion->insertText = '\\' . $fqn;
             }
             yield $fqn => $completion;
         }
@@ -500,14 +489,14 @@ class CompletionProvider
             if (!nameStartsWith($alias, $prefix)) {
                 continue;
             }
-            $definition = $this->index->getDefinition((string)$aliasFqn);
+            $definition = $this->index->getDefinition((string) $aliasFqn);
             if ($definition) {
                 if ($requireCanBeInstantiated && !$definition->canBeInstantiated) {
                     continue;
                 }
                 $completionItem = CompletionItemFactory::fromDefinition($definition);
                 $completionItem->insertText = $alias;
-                yield (string)$aliasFqn => $completionItem;
+                yield (string) $aliasFqn => $completionItem;
             }
         }
     }
@@ -527,11 +516,7 @@ class CompletionProvider
         $prefixFirstPart = nameGetFirstPart($prefix);
         // Matched alias.
         $resolvedPrefix = nameConcat($aliasFqn, nameWithoutFirstPart($prefix));
-        $completionItems = $this->getCompletionsForFqnPrefix(
-            $resolvedPrefix,
-            $requireCanBeInstantiated,
-            false
-        );
+        $completionItems = $this->getCompletionsForFqnPrefix($resolvedPrefix, $requireCanBeInstantiated, false);
         // Convert FQNs in the CompletionItems so they are expressed in terms of the alias.
         foreach ($completionItems as $fqn => $completionItem) {
             /** @var string $fqn with the leading parts determined by the alias removed. Has the leading backslash. */
@@ -556,7 +541,7 @@ class CompletionProvider
             $completionItem = CompletionItemFactory::fromDefinition($def);
             // Second-guessing the user here - do not trust roaming to work. If the same symbol is
             // inserted in the current namespace, the code will stop working.
-            $completionItem->insertText =  '\\' . $fqn;
+            $completionItem->insertText = '\\' . $fqn;
             yield $fqn => $completionItem;
         }
     }
@@ -584,7 +569,7 @@ class CompletionProvider
      * @param string[] $fqns
      * @return Generator
      */
-    private function expandParentFqns(array $fqns) : Generator
+    private function expandParentFqns(array $fqns): Generator
     {
         foreach ($fqns as $fqn) {
             yield $fqn;
@@ -625,7 +610,7 @@ class CompletionProvider
         while ($level && !($level instanceof PhpParser\FunctionLike)) {
             // Walk siblings before the node
             $sibling = $level;
-            while ($sibling = $sibling->getPreviousSibling()) {
+            while (($sibling = $sibling->getPreviousSibling())) {
                 // Collect all variables inside the sibling node
                 foreach ($this->findVariableDefinitionsInNode($sibling, $namePrefix) as $var) {
                     $vars[$var->getName()] = $var;
@@ -644,9 +629,11 @@ class CompletionProvider
                 }
             }
 
-            if ($level instanceof Node\Expression\AnonymousFunctionCreationExpression
-                && $level->anonymousFunctionUseClause !== null
-                && $level->anonymousFunctionUseClause->useVariableNameList !== null) {
+            if (
+                $level instanceof Node\Expression\AnonymousFunctionCreationExpression &&
+                $level->anonymousFunctionUseClause !== null &&
+                $level->anonymousFunctionUseClause->useVariableNameList !== null
+            ) {
                 foreach ($level->anonymousFunctionUseClause->useVariableNameList->getValues() as $use) {
                     $useName = $use->getName();
                     if (empty($namePrefix) || strpos($useName, $namePrefix) !== false) {
@@ -679,8 +666,9 @@ class CompletionProvider
             $vars[] = $node->leftOperand;
         } elseif ($node instanceof Node\ForeachKey || $node instanceof Node\ForeachValue) {
             foreach ($node->getDescendantNodes() as $descendantNode) {
-                if ($descendantNode instanceof Node\Expression\Variable
-                    && ($namePrefix === '' || strpos($descendantNode->getName(), $namePrefix) !== false)
+                if (
+                    $descendantNode instanceof Node\Expression\Variable &&
+                    ($namePrefix === '' || strpos($descendantNode->getName(), $namePrefix) !== false)
                 ) {
                     $vars[] = $descendantNode;
                 }
@@ -700,8 +688,8 @@ class CompletionProvider
 
     private function isAssignmentToVariableWithPrefix(Node $node, string $namePrefix): bool
     {
-        return $node instanceof Node\Expression\AssignmentExpression
-            && $node->leftOperand instanceof Node\Expression\Variable
-            && ($namePrefix === '' || strpos($node->leftOperand->getName(), $namePrefix) !== false);
+        return $node instanceof Node\Expression\AssignmentExpression &&
+            $node->leftOperand instanceof Node\Expression\Variable &&
+            ($namePrefix === '' || strpos($node->leftOperand->getName(), $namePrefix) !== false);
     }
 }

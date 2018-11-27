@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\Tests;
 
@@ -28,8 +28,8 @@ class LanguageServerTest extends TestCase
 {
     public function testInitialize()
     {
-        $server = new LanguageServer(new MockProtocolStream, new MockProtocolStream);
-        $result = $server->initialize(new ClientCapabilities, __DIR__, getmypid())->wait();
+        $server = new LanguageServer(new MockProtocolStream(), new MockProtocolStream());
+        $result = $server->initialize(new ClientCapabilities(), __DIR__, getmypid())->wait();
 
         $serverCapabilities = new ServerCapabilities();
         $serverCapabilities->textDocumentSync = TextDocumentSyncKind::FULL;
@@ -38,10 +38,10 @@ class LanguageServerTest extends TestCase
         $serverCapabilities->definitionProvider = true;
         $serverCapabilities->referencesProvider = true;
         $serverCapabilities->hoverProvider = true;
-        $serverCapabilities->completionProvider = new CompletionOptions;
+        $serverCapabilities->completionProvider = new CompletionOptions();
         $serverCapabilities->completionProvider->resolveProvider = false;
         $serverCapabilities->completionProvider->triggerCharacters = ['$', '>'];
-        $serverCapabilities->signatureHelpProvider = new SignatureHelpOptions;
+        $serverCapabilities->signatureHelpProvider = new SignatureHelpOptions();
         $serverCapabilities->signatureHelpProvider->triggerCharacters = ['(', ','];
         $serverCapabilities->xworkspaceReferencesProvider = true;
         $serverCapabilities->xdefinitionProvider = true;
@@ -52,44 +52,51 @@ class LanguageServerTest extends TestCase
 
     public function testIndexingWithDirectFileAccess()
     {
-        $promise = new Promise;
-        $input = new MockProtocolStream;
-        $output = new MockProtocolStream;
+        $promise = new Promise();
+        $input = new MockProtocolStream();
+        $output = new MockProtocolStream();
         $output->on('message', function (Message $msg) use ($promise) {
             if ($msg->body->method === 'window/logMessage' && $promise->state === Promise::PENDING) {
                 if ($msg->body->params->type === MessageType::ERROR) {
                     $promise->reject(new Exception($msg->body->params->message));
-                } else if (preg_match('/All \d+ PHP files parsed/', $msg->body->params->message)) {
+                } elseif (preg_match('/All \d+ PHP files parsed/', $msg->body->params->message)) {
                     $promise->fulfill();
                 }
             }
         });
         $server = new LanguageServer($input, $output);
-        $capabilities = new ClientCapabilities;
+        $capabilities = new ClientCapabilities();
         $server->initialize($capabilities, realpath(__DIR__ . '/../fixtures'), getmypid());
         $promise->wait();
     }
 
     public function testIndexingWithFilesAndContentRequests()
     {
-        $promise = new Promise;
+        $promise = new Promise();
         $filesCalled = false;
         $contentCalled = false;
         $rootPath = realpath(__DIR__ . '/../fixtures');
-        $input = new MockProtocolStream;
-        $output = new MockProtocolStream;
+        $input = new MockProtocolStream();
+        $output = new MockProtocolStream();
         $run = 1;
-        $output->on('message', function (Message $msg) use ($promise, $input, $rootPath, &$filesCalled, &$contentCalled, &$run) {
+        $output->on('message', function (Message $msg) use (
+            $promise,
+            $input,
+            $rootPath,
+            &$filesCalled,
+            &$contentCalled,
+            &$run
+        ) {
             if ($msg->body->method === 'textDocument/xcontent') {
                 // Document content requested
                 $contentCalled = true;
-                $textDocumentItem = new TextDocumentItem;
+                $textDocumentItem = new TextDocumentItem();
                 $textDocumentItem->uri = $msg->body->params->textDocument->uri;
                 $textDocumentItem->version = 1;
                 $textDocumentItem->languageId = 'php';
                 $textDocumentItem->text = file_get_contents($msg->body->params->textDocument->uri);
                 $input->write(new Message(new AdvancedJsonRpc\SuccessResponse($msg->body->id, $textDocumentItem)));
-            } else if ($msg->body->method === 'workspace/xfiles') {
+            } elseif ($msg->body->method === 'workspace/xfiles') {
                 // Files requested
                 $filesCalled = true;
                 $pattern = Path::makeAbsolute('**/*.php', $msg->body->params->base ?? $rootPath);
@@ -98,20 +105,20 @@ class LanguageServerTest extends TestCase
                     $files[] = new TextDocumentIdentifier(pathToUri($path));
                 }
                 $input->write(new Message(new AdvancedJsonRpc\SuccessResponse($msg->body->id, $files)));
-            } else if ($msg->body->method === 'window/logMessage') {
+            } elseif ($msg->body->method === 'window/logMessage') {
                 // Message logged
                 if ($msg->body->params->type === MessageType::ERROR) {
                     // Error happened during indexing, fail test
                     if ($promise->state === Promise::PENDING) {
                         $promise->reject(new Exception($msg->body->params->message));
                     }
-                } else if (preg_match('/All \d+ PHP files parsed/', $msg->body->params->message)) {
+                } elseif (preg_match('/All \d+ PHP files parsed/', $msg->body->params->message)) {
                     $promise->fulfill();
                 }
             }
         });
         $server = new LanguageServer($input, $output);
-        $capabilities = new ClientCapabilities;
+        $capabilities = new ClientCapabilities();
         $capabilities->xfilesProvider = true;
         $capabilities->xcontentProvider = true;
         $server->initialize($capabilities, $rootPath, getmypid());

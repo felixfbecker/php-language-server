@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\Index;
 
@@ -131,9 +131,9 @@ class Index implements ReadableIndex, \Serializable
                 continue;
             }
             if ($item instanceof Definition) {
-                yield $fqn.$name => $item;
+                yield $fqn . $name => $item;
             } elseif (is_array($item) && isset($item[''])) {
-                yield $fqn.$name => $item[''];
+                yield $fqn . $name => $item[''];
             }
         }
     }
@@ -299,9 +299,9 @@ class Index implements ReadableIndex, \Serializable
     {
         foreach ($storage as $key => $value) {
             if (!is_array($value)) {
-                yield $prefix.$key => $value;
+                yield $prefix . $key => $value;
             } else {
-                yield from $this->yieldDefinitionsRecursively($value, $prefix.$key);
+                yield from $this->yieldDefinitionsRecursively($value, $prefix . $key);
             }
         }
     }

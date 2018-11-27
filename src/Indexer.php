@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer;
 
@@ -103,9 +103,8 @@ class Indexer
     public function index(): Promise
     {
         return coroutine(function () {
-
             $pattern = Path::makeAbsolute('**/*.php', $this->rootPath);
-            $uris = yield $this->filesFinder->find($pattern);
+            $uris = (yield $this->filesFinder->find($pattern));
 
             $count = count($uris);
             $startTime = microtime(true);
@@ -132,7 +131,10 @@ class Indexer
 
             // Index source
             // Definitions and static references
-            $this->client->window->logMessage(MessageType::INFO, 'Indexing project for definitions and static references');
+            $this->client->window->logMessage(
+                MessageType::INFO,
+                'Indexing project for definitions and static references'
+            );
             yield $this->indexFiles($source);
             $this->sourceIndex->setStaticComplete();
             // Dynamic references
@@ -147,7 +149,10 @@ class Indexer
                 $packageKey = null;
                 $cacheKey = null;
                 $index = null;
-                foreach (array_merge($this->composerLock->packages, (array)$this->composerLock->{'packages-dev'}) as $package) {
+                foreach (
+                    array_merge($this->composerLock->packages, (array) $this->composerLock->{'packages-dev'})
+                    as $package
+                ) {
                     // Check if package name matches and version is absolute
                     // Dynamic constraints are not cached, because they can change every time
                     $packageVersion = ltrim($package->version, 'v');
@@ -155,7 +160,7 @@ class Indexer
                         $packageKey = $packageName . ':' . $packageVersion;
                         $cacheKey = self::CACHE_VERSION . ':' . $packageKey;
                         // Check cache
-                        $index = yield $this->cache->get($cacheKey);
+                        $index = (yield $this->cache->get($cacheKey));
                         break;
                     }
                 }
@@ -168,12 +173,18 @@ class Indexer
                     $index = $this->dependenciesIndex->getDependencyIndex($packageName);
 
                     // Index definitions and static references
-                    $this->client->window->logMessage(MessageType::INFO, 'Indexing ' . ($packageKey ?? $packageName) . ' for definitions and static references');
+                    $this->client->window->logMessage(
+                        MessageType::INFO,
+                        'Indexing ' . ($packageKey ?? $packageName) . ' for definitions and static references'
+                    );
                     yield $this->indexFiles($files);
                     $index->setStaticComplete();
 
                     // Index dynamic references
-                    $this->client->window->logMessage(MessageType::INFO, 'Indexing ' . ($packageKey ?? $packageName) . ' for dynamic references');
+                    $this->client->window->logMessage(
+                        MessageType::INFO,
+                        'Indexing ' . ($packageKey ?? $packageName) . ' for dynamic references'
+                    );
                     yield $this->indexFiles($files);
                     $index->setComplete();
 
@@ -182,13 +193,16 @@ class Indexer
                         $this->client->window->logMessage(MessageType::INFO, "Storing $packageKey in cache");
                         $this->cache->set($cacheKey, $index);
                     } else {
-                        $this->client->window->logMessage(MessageType::WARNING, "Could not compute cache key for $packageName");
+                        $this->client->window->logMessage(
+                            MessageType::WARNING,
+                            "Could not compute cache key for $packageName"
+                        );
                     }
                 }
             }
 
-            $duration = (int)(microtime(true) - $startTime);
-            $mem = (int)(memory_get_usage(true) / (1024 * 1024));
+            $duration = (int) (microtime(true) - $startTime);
+            $mem = (int) (memory_get_usage(true) / (1024 * 1024));
             $this->client->window->logMessage(
                 MessageType::INFO,
                 "All $count PHP files parsed in $duration seconds. $mem MiB allocated."
@@ -213,7 +227,7 @@ class Indexer
                 yield timeout();
                 $this->client->window->logMessage(MessageType::LOG, "Parsing $uri");
                 try {
-                    $document = yield $this->documentLoader->load($uri);
+                    $document = (yield $this->documentLoader->load($uri));
                     if (!isVendored($document, $this->composerJson)) {
                         $this->client->textDocument->publishDiagnostics($uri, $document->getDiagnostics());
                     }
@@ -223,7 +237,7 @@ class Indexer
                         "Ignoring file {$uri} because it exceeds size limit of {$e->limit} bytes ({$e->size})"
                     );
                 } catch (\Exception $e) {
-                    $this->client->window->logMessage(MessageType::ERROR, "Error parsing $uri: " . (string)$e);
+                    $this->client->window->logMessage(MessageType::ERROR, "Error parsing $uri: " . (string) $e);
                 }
             }
         });

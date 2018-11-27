@@ -17,30 +17,35 @@ Uses the great [Tolerant PHP Parser](https://github.com/Microsoft/tolerant-php-p
 and an [event loop](http://sabre.io/event/loop/) for concurrency.
 
 **Table of Contents**
-  - [Features](#features)
-  - [Performance](#performance)
-  - [Versioning](#versioning)
-  - [Installation](#installation)
-  - [Running](#running)
-  - [Used by](#used-by)
-  - [Contributing](#contributing)
 
+-   [Features](#features)
+-   [Performance](#performance)
+-   [Versioning](#versioning)
+-   [Installation](#installation)
+-   [Running](#running)
+-   [Used by](#used-by)
+-   [Contributing](#contributing)
 
 ## Features
 
 ### [Completion](https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#textDocument_completion)
+
 ![Completion search demo](images/completion.gif)
 
 ### [Signature Help](https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#textDocument_signatureHelp)
+
 ![Signature help demo](images/signatureHelp.gif)
 
 ### [Go To Definition](https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#goto-definition-request)
+
 ![Go To Definition demo](images/definition.gif)
 
 ### [Find References](https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#find-references-request)
+
 ![Find References demo](images/references.png)
 
 ### [Hover](https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#hover-request)
+
 ![Hover class demo](images/hoverClass.png)
 
 ![Hover parameter demo](images/hoverParam.png)
@@ -49,15 +54,18 @@ A hover request returns a declaration line (marked with language `php`) and the 
 For Parameters, it will return the `@param` tag.
 
 ### [Document Symbols](https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#document-symbols-request)
+
 ![Document Symbols demo](images/documentSymbol.gif)
 
 ### [Workspace Symbols](https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#workspace-symbols-request)
+
 ![Workspace Symbols demo](images/workspaceSymbol.gif)
 
 The query is matched case-insensitively against the fully qualified name of the symbol.  
 Non-Standard: An empty query will return _all_ symbols found in the workspace.
 
 ### Error reporting through [Publish Diagnostics](https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#publishdiagnostics-notification)
+
 ![Error reporting demo](images/publishDiagnostics.png)
 
 PHP parse errors are reported as errors, parse errors of docblocks are reported as warnings.
@@ -70,21 +78,24 @@ Completion, type resolval etc. will use the standard PHP library and common exte
 ### What is considered a definition?
 
 Globally searchable definitions are:
- - classes
- - interfaces
- - traits
- - properties
- - methods
- - class constants
- - constants with `const` keyword
+
+-   classes
+-   interfaces
+-   traits
+-   properties
+-   methods
+-   class constants
+-   constants with `const` keyword
 
 Definitions resolved just-in-time when needed:
- - variable assignments
- - parameters
- - closure `use` statements
+
+-   variable assignments
+-   parameters
+-   closure `use` statements
 
 Not supported yet:
- - constants with `define()`
+
+-   constants with `define()`
 
 Namespaces are not considerd a declaration by design because they only make up a part of the fully qualified name
 and don't map to one unique declaration.
@@ -92,24 +103,25 @@ and don't map to one unique declaration.
 ### What is considered a reference?
 
 Definitions/references/hover currently work for
- - class instantiations
- - static method calls
- - class constant access
- - static property access
- - parameter type hints
- - return type hints
- - method calls, if the variable was assigned to a new object in the same scope
- - property access, if the variable was assigned to a new object in the same scope
- - variables
- - parameters
- - imported closure variables (`use`)
- - `use` statements for classes, constants and functions
- - class-like after `implements`/`extends`
- - function calls
- - constant access
- - `instanceof` checks
- - Reassigned variables
- - Nested access/calls on return values, properties, array access
+
+-   class instantiations
+-   static method calls
+-   class constant access
+-   static property access
+-   parameter type hints
+-   return type hints
+-   method calls, if the variable was assigned to a new object in the same scope
+-   property access, if the variable was assigned to a new object in the same scope
+-   variables
+-   parameters
+-   imported closure variables (`use`)
+-   `use` statements for classes, constants and functions
+-   class-like after `implements`/`extends`
+-   function calls
+-   constant access
+-   `instanceof` checks
+-   Reassigned variables
+-   Nested access/calls on return values, properties, array access
 
 ### Protocol Extensions
 
@@ -163,6 +175,7 @@ Start the language server with
 ### Command line arguments
 
 #### `--tcp=host:port` (optional)
+
 Causes the server to use a tcp connection for communicating with the language client instead of using STDIN/STDOUT.
 The server will try to connect to the specified address.
 Strongly recommended on Windows because of blocking STDIO.
@@ -172,6 +185,7 @@ Example:
     php bin/php-language-server.php --tcp=127.0.0.1:12345
 
 #### `--tcp-server=host:port` (optional)
+
 Causes the server to use a tcp connection for communicating with the language client instead of using STDIN/STDOUT.
 The server will listen on the given address for a connection.
 If PCNTL is available, will fork a child process for every connection.
@@ -182,6 +196,7 @@ Example:
     php bin/php-language-server.php --tcp-server=127.0.0.1:12345
 
 #### `--memory-limit=integer` (optional)
+
 Sets memory limit for language server.
 Equivalent to [memory-limit](http://php.net/manual/en/ini.core.php#ini.memory-limit) php.ini directive.
 The default is 4GB (which is way more than needed).
@@ -191,11 +206,12 @@ Example:
     php bin/php-language-server.php --memory-limit=256M
 
 ## Used by
- - [VS Code PHP IntelliSense](https://github.com/felixfbecker/vscode-php-intellisense)
- - [Eclipse Che](https://eclipse.org/che/)
- - [Eclipse IDE (LSP4E-PHP)](https://github.com/eclipselabs/lsp4e-php)
- - NeoVim: [LanguageServer-php-neovim](https://github.com/roxma/LanguageServer-php-neovim) with [LanguageClient neovim](https://github.com/autozimu/LanguageClient-neovim)
- - Atom: [ide-php](https://github.com/atom/ide-php)
+
+-   [VS Code PHP IntelliSense](https://github.com/felixfbecker/vscode-php-intellisense)
+-   [Eclipse Che](https://eclipse.org/che/)
+-   [Eclipse IDE (LSP4E-PHP)](https://github.com/eclipselabs/lsp4e-php)
+-   NeoVim: [LanguageServer-php-neovim](https://github.com/roxma/LanguageServer-php-neovim) with [LanguageClient neovim](https://github.com/autozimu/LanguageClient-neovim)
+-   Atom: [ide-php](https://github.com/atom/ide-php)
 
 ## Contributing
 
@@ -206,18 +222,18 @@ Clone the repository and run
 
 to install dependencies.
 
-Run the tests with 
+Run the tests with
 
     composer test
 
 Lint with
 
     composer lint
-    
+
 The project parses PHPStorm's PHP stubs to get support for PHP builtins. It re-parses them as needed after Composer processes, but after some code changes (such as ones involving the index or parsing) you may have to explicitly re-parse them:
 
     composer run-script parse-stubs
-    
+
 To debug with xDebug ensure that you have this set as an environment variable
 
     PHPLS_ALLOW_XDEBUG=1

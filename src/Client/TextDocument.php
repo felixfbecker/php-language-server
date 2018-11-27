@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\Client;
 
@@ -53,11 +53,12 @@ class TextDocument
      */
     public function xcontent(TextDocumentIdentifier $textDocument): Promise
     {
-        return $this->handler->request(
-            'textDocument/xcontent',
-            ['textDocument' => $textDocument]
-        )->then(function ($result) {
-            return $this->mapper->map($result, new TextDocumentItem);
-        });
+        return $this->handler
+            ->request('textDocument/xcontent', [
+                'textDocument' => $textDocument
+            ])
+            ->then(function ($result) {
+                return $this->mapper->map($result, new TextDocumentItem());
+            });
     }
 }

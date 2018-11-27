@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\Tests;
 
@@ -20,7 +20,7 @@ class ProtocolStreamWriterTest extends TestCase
 
         $writer = new ProtocolStreamWriter($writeHandle);
         $msg = new Message(new RequestBody(1, 'aMethod', ['arg' => str_repeat('X', 100000)]));
-        $msgString = (string)$msg;
+        $msgString = (string) $msg;
 
         $promise = $writer->write($msg);
 

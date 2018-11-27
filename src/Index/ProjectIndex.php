@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\Index;
 
@@ -24,8 +24,11 @@ class ProjectIndex extends AbstractAggregateIndex
      */
     private $sourceIndex;
 
-    public function __construct(Index $sourceIndex, DependenciesIndex $dependenciesIndex, \stdClass $composerJson = null)
-    {
+    public function __construct(
+        Index $sourceIndex,
+        DependenciesIndex $dependenciesIndex,
+        \stdClass $composerJson = null
+    ) {
         $this->sourceIndex = $sourceIndex;
         $this->dependenciesIndex = $dependenciesIndex;
         $this->composerJson = $composerJson;

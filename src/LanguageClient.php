@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer;
 
@@ -38,7 +38,7 @@ class LanguageClient
     public function __construct(ProtocolReader $reader, ProtocolWriter $writer)
     {
         $handler = new ClientHandler($reader, $writer);
-        $mapper = new JsonMapper;
+        $mapper = new JsonMapper();
 
         $this->textDocument = new Client\TextDocument($handler, $mapper);
         $this->window = new Client\Window($handler);

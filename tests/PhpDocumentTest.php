@@ -1,17 +1,11 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\Tests\Server;
 
-use LanguageServer\{
-    PhpDocument, DefinitionResolver
-};
-use LanguageServer\Index\{
-    Index
-};
-use LanguageServerProtocol\{
-    Position
-};
+use LanguageServer\{PhpDocument, DefinitionResolver};
+use LanguageServer\Index\{Index};
+use LanguageServerProtocol\{Position};
 use Microsoft\PhpParser;
 use Microsoft\PhpParser\Node;
 use phpDocumentor\Reflection\DocBlockFactory;
@@ -24,7 +18,7 @@ class PhpDocumentTest extends TestCase
     {
         $parser = new PhpParser\Parser();
         $docBlockFactory = DocBlockFactory::createInstance();
-        $index = new Index;
+        $index = new Index();
         $definitionResolver = new DefinitionResolver($index);
         return new PhpDocument($uri, $content, $index, $parser, $docBlockFactory, $definitionResolver);
     }
@@ -41,7 +35,7 @@ class PhpDocumentTest extends TestCase
         $document = $this->createDocument('whatever', "<?php\n$\$a = new SomeClass;");
         $node = $document->getNodeAtPosition(new Position(1, 13));
         $this->assertQualifiedName($node);
-        $this->assertEquals('SomeClass', (string)$node);
+        $this->assertEquals('SomeClass', (string) $node);
     }
 
     private function assertQualifiedName($node)

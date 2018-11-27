@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\Client;
 
@@ -31,7 +31,10 @@ class Window
      */
     public function showMessage(int $type, string $message): Promise
     {
-        return $this->handler->notify('window/showMessage', ['type' => $type, 'message' => $message]);
+        return $this->handler->notify('window/showMessage', [
+            'type' => $type,
+            'message' => $message
+        ]);
     }
 
     /**
@@ -43,6 +46,9 @@ class Window
      */
     public function logMessage(int $type, string $message): Promise
     {
-        return $this->handler->notify('window/logMessage', ['type' => $type, 'message' => $message]);
+        return $this->handler->notify('window/logMessage', [
+            'type' => $type,
+            'message' => $message
+        ]);
     }
 }

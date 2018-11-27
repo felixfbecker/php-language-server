@@ -1,13 +1,10 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer;
 
 use LanguageServer\Message;
-use Sabre\Event\{
-    Loop,
-    Promise
-};
+use Sabre\Event\{Loop, Promise};
 
 class ProtocolStreamWriter implements ProtocolWriter
 {
@@ -43,7 +40,7 @@ class ProtocolStreamWriter implements ProtocolWriter
 
         $promise = new Promise();
         $this->messages[] = [
-            'message' => (string)$msg,
+            'message' => (string) $msg,
             'promise' => $promise
         ];
         return $promise;

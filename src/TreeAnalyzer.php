@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer;
 
@@ -46,8 +46,13 @@ class TreeAnalyzer
      * @param DefinitionResolver $definitionResolver
      * @param string $uri
      */
-    public function __construct(PhpParser\Parser $parser, string $content, DocBlockFactory $docBlockFactory, DefinitionResolver $definitionResolver, string $uri)
-    {
+    public function __construct(
+        PhpParser\Parser $parser,
+        string $content,
+        DocBlockFactory $docBlockFactory,
+        DefinitionResolver $definitionResolver,
+        string $uri
+    ) {
         $this->parser = $parser;
         $this->docBlockFactory = $docBlockFactory;
         $this->definitionResolver = $definitionResolver;
@@ -69,7 +74,11 @@ class TreeAnalyzer
     {
         // Get errors from the parser.
         if (($error = PhpParser\DiagnosticsProvider::checkDiagnostics($node)) !== null) {
-            $range = PhpParser\PositionUtilities::getRangeFromPosition($error->start, $error->length, $this->sourceFileNode->fileContents);
+            $range = PhpParser\PositionUtilities::getRangeFromPosition(
+                $error->start,
+                $error->length,
+                $this->sourceFileNode->fileContents
+            );
 
             switch ($error->kind) {
                 case PhpParser\DiagnosticKind::Error:
@@ -150,24 +159,24 @@ class TreeAnalyzer
      */
     private function collectDefinitionsAndReferences(Node $node)
     {
-        $fqn = ($this->definitionResolver)::getDefinedFqn($node);
+        $fqn = $this->definitionResolver::getDefinedFqn($node);
         // Only index definitions with an FQN (no variables)
         if ($fqn !== null) {
             $this->definitionNodes[$fqn] = $node;
             $this->definitions[$fqn] = $this->definitionResolver->createDefinitionFromNode($node, $fqn);
         } else {
-
             $parent = $node->parent;
             if (
-                (
-                    // $node->parent instanceof Node\Expression\ScopedPropertyAccessExpression ||
-                    ($node instanceof Node\Expression\ScopedPropertyAccessExpression ||
-                    $node instanceof Node\Expression\MemberAccessExpression)
-                    && !(
+                // $node->parent instanceof Node\Expression\ScopedPropertyAccessExpression ||
+                (($node instanceof Node\Expression\ScopedPropertyAccessExpression ||
+                    $node instanceof Node\Expression\MemberAccessExpression) &&
+                    !(
                         $node->parent instanceof Node\Expression\CallExpression ||
                         $node->memberName instanceof PhpParser\Token
-                    ))
-                || ($parent instanceof Node\Statement\NamespaceDefinition && $parent->name !== null && $parent->name->getStart() === $node->getStart())
+                    )) ||
+                ($parent instanceof Node\Statement\NamespaceDefinition &&
+                    $parent->name !== null &&
+                    $parent->name->getStart() === $node->getStart())
             ) {
                 return;
             }
@@ -184,17 +193,17 @@ class TreeAnalyzer
                 if (!$classNode) {
                     return;
                 }
-                $fqn = (string)$classNode->getNamespacedName();
+                $fqn = (string) $classNode->getNamespacedName();
                 if (!$fqn) {
                     return;
                 }
-            } else if ($fqn === 'parent') {
+            } elseif ($fqn === 'parent') {
                 // Resolve parent keyword to the base class FQN
                 $classNode = $node->getFirstAncestor(Node\Statement\ClassDeclaration::class);
                 if (!$classNode || !$classNode->classBaseClause || !$classNode->classBaseClause->baseClass) {
                     return;
                 }
-                $fqn = (string)$classNode->classBaseClause->baseClass->getResolvedName();
+                $fqn = (string) $classNode->classBaseClause->baseClass->getResolvedName();
                 if (!$fqn) {
                     return;
                 }
@@ -203,9 +212,11 @@ class TreeAnalyzer
             $this->addReference($fqn, $node);
 
             if (
-                $node instanceof Node\QualifiedName
-                && ($node->isQualifiedName() || $node->parent instanceof Node\NamespaceUseClause)
-                && !($parent instanceof Node\Statement\NamespaceDefinition && $parent->name->getStart() === $node->getStart()
+                $node instanceof Node\QualifiedName &&
+                ($node->isQualifiedName() || $node->parent instanceof Node\NamespaceUseClause) &&
+                !(
+                    $parent instanceof Node\Statement\NamespaceDefinition &&
+                    $parent->name->getStart() === $node->getStart()
                 )
             ) {
                 // Add references for each referenced namespace
@@ -219,12 +230,14 @@ class TreeAnalyzer
             // Namespaced constant access and function calls also need to register a reference
             // to the global version because PHP falls back to global at runtime
             // http://php.net/manual/en/language.namespaces.fallback.php
-            if (ParserHelpers\isConstantFetch($node) ||
-                ($parent instanceof Node\Expression\CallExpression
-                    && !(
+            if (
+                ParserHelpers\isConstantFetch($node) ||
+                ($parent instanceof Node\Expression\CallExpression &&
+                    !(
                         $node instanceof Node\Expression\ScopedPropertyAccessExpression ||
                         $node instanceof Node\Expression\MemberAccessExpression
-                    ))) {
+                    ))
+            ) {
                 $parts = explode('\\', $fqn);
                 if (count($parts) > 1) {
                     $globalFqn = end($parts);

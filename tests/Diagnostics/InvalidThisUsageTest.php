@@ -1,17 +1,13 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\Tests\Diagnostics;
 
 use PHPUnit\Framework\TestCase;
 use phpDocumentor\Reflection\DocBlockFactory;
-use LanguageServer\{
-    DefinitionResolver, TreeAnalyzer
-};
+use LanguageServer\{DefinitionResolver, TreeAnalyzer};
 use LanguageServer\Index\{Index};
-use LanguageServerProtocol\{
-    Diagnostic, DiagnosticSeverity, Position, Range
-};
+use LanguageServerProtocol\{Diagnostic, DiagnosticSeverity, Position, Range};
 use function LanguageServer\pathToUri;
 use Microsoft\PhpParser\Parser;
 
@@ -29,7 +25,7 @@ class InvalidThisUsageTest extends TestCase
         $parser = new Parser();
 
         $docBlockFactory = DocBlockFactory::createInstance();
-        $index = new Index;
+        $index = new Index();
         $definitionResolver = new DefinitionResolver($index);
         $content = file_get_contents($path);
 
@@ -64,18 +60,13 @@ class InvalidThisUsageTest extends TestCase
             $diagnostics[0],
             '$this can not be used in static methods.',
             DiagnosticSeverity::ERROR,
-            new Range(
-                new Position(6, 15),
-                new Position(6, 20)
-            )
+            new Range(new Position(6, 15), new Position(6, 20))
         );
     }
 
     public function testThisInMethodProducesNoError()
     {
-        $diagnostics = $this->collectDiagnostics(
-            __DIR__ . '/../../fixtures/diagnostics/baselines/this_in_method.php'
-        );
+        $diagnostics = $this->collectDiagnostics(__DIR__ . '/../../fixtures/diagnostics/baselines/this_in_method.php');
 
         $this->assertCount(0, $diagnostics);
     }

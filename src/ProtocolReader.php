@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer;
 
@@ -13,5 +13,4 @@ use Sabre\Event\EmitterInterface;
  */
 interface ProtocolReader extends EmitterInterface
 {
-
 }

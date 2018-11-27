@@ -30,21 +30,25 @@ $iterator = new RecursiveDirectoryIterator(__DIR__ . "/../validation/frameworks/
 $testProviderArray = array();
 
 foreach (new RecursiveIteratorIterator($iterator) as $file) {
-    if (strpos((string)$file, ".php") !== false) {
+    if (strpos((string) $file, ".php") !== false) {
         $totalSize += $file->getSize();
         $testProviderArray[] = $file->getRealPath();
     }
 }
 
 if (count($testProviderArray) === 0) {
-    throw new Exception("ERROR: Validation testsuite frameworks not found - run `git submodule update --init --recursive` to download.");
+    throw new Exception(
+        "ERROR: Validation testsuite frameworks not found - run `git submodule update --init --recursive` to download."
+    );
 }
 
-$index = new Index;
+$index = new Index();
 $definitionResolver = new DefinitionResolver($index);
 $completionProvider = new CompletionProvider($definitionResolver, $index);
 $docBlockFactory = DocBlockFactory::createInstance();
-$completionFile = realpath(__DIR__ . '/../validation/frameworks/symfony/src/Symfony/Component/HttpFoundation/Request.php');
+$completionFile = realpath(
+    __DIR__ . '/../validation/frameworks/symfony/src/Symfony/Component/HttpFoundation/Request.php'
+);
 $parser = new PhpParser\Parser();
 $completionDocument = null;
 
@@ -71,7 +75,7 @@ foreach ($testProviderArray as $idx => $testCaseFile) {
     }
 }
 
-echo "Getting completion". PHP_EOL;
+echo "Getting completion" . PHP_EOL;
 
 // Completion in $this->|request = new ParameterBag($request);
 $start = microtime(true);

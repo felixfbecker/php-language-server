@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\Server;
 
@@ -64,8 +64,15 @@ class Workspace
      * @param \stdClass         $composerLock      The parsed composer.lock of the project, if any
      * @param PhpDocumentLoader $documentLoader    PhpDocumentLoader instance to load documents
      */
-    public function __construct(LanguageClient $client, ProjectIndex $projectIndex, DependenciesIndex $dependenciesIndex, Index $sourceIndex, \stdClass $composerLock = null, PhpDocumentLoader $documentLoader, \stdClass $composerJson = null)
-    {
+    public function __construct(
+        LanguageClient $client,
+        ProjectIndex $projectIndex,
+        DependenciesIndex $dependenciesIndex,
+        Index $sourceIndex,
+        \stdClass $composerLock = null,
+        PhpDocumentLoader $documentLoader,
+        \stdClass $composerJson = null
+    ) {
         $this->client = $client;
         $this->sourceIndex = $sourceIndex;
         $this->projectIndex = $projectIndex;
@@ -148,9 +155,9 @@ class Workspace
             $refInfos = [];
             foreach ($refs as $uri => $fqns) {
                 foreach ($fqns as $fqn) {
-                    $doc = yield $this->documentLoader->getOrLoad($uri);
+                    $doc = (yield $this->documentLoader->getOrLoad($uri));
                     foreach ($doc->getReferenceNodesByFqn($fqn) as $node) {
-                        $refInfo = new ReferenceInformation;
+                        $refInfo = new ReferenceInformation();
                         $refInfo->reference = LocationFactory::fromNode($node);
                         $refInfo->symbol = $query;
                         $refInfos[] = $refInfo;
@@ -170,7 +177,10 @@ class Workspace
             return [];
         }
         $dependencyReferences = [];
-        foreach (array_merge($this->composerLock->packages, (array)$this->composerLock->{'packages-dev'}) as $package) {
+        foreach (
+            array_merge($this->composerLock->packages, (array) $this->composerLock->{'packages-dev'})
+            as $package
+        ) {
             $dependencyReferences[] = new DependencyReference($package);
         }
         return $dependencyReferences;

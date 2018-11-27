@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\ContentRetriever;
 
@@ -28,7 +28,8 @@ class ClientContentRetriever implements ContentRetriever
      */
     public function retrieve(string $uri): Promise
     {
-        return $this->client->textDocument->xcontent(new TextDocumentIdentifier($uri))
+        return $this->client->textDocument
+            ->xcontent(new TextDocumentIdentifier($uri))
             ->then(function (TextDocumentItem $textDocument) {
                 return $textDocument->text;
             });

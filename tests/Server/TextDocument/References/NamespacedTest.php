@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\Tests\Server\TextDocument\References;
 
@@ -23,11 +23,9 @@ class NamespacedTest extends GlobalTest
         // namespace TestNamespace;
         // Get references for TestNamespace
         $definition = parent::getDefinitionLocation('TestNamespace');
-        $result = $this->textDocument->references(
-            new ReferenceContext,
-            new TextDocumentIdentifier($definition->uri),
-            $definition->range->end
-        )->wait();
+        $result = $this->textDocument
+            ->references(new ReferenceContext(), new TextDocumentIdentifier($definition->uri), $definition->range->end)
+            ->wait();
         $this->assertEquals(parent::getReferenceLocations('TestNamespace'), $result);
     }
 }

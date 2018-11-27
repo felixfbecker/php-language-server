@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\Tests;
 
@@ -31,7 +31,10 @@ class ValidationTest extends TestCase
         $disabled = json_decode(file_get_contents(__DIR__ . '/disabled.json'));
 
         foreach (new RecursiveIteratorIterator($iterator) as $file) {
-            if (strpos(\strrev((string)$file), \strrev(".php")) === 0 && !\in_array(basename((string)$file), $disabled)) {
+            if (
+                strpos(\strrev((string) $file), \strrev(".php")) === 0 &&
+                !\in_array(basename((string) $file), $disabled)
+            ) {
                 if ($file->getSize() < 100000) {
                     $testProviderArray[] = [$file->getPathname()];
                 }
@@ -57,17 +60,21 @@ class ValidationTest extends TestCase
 
         $outputFile = getExpectedValuesFile($testCaseFile);
         if (!file_exists($outputFile)) {
-            file_put_contents($outputFile, json_encode($actualValues, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));
+            file_put_contents($outputFile, json_encode($actualValues, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
         }
 
-        $expectedValues = (array)json_decode(file_get_contents($outputFile));
+        $expectedValues = (array) json_decode(file_get_contents($outputFile));
 
         try {
             $this->assertEquals($expectedValues['definitions'], $actualValues['definitions']);
-            $this->assertEquals((array)$expectedValues['references'], (array)$actualValues['references'], sprintf('references match in "%s"', $outputFile));
+            $this->assertEquals(
+                (array) $expectedValues['references'],
+                (array) $actualValues['references'],
+                sprintf('references match in "%s"', $outputFile)
+            );
         } catch (\Throwable $e) {
             $outputFile = getExpectedValuesFile($testCaseFile);
-            file_put_contents($outputFile, json_encode($actualValues, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));
+            file_put_contents($outputFile, json_encode($actualValues, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
             throw $e;
         }
@@ -106,10 +113,22 @@ class ValidationTest extends TestCase
 
         // Turn def locations into relative paths
         foreach ($refsAndDefs['definitions'] as $key => $def) {
-            if ($def !== null && $def->symbolInformation !== null &&
-                $def->symbolInformation->location !== null && $def->symbolInformation->location->uri !== null) {
-                $def->symbolInformation->location->uri = str_replace($testCasesDir, '.', $def->symbolInformation->location->uri);
-                $def->symbolInformation->location->uri = str_replace(DIRECTORY_SEPARATOR, '/', $def->symbolInformation->location->uri);
+            if (
+                $def !== null &&
+                $def->symbolInformation !== null &&
+                $def->symbolInformation->location !== null &&
+                $def->symbolInformation->location->uri !== null
+            ) {
+                $def->symbolInformation->location->uri = str_replace(
+                    $testCasesDir,
+                    '.',
+                    $def->symbolInformation->location->uri
+                );
+                $def->symbolInformation->location->uri = str_replace(
+                    DIRECTORY_SEPARATOR,
+                    '/',
+                    $def->symbolInformation->location->uri
+                );
             }
         }
 
@@ -135,7 +154,7 @@ class ValidationTest extends TestCase
                 } elseif ($propertyName === 'extends') {
                     $definition->$propertyName = $definition->$propertyName ?? [];
                 } elseif ($propertyName === 'type' && $definition->type !== null) {
-                    $defsForAssert[$fqn]['type__tostring'] = (string)$definition->type;
+                    $defsForAssert[$fqn]['type__tostring'] = (string) $definition->type;
                 }
 
                 $defsForAssert[$fqn][$propertyName] = $definition->$propertyName;

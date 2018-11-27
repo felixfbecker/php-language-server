@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer;
 
@@ -105,9 +105,8 @@ class PhpDocumentLoader
     public function load(string $uri): Promise
     {
         return coroutine(function () use ($uri) {
-
             $limit = 150000;
-            $content = yield $this->contentRetriever->retrieve($uri);
+            $content = (yield $this->contentRetriever->retrieve($uri));
             $size = strlen($content);
             if ($size > $limit) {
                 throw new ContentTooLargeException($uri, $size, $limit);

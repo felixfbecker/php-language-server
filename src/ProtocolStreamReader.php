@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer;
 
@@ -42,9 +42,9 @@ class ProtocolStreamReader extends Emitter implements ProtocolReader
                     case self::PARSE_HEADERS:
                         if ($this->buffer === "\r\n") {
                             $this->parsingMode = self::PARSE_BODY;
-                            $this->contentLength = (int)$this->headers['Content-Length'];
+                            $this->contentLength = (int) $this->headers['Content-Length'];
                             $this->buffer = '';
-                        } else if (substr($this->buffer, -2) === "\r\n") {
+                        } elseif (substr($this->buffer, -2) === "\r\n") {
                             $parts = explode(':', $this->buffer);
                             $this->headers[$parts[0]] = trim($parts[1]);
                             $this->buffer = '';

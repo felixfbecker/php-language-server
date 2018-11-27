@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\Index;
 
@@ -27,7 +27,7 @@ class DependenciesIndex extends AbstractAggregateIndex
     public function getDependencyIndex(string $packageName): Index
     {
         if (!isset($this->indexes[$packageName])) {
-            $index = new Index;
+            $index = new Index();
             $this->indexes[$packageName] = $index;
             $this->registerIndex($index);
         }

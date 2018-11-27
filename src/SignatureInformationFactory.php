@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer;
 
@@ -32,11 +32,7 @@ class SignatureInformationFactory
     {
         $params = $this->createParameters($node);
         $label = $this->createLabel($params);
-        return new SignatureInformation(
-            $label,
-            $params,
-            $this->definitionResolver->getDocumentationFromNode($node)
-        );
+        return new SignatureInformation($label, $params, $this->definitionResolver->getDocumentationFromNode($node));
     }
 
     /**
