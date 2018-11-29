@@ -16,8 +16,11 @@ cache:
 
 install:
   - composer install --prefer-dist --no-interaction
+  - pecl install ast-1.0.0
+
 script:
   - vendor/bin/phpcs -n
+  - vendor/bin/phan
   - vendor/bin/phpunit --coverage-clover=coverage.xml --colors=always
   - bash <(curl -s https://codecov.io/bash)
 
