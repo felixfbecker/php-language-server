@@ -1,17 +1,21 @@
 
+FROM composer AS builder
+
+COPY ./ /app
+RUN composer install
+
 # Running this container will start a language server that listens for TCP connections on port 2088
 # Every connection will be run in a forked child process
 
 # Please note that before building the image, you have to install dependencies with `composer install`
 
 FROM php:7-cli
-MAINTAINER Felix Becker <felix.b@outlook.com>
 
 RUN docker-php-ext-configure pcntl --enable-pcntl
 RUN docker-php-ext-install pcntl
 COPY ./php.ini /usr/local/etc/php/conf.d/
 
-COPY ./ /srv/phpls
+COPY --from=builder /app /srv/phpls
 
 WORKDIR /srv/phpls
 
