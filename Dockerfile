@@ -10,6 +10,7 @@ RUN composer install
 # Please note that before building the image, you have to install dependencies with `composer install`
 
 FROM php:7-cli
+MAINTAINER Felix Becker <felix.b@outlook.com>
 
 RUN docker-php-ext-configure pcntl --enable-pcntl
 RUN docker-php-ext-install pcntl
