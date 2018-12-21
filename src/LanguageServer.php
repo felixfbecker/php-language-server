@@ -141,6 +141,10 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                         $e
                     );
                 }
+
+                // When a request is processed, clear the caches of definition resolver as not to leak memory.
+                $this->definitionResolver->clearCache();
+
                 // Only send a Response for a Request
                 // Notifications do not send Responses
                 if (AdvancedJsonRpc\Request::isRequest($msg->body)) {
