@@ -165,8 +165,11 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
      * @param int|null $processId The process Id of the parent process that started the server. Is null if the process has not been started by another process. If the parent process is not alive then the server should exit (see exit notification) its process.
      * @return Promise <InitializeResult>
      */
-    public function initialize(ClientCapabilities $capabilities, string $rootPath = null, int $processId = null): Promise
+    public function initialize(ClientCapabilities $capabilities, string $rootPath = null, int $processId = null, string $rootUri = null): Promise
     {
+        if ($rootPath === null && $rootUri !== null) {
+            $rootPath = uriToPath($rootUri);
+        }
         return coroutine(function () use ($capabilities, $rootPath, $processId) {
 
             if ($capabilities->xfilesProvider) {
