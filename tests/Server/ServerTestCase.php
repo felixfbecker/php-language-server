@@ -84,8 +84,6 @@ abstract class ServerTestCase extends TestCase
             'TestClass::staticTestProperty'          => new Location($globalSymbolsUri,    new Range(new Position(34, 18), new Position(34,  37))),
             'TestClass::staticTestMethod()'          => new Location($globalSymbolsUri,    new Range(new Position(46,  4), new Position(49,   5))),
             'TestClass::testMethod()'                => new Location($globalSymbolsUri,    new Range(new Position(57,  4), new Position(60,   5))),
-            'ChildClass::staticTestProperty'         => new Location($globalSymbolsUri,    new Range(new Position(34, 18), new Position(34,  37))),
-            'ChildClass::staticTestMethod()'         => new Location($globalSymbolsUri,    new Range(new Position(46,  4), new Position(49,   5))),
             'test_function()'                        => new Location($globalSymbolsUri,    new Range(new Position(78,  0), new Position(81,   1))),
             'UnusedClass'                            => new Location($globalSymbolsUri,    new Range(new Position(111, 0), new Position(118,  1))),
             'UnusedClass::unusedProperty'            => new Location($globalSymbolsUri,    new Range(new Position(113,11), new Position(113, 26))),
