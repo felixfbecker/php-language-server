@@ -41,3 +41,6 @@ TestClass::$staticTestProperty[123]->testProperty;
 
 $child = new ChildClass;
 echo $child->testMethod();
+
+ChildClass::staticTestMethod();
+ChildClass::$staticTestProperty[123]->testProperty;

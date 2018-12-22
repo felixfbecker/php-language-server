@@ -494,19 +494,21 @@ class DefinitionResolver
             $className = $scoped->scopeResolutionQualifier->getResolvedName();
         }
         $origName = null;
-        do {
-            if ($scoped->memberName instanceof Node\Expression\Variable) {
-                if ($scoped->parent instanceof Node\Expression\CallExpression) {
-                    return null;
-                }
-                $memberName = $scoped->memberName->getName();
-                if (empty($memberName)) {
-                    return null;
-                }
-                $name = (string)$className . '::$' . $memberName;
-            } else {
-                $name = (string)$className . '::' . $scoped->memberName->getText($scoped->getFileContents());
+        $nameSuffix = null;
+        if ($scoped->memberName instanceof Node\Expression\Variable) {
+            if ($scoped->parent instanceof Node\Expression\CallExpression) {
+                return null;
             }
+            $memberName = $scoped->memberName->getName();
+            if (empty($memberName)) {
+                return null;
+            }
+            $nameSuffix = '::$' . $memberName;
+        } else {
+            $nameSuffix = '::' . $scoped->memberName->getText($scoped->getFileContents());
+        }
+        do {
+            $name = (string)$className . $nameSuffix;
             if ($scoped->parent instanceof Node\Expression\CallExpression) {
                 $name .= '()';
             }

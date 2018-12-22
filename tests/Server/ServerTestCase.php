@@ -84,6 +84,8 @@ abstract class ServerTestCase extends TestCase
             'TestClass::staticTestProperty'          => new Location($globalSymbolsUri,    new Range(new Position(34, 18), new Position(34,  37))),
             'TestClass::staticTestMethod()'          => new Location($globalSymbolsUri,    new Range(new Position(46,  4), new Position(49,   5))),
             'TestClass::testMethod()'                => new Location($globalSymbolsUri,    new Range(new Position(57,  4), new Position(60,   5))),
+            'ChildClass::staticTestProperty'         => new Location($globalSymbolsUri,    new Range(new Position(34, 18), new Position(34,  37))),
+            'ChildClass::staticTestMethod()'         => new Location($globalSymbolsUri,    new Range(new Position(46,  4), new Position(49,   5))),
             'test_function()'                        => new Location($globalSymbolsUri,    new Range(new Position(78,  0), new Position(81,   1))),
             'UnusedClass'                            => new Location($globalSymbolsUri,    new Range(new Position(111, 0), new Position(118,  1))),
             'UnusedClass::unusedProperty'            => new Location($globalSymbolsUri,    new Range(new Position(113,11), new Position(113, 26))),
@@ -103,6 +105,8 @@ abstract class ServerTestCase extends TestCase
             'TestNamespace\\TestClass::staticTestProperty' => new Location($symbolsUri,    new Range(new Position(34, 18), new Position(34,  37))),
             'TestNamespace\\TestClass::staticTestMethod()' => new Location($symbolsUri,    new Range(new Position(46,  4), new Position(49,   5))),
             'TestNamespace\\TestClass::testMethod()'       => new Location($symbolsUri,    new Range(new Position(57,  4), new Position(60,   5))),
+            'TestNamespace\\ChildClass::staticTestProperty'=> new Location($symbolsUri,    new Range(new Position(34, 18), new Position(34,  37))),
+            'TestNamespace\\ChildClass::staticTestMethod()'=> new Location($symbolsUri,    new Range(new Position(46,  4), new Position(49,   5))),
             'TestNamespace\\test_function()'               => new Location($symbolsUri,    new Range(new Position(78,  0), new Position(81,   1))),
             'TestNamespace\\whatever()'                    => new Location($referencesUri, new Range(new Position(21,  0), new Position(23,   1))),
             'TestNamespace\\Example'                       => new Location($symbolsUri,    new Range(new Position(101, 0), new Position(104,  1))),
@@ -153,10 +157,12 @@ abstract class ServerTestCase extends TestCase
             ],
             'TestNamespace\\TestClass::staticTestProperty' => [
                 0 => new Location($referencesUri, new Range(new Position( 8,  16), new Position( 8, 35))), // echo TestClass::$staticTestProperty;
-                1 => new Location($referencesUri, new Range(new Position(39,  11), new Position(39, 30)))  // TestClass::$staticTestProperty[123]->testProperty;
+                1 => new Location($referencesUri, new Range(new Position(39,  11), new Position(39, 30))), // TestClass::$staticTestProperty[123]->testProperty;
+                2 => new Location($referencesUri, new Range(new Position(45,  12), new Position(45, 31)))  // ChildClass::$staticTestProperty[123]->testProperty;
             ],
             'TestNamespace\\TestClass::staticTestMethod()' => [
-                0 => new Location($referencesUri, new Range(new Position( 7,  0), new Position( 7, 27)))
+                0 => new Location($referencesUri, new Range(new Position( 7,  0), new Position( 7, 27))),
+                1 => new Location($referencesUri, new Range(new Position(44,  0), new Position(44, 28)))
             ],
             'TestNamespace\\TestClass::testMethod()' => [
                 0 => new Location($referencesUri, new Range(new Position( 5,  0), new Position( 5, 16))), // $obj->testMethod();
@@ -207,10 +213,12 @@ abstract class ServerTestCase extends TestCase
             ],
             'TestClass::staticTestProperty' => [
                 0 => new Location($globalReferencesUri, new Range(new Position( 8,  16), new Position( 8, 35))), // echo TestClass::$staticTestProperty;
-                1 => new Location($globalReferencesUri, new Range(new Position(39,  11), new Position(39, 30)))  // TestClass::$staticTestProperty[123]->testProperty;
+                1 => new Location($globalReferencesUri, new Range(new Position(39,  11), new Position(39, 30))), // TestClass::$staticTestProperty[123]->testProperty;
+                2 => new Location($globalReferencesUri, new Range(new Position(45,  12), new Position(45, 31)))  // ChildClass::$staticTestProperty[123]->testProperty;
             ],
             'TestClass::staticTestMethod()' => [
-                0 => new Location($globalReferencesUri, new Range(new Position( 7,  0), new Position( 7, 27)))
+                0 => new Location($globalReferencesUri, new Range(new Position( 7,  0), new Position( 7, 27))),
+                1 => new Location($globalReferencesUri, new Range(new Position(44,  0), new Position(44, 28)))
             ],
             'TestClass::testMethod()' => [
                 0 => new Location($globalReferencesUri, new Range(new Position( 5,  0), new Position( 5, 16))), // $obj->testMethod();

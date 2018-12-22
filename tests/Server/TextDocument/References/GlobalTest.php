@@ -198,4 +198,28 @@ class GlobalTest extends ServerTestCase
         )->wait();
         $this->assertEquals([], $result);
     }
+    public function testReferencesForInheritedStaticMethods()
+    {
+        // public static function staticTestMethod()
+        // Get references for staticTestMethod
+        $definition = $this->getDefinitionLocation('ChildClass::staticTestMethod()');
+        $result = $this->textDocument->references(
+            new ReferenceContext,
+            new TextDocumentIdentifier($definition->uri),
+            $definition->range->start
+        )->wait();
+        $this->assertEquals($this->getReferenceLocations('TestClass::staticTestMethod()'), $result);
+    }
+    public function testReferencesForInheritedStaticProperties()
+    {
+        // public static $staticTestProperty;
+        // Get references for $staticTestProperty
+        $definition = $this->getDefinitionLocation('ChildClass::staticTestProperty');
+        $result = $this->textDocument->references(
+            new ReferenceContext,
+            new TextDocumentIdentifier($definition->uri),
+            $definition->range->start
+        )->wait();
+        $this->assertEquals($this->getReferenceLocations('TestClass::staticTestProperty'), $result);
+    }
 }
