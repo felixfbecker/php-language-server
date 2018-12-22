@@ -507,11 +507,11 @@ class DefinitionResolver
         } else {
             $nameSuffix = '::' . $scoped->memberName->getText($scoped->getFileContents());
         }
+        if ($scoped->parent instanceof Node\Expression\CallExpression) {
+            $nameSuffix .= '()';
+        }
         do {
             $name = (string)$className . $nameSuffix;
-            if ($scoped->parent instanceof Node\Expression\CallExpression) {
-                $name .= '()';
-            }
             if ($origName === null) {
                 $origName = $name;
             }
