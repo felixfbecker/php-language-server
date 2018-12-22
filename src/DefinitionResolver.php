@@ -499,6 +499,8 @@ class DefinitionResolver
         } elseif ($scoped->scopeResolutionQualifier instanceof Node\QualifiedName) {
             $className = $scoped->scopeResolutionQualifier->getResolvedName();
         }
+        $origName = null;
+        $nameSuffix = null;
         if ($scoped->memberName instanceof Node\Expression\Variable) {
             if ($scoped->parent instanceof Node\Expression\CallExpression) {
                 return null;
@@ -507,13 +509,29 @@ class DefinitionResolver
             if (empty($memberName)) {
                 return null;
             }
-            $name = (string)$className . '::$' . $memberName;
+            $nameSuffix = '::$' . $memberName;
         } else {
-            $name = (string)$className . '::' . $scoped->memberName->getText($scoped->getFileContents());
+            $nameSuffix = '::' . $scoped->memberName->getText($scoped->getFileContents());
         }
         if ($scoped->parent instanceof Node\Expression\CallExpression) {
-            $name .= '()';
+            $nameSuffix .= '()';
         }
+        do {
+            $name = (string)$className . $nameSuffix;
+            if ($origName === null) {
+                $origName = $name;
+            }
+            $definition = $this->index->getDefinition($name);
+            if (!!$definition) {
+                break;
+            } else {
+                $class = $this->index->getDefinition((string)$className);
+                if ($class === null || empty($class->extends)) {
+                    return $origName;
+                }
+                $className = $class->extends[0];
+            }
+        } while (true);
         return $name;
     }
 

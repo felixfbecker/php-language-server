@@ -155,10 +155,12 @@ abstract class ServerTestCase extends TestCase
             ],
             'TestNamespace\\TestClass::staticTestProperty' => [
                 0 => new Location($referencesUri, new Range(new Position( 8,  16), new Position( 8, 35))), // echo TestClass::$staticTestProperty;
-                1 => new Location($referencesUri, new Range(new Position(39,  11), new Position(39, 30)))  // TestClass::$staticTestProperty[123]->testProperty;
+                1 => new Location($referencesUri, new Range(new Position(39,  11), new Position(39, 30))), // TestClass::$staticTestProperty[123]->testProperty;
+                2 => new Location($referencesUri, new Range(new Position(45,  12), new Position(45, 31)))  // ChildClass::$staticTestProperty[123]->testProperty;
             ],
             'TestNamespace\\TestClass::staticTestMethod()' => [
-                0 => new Location($referencesUri, new Range(new Position( 7,  0), new Position( 7, 27)))
+                0 => new Location($referencesUri, new Range(new Position( 7,  0), new Position( 7, 27))),
+                1 => new Location($referencesUri, new Range(new Position(44,  0), new Position(44, 28)))
             ],
             'TestNamespace\\TestClass::testMethod()' => [
                 0 => new Location($referencesUri, new Range(new Position( 5,  0), new Position( 5, 16))), // $obj->testMethod();
@@ -209,10 +211,12 @@ abstract class ServerTestCase extends TestCase
             ],
             'TestClass::staticTestProperty' => [
                 0 => new Location($globalReferencesUri, new Range(new Position( 8,  16), new Position( 8, 35))), // echo TestClass::$staticTestProperty;
-                1 => new Location($globalReferencesUri, new Range(new Position(39,  11), new Position(39, 30)))  // TestClass::$staticTestProperty[123]->testProperty;
+                1 => new Location($globalReferencesUri, new Range(new Position(39,  11), new Position(39, 30))), // TestClass::$staticTestProperty[123]->testProperty;
+                2 => new Location($globalReferencesUri, new Range(new Position(45,  12), new Position(45, 31)))  // ChildClass::$staticTestProperty[123]->testProperty;
             ],
             'TestClass::staticTestMethod()' => [
-                0 => new Location($globalReferencesUri, new Range(new Position( 7,  0), new Position( 7, 27)))
+                0 => new Location($globalReferencesUri, new Range(new Position( 7,  0), new Position( 7, 27))),
+                1 => new Location($globalReferencesUri, new Range(new Position(44,  0), new Position(44, 28)))
             ],
             'TestClass::testMethod()' => [
                 0 => new Location($globalReferencesUri, new Range(new Position( 5,  0), new Position( 5, 16))), // $obj->testMethod();
