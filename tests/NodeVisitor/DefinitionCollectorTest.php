@@ -35,7 +35,9 @@ class DefinitionCollectorTest extends TestCase
             'TestNamespace\\ChildClass',
             'TestNamespace\\Example',
             'TestNamespace\\Example->__construct()',
-            'TestNamespace\\Example->__destruct()'
+            'TestNamespace\\Example->__destruct()',
+            'TestNamespace\\InnerNamespace',
+            'TestNamespace\\InnerNamespace\\InnerClass',
         ], array_keys($defNodes));
 
         $this->assertInstanceOf(Node\ConstElement::class, $defNodes['TestNamespace\\TEST_CONST']);
@@ -53,6 +55,7 @@ class DefinitionCollectorTest extends TestCase
         $this->assertInstanceOf(Node\Statement\ClassDeclaration::class, $defNodes['TestNamespace\\Example']);
         $this->assertInstanceOf(Node\MethodDeclaration::class, $defNodes['TestNamespace\\Example->__construct()']);
         $this->assertInstanceOf(Node\MethodDeclaration::class, $defNodes['TestNamespace\\Example->__destruct()']);
+        $this->assertInstanceOf(Node\Statement\ClassDeclaration::class, $defNodes['TestNamespace\\InnerNamespace\\InnerClass']);
     }
 
     public function testDoesNotCollectReferences()

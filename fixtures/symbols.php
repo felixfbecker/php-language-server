@@ -103,3 +103,8 @@ class Example {
     public function __construct() {}
     public function __destruct() {}
 }
+
+namespace TestNamespace\InnerNamespace;
+
+class InnerClass {
+}
