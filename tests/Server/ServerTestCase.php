@@ -105,8 +105,6 @@ abstract class ServerTestCase extends TestCase
             'TestNamespace\\TestClass::staticTestProperty' => new Location($symbolsUri,    new Range(new Position(34, 18), new Position(34,  37))),
             'TestNamespace\\TestClass::staticTestMethod()' => new Location($symbolsUri,    new Range(new Position(46,  4), new Position(49,   5))),
             'TestNamespace\\TestClass::testMethod()'       => new Location($symbolsUri,    new Range(new Position(57,  4), new Position(60,   5))),
-            'TestNamespace\\ChildClass::staticTestProperty'=> new Location($symbolsUri,    new Range(new Position(34, 18), new Position(34,  37))),
-            'TestNamespace\\ChildClass::staticTestMethod()'=> new Location($symbolsUri,    new Range(new Position(46,  4), new Position(49,   5))),
             'TestNamespace\\test_function()'               => new Location($symbolsUri,    new Range(new Position(78,  0), new Position(81,   1))),
             'TestNamespace\\whatever()'                    => new Location($referencesUri, new Range(new Position(21,  0), new Position(23,   1))),
             'TestNamespace\\Example'                       => new Location($symbolsUri,    new Range(new Position(101, 0), new Position(104,  1))),
