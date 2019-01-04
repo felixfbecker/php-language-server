@@ -141,18 +141,54 @@ All classes are considered internal and are not subject to semver.
 
 ## Installation
 
-The recommended installation method is through [Composer](https://getcomposer.org/).
-Simply run
+The recommended installation method is through [Composer](https://getcomposer.org/).  Follow the following installation instructions for local or global installation after installing composer on your system.
 
-    composer require felixfbecker/language-server
+### Local Installation
+Create a directory for php-language-server. Create a composer.json file in it, with the following contents:
 
-and you will get the latest stable release and all dependencies.  
-Running `composer update` will update the server to the latest non-breaking version.
+```
+{
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "require": {
+        "felixfbecker/language-server": "v5.4.0"
+    },
+    "scripts": {
+        "parse-stubs": "LanguageServer\\ComposerScripts::parseStubs",
+        "post-update-cmd": "@parse-stubs",
+        "post-install-cmd": "@parse-stubs"
+    }
+}
+```
+Then, in the directory, run the following commands:
 
-After installing the language server and its dependencies,
-you must parse the stubs for standard PHP symbols and save the index for fast initialization.
+```
+composer require felixfbecker/language-server
+```
 
-     composer run-script --working-dir=vendor/felixfbecker/language-server parse-stubs
+### Global installation
+Before installing php-language-server, make sure your ~/.config/composer/composer.json includes the lines below. The settings apply to all globally installed Composer packages, so proceed with caution. If you do not want to edit your global Composer configuration, see the section for local installation above.
+
+```
+{
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "require": {
+        "felixfbecker/language-server": "v5.4.0"
+    },
+    "scripts": {
+        "parse-stubs": "LanguageServer\\ComposerScripts::parseStubs",
+        "post-update-cmd": "@parse-stubs",
+        "post-install-cmd": "@parse-stubs"
+    }
+}
+
+```
+After editing your composer.json, you can install felixfbecker/php-language-server.
+
+```
+composer global require felixfbecker/language-server
+```
 
 ## Running
 
