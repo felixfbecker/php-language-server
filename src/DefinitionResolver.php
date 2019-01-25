@@ -822,8 +822,22 @@ class DefinitionResolver
         }
 
         // ASSIGNMENT EXPRESSION
+        //   first var tag will be used to resolve the type if present
+        //   otherwise
         //   $a = $myExpression => resolves to the type of the right-hand operand
         if ($expr instanceof Node\Expression\AssignmentExpression) {
+            $declarationNode =
+                ParserHelpers\tryGetPropertyDeclaration($expr) ??
+                ParserHelpers\tryGetConstOrClassConstDeclaration($expr);
+            $declarationNode = $declarationNode ?? $expr;
+
+            if (
+                ($docBlock = $this->getDocBlock($declarationNode))
+                && !empty($varTags = $docBlock->getTagsByName('var'))
+                && ($type = $varTags[0]->getType())
+            ) {
+                return $type;
+            }
             return $this->resolveExpressionNodeToType($expr->rightOperand);
         }
 
