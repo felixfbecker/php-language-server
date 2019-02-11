@@ -133,4 +133,35 @@ class Definition
             }
         }
     }
+
+    /**
+     * Checks the definition's visibility.
+     * @param string $match Owner of the FQNS
+     * @param string $caller Descendant of the FQNS owner
+     * @param bool $isInMethodDeclaration checking if the call is from inside a
+     * method
+     * @return bool
+     */
+    public function isVisible(string $match, string $caller, bool $isInMethodDeclaration): bool
+    {
+        if ($isInMethodDeclaration) {
+            if ($match !== $caller && $this->isPrivate()) {
+                return false;
+            }
+        } else if ($this->isProtected() || $this->isPrivate()) {
+                return false;
+        }
+
+        return true;
+    }
+
+    private function isPrivate(): bool
+    {
+        return 'private' === substr($this->declarationLine, 0, 7);
+    }
+
+    private function isProtected(): bool
+    {
+        return 'protected' === substr($this->declarationLine, 0, 9);
+    }
 }

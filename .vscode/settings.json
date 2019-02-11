@@ -3,5 +3,16 @@
   "search.exclude": {
     "**/validation": true,
     "**/tests/Validation/cases": true
+  },
+  "files.trimTrailingWhitespace": true,
+  "files.eol": "\n",
+
+  "files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/CVS": true,
+    "**/.DS_Store": true,
+    "**/tests": false
   }
 }

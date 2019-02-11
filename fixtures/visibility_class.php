@@ -1,14 +1,5 @@
 <?php
 
-
-
-/**
- * Esse commodo excepteur pariatur Lorem est aute incididunt reprehenderit.
- *
- * @var int
- */
-const TEST_CONST = 123;
-
 /**
  * Pariatur ut laborum tempor voluptate consequat ea deserunt.
  *
@@ -18,7 +9,7 @@ const TEST_CONST = 123;
  * consequat sunt culpa exercitation pariatur id reprehenderit nisi incididunt Lorem
  * sint. Officia culpa pariatur laborum nostrud cupidatat consequat mollit.
  */
-class TestClass implements TestInterface
+class TestClass
 {
     /**
      * Anim labore veniam consectetur laboris minim quis aute aute esse nulla ad.
@@ -42,6 +33,20 @@ class TestClass implements TestInterface
     public $testProperty;
 
     /**
+     * Reprehenderit magna velit mollit ipsum do.
+     *
+     * @var TestClass
+     */
+    private $privateProperty;
+
+    /**
+     * Reprehenderit magna velit mollit ipsum do.
+     *
+     * @var TestClass
+     */
+    protected $protectedProperty;
+
+    /**
      * Do magna consequat veniam minim proident eiusmod incididunt aute proident.
      */
     public static function staticTestMethod()
@@ -59,61 +64,14 @@ class TestClass implements TestInterface
     {
         $this->testProperty = $testParameter;
     }
-}
 
-trait TestTrait
-{
-
-}
-
-interface TestInterface
-{
-
-}
-
-/**
- * Officia aliquip adipisicing et nulla et laboris dolore labore.
- *
- * @return void
- */
-function test_function()
-{
-
-}
-
-new class {
-    const TEST_CLASS_CONST = 123;
-    public static $staticTestProperty;
-    public $testProperty;
-
-    public static function staticTestMethod()
+    private function privateTestMethod()
     {
-
+        return $this->privateProperty;
     }
 
-    public function testMethod($testParameter)
+    protected function protectedTestMethod()
     {
-        $testVariable = 123;
-    }
-};
-
-class ChildClass extends TestClass {}
-
-/**
- * Lorem ipsum dolor sit amet, consectetur.
- */
-define('TEST_DEFINE_CONSTANT', false);
-
-print TEST_DEFINE_CONSTANT ? 'true' : 'false';
-
-/**
- * Neither this class nor its members are referenced anywhere
- */
-class UnusedClass
-{
-    public $unusedProperty;
-
-    public function unusedMethod()
-    {
+        return $this->protectedProperty;
     }
 }

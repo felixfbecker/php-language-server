@@ -159,7 +159,6 @@ class CompletionProvider
     ): CompletionList {
         // This can be made much more performant if the tree follows specific invariants.
         $node = $doc->getNodeAtPosition($pos);
-
         // Get the node at the position under the cursor
         $offset = $node === null ? -1 : $pos->toOffset($node->getFileContents());
         if (
@@ -247,7 +246,7 @@ class CompletionProvider
             $fqns = FqnUtilities\getFqnsFromType(
                 $this->definitionResolver->resolveExpressionNodeToType($node->dereferencableExpression)
             );
-
+            $isInMethodDeclaration = null !== $node->getFirstAncestor(\Microsoft\PhpParser\Node\MethodDeclaration::class);
             // The FQNs of the symbol and its parents (eg the implemented interfaces)
             foreach ($this->expandParentFqns($fqns) as $parentFqn) {
                 // Add the object access operator to only get members of all parents
@@ -255,7 +254,10 @@ class CompletionProvider
                 $prefixLen = strlen($prefix);
                 // Collect fqn definitions
                 foreach ($this->index->getChildDefinitionsForFqn($parentFqn) as $fqn => $def) {
-                    if (substr($fqn, 0, $prefixLen) === $prefix && $def->isMember) {
+                    if (substr($fqn, 0, $prefixLen) === $prefix &&
+                        $def->isMember &&
+                        $def->isVisible($prefix, $fqns[0] . '->', $isInMethodDeclaration)
+                        ) {
                         $list->items[] = CompletionItemFactory::fromDefinition($def);
                     }
                 }
@@ -278,7 +280,6 @@ class CompletionProvider
             $fqns = FqnUtilities\getFqnsFromType(
                 $classType = $this->definitionResolver->resolveExpressionNodeToType($scoped->scopeResolutionQualifier)
             );
-
             // The FQNs of the symbol and its parents (eg the implemented interfaces)
             foreach ($this->expandParentFqns($fqns) as $parentFqn) {
                 // Append :: operator to only get static members of all parents
