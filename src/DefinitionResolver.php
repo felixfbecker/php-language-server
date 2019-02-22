@@ -1091,7 +1091,7 @@ class DefinitionResolver
 
             $parameterDocBlockTag = $this->tryGetDocBlockTagForParameter($docBlock, $variableName);
             if ($parameterDocBlockTag !== null && ($type = $parameterDocBlockTag->getType())) {
-                // Doc block comments supercede all other forms of type inference
+                // Doc block comments supersede all other forms of type inference
                 return $type;
             }
 

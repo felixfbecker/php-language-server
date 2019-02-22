@@ -96,7 +96,7 @@ class Indexer
     }
 
     /**
-     * Will read and parse the passed source files in the project and add them to the appropiate indexes
+     * Will read and parse the passed source files in the project and add them to the appropriate indexes
      *
      * @return Promise <void>
      */
