@@ -105,13 +105,7 @@ class PhpDocumentLoader
     public function load(string $uri): Promise
     {
         return coroutine(function () use ($uri) {
-
-            $limit = 150000;
             $content = yield $this->contentRetriever->retrieve($uri);
-            $size = strlen($content);
-            if ($size > $limit) {
-                throw new ContentTooLargeException($uri, $size, $limit);
-            }
 
             if (isset($this->documents[$uri])) {
                 $document = $this->documents[$uri];
