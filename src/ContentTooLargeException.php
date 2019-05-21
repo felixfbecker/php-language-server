@@ -9,6 +9,13 @@ namespace LanguageServer;
 class ContentTooLargeException extends \Exception
 {
     /**
+     * The limit of content
+     *
+     * @var int
+     */
+    public static $limit = 1000000;
+
+    /**
      * The URI of the file that exceeded the limit
      *
      * @var string
@@ -23,23 +30,15 @@ class ContentTooLargeException extends \Exception
     public $size;
 
     /**
-     * The limit that was exceeded in bytes
-     *
-     * @var int
-     */
-    public $limit;
-
-    /**
      * @param string     $uri      The URI of the file that exceeded the limit
      * @param int        $size     The size of the file in bytes
-     * @param int        $limit    The limit that was exceeded in bytes
      * @param \Throwable $previous The previous exception used for the exception chaining.
      */
-    public function __construct(string $uri, int $size, int $limit, \Throwable $previous = null)
+    public function __construct(string $uri, int $size, \Throwable $previous = null)
     {
         $this->uri = $uri;
         $this->size = $size;
-        $this->limit = $limit;
+        $limit = self::$limit;
         parent::__construct("$uri exceeds size limit of $limit bytes ($size)", 0, $previous);
     }
 }

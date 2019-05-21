@@ -1,10 +1,10 @@
 <?php
 
-use LanguageServer\{LanguageServer, ProtocolStreamReader, ProtocolStreamWriter, StderrLogger};
+use LanguageServer\{LanguageServer, ProtocolStreamReader, ProtocolStreamWriter, StderrLogger, ContentTooLargeException};
 use Sabre\Event\Loop;
 use Composer\XdebugHandler\XdebugHandler;
 
-$options = getopt('', ['tcp::', 'tcp-server::', 'memory-limit::']);
+$options = getopt('', ['tcp::', 'tcp-server::', 'memory-limit::', "content-limit::"]);
 
 ini_set('memory_limit', $options['memory-limit'] ?? '4G');
 
@@ -38,6 +38,10 @@ $xdebugHandler = new XdebugHandler('PHPLS');
 $xdebugHandler->setLogger($logger);
 $xdebugHandler->check();
 unset($xdebugHandler);
+
+if (is_integer($options['content-limit'] ?? null)) {
+    ContentTooLargeException::$limit = (int)$options['content-limit'];
+}
 
 if (!empty($options['tcp'])) {
     // Connect to a TCP server

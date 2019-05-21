@@ -20,12 +20,10 @@ class FileSystemContentRetriever implements ContentRetriever
      */
     public function retrieve(string $uri): Promise
     {
-        $limit = 150000;
-
         $path = uriToPath($uri);
         $size = filesize($path);
-        if ($size > $limit) {
-            return Promise\reject(new ContentTooLargeException($uri, $size, $limit));
+        if ($size > ContentTooLargeException::$limit) {
+            return Promise\reject(new ContentTooLargeException($uri, $size));
         }
         return Promise\resolve(file_get_contents($path));
     }

@@ -218,9 +218,10 @@ class Indexer
                         $this->client->textDocument->publishDiagnostics($uri, $document->getDiagnostics());
                     }
                 } catch (ContentTooLargeException $e) {
+                    $limit = ContentTooLargeException::$limit;
                     $this->client->window->logMessage(
                         MessageType::INFO,
-                        "Ignoring file {$uri} because it exceeds size limit of {$e->limit} bytes ({$e->size})"
+                        "Ignoring file {$uri} because it exceeds size limit of {$limit} bytes ({$e->size})"
                     );
                 } catch (\Exception $e) {
                     $this->client->window->logMessage(MessageType::ERROR, "Error parsing $uri: " . (string)$e);
