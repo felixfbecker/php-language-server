@@ -1,8 +1,9 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\Index;
 
+use Ds\Set;
 use LanguageServer\Definition;
 use Sabre\Event\EmitterTrait;
 
@@ -36,7 +37,7 @@ class Index implements ReadableIndex, \Serializable
      * An associative array that maps fully qualified symbol names
      * to arrays of document URIs that reference the symbol
      *
-     * @var string[][]
+     * @var Set[]
      */
     private $references = [];
 
@@ -131,9 +132,9 @@ class Index implements ReadableIndex, \Serializable
                 continue;
             }
             if ($item instanceof Definition) {
-                yield $fqn.$name => $item;
+                yield $fqn . $name => $item;
             } elseif (is_array($item) && isset($item[''])) {
-                yield $fqn.$name => $item[''];
+                yield $fqn . $name => $item[''];
             }
         }
     }
@@ -200,8 +201,10 @@ class Index implements ReadableIndex, \Serializable
      */
     public function getReferenceUris(string $fqn): \Generator
     {
-        foreach ($this->references[$fqn] ?? [] as $uri) {
-            yield $uri;
+        if ($this->references[$fqn]) {
+            foreach ($this->references[$fqn] as $uri) {
+                yield $uri;
+            }
         }
     }
 
@@ -209,7 +212,7 @@ class Index implements ReadableIndex, \Serializable
      * For test use.
      * Returns all references, keyed by fqn.
      *
-     * @return string[][]
+     * @return Set[]
      */
     public function getReferences(): array
     {
@@ -225,12 +228,9 @@ class Index implements ReadableIndex, \Serializable
     public function addReferenceUri(string $fqn, string $uri)
     {
         if (!isset($this->references[$fqn])) {
-            $this->references[$fqn] = [];
+            $this->references[$fqn] = new Set();
         }
-        // TODO: use DS\Set instead of searching array
-        if (array_search($uri, $this->references[$fqn], true) === false) {
-            $this->references[$fqn][] = $uri;
-        }
+        $this->references[$fqn]->add($uri);
     }
 
     /**
@@ -245,11 +245,7 @@ class Index implements ReadableIndex, \Serializable
         if (!isset($this->references[$fqn])) {
             return;
         }
-        $index = array_search($fqn, $this->references[$fqn], true);
-        if ($index === false) {
-            return;
-        }
-        array_splice($this->references[$fqn], $index, 1);
+        $this->references[$fqn]->remove($uri);
     }
 
     /**
@@ -299,9 +295,9 @@ class Index implements ReadableIndex, \Serializable
     {
         foreach ($storage as $key => $value) {
             if (!is_array($value)) {
-                yield $prefix.$key => $value;
+                yield $prefix . $key => $value;
             } else {
-                yield from $this->yieldDefinitionsRecursively($value, $prefix.$key);
+                yield from $this->yieldDefinitionsRecursively($value, $prefix . $key);
             }
         }
     }
@@ -365,8 +361,8 @@ class Index implements ReadableIndex, \Serializable
      * It can be an index node or a Definition if the $parts are precise
      * enough. Returns null when nothing is found.
      *
-     * @param string[] $path              The splitted FQN
-     * @param array|Definition &$storage  The current level to look for $path.
+     * @param string[] $path The splitted FQN
+     * @param array|Definition &$storage The current level to look for $path.
      * @return array|Definition|null
      */
     private function getIndexValue(array $path, &$storage)
@@ -389,10 +385,10 @@ class Index implements ReadableIndex, \Serializable
      * Recursive function that stores the given Definition in the given $storage array represented
      * as a tree matching the given $parts.
      *
-     * @param int $level              The current level of FQN part
-     * @param string[] $parts         The splitted FQN
-     * @param array &$storage         The array in which to store the $definition
-     * @param Definition $definition  The Definition to store
+     * @param int $level The current level of FQN part
+     * @param string[] $parts The splitted FQN
+     * @param array &$storage The array in which to store the $definition
+     * @param Definition $definition The Definition to store
      */
     private function indexDefinition(int $level, array $parts, array &$storage, Definition $definition)
     {
@@ -416,10 +412,10 @@ class Index implements ReadableIndex, \Serializable
      * $storage array. The function also looks up recursively to remove the parents of the
      * definition which no longer has children to avoid to let empty arrays in the index.
      *
-     * @param int $level              The current level of FQN part
-     * @param string[] $parts         The splitted FQN
-     * @param array &$storage         The current array in which to remove data
-     * @param array &$rootStorage     The root storage array
+     * @param int $level The current level of FQN part
+     * @param string[] $parts The splitted FQN
+     * @param array &$storage The current array in which to remove data
+     * @param array &$rootStorage The root storage array
      */
     private function removeIndexedDefinition(int $level, array $parts, array &$storage, array &$rootStorage)
     {
