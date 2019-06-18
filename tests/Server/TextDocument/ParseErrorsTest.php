@@ -1,18 +1,18 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\Tests\Server\TextDocument;
 
-use PHPUnit\Framework\TestCase;
-use LanguageServer\Tests\MockProtocolStream;
-use LanguageServer\{
-    Server, Client, LanguageClient, ClientHandler, PhpDocumentLoader, DefinitionResolver
-};
-use LanguageServer\Index\{Index, ProjectIndex, DependenciesIndex};
-use LanguageServer\ContentRetriever\FileSystemContentRetriever;
-use LanguageServerProtocol\{TextDocumentItem, DiagnosticSeverity};
-use Sabre\Event\Promise;
+use Amp\Deferred;
+use Amp\Delayed;
+use Amp\Loop;
 use JsonMapper;
+use LanguageServer\{Client, ClientHandler, DefinitionResolver, LanguageClient, PhpDocumentLoader, Server};
+use LanguageServer\ContentRetriever\FileSystemContentRetriever;
+use LanguageServer\Index\{DependenciesIndex, Index, ProjectIndex};
+use LanguageServer\Tests\MockProtocolStream;
+use LanguageServerProtocol\{DiagnosticSeverity, TextDocumentItem};
+use PHPUnit\Framework\TestCase;
 
 class ParseErrorsTest extends TestCase
 {
@@ -21,22 +21,31 @@ class ParseErrorsTest extends TestCase
      */
     private $textDocument;
 
+    /**
+     * @var Deferred
+     */
     private $args;
 
     public function setUp()
     {
         $client = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
-        $client->textDocument = new class($this->args) extends Client\TextDocument {
+        $this->args = new Deferred();
+        $client->textDocument = new class($this->args) extends Client\TextDocument
+        {
+            /** @var Deferred */
             private $args;
-            public function __construct(&$args)
+
+            public function __construct($args)
             {
                 parent::__construct(new ClientHandler(new MockProtocolStream, new MockProtocolStream), new JsonMapper);
-                $this->args = &$args;
+                $this->args = $args;
             }
-            public function publishDiagnostics(string $uri, array $diagnostics): Promise
+
+            public function publishDiagnostics(string $uri, array $diagnostics): \Generator
             {
-                $this->args = func_get_args();
-                return Promise\resolve(null);
+                $this->args->resolve(func_get_args());
+                yield new Delayed(0);
+                return null;
             }
         };
         $projectIndex = new ProjectIndex(new Index, new DependenciesIndex);
@@ -57,98 +66,102 @@ class ParseErrorsTest extends TestCase
 
     public function testParseErrorsArePublishedAsDiagnostics()
     {
-        $this->openFile(__DIR__ . '/../../../fixtures/invalid_file.php');
-        $this->assertEquals([
-            'whatever',
-            [[
-                'range' => [
-                    'start' => [
-                        'line' => 2,
-                        'character' => 9
+        Loop::run(function () {
+            $this->openFile(__DIR__ . '/../../../fixtures/invalid_file.php');
+            $this->assertEquals([
+                'whatever',
+                [[
+                    'range' => [
+                        'start' => [
+                            'line' => 2,
+                            'character' => 9
+                        ],
+                        'end' => [
+                            'line' => 2,
+                            'character' => 9
+                        ]
                     ],
-                    'end' => [
-                        'line' => 2,
-                        'character' => 9
-                    ]
+                    'severity' => DiagnosticSeverity::ERROR,
+                    'code' => null,
+                    'source' => 'php',
+                    'message' => "'Name' expected."
                 ],
-                'severity' => DiagnosticSeverity::ERROR,
-                'code' => null,
-                'source' => 'php',
-                'message' => "'Name' expected."
-            ],
-            [
-                'range' => [
-                    'start' => [
-                        'line' => 2,
-                        'character' => 9
+                    [
+                        'range' => [
+                            'start' => [
+                                'line' => 2,
+                                'character' => 9
+                            ],
+                            'end' => [
+                                'line' => 2,
+                                'character' => 9
+                            ]
+                        ],
+                        'severity' => DiagnosticSeverity::ERROR,
+                        'code' => null,
+                        'source' => 'php',
+                        'message' => "'{' expected."
                     ],
-                    'end' => [
-                        'line' => 2,
-                        'character' => 9
-                    ]
-                ],
-                'severity' => DiagnosticSeverity::ERROR,
-                'code' => null,
-                'source' => 'php',
-                'message' => "'{' expected."
-            ],
-            [
-                'range' => [
-                    'start' => [
-                        'line' => 2,
-                        'character' => 9
+                    [
+                        'range' => [
+                            'start' => [
+                                'line' => 2,
+                                'character' => 9
+                            ],
+                            'end' => [
+                                'line' => 2,
+                                'character' => 9
+                            ]
+                        ],
+                        'severity' => DiagnosticSeverity::ERROR,
+                        'code' => null,
+                        'source' => 'php',
+                        'message' => "'}' expected."
                     ],
-                    'end' => [
-                        'line' => 2,
-                        'character' => 9
-                    ]
-                ],
-                'severity' => DiagnosticSeverity::ERROR,
-                'code' => null,
-                'source' => 'php',
-                'message' => "'}' expected."
-            ],
-            [
-                'range' => [
-                    'start' => [
-                        'line' => 2,
-                        'character' => 15
-                    ],
-                    'end' => [
-                        'line' => 2,
-                        'character' => 15
-                    ]
-                ],
-                'severity' => DiagnosticSeverity::ERROR,
-                'code' => null,
-                'source' => 'php',
-                'message' => "'Name' expected."
-            ]]
-        ], json_decode(json_encode($this->args), true));
+                    [
+                        'range' => [
+                            'start' => [
+                                'line' => 2,
+                                'character' => 15
+                            ],
+                            'end' => [
+                                'line' => 2,
+                                'character' => 15
+                            ]
+                        ],
+                        'severity' => DiagnosticSeverity::ERROR,
+                        'code' => null,
+                        'source' => 'php',
+                        'message' => "'Name' expected."
+                    ]]
+            ], json_decode(json_encode(yield $this->args->promise()), true));
+        });
     }
 
     public function testParseErrorsWithOnlyStartLine()
     {
-        $this->markTestIncomplete('This diagnostic not yet implemented in tolerant-php-parser');
-        $this->openFile(__DIR__ . '/../../../fixtures/namespace_not_first.php');
-        $this->assertEquals([
-            'whatever',
-            [[
-                'range' => [
-                    'start' => [
-                        'line' => 4,
-                        'character' => 0
+        Loop::run(function () {
+            $this->markTestIncomplete('This diagnostic not yet implemented in tolerant-php-parser');
+            yield $this->openFile(__DIR__ . '/../../../fixtures/namespace_not_first.php');
+            $this->assertEquals([
+                'whatever',
+                [[
+                    'range' => [
+                        'start' => [
+                            'line' => 4,
+                            'character' => 0
+                        ],
+                        'end' => [
+                            'line' => 4,
+                            'character' => 0
+                        ]
                     ],
-                    'end' => [
-                        'line' => 4,
-                        'character' => 0
-                    ]
-                ],
-                'severity' => DiagnosticSeverity::ERROR,
-                'code' => null,
-                'source' => 'php',
-                'message' => "Namespace declaration statement has to be the very first statement in the script"
-            ]]
-        ], json_decode(json_encode($this->args), true));
+                    'severity' => DiagnosticSeverity::ERROR,
+                    'code' => null,
+                    'source' => 'php',
+                    'message' => "Namespace declaration statement has to be the very first statement in the script"
+                ]]
+            ], json_decode(json_encode(yield $this->args->promise()), true));
+        });
     }
 }

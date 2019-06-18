@@ -1,8 +1,9 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\Tests\Server\TextDocument\References;
 
+use Amp\Loop;
 use LanguageServerProtocol\{TextDocumentIdentifier, Position, ReferenceContext, Location, Range};
 use function LanguageServer\pathToUri;
 
@@ -20,14 +21,16 @@ class NamespacedTest extends GlobalTest
 
     public function testReferencesForNamespaces()
     {
-        // namespace TestNamespace;
-        // Get references for TestNamespace
-        $definition = parent::getDefinitionLocation('TestNamespace');
-        $result = $this->textDocument->references(
-            new ReferenceContext,
-            new TextDocumentIdentifier($definition->uri),
-            $definition->range->end
-        )->wait();
-        $this->assertEquals(parent::getReferenceLocations('TestNamespace'), $result);
+        Loop::run(function () {
+            // namespace TestNamespace;
+            // Get references for TestNamespace
+            $definition = parent::getDefinitionLocation('TestNamespace');
+            $result = yield $this->textDocument->references(
+                new ReferenceContext,
+                new TextDocumentIdentifier($definition->uri),
+                $definition->range->end
+            );
+            $this->assertEquals(parent::getReferenceLocations('TestNamespace'), $result);
+        });
     }
 }

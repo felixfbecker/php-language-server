@@ -1,8 +1,9 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\Tests\Server;
 
+use Amp\Loop;
 use LanguageServer\{
     PhpDocument, PhpDocumentLoader, Project, DefinitionResolver
 };
@@ -32,10 +33,12 @@ class PhpDocumentLoaderTest extends TestCase
 
     public function testGetOrLoadLoadsDocument()
     {
-        $document = $this->loader->getOrLoad(pathToUri(__FILE__))->wait();
+        Loop::run(function () {
+            $document = yield from $this->loader->getOrLoad(pathToUri(__FILE__));
 
-        $this->assertNotNull($document);
-        $this->assertInstanceOf(PhpDocument::class, $document);
+            $this->assertNotNull($document);
+            $this->assertInstanceOf(PhpDocument::class, $document);
+        });
     }
 
     public function testGetReturnsOpenedInstance()

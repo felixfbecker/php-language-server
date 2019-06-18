@@ -1,11 +1,15 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\Tests;
 
-use LanguageServer\{ProtocolReader, ProtocolWriter};
+use Amp\Deferred;
+use Amp\Delayed;
+use Amp\Loop;
+use LanguageServer\{Event\MessageEvent, ProtocolReader, ProtocolWriter};
 use LanguageServer\Message;
-use Sabre\Event\{Loop, Emitter, Promise};
+use League\Event\Emitter;
+use League\Event\Event;
 
 /**
  * A fake duplex protocol stream
@@ -18,11 +22,11 @@ class MockProtocolStream extends Emitter implements ProtocolReader, ProtocolWrit
      * @param Message $msg
      * @return void
      */
-    public function write(Message $msg): Promise
+    public function write(Message $msg): \Generator
     {
-        Loop\nextTick(function () use ($msg) {
-            $this->emit('message', [Message::parse((string)$msg)]);
+        Loop::defer(function () use ($msg) {
+            $this->emit(new MessageEvent('message', Message::parse((string)$msg)));
         });
-        return Promise\resolve(null);
+        yield new Delayed(0);
     }
 }

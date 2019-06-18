@@ -5,9 +5,6 @@
         ],
         "LanguageServer\\pathToUri()": [
             "./functionUse2.php"
-        ],
-        "LanguageServer\\timeout()": [
-            "./functionUse2.php"
         ]
     },
     "definitions": []
