@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\Client;
 
@@ -36,9 +36,9 @@ class TextDocument
      * @param Diagnostic[] $diagnostics
      * @return Promise <void>
      */
-    public function publishDiagnostics(string $uri, array $diagnostics): Promise
+    public function publishDiagnostics(string $uri, array $diagnostics): \Generator
     {
-        return $this->handler->notify('textDocument/publishDiagnostics', [
+        yield from $this->handler->notify('textDocument/publishDiagnostics', [
             'uri' => $uri,
             'diagnostics' => $diagnostics
         ]);
@@ -51,13 +51,12 @@ class TextDocument
      * @param TextDocumentIdentifier $textDocument The document to get the content for
      * @return Promise <TextDocumentItem> The document's current content
      */
-    public function xcontent(TextDocumentIdentifier $textDocument): Promise
+    public function xcontent(TextDocumentIdentifier $textDocument): \Generator
     {
-        return $this->handler->request(
+        $result = yield from  $this->handler->request(
             'textDocument/xcontent',
             ['textDocument' => $textDocument]
-        )->then(function ($result) {
-            return $this->mapper->map($result, new TextDocumentItem);
-        });
+        );
+        return $this->mapper->map($result, new TextDocumentItem);
     }
 }

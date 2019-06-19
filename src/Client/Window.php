@@ -41,8 +41,8 @@ class Window
      * @param string $message
      * @return Promise <void>
      */
-    public function logMessage(int $type, string $message): Promise
+    public function logMessage(int $type, string $message): \Generator
     {
-        return $this->handler->notify('window/logMessage', ['type' => $type, 'message' => $message]);
+        yield from $this->handler->notify('window/logMessage', ['type' => $type, 'message' => $message]);
     }
 }

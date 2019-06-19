@@ -1,10 +1,9 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer;
 
 use AdvancedJsonRpc\Message as MessageBody;
-use LanguageServer\Message;
 
 class Message
 {
@@ -27,7 +26,7 @@ class Message
     public static function parse(string $msg): Message
     {
         $obj = new self;
-        $parts = explode("\r\n", $msg);
+        $parts = explode("\r\n\r\n", $msg, 2);
         $obj->body = MessageBody::parse(array_pop($parts));
         foreach ($parts as $line) {
             if ($line) {
@@ -55,11 +54,11 @@ class Message
     {
         $body = (string)$this->body;
         $contentLength = strlen($body);
-        $this->headers['Content-Length'] = $contentLength;
+        $this->headers['Content-Length'] = $contentLength + 6;
         $headers = '';
         foreach ($this->headers as $name => $value) {
             $headers .= "$name: $value\r\n";
         }
-        return $headers . "\r\n" . $body;
+        return $headers . "\r\n" . $body . "\r\n\r\n\r\n";
     }
 }

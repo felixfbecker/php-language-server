@@ -1,8 +1,12 @@
 <?php
 
-use LanguageServer\{LanguageServer, ProtocolStreamReader, ProtocolStreamWriter, StderrLogger};
-use Sabre\Event\Loop;
+use Amp\ByteStream\ResourceInputStream;
+use Amp\ByteStream\ResourceOutputStream;
+use Amp\Loop;
+use Amp\Socket\ClientSocket;
+use Amp\Socket\ServerSocket;
 use Composer\XdebugHandler\XdebugHandler;
+use LanguageServer\{LanguageServer, ProtocolStreamReader, ProtocolStreamWriter, StderrLogger};
 
 $options = getopt('', ['tcp::', 'tcp-server::', 'memory-limit::']);
 
@@ -42,69 +46,51 @@ unset($xdebugHandler);
 if (!empty($options['tcp'])) {
     // Connect to a TCP server
     $address = $options['tcp'];
-    $socket = stream_socket_client('tcp://' . $address, $errno, $errstr);
-    if ($socket === false) {
-        $logger->critical("Could not connect to language client. Error $errno\n$errstr");
-        exit(1);
-    }
-    stream_set_blocking($socket, false);
-    $ls = new LanguageServer(
-        new ProtocolStreamReader($socket),
-        new ProtocolStreamWriter($socket)
-    );
-    Loop\run();
+    $server = function () use ($logger, $address) {
+        /** @var ClientSocket $socket */
+        $socket = yield Amp\Socket\connect('tcp://' . $address);
+        $ls = new LanguageServer(
+            new ProtocolStreamReader($socket),
+            new ProtocolStreamWriter($socket)
+        );
+        yield $ls->getshutdownDeferred();
+    };
 } else if (!empty($options['tcp-server'])) {
     // Run a TCP Server
     $address = $options['tcp-server'];
-    $tcpServer = stream_socket_server('tcp://' . $address, $errno, $errstr);
-    if ($tcpServer === false) {
-        $logger->critical("Could not listen on $address. Error $errno\n$errstr");
-        exit(1);
-    }
-    $logger->debug("Server listening on $address");
-    $pcntlAvailable = extension_loaded('pcntl');
-    if (!$pcntlAvailable) {
-        $logger->notice('PCNTL is not available. Only a single connection will be accepted');
-    }
-    while ($socket = stream_socket_accept($tcpServer, -1)) {
-        $logger->debug('Connection accepted');
-        stream_set_blocking($socket, false);
-        if ($pcntlAvailable) {
-            // If PCNTL is available, fork a child process for the connection
-            // An exit notification will only terminate the child process
-            $pid = pcntl_fork();
-            if ($pid === -1) {
-                $logger->critical('Could not fork');
-                exit(1);
-            } else if ($pid === 0) {
-                // Child process
-                $reader = new ProtocolStreamReader($socket);
-                $writer = new ProtocolStreamWriter($socket);
-                $reader->on('close', function () use ($logger) {
-                    $logger->debug('Connection closed');
-                });
-                $ls = new LanguageServer($reader, $writer);
-                Loop\run();
-                // Just for safety
-                exit(0);
-            }
-        } else {
-            // If PCNTL is not available, we only accept one connection.
-            // An exit notification will terminate the server
-            $ls = new LanguageServer(
-                new ProtocolStreamReader($socket),
-                new ProtocolStreamWriter($socket)
-            );
-            Loop\run();
+    $server = function () use ($logger, $address) {
+
+        $server = Amp\Socket\listen('tcp://' . $address);
+
+        $logger->debug("Server listening on $address");
+
+        while ($socket = yield $server->accept()) {
+            /** @var ServerSocket $socket */
+            list($ip, $port) = \explode(':', $socket->getRemoteAddress());
+
+            $logger->debug("Accepted connection from {$ip}:{$port}." . PHP_EOL);
+
+            Loop::run(function () use ($socket) {
+                $ls = new LanguageServer(
+                    new ProtocolStreamReader($socket),
+                    new ProtocolStreamWriter($socket)
+                );
+                yield $ls->getshutdownDeferred();
+            });
         }
-    }
+    };
 } else {
     // Use STDIO
     $logger->debug('Listening on STDIN');
-    stream_set_blocking(STDIN, false);
+    $inputStream = new ResourceInputStream(STDIN);
+    $outputStream = new ResourceOutputStream(STDOUT);
     $ls = new LanguageServer(
-        new ProtocolStreamReader(STDIN),
-        new ProtocolStreamWriter(STDOUT)
+        new ProtocolStreamReader($inputStream),
+        new ProtocolStreamWriter($outputStream)
     );
-    Loop\run();
+    $server = function () use ($ls) {
+        yield $ls->getshutdownDeferred();
+    };
 }
+
+Loop::run($server);

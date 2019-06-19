@@ -5,15 +5,14 @@ namespace LanguageServer\Index;
 
 use Ds\Set;
 use LanguageServer\Definition;
-use Sabre\Event\EmitterTrait;
+use League\Event\Emitter;
 
 /**
  * Represents the index of a project or dependency
  * Serializable for caching
  */
-class Index implements ReadableIndex, \Serializable
+class Index extends Emitter implements ReadableIndex, \Serializable
 {
-    use EmitterTrait;
 
     /**
      * An associative array that maps splitted fully qualified symbol names
@@ -62,7 +61,6 @@ class Index implements ReadableIndex, \Serializable
             $this->setStaticComplete();
         }
         $this->complete = true;
-        $this->emit('complete');
     }
 
     /**
@@ -73,7 +71,6 @@ class Index implements ReadableIndex, \Serializable
     public function setStaticComplete()
     {
         $this->staticComplete = true;
-        $this->emit('static-complete');
     }
 
     /**
@@ -174,8 +171,6 @@ class Index implements ReadableIndex, \Serializable
     {
         $parts = $this->splitFqn($fqn);
         $this->indexDefinition(0, $parts, $this->definitions, $definition);
-
-        $this->emit('definition-added');
     }
 
     /**
@@ -201,7 +196,7 @@ class Index implements ReadableIndex, \Serializable
      */
     public function getReferenceUris(string $fqn): \Generator
     {
-        if ($this->references[$fqn]) {
+        if (isset($this->references[$fqn])) {
             foreach ($this->references[$fqn] as $uri) {
                 yield $uri;
             }
@@ -425,7 +420,7 @@ class Index implements ReadableIndex, \Serializable
             if (isset($storage[$part])) {
                 unset($storage[$part]);
 
-                if (0 === count($storage)) {
+                if (0 === count($storage) && $level != 0) {
                     // parse again the definition tree to remove the parent
                     // when it has no more children
                     $this->removeIndexedDefinition(0, array_slice($parts, 0, $level), $rootStorage, $rootStorage);

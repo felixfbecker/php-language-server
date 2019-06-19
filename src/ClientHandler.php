@@ -1,10 +1,12 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer;
 
 use AdvancedJsonRpc;
-use Sabre\Event\Promise;
+use Amp\Deferred;
+use Amp\Loop;
+use LanguageServer\Event\MessageEvent;
 
 class ClientHandler
 {
@@ -35,31 +37,35 @@ class ClientHandler
      *
      * @param string $method The method to call
      * @param array|object $params The method parameters
-     * @return Promise <mixed> Resolved with the result of the request or rejected with an error
+     * @return \Generator <mixed> Resolved with the result of the request or rejected with an error
      */
-    public function request(string $method, $params): Promise
+    public function request(string $method, $params): \Generator
     {
         $id = $this->idGenerator->generate();
-        return $this->protocolWriter->write(
-            new Message(
-                new AdvancedJsonRpc\Request($id, $method, (object)$params)
-            )
-        )->then(function () use ($id) {
-            $promise = new Promise;
-            $listener = function (Message $msg) use ($id, $promise, &$listener) {
+        $deferred = new Deferred();
+        $listener = function (MessageEvent $messageEvent) use ($id, $deferred, &$listener) {
+            $msg = $messageEvent->getMessage();
+            Loop::defer(function () use (&$listener, $deferred, $id, $msg) {
                 if (AdvancedJsonRpc\Response::isResponse($msg->body) && $msg->body->id === $id) {
                     // Received a response
                     $this->protocolReader->removeListener('message', $listener);
                     if (AdvancedJsonRpc\SuccessResponse::isSuccessResponse($msg->body)) {
-                        $promise->fulfill($msg->body->result);
+                        $deferred->resolve($msg->body->result);
                     } else {
-                        $promise->reject($msg->body->error);
+                        $deferred->fail($msg->body->error);
                     }
                 }
-            };
-            $this->protocolReader->on('message', $listener);
-            return $promise;
-        });
+            });
+        };
+        $this->protocolReader->addListener('message', $listener);
+
+        yield from $this->protocolWriter->write(
+            new Message(
+                new AdvancedJsonRpc\Request($id, $method, (object)$params)
+            )
+        );
+
+        return yield $deferred->promise();
     }
 
     /**
@@ -67,11 +73,11 @@ class ClientHandler
      *
      * @param string $method The method to call
      * @param array|object $params The method parameters
-     * @return Promise <null> Will be resolved as soon as the notification has been sent
+     * @return \Generator <null> Will be resolved as soon as the notification has been sent
      */
-    public function notify(string $method, $params): Promise
+    public function notify(string $method, $params): \Generator
     {
-        return $this->protocolWriter->write(
+        return yield from $this->protocolWriter->write(
             new Message(
                 new AdvancedJsonRpc\Notification($method, (object)$params)
             )

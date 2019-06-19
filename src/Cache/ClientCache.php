@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\Cache;
 
@@ -30,24 +30,22 @@ class ClientCache implements Cache
      * @param string $key
      * @return Promise <mixed>
      */
-    public function get(string $key): Promise
+    public function get(string $key): \Generator
     {
-        return $this->client->xcache->get($key)->then('unserialize')->otherwise(function () {
-            // Ignore
-        });
+        $cached = yield from $this->client->xcache->get($key);
+        $obj = unserialize($cached);
+        return $obj;
     }
 
     /**
      * Sets a value in the cache
      *
      * @param string $key
-     * @param mixed  $value
+     * @param mixed $value
      * @return Promise
      */
-    public function set(string $key, $value): Promise
+    public function set(string $key, $value): \Generator
     {
-        return $this->client->xcache->set($key, serialize($value))->otherwise(function () {
-            // Ignore
-        });
+        return yield from $this->client->xcache->set($key, serialize($value));
     }
 }

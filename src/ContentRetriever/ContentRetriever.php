@@ -16,5 +16,5 @@ interface ContentRetriever
      * @param string $uri The URI of the document
      * @return Promise <string> Resolved with the content as a string
      */
-    public function retrieve(string $uri): Promise;
+    public function retrieve(string $uri): \Generator;
 }

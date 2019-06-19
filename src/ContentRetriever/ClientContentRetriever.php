@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\ContentRetriever;
 
@@ -26,11 +26,10 @@ class ClientContentRetriever implements ContentRetriever
      * @param string $uri The URI of the document
      * @return Promise <string> Resolved with the content as a string
      */
-    public function retrieve(string $uri): Promise
+    public function retrieve(string $uri): \Generator
     {
-        return $this->client->textDocument->xcontent(new TextDocumentIdentifier($uri))
-            ->then(function (TextDocumentItem $textDocument) {
-                return $textDocument->text;
-            });
+        /** @var TextDocumentItem $textDocument */
+        $textDocument = yield from $this->client->textDocument->xcontent(new TextDocumentIdentifier($uri));
+        return $textDocument->text;
     }
 }

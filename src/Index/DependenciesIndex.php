@@ -3,6 +3,13 @@ declare(strict_types = 1);
 
 namespace LanguageServer\Index;
 
+use League\Event\EmitterInterface;
+use League\Event\EventInterface;
+use League\Event\GeneratorInterface;
+use League\Event\ListenerAcceptorInterface;
+use League\Event\ListenerInterface;
+use League\Event\ListenerProviderInterface;
+
 class DependenciesIndex extends AbstractAggregateIndex
 {
     /**

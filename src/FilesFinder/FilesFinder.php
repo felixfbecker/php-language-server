@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\FilesFinder;
 
@@ -17,5 +17,5 @@ interface FilesFinder
      * @param string $glob
      * @return Promise <string[]>
      */
-    public function find(string $glob): Promise;
+    public function find(string $glob): \Generator;
 }

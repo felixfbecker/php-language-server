@@ -1,14 +1,13 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer;
 
 use LanguageServer\ContentRetriever\ContentRetriever;
 use LanguageServer\Index\ProjectIndex;
-use phpDocumentor\Reflection\DocBlockFactory;
-use Sabre\Event\Promise;
-use function Sabre\Event\coroutine;
 use Microsoft\PhpParser;
+use Microsoft\PhpParser\Parser;
+use phpDocumentor\Reflection\DocBlockFactory;
 
 /**
  * Takes care of loading documents and managing "open" documents
@@ -18,7 +17,7 @@ class PhpDocumentLoader
     /**
      * A map from URI => PhpDocument of open documents that should be kept in memory
      *
-     * @var PhpDocument
+     * @var PhpDocument[]
      */
     private $documents = [];
 
@@ -36,11 +35,6 @@ class PhpDocumentLoader
      * @var Parser
      */
     private $parser;
-
-    /**
-     * @var PhpParser\Parser
-     */
-    private $tolerantParser;
 
     /**
      * @var DocBlockFactory
@@ -87,11 +81,16 @@ class PhpDocumentLoader
      * If the document is not open, loads it.
      *
      * @param string $uri
-     * @return Promise <PhpDocument>
+     * @return \Generator <PhpDocument>
+     * @throws ContentTooLargeException
      */
-    public function getOrLoad(string $uri): Promise
+    public function getOrLoad(string $uri): \Generator
     {
-        return isset($this->documents[$uri]) ? Promise\resolve($this->documents[$uri]) : $this->load($uri);
+        if (isset($this->documents[$uri])) {
+            return $this->documents[$uri];
+        } else {
+            return yield from $this->load($uri);
+        }
     }
 
     /**
@@ -100,27 +99,25 @@ class PhpDocumentLoader
      * The document is NOT added to the list of open documents, but definitions are registered.
      *
      * @param string $uri
-     * @return Promise <PhpDocument>
+     * @return \Generator <PhpDocument>
+     * @throws ContentTooLargeException
      */
-    public function load(string $uri): Promise
+    public function load(string $uri): \Generator
     {
-        return coroutine(function () use ($uri) {
+        $limit = 150000;
+        $content = yield from $this->contentRetriever->retrieve($uri);
+        $size = strlen($content);
+        if ($size > $limit) {
+            throw new ContentTooLargeException($uri, $size, $limit);
+        }
 
-            $limit = 150000;
-            $content = yield $this->contentRetriever->retrieve($uri);
-            $size = strlen($content);
-            if ($size > $limit) {
-                throw new ContentTooLargeException($uri, $size, $limit);
-            }
-
-            if (isset($this->documents[$uri])) {
-                $document = $this->documents[$uri];
-                $document->updateContent($content);
-            } else {
-                $document = $this->create($uri, $content);
-            }
-            return $document;
-        });
+        if (isset($this->documents[$uri])) {
+            $document = $this->documents[$uri];
+            $document->updateContent($content);
+        } else {
+            $document = $this->create($uri, $content);
+        }
+        return $document;
     }
 
     /**
@@ -147,7 +144,7 @@ class PhpDocumentLoader
      *
      * @param string $uri
      * @param string $content
-     * @return void
+     * @return PhpDocument
      */
     public function open(string $uri, string $content)
     {

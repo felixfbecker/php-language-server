@@ -1,12 +1,12 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer;
 
-use Throwable;
+use Amp\Loop;
 use InvalidArgumentException;
-use Sabre\Event\{Loop, Promise, EmitterInterface};
-use Sabre\Uri;
+use Throwable;
+use function League\Uri\parse;
 
 /**
  * Transforms an absolute file path into a URI as used by the language server protocol.
@@ -60,37 +60,9 @@ function uriToPath(string $uri)
  */
 function crash(Throwable $err)
 {
-    Loop\nextTick(function () use ($err) {
+    Loop::run(function () use ($err) {
         throw $err;
     });
-}
-
-/**
- * Returns a promise that is resolved after x seconds.
- * Useful for giving back control to the event loop inside a coroutine.
- *
- * @param int $seconds
- * @return Promise <void>
- */
-function timeout($seconds = 0): Promise
-{
-    $promise = new Promise;
-    Loop\setTimeout([$promise, 'fulfill'], $seconds);
-    return $promise;
-}
-
-/**
- * Returns a promise that is fulfilled once the passed event was triggered on the passed EventEmitter
- *
- * @param EmitterInterface $emitter
- * @param string           $event
- * @return Promise
- */
-function waitForEvent(EmitterInterface $emitter, string $event): Promise
-{
-    $p = new Promise;
-    $emitter->once($event, [$p, 'fulfill']);
-    return $p;
 }
 
 /**
@@ -125,7 +97,7 @@ function stripStringOverlap(string $a, string $b): string
 function sortUrisLevelOrder(&$uriList)
 {
     usort($uriList, function ($a, $b) {
-        return substr_count(Uri\parse($a)['path'], '/') - substr_count(Uri\parse($b)['path'], '/');
+        return substr_count(parse($a)['path'], '/') - substr_count(parse($b)['path'], '/');
     });
 }
 
@@ -133,13 +105,13 @@ function sortUrisLevelOrder(&$uriList)
  * Checks a document against the composer.json to see if it
  * is a vendored document
  *
- * @param PhpDocument    $document
+ * @param PhpDocument $document
  * @param \stdClass|null $composerJson
  * @return bool
  */
 function isVendored(PhpDocument $document, \stdClass $composerJson = null): bool
 {
-    $path = Uri\parse($document->getUri())['path'];
+    $path = parse($document->getUri())['path'];
     $vendorDir = getVendorDir($composerJson);
     return strpos($path, "/$vendorDir/") !== false;
 }
@@ -148,7 +120,7 @@ function isVendored(PhpDocument $document, \stdClass $composerJson = null): bool
  * Check a given URI against the composer.json to see if it
  * is a vendored URI
  *
- * @param string         $uri
+ * @param string $uri
  * @param \stdClass|null $composerJson
  * @return string|null
  */

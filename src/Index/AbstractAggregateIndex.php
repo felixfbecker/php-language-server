@@ -4,12 +4,10 @@ declare(strict_types = 1);
 namespace LanguageServer\Index;
 
 use LanguageServer\Definition;
-use Sabre\Event\EmitterTrait;
+use League\Event\Emitter;
 
-abstract class AbstractAggregateIndex implements ReadableIndex
+abstract class AbstractAggregateIndex extends Emitter implements ReadableIndex
 {
-    use EmitterTrait;
-
     /**
      * Returns all indexes managed by the aggregate index
      *
@@ -29,17 +27,17 @@ abstract class AbstractAggregateIndex implements ReadableIndex
      */
     protected function registerIndex(ReadableIndex $index)
     {
-        $index->on('complete', function () {
+        $index->addListener('complete', function () {
             if ($this->isComplete()) {
                 $this->emit('complete');
             }
         });
-        $index->on('static-complete', function () {
+        $index->addListener('static-complete', function () {
             if ($this->isStaticComplete()) {
                 $this->emit('static-complete');
             }
         });
-        $index->on('definition-added', function () {
+        $index->addListener('definition-added', function () {
             $this->emit('definition-added');
         });
     }

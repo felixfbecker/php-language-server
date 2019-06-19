@@ -4,7 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer\Index;
 
 use LanguageServer\Definition;
-use Sabre\Event\EmitterInterface;
+use League\Event\EmitterInterface;
 
 /**
  * The ReadableIndex interface provides methods to lookup definitions and references
