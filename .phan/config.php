@@ -283,9 +283,14 @@ return [
     // your application should be included in this list.
     'directory_list' => [
         'src',
+        'vendor/amphp/amp/lib',
+        'vendor/amphp/file/lib',
+        'vendor/amphp/socket/src',
         'vendor/composer/xdebug-handler/src',
         'vendor/felixfbecker/advanced-json-rpc/lib',
         'vendor/felixfbecker/language-server-protocol/src/',
+        'vendor/league/event/src',
+        'vendor/league/uri-parser/src',
         'vendor/microsoft/tolerant-php-parser/src',
         'vendor/netresearch/jsonmapper/src',
         'vendor/phpdocumentor/reflection-common/src',
@@ -294,7 +299,6 @@ return [
         'vendor/phpunit/phpunit/src',
         'vendor/psr/log/Psr',
         'vendor/sabre/event/lib',
-        'vendor/sabre/uri/lib',
         'vendor/webmozart/glob/src',
         'vendor/webmozart/path-util/src',
     ],

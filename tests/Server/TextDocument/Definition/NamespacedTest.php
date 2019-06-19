@@ -1,8 +1,9 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\Tests\Server\TextDocument\Definition;
 
+use Amp\Loop;
 use LanguageServerProtocol\{TextDocumentIdentifier, Location};
 use function LanguageServer\pathToUri;
 
@@ -20,37 +21,43 @@ class NamespacedTest extends GlobalTest
 
     public function testDefinitionForConstants()
     {
-        // echo TEST_CONST;
-        // Get definition for TEST_CONST
-        $reference = $this->getReferenceLocations('TEST_CONST')[0];
-        $result = $this->textDocument->definition(
-            new TextDocumentIdentifier($reference->uri),
-            $reference->range->start
-        )->wait();
-        $this->assertEquals($this->getDefinitionLocation('TEST_CONST'), $result);
+        Loop::run(function () {
+            // echo TEST_CONST;
+            // Get definition for TEST_CONST
+            $reference = $this->getReferenceLocations('TEST_CONST')[0];
+            $result = yield $this->textDocument->definition(
+                new TextDocumentIdentifier($reference->uri),
+                $reference->range->start
+            );
+            $this->assertEquals($this->getDefinitionLocation('TEST_CONST'), $result);
+        });
     }
 
     public function testDefinitionForClassLikeUseStatement()
     {
-        // use TestNamespace\TestClass;
-        // Get definition for TestClass
-        $reference = $this->getReferenceLocations('TestClass')[7];
-        $result = $this->textDocument->definition(
-            new TextDocumentIdentifier($reference->uri),
-            $reference->range->start
-        )->wait();
-        $this->assertEquals($this->getDefinitionLocation('TestClass'), $result);
+        Loop::run(function () {
+            // use TestNamespace\TestClass;
+            // Get definition for TestClass
+            $reference = $this->getReferenceLocations('TestClass')[7];
+            $result = yield $this->textDocument->definition(
+                new TextDocumentIdentifier($reference->uri),
+                $reference->range->start
+            );
+            $this->assertEquals($this->getDefinitionLocation('TestClass'), $result);
+        });
     }
 
     public function testDefinitionForClassLikeGroupUseStatement()
     {
-        // use TestNamespace\{TestTrait, TestInterface};
-        // Get definition for TestInterface
-        $reference = $this->getReferenceLocations('TestClass')[1];
-        $result = $this->textDocument->definition(
-            new TextDocumentIdentifier($reference->uri),
-            $reference->range->start
-        )->wait();
-        $this->assertEquals($this->getDefinitionLocation('TestClass'), $result);
+        Loop::run(function () {
+            // use TestNamespace\{TestTrait, TestInterface};
+            // Get definition for TestInterface
+            $reference = $this->getReferenceLocations('TestClass')[1];
+            $result = yield $this->textDocument->definition(
+                new TextDocumentIdentifier($reference->uri),
+                $reference->range->start
+            );
+            $this->assertEquals($this->getDefinitionLocation('TestClass'), $result);
+        });
     }
 }

@@ -1,24 +1,24 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer;
 
-use LanguageServerProtocol\{
-    ServerCapabilities,
-    ClientCapabilities,
-    TextDocumentSyncKind,
-    InitializeResult,
-    CompletionOptions,
-    SignatureHelpOptions
-};
-use LanguageServer\Message;
-use LanguageServer\FilesFinder\{FilesFinder, ClientFilesFinder, FileSystemFilesFinder};
-use LanguageServer\ContentRetriever\{ContentRetriever, ClientContentRetriever, FileSystemContentRetriever};
-use LanguageServer\Index\{DependenciesIndex, GlobalIndex, Index, ProjectIndex, StubsIndex};
-use LanguageServer\Cache\{FileSystemCache, ClientCache};
 use AdvancedJsonRpc;
-use Sabre\Event\Promise;
-use function Sabre\Event\coroutine;
+use Amp\Deferred;
+use Amp\Delayed;
+use Amp\Loop;
+use Amp\Promise;
+use LanguageServer\Cache\{ClientCache, FileSystemCache};
+use LanguageServer\ContentRetriever\{ClientContentRetriever, ContentRetriever, FileSystemContentRetriever};
+use LanguageServer\Event\MessageEvent;
+use LanguageServer\FilesFinder\{ClientFilesFinder, FilesFinder, FileSystemFilesFinder};
+use LanguageServer\Index\{DependenciesIndex, GlobalIndex, Index, ProjectIndex, StubsIndex};
+use LanguageServerProtocol\{ClientCapabilities,
+    CompletionOptions,
+    InitializeResult,
+    ServerCapabilities,
+    SignatureHelpOptions,
+    TextDocumentSyncKind};
 use Throwable;
 use Webmozart\PathUtil\Path;
 
@@ -37,11 +37,6 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
      * @var Server\Workspace
      */
     public $workspace;
-
-    /**
-     * @var Server\Window
-     */
-    public $window;
 
     public $telemetry;
     public $completionItem;
@@ -107,19 +102,29 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     protected $definitionResolver;
 
     /**
-     * @param ProtocolReader  $reader
+     * @var Deferred
+     */
+    private $shutdownDeferred;
+
+    /**
+     * @param ProtocolReader $reader
      * @param ProtocolWriter $writer
      */
     public function __construct(ProtocolReader $reader, ProtocolWriter $writer)
     {
         parent::__construct($this, '/');
+
+        $this->shutdownDeferred = new Deferred();
+
         $this->protocolReader = $reader;
-        $this->protocolReader->on('close', function () {
+        $this->protocolReader->addListener('close', function () {
             $this->shutdown();
-            $this->exit();
         });
-        $this->protocolReader->on('message', function (Message $msg) {
-            coroutine(function () use ($msg) {
+        $this->protocolWriter = $writer;
+        $this->client = new LanguageClient($reader, $writer);
+        $this->protocolReader->addListener('message', function (MessageEvent $messageEvent) use ($reader, $writer) {
+            $msg = $messageEvent->getMessage();
+            Loop::defer(function () use ($msg) {
                 // Ignore responses, this is the handler for requests and notifications
                 if (AdvancedJsonRpc\Response::isResponse($msg->body)) {
                     return;
@@ -149,12 +154,15 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                     } else {
                         $responseBody = new AdvancedJsonRpc\SuccessResponse($msg->body->id, $result);
                     }
-                    $this->protocolWriter->write(new Message($responseBody));
+                    yield from $this->protocolWriter->write(new Message($responseBody));
                 }
-            })->otherwise('\\LanguageServer\\crash');
+            });
         });
-        $this->protocolWriter = $writer;
-        $this->client = new LanguageClient($reader, $writer);
+    }
+
+    public function getshutdownDeferred(): Promise
+    {
+        return $this->shutdownDeferred->promise();
     }
 
     /**
@@ -163,15 +171,13 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
      * @param ClientCapabilities $capabilities The capabilities provided by the client (editor)
      * @param string|null $rootPath The rootPath of the workspace. Is null if no folder is open.
      * @param int|null $processId The process Id of the parent process that started the server. Is null if the process has not been started by another process. If the parent process is not alive then the server should exit (see exit notification) its process.
+     * @param string|null $rootUri
      * @return Promise <InitializeResult>
      */
     public function initialize(ClientCapabilities $capabilities, string $rootPath = null, int $processId = null, string $rootUri = null): Promise
     {
-        if ($rootPath === null && $rootUri !== null) {
-            $rootPath = uriToPath($rootUri);
-        }
-        return coroutine(function () use ($capabilities, $rootPath, $processId) {
-
+        $deferred = new Deferred();
+        Loop::defer(function () use ($deferred, $capabilities, $rootPath, $processId, $rootUri) {
             if ($capabilities->xfilesProvider) {
                 $this->filesFinder = new ClientFilesFinder($this->client);
             } else {
@@ -200,25 +206,25 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
             );
 
             if ($rootPath !== null) {
-                yield $this->beforeIndex($rootPath);
+                yield from $this->beforeIndex($rootPath);
 
                 // Find composer.json
                 if ($this->composerJson === null) {
-                    $composerJsonFiles = yield $this->filesFinder->find(Path::makeAbsolute('**/composer.json', $rootPath));
+                    $composerJsonFiles = yield from $this->filesFinder->find(Path::makeAbsolute('**/composer.json', $rootPath));
                     sortUrisLevelOrder($composerJsonFiles);
 
                     if (!empty($composerJsonFiles)) {
-                        $this->composerJson = json_decode(yield $this->contentRetriever->retrieve($composerJsonFiles[0]));
+                        $this->composerJson = json_decode(yield from $this->contentRetriever->retrieve($composerJsonFiles[0]));
                     }
                 }
 
                 // Find composer.lock
                 if ($this->composerLock === null) {
-                    $composerLockFiles = yield $this->filesFinder->find(Path::makeAbsolute('**/composer.lock', $rootPath));
+                    $composerLockFiles = yield from $this->filesFinder->find(Path::makeAbsolute('**/composer.lock', $rootPath));
                     sortUrisLevelOrder($composerLockFiles);
 
                     if (!empty($composerLockFiles)) {
-                        $this->composerLock = json_decode(yield $this->contentRetriever->retrieve($composerLockFiles[0]));
+                        $this->composerLock = json_decode(yield from $this->contentRetriever->retrieve($composerLockFiles[0]));
                     }
                 }
 
@@ -236,7 +242,9 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                     $this->composerLock,
                     $this->composerJson
                 );
-                $indexer->index()->otherwise('\\LanguageServer\\crash');
+                Loop::defer(function () use ($indexer) {
+                    yield from $indexer->index();
+                });
             }
 
 
@@ -288,8 +296,9 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
             $serverCapabilities->xdefinitionProvider = true;
             $serverCapabilities->xdependenciesProvider = true;
 
-            return new InitializeResult($serverCapabilities);
+            $deferred->resolve(new InitializeResult($serverCapabilities));
         });
+        return $deferred->promise();
     }
 
     /**
@@ -297,29 +306,23 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
      * (otherwise the response might not be delivered correctly to the client). There is a separate exit notification that
      * asks the server to exit.
      *
-     * @return void
+     * @return \Generator
      */
     public function shutdown()
     {
         unset($this->project);
-    }
-
-    /**
-     * A notification to ask the server to exit its process.
-     *
-     * @return void
-     */
-    public function exit()
-    {
-        exit(0);
+        $this->shutdownDeferred->resolve();
+        yield new Delayed(0);
     }
 
     /**
      * Called before indexing, can return a Promise
      *
      * @param string $rootPath
+     * @return \Generator
      */
     protected function beforeIndex(string $rootPath)
     {
+        yield new Delayed(0, null);
     }
 }

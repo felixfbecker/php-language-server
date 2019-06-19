@@ -1,8 +1,9 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer;
 
+use Amp\ByteStream\OutputStream;
 use LanguageServer\Message;
 use Sabre\Event\{
     Loop,
@@ -12,7 +13,7 @@ use Sabre\Event\{
 class ProtocolStreamWriter implements ProtocolWriter
 {
     /**
-     * @var resource $output
+     * @var OutputStream $output
      */
     private $output;
 
@@ -22,9 +23,9 @@ class ProtocolStreamWriter implements ProtocolWriter
     private $messages = [];
 
     /**
-     * @param resource $output
+     * @param OutputStream $output
      */
-    public function __construct($output)
+    public function __construct(OutputStream $output)
     {
         $this->output = $output;
     }
@@ -32,21 +33,9 @@ class ProtocolStreamWriter implements ProtocolWriter
     /**
      * {@inheritdoc}
      */
-    public function write(Message $msg): Promise
+    public function write(Message $msg): \Generator
     {
-        // if the message queue is currently empty, register a write handler.
-        if (empty($this->messages)) {
-            Loop\addWriteStream($this->output, function () {
-                $this->flush();
-            });
-        }
-
-        $promise = new Promise();
-        $this->messages[] = [
-            'message' => (string)$msg,
-            'promise' => $promise
-        ];
-        return $promise;
+        yield $this->output->write((string)$msg);
     }
 
     /**

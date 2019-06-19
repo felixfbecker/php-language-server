@@ -17,8 +17,8 @@ class FileSystemContentRetriever implements ContentRetriever
      * @param string $uri The URI of the document
      * @return Promise <string> Resolved with the content as a string
      */
-    public function retrieve(string $uri): Promise
+    public function retrieve(string $uri): \Generator
     {
-        return Promise\resolve(file_get_contents(uriToPath($uri)));
+        return yield \Amp\File\get(uriToPath($uri));
     }
 }

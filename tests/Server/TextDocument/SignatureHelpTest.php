@@ -1,8 +1,9 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\Tests\Server\TextDocument;
 
+use Amp\Loop;
 use PHPUnit\Framework\TestCase;
 use LanguageServer\Tests\MockProtocolStream;
 use LanguageServer\{
@@ -50,13 +51,15 @@ class SignatureHelpTest extends TestCase
      */
     public function testSignatureHelp(Position $position, SignatureHelp $expectedSignature)
     {
-        $callsUri = pathToUri(__DIR__ . '/../../../fixtures/signature_help/calls.php');
-        $this->loader->open($callsUri, file_get_contents($callsUri));
-        $signatureHelp = $this->textDocument->signatureHelp(
-            new TextDocumentIdentifier($callsUri),
-            $position
-        )->wait();
-        $this->assertEquals($expectedSignature, $signatureHelp);
+        Loop::run(function () use ($position, $expectedSignature) {
+            $callsUri = pathToUri(__DIR__ . '/../../../fixtures/signature_help/calls.php');
+            $this->loader->open($callsUri, file_get_contents($callsUri));
+            $signatureHelp = yield $this->textDocument->signatureHelp(
+                new TextDocumentIdentifier($callsUri),
+                $position
+            );
+            $this->assertEquals($expectedSignature, $signatureHelp);
+        });
     }
 
     public function signatureHelpProvider(): array

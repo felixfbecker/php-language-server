@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\Client;
 
@@ -25,18 +25,18 @@ class XCache
      * @param string $key
      * @return Promise <mixed>
      */
-    public function get(string $key): Promise
+    public function get(string $key): \Generator
     {
-        return $this->handler->request('xcache/get', ['key' => $key]);
+        return yield from $this->handler->request('xcache/get', ['key' => $key]);
     }
 
     /**
      * @param string $key
-     * @param mixed  $value
+     * @param mixed $value
      * @return Promise <mixed>
      */
-    public function set(string $key, $value): Promise
+    public function set(string $key, $value): \Generator
     {
-        return $this->handler->notify('xcache/set', ['key' => $key, 'value' => $value]);
+        return yield from $this->handler->notify('xcache/set', ['key' => $key, 'value' => $value]);
     }
 }

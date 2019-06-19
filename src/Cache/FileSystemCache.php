@@ -1,9 +1,7 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\Cache;
-
-use Sabre\Event\Promise;
 
 /**
  * Caches content on the file system
@@ -30,18 +28,16 @@ class FileSystemCache implements Cache
      * Gets a value from the cache
      *
      * @param string $key
-     * @return Promise <mixed>
+     * @return \Generator <mixed>
      */
-    public function get(string $key): Promise
+    public function get(string $key): \Generator
     {
         try {
             $file = $this->cacheDir . urlencode($key);
-            if (!file_exists($file)) {
-                return Promise\resolve(null);
-            }
-            return Promise\resolve(unserialize(file_get_contents($file)));
+            $content = yield \Amp\File\get($file);
+            return unserialize($content);
         } catch (\Exception $e) {
-            return Promise\resolve(null);
+            return null;
         }
     }
 
@@ -49,19 +45,19 @@ class FileSystemCache implements Cache
      * Sets a value in the cache
      *
      * @param string $key
-     * @param mixed  $value
-     * @return Promise
+     * @param mixed $value
+     * @return \Generator
      */
-    public function set(string $key, $value): Promise
+    public function set(string $key, $value): \Generator
     {
-        try {
-            $file = $this->cacheDir . urlencode($key);
-            if (!file_exists($this->cacheDir)) {
-                mkdir($this->cacheDir);
-            }
-            file_put_contents($file, serialize($value));
-        } finally {
-            return Promise\resolve(null);
+        $file = $this->cacheDir . urlencode($key);
+        $dir = dirname($file);
+        if (yield \Amp\File\isfile($dir)) {
+            yield \Amp\File\unlink($dir);
         }
+        if (!yield \Amp\File\exists($dir)) {
+            yield \Amp\File\mkdir($dir, 0777, true);
+        }
+        yield \Amp\File\put($file, serialize($value));
     }
 }

@@ -1,43 +1,48 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\Tests;
 
-use PHPUnit\Framework\TestCase;
-use LanguageServer\ClientHandler;
-use LanguageServer\Message;
 use AdvancedJsonRpc;
-use Sabre\Event\Loop;
+use Amp\Loop;
+use LanguageServer\ClientHandler;
+use LanguageServer\Event\MessageEvent;
+use LanguageServer\Message;
+use PHPUnit\Framework\TestCase;
 
 class ClientHandlerTest extends TestCase
 {
     public function testRequest()
     {
-        $reader = new MockProtocolStream;
-        $writer = new MockProtocolStream;
-        $handler = new ClientHandler($reader, $writer);
-        $writer->once('message', function (Message $msg) use ($reader) {
-            // Respond to request
-            Loop\setTimeout(function () use ($reader, $msg) {
-                $reader->write(new Message(new AdvancedJsonRpc\SuccessResponse($msg->body->id, 'pong')));
-            }, 0);
-        });
-        $handler->request('testMethod', ['ping'])->then(function ($result) {
+        Loop::run(function () {
+            $reader = new MockProtocolStream;
+            $writer = new MockProtocolStream;
+            $handler = new ClientHandler($reader, $writer);
+            $writer->addOneTimeListener('message', function (MessageEvent $messageEvent) use ($reader) {
+                $msg = $messageEvent->getMessage();
+                // Respond to request
+                Loop::defer(function () use ($reader, $msg) {
+                    yield from $reader->write(new Message(new AdvancedJsonRpc\SuccessResponse($msg->body->id, 'pong')));
+                });
+            });
+            $result = yield from $handler->request('testMethod', ['ping']);
             $this->assertEquals('pong', $result);
-        })->wait();
-        // No event listeners
-        $this->assertEquals([], $reader->listeners('message'));
-        $this->assertEquals([], $writer->listeners('message'));
+            // No event listeners
+            $this->assertEquals([], $reader->getListeners('message'));
+            $this->assertEquals([], $writer->getListeners('message'));
+        });
     }
 
     public function testNotify()
     {
-        $reader = new MockProtocolStream;
-        $writer = new MockProtocolStream;
-        $handler = new ClientHandler($reader, $writer);
-        $handler->notify('testMethod', ['ping'])->wait();
-        // No event listeners
-        $this->assertEquals([], $reader->listeners('message'));
-        $this->assertEquals([], $writer->listeners('message'));
+        Loop::run(function () {
+            $reader = new MockProtocolStream;
+            $writer = new MockProtocolStream;
+            $handler = new ClientHandler($reader, $writer);
+            yield from $handler->notify('testMethod', ['ping']);
+            // No event listeners
+            $this->assertEquals([], $reader->getListeners('message'));
+            $this->assertEquals([], $writer->getListeners('message'));
+        });
     }
 }

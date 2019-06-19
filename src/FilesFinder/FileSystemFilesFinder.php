@@ -1,12 +1,11 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\FilesFinder;
 
-use Webmozart\Glob\Iterator\GlobIterator;
-use Sabre\Event\Promise;
-use function Sabre\Event\coroutine;
-use function LanguageServer\{pathToUri, timeout};
+use Webmozart\Glob\Glob;
+use function Amp\File\isdir;
+use function LanguageServer\{pathToUri};
 
 class FileSystemFilesFinder implements FilesFinder
 {
@@ -15,21 +14,24 @@ class FileSystemFilesFinder implements FilesFinder
      * If the client does not support workspace/xfiles, it falls back to searching the file system directly.
      *
      * @param string $glob
-     * @return Promise <string[]>
+     * @return \Amp\Promise <string[]>
      */
-    public function find(string $glob): Promise
+    public function find(string $glob): \Generator
     {
-        return coroutine(function () use ($glob) {
-            $uris = [];
-            foreach (new GlobIterator($glob) as $path) {
-                // Exclude any directories that also match the glob pattern
-                if (!is_dir($path)) {
-                    $uris[] = pathToUri($path);
+        $uris = [];
+        $basePath = \Webmozart\Glob\Glob::getBasePath($glob);
+        $pathList = [$basePath];
+        while ($pathList) {
+            $path = array_pop($pathList);
+            if (yield isdir($path)) {
+                $subFileList = yield \Amp\File\scandir($path);
+                foreach ($subFileList as $subFile) {
+                    $pathList[] = $path . DIRECTORY_SEPARATOR . $subFile;
                 }
-
-                yield timeout();
+            } elseif (Glob::match($path, $glob)) {
+                $uris[] = pathToUri($path);
             }
-            return $uris;
-        });
+        }
+        return $uris;
     }
 }

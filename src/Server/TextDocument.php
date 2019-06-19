@@ -1,37 +1,35 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\Server;
 
-use LanguageServer\{
-    CompletionProvider, SignatureHelpProvider, LanguageClient, PhpDocument, PhpDocumentLoader, DefinitionResolver
-};
-use LanguageServer\Index\ReadableIndex;
+use Amp\Coroutine;
+use Amp\Deferred;
+use Amp\Loop;
+use Amp\Promise;
+use LanguageServer\{CompletionProvider,
+    DefinitionResolver,
+    LanguageClient,
+    PhpDocument,
+    PhpDocumentLoader,
+    SignatureHelpProvider};
 use LanguageServer\Factory\LocationFactory;
 use LanguageServer\Factory\RangeFactory;
-use LanguageServerProtocol\{
-    FormattingOptions,
+use LanguageServer\Index\ReadableIndex;
+use LanguageServerProtocol\{CompletionContext,
     Hover,
-    Location,
     MarkedString,
+    PackageDescriptor,
     Position,
-    Range,
     ReferenceContext,
     SymbolDescriptor,
-    PackageDescriptor,
     SymbolLocationInformation,
     TextDocumentIdentifier,
     TextDocumentItem,
-    VersionedTextDocumentIdentifier,
-    CompletionContext
-};
+    VersionedTextDocumentIdentifier};
 use Microsoft\PhpParser\Node;
-use Sabre\Event\Promise;
-use Sabre\Uri;
-use function LanguageServer\{
-    isVendored, waitForEvent, getPackageName
-};
-use function Sabre\Event\coroutine;
+use function LanguageServer\{getPackageName, isVendored};
+use function League\Uri\parse;
 
 /**
  * Provides method handlers for all textDocument/* methods
@@ -115,13 +113,18 @@ class TextDocument
      */
     public function documentSymbol(TextDocumentIdentifier $textDocument): Promise
     {
-        return $this->documentLoader->getOrLoad($textDocument->uri)->then(function (PhpDocument $document) {
+        $deferred = new Deferred();
+        Loop::defer(function () use ($textDocument, $deferred) {
+            /** @var PhpDocument $document */
+            $document = yield from $this->documentLoader->getOrLoad($textDocument->uri);
+
             $symbols = [];
             foreach ($document->getDefinitions() as $fqn => $definition) {
                 $symbols[] = $definition->symbolInformation;
             }
-            return $symbols;
+            $deferred->resolve($symbols);
         });
+        return $deferred->promise();
     }
 
     /**
@@ -134,10 +137,12 @@ class TextDocument
      */
     public function didOpen(TextDocumentItem $textDocument)
     {
-        $document = $this->documentLoader->open($textDocument->uri, $textDocument->text);
-        if (!isVendored($document, $this->composerJson)) {
-            $this->client->textDocument->publishDiagnostics($textDocument->uri, $document->getDiagnostics());
-        }
+        Loop::defer(function () use ($textDocument) {
+            $document = $this->documentLoader->open($textDocument->uri, $textDocument->text);
+            if (!isVendored($document, $this->composerJson)) {
+                yield from $this->client->textDocument->publishDiagnostics($textDocument->uri, $document->getDiagnostics());
+            }
+        });
     }
 
     /**
@@ -145,13 +150,18 @@ class TextDocument
      *
      * @param \LanguageServerProtocol\VersionedTextDocumentIdentifier $textDocument
      * @param \LanguageServerProtocol\TextDocumentContentChangeEvent[] $contentChanges
-     * @return void
+     * @return Promise
      */
     public function didChange(VersionedTextDocumentIdentifier $textDocument, array $contentChanges)
     {
-        $document = $this->documentLoader->get($textDocument->uri);
-        $document->updateContent($contentChanges[0]->text);
-        $this->client->textDocument->publishDiagnostics($textDocument->uri, $document->getDiagnostics());
+        $deferred = new Deferred();
+        Loop::defer(function () use ($deferred, $textDocument, $contentChanges) {
+            $document = $this->documentLoader->get($textDocument->uri);
+            $document->updateContent($contentChanges[0]->text);
+            yield from $this->client->textDocument->publishDiagnostics($textDocument->uri, $document->getDiagnostics());
+            $deferred->resolve();
+        });
+        return $deferred->promise();
     }
 
     /**
@@ -179,8 +189,9 @@ class TextDocument
         TextDocumentIdentifier $textDocument,
         Position $position
     ): Promise {
-        return coroutine(function () use ($textDocument, $position) {
-            $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
+        $deferred = new Deferred();
+        Loop::defer(function () use ($deferred, $textDocument, $position) {
+            $document = yield from $this->documentLoader->getOrLoad($textDocument->uri);
             $node = $document->getNodeAtPosition($position);
             if ($node === null) {
                 return [];
@@ -189,8 +200,7 @@ class TextDocument
             // Variables always stay in the boundary of the file and need to be searched inside their function scope
             // by traversing the AST
             if (
-
-            ($node instanceof Node\Expression\Variable && !($node->getParent()->getParent() instanceof Node\PropertyDeclaration))
+                ($node instanceof Node\Expression\Variable && !($node->getParent()->getParent() instanceof Node\PropertyDeclaration))
                 || $node instanceof Node\Parameter
                 || $node instanceof Node\UseVariableName
             ) {
@@ -217,21 +227,18 @@ class TextDocument
                 // Definition with a global FQN
                 $fqn = DefinitionResolver::getDefinedFqn($node);
 
-                // Wait until indexing finished
-                if (!$this->index->isComplete()) {
-                    yield waitForEvent($this->index, 'complete');
-                }
                 if ($fqn === null) {
                     $fqn = $this->definitionResolver->resolveReferenceNodeToFqn($node);
                     if ($fqn === null) {
-                        return [];
+                        $deferred->resolve([]);
+                        return;
                     }
                 }
                 $refDocumentPromises = [];
                 foreach ($this->index->getReferenceUris($fqn) as $uri) {
-                    $refDocumentPromises[] = $this->documentLoader->getOrLoad($uri);
+                    $refDocumentPromises[] = new Coroutine($this->documentLoader->getOrLoad($uri));
                 }
-                $refDocuments = yield Promise\all($refDocumentPromises);
+                $refDocuments = yield \Amp\Promise\all($refDocumentPromises);
                 foreach ($refDocuments as $document) {
                     $refs = $document->getReferenceNodesByFqn($fqn);
                     if ($refs !== null) {
@@ -241,8 +248,9 @@ class TextDocument
                     }
                 }
             }
-            return $locations;
+            $deferred->resolve($locations);
         });
+        return $deferred->promise();
     }
 
     /**
@@ -250,16 +258,20 @@ class TextDocument
      * cursor position.
      *
      * @param TextDocumentIdentifier $textDocument The text document
-     * @param Position               $position     The position inside the text document
+     * @param Position $position The position inside the text document
      *
      * @return Promise <SignatureHelp>
      */
     public function signatureHelp(TextDocumentIdentifier $textDocument, Position $position): Promise
     {
-        return coroutine(function () use ($textDocument, $position) {
-            $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
-            return $this->signatureHelpProvider->getSignatureHelp($document, $position);
+        $deferred = new Deferred();
+        Loop::defer(function () use ($deferred, $textDocument, $position) {
+            $document = yield from $this->documentLoader->getOrLoad($textDocument->uri);
+            $deferred->resolve(
+                yield from $this->signatureHelpProvider->getSignatureHelp($document, $position)
+            );
         });
+        return $deferred->promise();
     }
 
     /**
@@ -269,11 +281,13 @@ class TextDocument
      * @param TextDocumentIdentifier $textDocument The text document
      * @param Position $position The position inside the text document
      * @return Promise <Location|Location[]>
+     * @throws \LanguageServer\ContentTooLargeException
      */
     public function definition(TextDocumentIdentifier $textDocument, Position $position): Promise
     {
-        return coroutine(function () use ($textDocument, $position) {
-            $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
+        $deferred = new Deferred();
+        Loop::defer(function () use ($deferred, $textDocument, $position) {
+            $document = yield from $this->documentLoader->getOrLoad($textDocument->uri);
             $node = $document->getNodeAtPosition($position);
             if ($node === null) {
                 return [];
@@ -291,17 +305,18 @@ class TextDocument
                 if ($def !== null || $this->index->isComplete()) {
                     break;
                 }
-                yield waitForEvent($this->index, 'definition-added');
             }
             if (
                 $def === null
                 || $def->symbolInformation === null
-                || Uri\parse($def->symbolInformation->location->uri)['scheme'] === 'phpstubs'
+                || parse($def->symbolInformation->location->uri)['scheme'] === 'phpstubs'
             ) {
-                return [];
+                $deferred->resolve([]);
+            } else {
+                $deferred->resolve($def->symbolInformation->location);
             }
-            return $def->symbolInformation->location;
         });
+        return $deferred->promise();
     }
 
     /**
@@ -313,8 +328,9 @@ class TextDocument
      */
     public function hover(TextDocumentIdentifier $textDocument, Position $position): Promise
     {
-        return coroutine(function () use ($textDocument, $position) {
-            $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
+        $deferred = new Deferred();
+        Loop::defer(function () use ($deferred, $textDocument, $position) {
+            $document = yield from $this->documentLoader->getOrLoad($textDocument->uri);
             // Find the node under the cursor
             $node = $document->getNodeAtPosition($position);
             if ($node === null) {
@@ -333,7 +349,6 @@ class TextDocument
                 if ($def !== null || $this->index->isComplete()) {
                     break;
                 }
-                yield waitForEvent($this->index, 'definition-added');
             }
             $range = RangeFactory::fromNode($node);
             if ($def === null) {
@@ -346,8 +361,9 @@ class TextDocument
             if ($def->documentation) {
                 $contents[] = $def->documentation;
             }
-            return new Hover($contents, $range);
+            $deferred->resolve(new Hover($contents, $range));
         });
+        return $deferred->promise();
     }
 
     /**
@@ -360,17 +376,20 @@ class TextDocument
      * interface then a 'completionItem/resolve' request is sent with the selected completion item as a param. The
      * returned completion item should have the documentation property filled in.
      *
-     * @param TextDocumentIdentifier The text document
+     * @param TextDocumentIdentifier $textDocument
      * @param Position $position The position
      * @param CompletionContext|null $context The completion context
      * @return Promise <CompletionItem[]|CompletionList>
      */
     public function completion(TextDocumentIdentifier $textDocument, Position $position, CompletionContext $context = null): Promise
     {
-        return coroutine(function () use ($textDocument, $position, $context) {
-            $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
-            return $this->completionProvider->provideCompletion($document, $position, $context);
+        $deferred = new Deferred();
+        Loop::defer(function () use ($deferred, $context, $position, $textDocument) {
+            /** @var PhpDocument $document */
+            $document = yield from $this->documentLoader->getOrLoad($textDocument->uri);
+            $deferred->resolve($this->completionProvider->provideCompletion($document, $position, $context));
         });
+        return $deferred->promise();
     }
 
     /**
@@ -382,12 +401,13 @@ class TextDocument
      * but still may know some information about it.
      *
      * @param TextDocumentIdentifier $textDocument The text document
-     * @param Position               $position     The position inside the text document
+     * @param Position $position The position inside the text document
      * @return Promise <SymbolLocationInformation[]>
      */
     public function xdefinition(TextDocumentIdentifier $textDocument, Position $position): Promise
     {
-        return coroutine(function () use ($textDocument, $position) {
+        $deferred = new Deferred();
+        Loop::defer(function () use ($deferred, $textDocument, $position) {
             $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
             $node = $document->getNodeAtPosition($position);
             if ($node === null) {
@@ -406,12 +426,11 @@ class TextDocument
                 if ($def !== null || $this->index->isComplete()) {
                     break;
                 }
-                yield waitForEvent($this->index, 'definition-added');
             }
             if (
                 $def === null
                 || $def->symbolInformation === null
-                || Uri\parse($def->symbolInformation->location->uri)['scheme'] === 'phpstubs'
+                || parse($def->symbolInformation->location->uri)['scheme'] === 'phpstubs'
             ) {
                 return [];
             }
@@ -422,7 +441,8 @@ class TextDocument
                 $packageName = $this->composerJson->name;
             }
             $descriptor = new SymbolDescriptor($def->fqn, new PackageDescriptor($packageName));
-            return [new SymbolLocationInformation($descriptor, $def->symbolInformation->location)];
+            $deferred->resolve([new SymbolLocationInformation($descriptor, $def->symbolInformation->location)]);
         });
+        return $deferred->promise();
     }
 }

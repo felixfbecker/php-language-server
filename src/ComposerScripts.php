@@ -1,16 +1,16 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer;
 
-use LanguageServer\FilesFinder\FileSystemFilesFinder;
+use Amp\Loop;
 use LanguageServer\ContentRetriever\FileSystemContentRetriever;
+use LanguageServer\FilesFinder\FileSystemFilesFinder;
 use LanguageServer\Index\StubsIndex;
+use Microsoft\PhpParser;
 use phpDocumentor\Reflection\DocBlockFactory;
 use Webmozart\PathUtil\Path;
-use Sabre\Uri;
-use function Sabre\Event\coroutine;
-use Microsoft\PhpParser;
+use function League\Uri\parse;
 
 foreach ([__DIR__ . '/../../../autoload.php', __DIR__ . '/../autoload.php', __DIR__ . '/../vendor/autoload.php'] as $file) {
     if (file_exists($file)) {
@@ -23,8 +23,7 @@ class ComposerScripts
 {
     public static function parseStubs()
     {
-        coroutine(function () {
-
+        Loop::run(function () {
             $index = new StubsIndex;
 
             $finder = new FileSystemFilesFinder;
@@ -44,20 +43,19 @@ class ComposerScripts
                 throw new \Exception('jetbrains/phpstorm-stubs package not found');
             }
 
-            $uris = yield $finder->find("$stubsLocation/**/*.php");
+            $uris = yield from $finder->find("$stubsLocation/**/*.php");
 
             foreach ($uris as $uri) {
                 echo "Parsing $uri\n";
-                $content = yield $contentRetriever->retrieve($uri);
+                $content = yield from $contentRetriever->retrieve($uri);
 
                 // Change URI to phpstubs://
-                $parts = Uri\parse($uri);
+                $parts = parse($uri);
                 $parts['path'] = Path::makeRelative($parts['path'], $stubsLocation);
                 $parts['scheme'] = 'phpstubs';
-                $uri = Uri\build($parts);
 
                 // Create a new document and add it to $index
-                new PhpDocument($uri, $content, $index, $parser, $docBlockFactory, $definitionResolver);
+                new PhpDocument((string)$uri, $content, $index, $parser, $docBlockFactory, $definitionResolver);
             }
 
             $index->setComplete();
@@ -67,6 +65,6 @@ class ComposerScripts
             $index->save();
 
             echo "Finished\n";
-        })->wait();
+        });
     }
 }

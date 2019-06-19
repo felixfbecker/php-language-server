@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace LanguageServer\Client;
 
@@ -35,13 +35,12 @@ class Workspace
      * @param string $base The base directory (defaults to the workspace)
      * @return Promise <TextDocumentIdentifier[]> Array of documents
      */
-    public function xfiles(string $base = null): Promise
+    public function xfiles(string $base = null): \Generator
     {
-        return $this->handler->request(
+        $textDocuments = yield from $this->handler->request(
             'workspace/xfiles',
             ['base' => $base]
-        )->then(function (array $textDocuments) {
-            return $this->mapper->mapArray($textDocuments, [], TextDocumentIdentifier::class);
-        });
+        );
+        return $this->mapper->mapArray($textDocuments, [], TextDocumentIdentifier::class);
     }
 }
