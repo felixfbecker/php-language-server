@@ -423,6 +423,10 @@ class Index implements ReadableIndex, \Serializable
      */
     private function removeIndexedDefinition(int $level, array $parts, array &$storage, array &$rootStorage)
     {
+        if (empty($parts)) {
+            return;
+        }
+        
         $part = $parts[$level];
 
         if ($level + 1 === count($parts)) {
