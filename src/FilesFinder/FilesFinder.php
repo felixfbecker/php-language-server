@@ -4,6 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer\FilesFinder;
 
 use Sabre\Event\Promise;
+use Webmozart\Glob\Glob;
 
 /**
  * Interface for finding files in the workspace
