@@ -15,9 +15,11 @@ use LanguageServerProtocol\{
     DependencyReference,
     Location
 };
+use LanguageServerProtocol\MessageType;
 use Sabre\Event\Promise;
 use function Sabre\Event\coroutine;
 use function LanguageServer\waitForEvent;
+use LanguageServer\Configuration;
 
 /**
  * Provides method handlers for all workspace/* methods
@@ -57,14 +59,20 @@ class Workspace
     public $documentLoader;
 
     /**
+     * @var Configuration
+     */
+    public $configuration;
+
+    /**
      * @param LanguageClient    $client            LanguageClient instance used to signal updated results
      * @param ProjectIndex      $projectIndex      Index that is used to wait for full index completeness
      * @param DependenciesIndex $dependenciesIndex Index that is used on a workspace/xreferences request
      * @param DependenciesIndex $sourceIndex       Index that is used on a workspace/xreferences request
      * @param \stdClass         $composerLock      The parsed composer.lock of the project, if any
      * @param PhpDocumentLoader $documentLoader    PhpDocumentLoader instance to load documents
+     * @param Configuration     $configuration     Configuration for the language server
      */
-    public function __construct(LanguageClient $client, ProjectIndex $projectIndex, DependenciesIndex $dependenciesIndex, Index $sourceIndex, \stdClass $composerLock = null, PhpDocumentLoader $documentLoader, \stdClass $composerJson = null)
+    public function __construct(LanguageClient $client, ProjectIndex $projectIndex, DependenciesIndex $dependenciesIndex, Index $sourceIndex, \stdClass $composerLock = null, PhpDocumentLoader $documentLoader, \stdClass $composerJson = null, Configuration $configuration = null)
     {
         $this->client = $client;
         $this->sourceIndex = $sourceIndex;
@@ -73,6 +81,7 @@ class Workspace
         $this->composerLock = $composerLock;
         $this->documentLoader = $documentLoader;
         $this->composerJson = $composerJson;
+        $this->configuration = $configuration ?? new Configuration();
     }
 
     /**
@@ -109,6 +118,24 @@ class Workspace
         foreach ($changes as $change) {
             if ($change->type === FileChangeType::DELETED) {
                 $this->client->textDocument->publishDiagnostics($change->uri, []);
+            }
+        }
+    }
+
+    /**
+     * The changed configuration notification is sent from the client to the server when the configuration changes on the client.
+     *
+     * @param array $changesToConfig
+     * @return void
+     */
+    public function didChangeConfiguration(array $changesToConfig)
+    {
+        foreach ($changesToConfig['settings'] as $key => $value) {
+            // Only update the key if it exists in the class definition
+            if (property_exists(Configuration::class, $key)) {
+                $this->configuration->{$key} = $value;
+            } else {
+                $this->client->window->logMessage(MessageType::WARNING, "Key of \"$key\" isn't a valid configuration option.");
             }
         }
     }

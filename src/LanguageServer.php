@@ -199,6 +199,28 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                 $this->definitionResolver
             );
 
+            if ($this->textDocument === null) {
+                $this->textDocument = new Server\TextDocument(
+                    $this->documentLoader,
+                    $this->definitionResolver,
+                    $this->client,
+                    $this->globalIndex,
+                    $this->composerJson,
+                    $this->composerLock
+                );
+            }
+            if ($this->workspace === null) {
+                $this->workspace = new Server\Workspace(
+                    $this->client,
+                    $this->projectIndex,
+                    $dependenciesIndex,
+                    $sourceIndex,
+                    $this->composerLock,
+                    $this->documentLoader,
+                    $this->composerJson
+                );
+            }
+
             if ($rootPath !== null) {
                 yield $this->beforeIndex($rootPath);
 
@@ -233,33 +255,11 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                     $dependenciesIndex,
                     $sourceIndex,
                     $this->documentLoader,
+                    $this->workspace->configuration,
                     $this->composerLock,
                     $this->composerJson
                 );
                 $indexer->index()->otherwise('\\LanguageServer\\crash');
-            }
-
-
-            if ($this->textDocument === null) {
-                $this->textDocument = new Server\TextDocument(
-                    $this->documentLoader,
-                    $this->definitionResolver,
-                    $this->client,
-                    $this->globalIndex,
-                    $this->composerJson,
-                    $this->composerLock
-                );
-            }
-            if ($this->workspace === null) {
-                $this->workspace = new Server\Workspace(
-                    $this->client,
-                    $this->projectIndex,
-                    $dependenciesIndex,
-                    $sourceIndex,
-                    $this->composerLock,
-                    $this->documentLoader,
-                    $this->composerJson
-                );
             }
 
             $serverCapabilities = new ServerCapabilities();

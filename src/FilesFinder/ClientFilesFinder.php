@@ -33,13 +33,13 @@ class ClientFilesFinder implements FilesFinder
      * @param string $glob
      * @return Promise <string[]> The URIs
      */
-    public function find(string $glob): Promise
+    public function find(string $glob, array $excludePatterns = []): Promise
     {
-        return $this->client->workspace->xfiles()->then(function (array $textDocuments) use ($glob) {
+        return $this->client->workspace->xfiles()->then(function (array $textDocuments) use ($glob, $excludePatterns) {
             $uris = [];
             foreach ($textDocuments as $textDocument) {
                 $path = Uri\parse($textDocument->uri)['path'];
-                if (Glob::match($path, $glob)) {
+                if (matchGlobs($path, [ $glob ]) && !matchGlobs($path, $excludePatterns)) {
                     $uris[] = $textDocument->uri;
                 }
             }

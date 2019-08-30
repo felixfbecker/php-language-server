@@ -6,6 +6,7 @@ namespace LanguageServer;
 use LanguageServer\Cache\Cache;
 use LanguageServer\FilesFinder\FilesFinder;
 use LanguageServer\Index\{DependenciesIndex, Index};
+use LanguageServer\Configuration;
 use LanguageServerProtocol\MessageType;
 use Webmozart\PathUtil\Path;
 use Sabre\Event\Promise;
@@ -64,6 +65,11 @@ class Indexer
     private $composerJson;
 
     /**
+     * @var Configuration
+     */
+    private $configuration;
+
+    /**
      * @param FilesFinder       $filesFinder
      * @param string            $rootPath
      * @param LanguageClient    $client
@@ -81,6 +87,7 @@ class Indexer
         DependenciesIndex $dependenciesIndex,
         Index $sourceIndex,
         PhpDocumentLoader $documentLoader,
+        Configuration $configuration,
         \stdClass $composerLock = null,
         \stdClass $composerJson = null
     ) {
@@ -93,6 +100,7 @@ class Indexer
         $this->documentLoader = $documentLoader;
         $this->composerLock = $composerLock;
         $this->composerJson = $composerJson;
+        $this->configuration = $configuration;
     }
 
     /**

@@ -17,5 +17,22 @@ interface FilesFinder
      * @param string $glob
      * @return Promise <string[]>
      */
-    public function find(string $glob): Promise;
+    public function find(string $glob, array $excludePatterns): Promise;
+}
+
+/**
+ * Check if a path matches any of the globs
+ * @param string $path
+ * @param string[] $globs An array of globs
+ * @return bool
+ */
+function matchGlobs(string $path, array $globs): bool
+{
+    foreach ($globs as $glob) {
+        if (Glob::match($path, $glob)) {
+            return true;
+        }
+    }
+
+    return false;
 }
