@@ -113,7 +113,7 @@ class Indexer
         return coroutine(function () {
 
             $pattern = Path::makeAbsolute('**/*.php', $this->rootPath);
-            $uris = yield $this->filesFinder->find($pattern);
+            $uris = yield $this->filesFinder->find($pattern, $this->configuration->excludePatterns);
 
             $count = count($uris);
             $startTime = microtime(true);
