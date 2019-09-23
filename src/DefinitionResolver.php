@@ -164,7 +164,7 @@ class DefinitionResolver
                 // create() throws when it thinks the doc comment has invalid fields.
                 // For example, a @see tag that is followed by something that doesn't look like a valid fqsen will throw.
                 return $this->docBlockFactory->create($docCommentText, $context);
-            } catch (\InvalidArgumentException $e) {
+            } catch (\RuntimeException | \InvalidArgumentException $e) {
                 return null;
             }
         }
