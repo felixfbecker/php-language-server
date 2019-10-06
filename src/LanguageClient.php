@@ -35,13 +35,13 @@ class LanguageClient
      */
     public $xcache;
 
-    public function __construct(ProtocolReader $reader, ProtocolWriter $writer)
+    public function __construct(ProtocolReader $reader, ProtocolWriter $writer, $logLevel=4)
     {
         $handler = new ClientHandler($reader, $writer);
         $mapper = new JsonMapper;
 
         $this->textDocument = new Client\TextDocument($handler, $mapper);
-        $this->window = new Client\Window($handler);
+        $this->window = new Client\Window($handler, $logLevel);
         $this->workspace = new Client\Workspace($handler, $mapper);
         $this->xcache = new Client\XCache($handler);
     }

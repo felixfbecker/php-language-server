@@ -190,6 +190,13 @@ Example:
 
     php bin/php-language-server.php --memory-limit=256M
 
+#### `--log-level=integer` (optional)
+Limit client log messages by severity. Severities are defined in [LanuageServerProtocol\MessageType](https://github.com/felixfbecker/php-language-server-protocol/blob/master/src/MessageType.php).
+
+Example (Limit logging to ERROR and WARNING only):
+
+    php bin/php-language-server.php --log-level=2
+
 ## Used by
  - [VS Code PHP IntelliSense](https://github.com/felixfbecker/vscode-php-intellisense)
  - [Eclipse Che](https://eclipse.org/che/)
