@@ -109,8 +109,9 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     /**
      * @param ProtocolReader  $reader
      * @param ProtocolWriter $writer
+     * @param int $logLevel
      */
-    public function __construct(ProtocolReader $reader, ProtocolWriter $writer)
+    public function __construct(ProtocolReader $reader, ProtocolWriter $writer, $logLevel=4)
     {
         parent::__construct($this, '/');
         $this->protocolReader = $reader;
@@ -154,7 +155,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
             })->otherwise('\\LanguageServer\\crash');
         });
         $this->protocolWriter = $writer;
-        $this->client = new LanguageClient($reader, $writer);
+        $this->client = new LanguageClient($reader, $writer, $logLevel);
     }
 
     /**

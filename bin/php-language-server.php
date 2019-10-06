@@ -4,7 +4,7 @@ use LanguageServer\{LanguageServer, ProtocolStreamReader, ProtocolStreamWriter, 
 use Sabre\Event\Loop;
 use Composer\XdebugHandler\XdebugHandler;
 
-$options = getopt('', ['tcp::', 'tcp-server::', 'memory-limit::']);
+$options = getopt('', ['tcp::', 'tcp-server::', 'memory-limit::', 'log-level::']);
 
 ini_set('memory_limit', $options['memory-limit'] ?? '4G');
 
@@ -69,6 +69,7 @@ if (!empty($options['tcp'])) {
     while ($socket = stream_socket_accept($tcpServer, -1)) {
         $logger->debug('Connection accepted');
         stream_set_blocking($socket, false);
+        $logLevel = empty($options['log-level']) ? 4 : $options['log-level'];
         if ($pcntlAvailable) {
             // If PCNTL is available, fork a child process for the connection
             // An exit notification will only terminate the child process
@@ -83,7 +84,7 @@ if (!empty($options['tcp'])) {
                 $reader->on('close', function () use ($logger) {
                     $logger->debug('Connection closed');
                 });
-                $ls = new LanguageServer($reader, $writer);
+                $ls = new LanguageServer($reader, $writer, $logLevel);
                 Loop\run();
                 // Just for safety
                 exit(0);
@@ -93,7 +94,8 @@ if (!empty($options['tcp'])) {
             // An exit notification will terminate the server
             $ls = new LanguageServer(
                 new ProtocolStreamReader($socket),
-                new ProtocolStreamWriter($socket)
+                new ProtocolStreamWriter($socket),
+                $logLevel
             );
             Loop\run();
         }

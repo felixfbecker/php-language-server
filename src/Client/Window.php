@@ -15,10 +15,15 @@ class Window
      * @var ClientHandler
      */
     private $handler;
+    /**
+     * @var int
+     */
+    private $logLevel;
 
-    public function __construct(ClientHandler $handler)
+    public function __construct(ClientHandler $handler, $logLevel=4)
     {
         $this->handler = $handler;
+        $this->logLevel = $logLevel;
     }
 
     /**
@@ -43,6 +48,9 @@ class Window
      */
     public function logMessage(int $type, string $message): Promise
     {
+        if ($type > $this->logLevel) {
+            return new Promise();
+        }
         return $this->handler->notify('window/logMessage', ['type' => $type, 'message' => $message]);
     }
 }
