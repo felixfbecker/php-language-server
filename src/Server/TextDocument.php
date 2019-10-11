@@ -23,6 +23,8 @@ use LanguageServerProtocol\{
     TextDocumentIdentifier,
     TextDocumentItem,
     VersionedTextDocumentIdentifier,
+    WorkspaceEdit,
+    TextEdit,
     CompletionContext
 };
 use Microsoft\PhpParser\Node;
@@ -179,7 +181,7 @@ class TextDocument
         TextDocumentIdentifier $textDocument,
         Position $position
     ): Promise {
-        return coroutine(function () use ($textDocument, $position) {
+        return coroutine(function () use ($context, $textDocument, $position) {
             $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
             $node = $document->getNodeAtPosition($position);
             if ($node === null) {
@@ -211,6 +213,9 @@ class TextDocument
                         $descendantNode->getName() === $node->getName()
                     ) {
                         $locations[] = LocationFactory::fromNode($descendantNode);
+                    } else if (($descendantNode instanceof Node\Parameter) 
+                        && $context->includeDeclaration && $descendantNode->getName() === $node->getName() ) {
+                        $locations[] = LocationFactory::fromToken($descendantNode, $descendantNode->variableName);
                     }
                 }
             } else {
@@ -244,6 +249,42 @@ class TextDocument
             return $locations;
         });
     }
+
+    /**
+     * The rename request is sent from the client to the server to perform a workspace-wide rename of a symbol.
+     *
+     * @param  TextDocumentIdentifier $textDocument The document to rename in.
+     * @param  Position               $position     The position at which this request was sent.
+     * @param  string                 $newName      The new name of the symbol.
+     * @return Promise <WorkspaceEdit|null>
+     */
+    public function rename(
+        TextDocumentIdentifier $textDocument,
+        Position $position,
+        string $newName
+    ) : Promise {
+        return coroutine( function () use ($textDocument, $position, $newName) {
+            $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
+            $node = $document->getNodeAtPosition($position);
+            if (
+                $node instanceof Node\Expression\Variable ||
+                $node instanceof Node\Parameter
+            ) {
+                $newName = '$' . $newName;
+            }
+            $locations = yield $this->references(new ReferenceContext(true), $textDocument, $position);
+            $edits = [$textDocument->uri => [] ];
+            foreach ($locations as $location) {
+                $textEdit = new TextEdit($location->range, $newName);
+                if (!isset($edits[$location->uri])) {
+                    $edits[$location->uri] = [];
+                }
+                $edits[$location->uri][] = $textEdit;
+            }
+            return new WorkspaceEdit($edits);
+        });
+    }
+
 
     /**
      * The signature help request is sent from the client to the server to request signature information at a given
