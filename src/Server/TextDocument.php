@@ -192,7 +192,7 @@ class TextDocument
             // by traversing the AST
             if (
 
-            ($node instanceof Node\Expression\Variable && !($node->getParent()->getParent() instanceof Node\PropertyDeclaration))
+            ($node instanceof Node\Expression\Variable && !($node->getParent()->getParent() instanceof Node\PropertyDeclaration) && !($node->getParent()->getParent()->getParent() instanceof Node\PropertyDeclaration))
                 || $node instanceof Node\Parameter
                 || $node instanceof Node\UseVariableName
             ) {
@@ -212,10 +212,14 @@ class TextDocument
                     if ($descendantNode instanceof Node\Expression\Variable &&
                         $descendantNode->getName() === $node->getName()
                     ) {
-                        $locations[] = LocationFactory::fromNode($descendantNode);
+                        $location = LocationFactory::fromNode($descendantNode);
+                        $location->range->start->character++;
+                        $locations[] = $location;
                     } else if (($descendantNode instanceof Node\Parameter) 
                         && $context->includeDeclaration && $descendantNode->getName() === $node->getName() ) {
-                        $locations[] = LocationFactory::fromToken($descendantNode, $descendantNode->variableName);
+                        $location = LocationFactory::fromToken($descendantNode, $descendantNode->variableName);
+                        $location->range->start->character++;
+                        $locations[] = $location;
                     }
                 }
             } else {
@@ -241,9 +245,32 @@ class TextDocument
                     $refs = $document->getReferenceNodesByFqn($fqn);
                     if ($refs !== null) {
                         foreach ($refs as $ref) {
-                            $locations[] = LocationFactory::fromNode($ref);
+                            if ($ref instanceof Node\Expression\MemberAccessExpression) {
+                                $locations[] = LocationFactory::fromToken($ref, $ref -> memberName);
+                            } else {
+                                $locations[] = LocationFactory::fromNode($ref);
+                            }
                         }
                     }
+                    if ($context->includeDeclaration) {
+                        $refs = $document->getDefinitionNodeByFqn($fqn);
+                        if ($refs !== null){
+                            foreach ($refs as $ref) {
+                                if ($ref !== null){
+                                    if ($ref instanceof Node\Expression\AssignmentExpression) {
+                                        $location = LocationFactory::fromNode($ref->leftOperand);
+                                        $location->range->start->character++;
+                                        $locations[] = $location;
+                                    }elseif ($ref instanceof Node\DelimitedList\ExpressionList) {
+                                        $location = LocationFactory::fromNode($ref);
+                                        $location->range->start->character++;
+                                        $locations[] = $location;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                 }
             }
             return $locations;
@@ -266,12 +293,6 @@ class TextDocument
         return coroutine( function () use ($textDocument, $position, $newName) {
             $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
             $node = $document->getNodeAtPosition($position);
-            if (
-                $node instanceof Node\Expression\Variable ||
-                $node instanceof Node\Parameter
-            ) {
-                $newName = '$' . $newName;
-            }
             $locations = yield $this->references(new ReferenceContext(true), $textDocument, $position);
             $edits = [$textDocument->uri => [] ];
             foreach ($locations as $location) {
