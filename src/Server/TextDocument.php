@@ -255,6 +255,13 @@ class TextDocument
                     if ($context->includeDeclaration) {
                         $refs = $document->getDefinitionNodeByFqn($fqn);
                         if ($refs !== null){
+                            if ($refs instanceof Node\Statement\ClassDeclaration) {
+                                if ($refs->name->getText($refs->getFileContents()) === $node->name->getText($node->getFileContents())) {
+                                    $location = LocationFactory::fromToken($refs, $refs->name);
+                                    $locations[] = $location;
+                                }
+                            }
+
                             foreach ($refs as $ref) {
                                 if ($ref !== null){
                                     if ($ref instanceof Node\Expression\AssignmentExpression) {
@@ -268,7 +275,7 @@ class TextDocument
                                     }elseif ($ref instanceof Node\ClassMembersNode) {
                                         foreach ($ref->classMemberDeclarations as $declaration) {
                                             if ($declaration instanceof Node\MethodDeclaration) {
-                                                if ($declaration->getName() === $node->getName()) {
+                                                if ($declaration->getName() === $node->name->getText($node->getFileContents())) {
                                                     $location = LocationFactory::fromToken($declaration, $declaration->name);
                                                     $locations[] = $location;
                                                 }
