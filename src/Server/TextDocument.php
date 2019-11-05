@@ -265,6 +265,15 @@ class TextDocument
                                         $location = LocationFactory::fromNode($ref);
                                         $location->range->start->character++;
                                         $locations[] = $location;
+                                    }elseif ($ref instanceof Node\ClassMembersNode) {
+                                        foreach ($ref->classMemberDeclarations as $declaration) {
+                                            if ($declaration instanceof Node\MethodDeclaration) {
+                                                if ($declaration->getName() === $node->getName()) {
+                                                    $location = LocationFactory::fromToken($declaration, $declaration->name);
+                                                    $locations[] = $location;
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
