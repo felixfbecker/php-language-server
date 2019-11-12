@@ -236,6 +236,10 @@ class TextDocument
                         return [];
                     }
                 }
+                $nameParts = preg_split('/[\>\\\:]/', $fqn);
+                $name = end($nameParts);
+                $nameParts = explode('(', $name);
+                $name = $nameParts[0];
                 $refDocumentPromises = [];
                 foreach ($this->index->getReferenceUris($fqn) as $uri) {
                     $refDocumentPromises[] = $this->documentLoader->getOrLoad($uri);
@@ -275,7 +279,7 @@ class TextDocument
                                     }elseif ($ref instanceof Node\ClassMembersNode) {
                                         foreach ($ref->classMemberDeclarations as $declaration) {
                                             if ($declaration instanceof Node\MethodDeclaration) {
-                                                if ($declaration->getName() === $node->name->getText($node->getFileContents())) {
+                                                if ($declaration->getName() === $name ) {
                                                     $location = LocationFactory::fromToken($declaration, $declaration->name);
                                                     $locations[] = $location;
                                                 }
