@@ -215,7 +215,7 @@ class TextDocument
                         $location = LocationFactory::fromNode($descendantNode);
                         $location->range->start->character++;
                         $locations[] = $location;
-                    } else if (($descendantNode instanceof Node\Parameter) 
+                    } else if (($descendantNode instanceof Node\Parameter)
                         && $context->includeDeclaration && $descendantNode->getName() === $node->getName() ) {
                         $location = LocationFactory::fromToken($descendantNode, $descendantNode->variableName);
                         $location->range->start->character++;
@@ -258,7 +258,7 @@ class TextDocument
                     }
                     if ($context->includeDeclaration) {
                         $refs = $document->getDefinitionNodeByFqn($fqn);
-                        if ($refs !== null){
+                        if ($refs !== null) {
                             if ($refs instanceof Node\Statement\ClassDeclaration) {
                                 if ($refs->name->getText($refs->getFileContents()) === $node->name->getText($node->getFileContents())) {
                                     $location = LocationFactory::fromToken($refs, $refs->name);
@@ -267,19 +267,19 @@ class TextDocument
                             }
 
                             foreach ($refs as $ref) {
-                                if ($ref !== null){
+                                if ($ref !== null) {
                                     if ($ref instanceof Node\Expression\AssignmentExpression) {
                                         $location = LocationFactory::fromNode($ref->leftOperand);
                                         $location->range->start->character++;
                                         $locations[] = $location;
-                                    }elseif ($ref instanceof Node\DelimitedList\ExpressionList) {
+                                    } elseif ($ref instanceof Node\DelimitedList\ExpressionList) {
                                         $location = LocationFactory::fromNode($ref);
                                         $location->range->start->character++;
                                         $locations[] = $location;
-                                    }elseif ($ref instanceof Node\ClassMembersNode) {
+                                    } elseif ($ref instanceof Node\ClassMembersNode) {
                                         foreach ($ref->classMemberDeclarations as $declaration) {
                                             if ($declaration instanceof Node\MethodDeclaration) {
-                                                if ($declaration->getName() === $name ) {
+                                                if ($declaration->getName() === $name) {
                                                     $location = LocationFactory::fromToken($declaration, $declaration->name);
                                                     $locations[] = $location;
                                                 }
@@ -310,7 +310,7 @@ class TextDocument
         Position $position,
         string $newName
     ) : Promise {
-        return coroutine( function () use ($textDocument, $position, $newName) {
+        return coroutine(function () use ($textDocument, $position, $newName) {
             $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
             $node = $document->getNodeAtPosition($position);
             $locations = yield $this->references(new ReferenceContext(true), $textDocument, $position);
