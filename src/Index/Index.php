@@ -187,9 +187,6 @@ class Index implements ReadableIndex, \Serializable
     public function removeDefinition(string $fqn)
     {
         $parts = $this->splitFqn($fqn);
-        if (empty($parts)) {
-            throw new \Exception($fqn);
-        }
         $this->removeIndexedDefinition(0, $parts, $this->definitions, $this->definitions);
 
         unset($this->references[$fqn]);
