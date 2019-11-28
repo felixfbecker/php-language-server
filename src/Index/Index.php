@@ -187,6 +187,9 @@ class Index implements ReadableIndex, \Serializable
     public function removeDefinition(string $fqn)
     {
         $parts = $this->splitFqn($fqn);
+        if (empty($parts)) {
+            throw new \Exception($fqn);
+        }
         $this->removeIndexedDefinition(0, $parts, $this->definitions, $this->definitions);
 
         unset($this->references[$fqn]);
@@ -423,6 +426,9 @@ class Index implements ReadableIndex, \Serializable
      */
     private function removeIndexedDefinition(int $level, array $parts, array &$storage, array &$rootStorage)
     {
+        if (empty($parts)) {
+            return;
+        }
         $part = $parts[$level];
 
         if ($level + 1 === count($parts)) {

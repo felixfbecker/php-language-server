@@ -5,6 +5,7 @@ namespace LanguageServer;
 
 use LanguageServer\Index\ReadableIndex;
 use LanguageServer\Factory\SymbolInformationFactory;
+use LanguageServer\Factory\LocationFactory;
 use LanguageServerProtocol\SymbolInformation;
 use Microsoft\PhpParser;
 use Microsoft\PhpParser\Node;
@@ -236,6 +237,13 @@ class DefinitionResolver
 
         $def->symbolInformation = SymbolInformationFactory::fromNode($node, $fqn);
 
+        if ($node instanceof Node\Statement\ClassDeclaration ||
+            $node instanceof Node\MethodDeclaration) {
+            $def->name = LocationFactory::fromToken($node, $node->name);
+        } elseif ($node instanceof Node\Expression\Variable) {
+            $def->name = LocationFactory::fromToken($node, $node->name);
+            $def->name->range->start->character++;
+        }
         if ($def->symbolInformation !== null) {
             $def->type = $this->getTypeFromNode($node);
             $def->declarationLine = $this->getDeclarationLineFromNode($node);

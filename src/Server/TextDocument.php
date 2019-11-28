@@ -4,7 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer\Server;
 
 use LanguageServer\{
-    CompletionProvider, SignatureHelpProvider, LanguageClient, PhpDocument, PhpDocumentLoader, DefinitionResolver
+    CompletionProvider, SignatureHelpProvider, LanguageClient, PhpDocument, PhpDocumentLoader, DefinitionResolver, Definition
 };
 use LanguageServer\Index\ReadableIndex;
 use LanguageServer\Factory\LocationFactory;
@@ -256,41 +256,18 @@ class TextDocument
                             }
                         }
                     }
-                    if ($context->includeDeclaration) {
-                        $refs = $document->getDefinitionNodeByFqn($fqn);
-                        if ($refs !== null) {
-                            if ($refs instanceof Node\Statement\ClassDeclaration) {
-                                if ($refs->name->getText($refs->getFileContents()) === $node->name->getText($node->getFileContents())) {
-                                    $location = LocationFactory::fromToken($refs, $refs->name);
-                                    $locations[] = $location;
-                                }
-                            }
 
-                            foreach ($refs as $ref) {
-                                if ($ref !== null) {
-                                    if ($ref instanceof Node\Expression\AssignmentExpression) {
-                                        $location = LocationFactory::fromNode($ref->leftOperand);
-                                        $location->range->start->character++;
-                                        $locations[] = $location;
-                                    } elseif ($ref instanceof Node\DelimitedList\ExpressionList) {
-                                        $location = LocationFactory::fromNode($ref);
-                                        $location->range->start->character++;
-                                        $locations[] = $location;
-                                    } elseif ($ref instanceof Node\ClassMembersNode) {
-                                        foreach ($ref->classMemberDeclarations as $declaration) {
-                                            if ($declaration instanceof Node\MethodDeclaration) {
-                                                if ($declaration->getName() === $name) {
-                                                    $location = LocationFactory::fromToken($declaration, $declaration->name);
-                                                    $locations[] = $location;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                }
+                if ($context->includeDeclaration) {
+                    $definitionObjects = yield $this->definitionObject($textDocument, $position);
+                    $definitionLocations = $definitionObjects->name;
+                    if (gettype($definitionLocations) == "string") {
+                        throw new \Exception($definitionLocations);
                     }
-
+                    if (!is_array($definitionLocations)) {
+                        $definitionLocations = array($definitionLocations);
+                    }
+                    $locations = array_merge($locations, $definitionLocations);
                 }
             }
             return $locations;
@@ -321,6 +298,20 @@ class TextDocument
                     $edits[$location->uri] = [];
                 }
                 $edits[$location->uri][] = $textEdit;
+            }
+            
+            foreach ($edits as $uri => $textEdits) {
+                $document = yield $this->documentLoader->getOrLoad($uri);
+                $newtext = $document->getContent();
+                foreach ($textEdits as $textEdit) {
+                    $startOffset = $textEdit->range->start->toOffset($document->getContent());
+                    $endOffset = $textEdit->range->end->toOffset($document->getContent());
+                    $length = $endOffset - $startOffset;
+                    $newtext = substr_replace($newtext, $textEdit->newText, $startOffset, $length);
+                }
+                $document->updateContent($newtext);
+                $this->client->textDocument->publishDiagnostics($uri, $document->getDiagnostics());
+                
             }
             return new WorkspaceEdit($edits);
         });
@@ -355,6 +346,21 @@ class TextDocument
     public function definition(TextDocumentIdentifier $textDocument, Position $position): Promise
     {
         return coroutine(function () use ($textDocument, $position) {
+            $def = yield $this->definitionObject($textDocument, $position);
+            if (
+                $def === null
+                || $def->symbolInformation === null
+                || Uri\parse($def->symbolInformation->location->uri)['scheme'] === 'phpstubs'
+            ) {
+                return [];
+            }
+            return $def->symbolInformation->location;
+        });
+    }
+
+    private function definitionObject(TextDocumentIdentifier $textDocument, Position $position) 
+    {
+        return coroutine(function () use ($textDocument, $position) {
             $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
             $node = $document->getNodeAtPosition($position);
             if ($node === null) {
@@ -375,14 +381,7 @@ class TextDocument
                 }
                 yield waitForEvent($this->index, 'definition-added');
             }
-            if (
-                $def === null
-                || $def->symbolInformation === null
-                || Uri\parse($def->symbolInformation->location->uri)['scheme'] === 'phpstubs'
-            ) {
-                return [];
-            }
-            return $def->symbolInformation->location;
+            return $def;
         });
     }
 
