@@ -73,6 +73,11 @@ class Definition
     public $symbolInformation;
 
     /**
+    * @var Location
+    */
+    public $name;
+
+    /**
      * The type a reference to this symbol will resolve to.
      * For properties and constants, this is the type of the property/constant.
      * For functions and methods, this is the return type.

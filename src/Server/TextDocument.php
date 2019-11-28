@@ -4,7 +4,7 @@ declare(strict_types = 1);
 namespace LanguageServer\Server;
 
 use LanguageServer\{
-    CompletionProvider, SignatureHelpProvider, LanguageClient, PhpDocument, PhpDocumentLoader, DefinitionResolver
+    CompletionProvider, SignatureHelpProvider, LanguageClient, PhpDocument, PhpDocumentLoader, DefinitionResolver, Definition
 };
 use LanguageServer\Index\ReadableIndex;
 use LanguageServer\Factory\LocationFactory;
@@ -23,6 +23,8 @@ use LanguageServerProtocol\{
     TextDocumentIdentifier,
     TextDocumentItem,
     VersionedTextDocumentIdentifier,
+    WorkspaceEdit,
+    TextEdit,
     CompletionContext
 };
 use Microsoft\PhpParser\Node;
@@ -179,7 +181,7 @@ class TextDocument
         TextDocumentIdentifier $textDocument,
         Position $position
     ): Promise {
-        return coroutine(function () use ($textDocument, $position) {
+        return coroutine(function () use ($context, $textDocument, $position) {
             $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
             $node = $document->getNodeAtPosition($position);
             if ($node === null) {
@@ -190,7 +192,7 @@ class TextDocument
             // by traversing the AST
             if (
 
-            ($node instanceof Node\Expression\Variable && !($node->getParent()->getParent() instanceof Node\PropertyDeclaration))
+            ($node instanceof Node\Expression\Variable && !($node->getParent()->getParent() instanceof Node\PropertyDeclaration) && !($node->getParent()->getParent()->getParent() instanceof Node\PropertyDeclaration))
                 || $node instanceof Node\Parameter
                 || $node instanceof Node\UseVariableName
             ) {
@@ -210,7 +212,14 @@ class TextDocument
                     if ($descendantNode instanceof Node\Expression\Variable &&
                         $descendantNode->getName() === $node->getName()
                     ) {
-                        $locations[] = LocationFactory::fromNode($descendantNode);
+                        $location = LocationFactory::fromNode($descendantNode);
+                        $location->range->start->character++;
+                        $locations[] = $location;
+                    } else if (($descendantNode instanceof Node\Parameter)
+                        && $context->includeDeclaration && $descendantNode->getName() === $node->getName() ) {
+                        $location = LocationFactory::fromToken($descendantNode, $descendantNode->variableName);
+                        $location->range->start->character++;
+                        $locations[] = $location;
                     }
                 }
             } else {
@@ -227,6 +236,10 @@ class TextDocument
                         return [];
                     }
                 }
+                $nameParts = preg_split('/[\>\\\:]/', $fqn);
+                $name = end($nameParts);
+                $nameParts = explode('(', $name);
+                $name = $nameParts[0];
                 $refDocumentPromises = [];
                 foreach ($this->index->getReferenceUris($fqn) as $uri) {
                     $refDocumentPromises[] = $this->documentLoader->getOrLoad($uri);
@@ -236,14 +249,74 @@ class TextDocument
                     $refs = $document->getReferenceNodesByFqn($fqn);
                     if ($refs !== null) {
                         foreach ($refs as $ref) {
-                            $locations[] = LocationFactory::fromNode($ref);
+                            if ($ref instanceof Node\Expression\MemberAccessExpression) {
+                                $locations[] = LocationFactory::fromToken($ref, $ref -> memberName);
+                            } else {
+                                $locations[] = LocationFactory::fromNode($ref);
+                            }
                         }
                     }
+
+                }
+                if ($context->includeDeclaration) {
+                    $definitionObjects = yield $this->definitionObject($textDocument, $position);
+                    $definitionLocations = $definitionObjects->name;
+                    if (gettype($definitionLocations) == "string") {
+                        throw new \Exception($definitionLocations);
+                    }
+                    if (!is_array($definitionLocations)) {
+                        $definitionLocations = array($definitionLocations);
+                    }
+                    $locations = array_merge($locations, $definitionLocations);
                 }
             }
             return $locations;
         });
     }
+
+    /**
+     * The rename request is sent from the client to the server to perform a workspace-wide rename of a symbol.
+     *
+     * @param  TextDocumentIdentifier $textDocument The document to rename in.
+     * @param  Position               $position     The position at which this request was sent.
+     * @param  string                 $newName      The new name of the symbol.
+     * @return Promise <WorkspaceEdit|null>
+     */
+    public function rename(
+        TextDocumentIdentifier $textDocument,
+        Position $position,
+        string $newName
+    ) : Promise {
+        return coroutine(function () use ($textDocument, $position, $newName) {
+            $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
+            $node = $document->getNodeAtPosition($position);
+            $locations = yield $this->references(new ReferenceContext(true), $textDocument, $position);
+            $edits = [$textDocument->uri => [] ];
+            foreach ($locations as $location) {
+                $textEdit = new TextEdit($location->range, $newName);
+                if (!isset($edits[$location->uri])) {
+                    $edits[$location->uri] = [];
+                }
+                $edits[$location->uri][] = $textEdit;
+            }
+            
+            foreach ($edits as $uri => $textEdits) {
+                $document = yield $this->documentLoader->getOrLoad($uri);
+                $newtext = $document->getContent();
+                foreach ($textEdits as $textEdit) {
+                    $startOffset = $textEdit->range->start->toOffset($document->getContent());
+                    $endOffset = $textEdit->range->end->toOffset($document->getContent());
+                    $length = $endOffset - $startOffset;
+                    $newtext = substr_replace($newtext, $textEdit->newText, $startOffset, $length);
+                }
+                $document->updateContent($newtext);
+                $this->client->textDocument->publishDiagnostics($uri, $document->getDiagnostics());
+                
+            }
+            return new WorkspaceEdit($edits);
+        });
+    }
+
 
     /**
      * The signature help request is sent from the client to the server to request signature information at a given
@@ -273,6 +346,21 @@ class TextDocument
     public function definition(TextDocumentIdentifier $textDocument, Position $position): Promise
     {
         return coroutine(function () use ($textDocument, $position) {
+            $def = yield $this->definitionObject($textDocument, $position);
+            if (
+                $def === null
+                || $def->symbolInformation === null
+                || Uri\parse($def->symbolInformation->location->uri)['scheme'] === 'phpstubs'
+            ) {
+                return [];
+            }
+            return $def->symbolInformation->location;
+        });
+    }
+
+    private function definitionObject(TextDocumentIdentifier $textDocument, Position $position) 
+    {
+        return coroutine(function () use ($textDocument, $position) {
             $document = yield $this->documentLoader->getOrLoad($textDocument->uri);
             $node = $document->getNodeAtPosition($position);
             if ($node === null) {
@@ -293,14 +381,7 @@ class TextDocument
                 }
                 yield waitForEvent($this->index, 'definition-added');
             }
-            if (
-                $def === null
-                || $def->symbolInformation === null
-                || Uri\parse($def->symbolInformation->location->uri)['scheme'] === 'phpstubs'
-            ) {
-                return [];
-            }
-            return $def->symbolInformation->location;
+            return $def;
         });
     }
 
