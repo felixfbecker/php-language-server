@@ -23,7 +23,6 @@ class FileSystemFilesFinder implements FilesFinder
             $uris = [];
             $globIt = new GlobIterator($glob);
             while ($path = $globIt->current()) {
-                $path = $globIt->current();
                 try {
                     $globIt->next();
                 } catch (\Exception $e) {
