@@ -22,11 +22,8 @@ class FileSystemFilesFinder implements FilesFinder
         return coroutine(function () use ($glob) {
             $uris = [];
             $globIt = new GlobIterator($glob);
-            while (true) { // dirty hack need dirty methods
+            while ($path = $globIt->current()) {
                 $path = $globIt->current();
-                if (!$path) {
-                    break;
-                }
                 try {
                     $globIt->next();
                 } catch (\Exception $e) {
