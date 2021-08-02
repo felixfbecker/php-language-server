@@ -21,7 +21,17 @@ class FileSystemFilesFinder implements FilesFinder
     {
         return coroutine(function () use ($glob) {
             $uris = [];
-            foreach (new GlobIterator($glob) as $path) {
+            $globIt = new GlobIterator($glob);
+            while (true) { // dirty hack need dirty methods
+                $path = $globIt->current();
+                if (!$path) {
+                    break;
+                }
+                try {
+                    $globIt->next();
+                } catch (\Exception $e) {
+                    continue;
+                }
                 // Exclude any directories that also match the glob pattern
                 if (!is_dir($path)) {
                     $uris[] = pathToUri($path);
@@ -29,6 +39,7 @@ class FileSystemFilesFinder implements FilesFinder
 
                 yield timeout();
             }
+            // WTF. We are generator or not ?
             return $uris;
         });
     }
