@@ -35,7 +35,6 @@ class FileSystemFilesFinder implements FilesFinder
 
                 yield timeout();
             }
-            // WTF. We are generator or not ?
             return $uris;
         });
     }
