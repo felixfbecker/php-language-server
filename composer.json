@@ -28,7 +28,7 @@
         "jetbrains/phpstorm-stubs": "dev-master",
         "microsoft/tolerant-php-parser": "0.0.*",
         "netresearch/jsonmapper": "^1.0",
-        "phpdocumentor/reflection-docblock": "^4.0.0",
+        "phpdocumentor/reflection-docblock": "^5.2.2",
         "psr/log": "^1.0",
         "sabre/event": "^5.0",
         "sabre/uri": "^2.0",

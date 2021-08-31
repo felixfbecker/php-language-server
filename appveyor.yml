@@ -16,7 +16,7 @@ cache:
 environment:
   ANSICON: 121x90 (121x90)
   matrix:
-    - { PHP_VERSION: '7.1.11', VC_VERSION: '14', XDEBUG_VERSION: '2.5.5' }
+    - { PHP_VERSION: '7.4.23', VC_VERSION: '15', XDEBUG_VERSION: '2.9.8' }
 
 install:
   # Enable Windows Update service, needed to install vcredist2015 (dependency of php)
@@ -30,7 +30,7 @@ install:
   - ps: |
       $client = New-Object System.Net.WebClient
       $phpMinorVersion = $env:PHP_VERSION -replace '\.\d+$'
-      $xdebugUrl = "https://xdebug.org/files/php_xdebug-$env:XDEBUG_VERSION-$phpMinorVersion-vc14-nts-x86_64.dll"
+      $xdebugUrl = "https://xdebug.org/files/php_xdebug-$env:XDEBUG_VERSION-$phpMinorVersion-vc15-nts-x86_64.dll"
       $phpDir = (Get-Item (Get-Command php).Source).Directory.FullName
       $xdebugPath = Join-Path $phpDir ext\xdebug.dll
       $client.DownloadFile($xdebugUrl, $xdebugPath)
