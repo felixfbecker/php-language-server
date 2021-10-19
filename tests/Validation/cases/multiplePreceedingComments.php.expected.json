@@ -21,15 +21,15 @@
             "documentation": null,
             "signatureInformation": null
         },
-        "Foo->()": {
-            "fqn": "Foo->()",
+        "Foo->fn()": {
+            "fqn": "Foo->fn()",
             "extends": [],
             "isMember": true,
             "roamed": false,
             "isStatic": false,
             "canBeInstantiated": false,
             "symbolInformation": {
-                "name": "",
+                "name": "fn",
                 "kind": 6,
                 "location": {
                     "uri": "./multiplePreceedingComments.php"
