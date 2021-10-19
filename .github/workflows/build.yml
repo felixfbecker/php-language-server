@@ -33,8 +33,8 @@ jobs:
         run: composer install
       - name: phpcs
         run: ./vendor/bin/phpcs -n
-      - name: phan
-        run: ./vendor/bin/phan
+#      - name: phan
+#        run: ./vendor/bin/phan
       - name: phpunit
         run: vendor/bin/phpunit --coverage-clover=coverage.xml --colors=always
       - name: Upload coverage to Codecov
