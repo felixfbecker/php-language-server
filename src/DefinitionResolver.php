@@ -1128,6 +1128,7 @@ class DefinitionResolver
             if (
                 $docBlock !== null
                 && !empty($returnTags = $docBlock->getTagsByName('return'))
+                && $returnTags[0] instanceof DocBlock\Tags\Return_
                 && $returnTags[0]->getType() !== null
             ) {
                 // Use @return tag
@@ -1354,7 +1355,7 @@ class DefinitionResolver
         }
         $tags = $docBlock->getTagsByName('param');
         foreach ($tags as $tag) {
-            if ($tag->getVariableName() === \ltrim($variableName, "$")) {
+            if ($tag instanceof DocBlock\Tags\Param && $tag->getVariableName() === \ltrim($variableName, "$")) {
                 return $tag;
             }
         }

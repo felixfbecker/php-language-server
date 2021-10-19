@@ -40,7 +40,7 @@
                 },
                 "containerName": "A"
             },
-            "type__tostring": "bool[]",
+            "type__tostring": "array<\\__CLASS__,bool>",
             "type": {},
             "declarationLine": "private static $deprecationsTriggered;",
             "documentation": null,
