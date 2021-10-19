@@ -30,7 +30,7 @@ jobs:
           extensions: ${{ matrix.xdebug }}, ast
           tools: composer
       - name: Composer Install
-        uses: php-actions/composer@v6
+        run: composer install
       - name: phpcs
         run: ./vendor/bin/phpcs -n
       - name: phan
