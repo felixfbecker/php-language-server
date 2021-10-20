@@ -32,7 +32,7 @@
         "psr/log": "^1.0",
         "sabre/event": "^5.0",
         "sabre/uri": "^2.0",
-        "webmozart/glob": "^4.1",
+        "webmozart/glob": "^4.4",
         "webmozart/path-util": "^2.3"
     },
     "require-dev": {
