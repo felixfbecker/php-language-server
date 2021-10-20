@@ -14,7 +14,7 @@ use LanguageServerProtocol\{TextDocumentIdentifier, Position, Range, Location};
 
 class GlobalFallbackTest extends ServerTestCase
 {
-    public function setUp()
+    public function setUp(): void
     {
         $projectIndex = new ProjectIndex(new Index, new DependenciesIndex);
         $projectIndex->setComplete();

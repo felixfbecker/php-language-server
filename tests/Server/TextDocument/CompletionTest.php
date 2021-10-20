@@ -35,7 +35,7 @@ class CompletionTest extends TestCase
      */
     private $loader;
 
-    public function setUp()
+    public function setUp(): void
     {
         $client = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
         $projectIndex = new ProjectIndex(new Index, new DependenciesIndex);
@@ -838,7 +838,7 @@ class CompletionTest extends TestCase
     private function assertCompletionsListSubset(CompletionList $subsetList, CompletionList $list)
     {
         foreach ($subsetList->items as $expectedItem) {
-            $this->assertContains($expectedItem, $list->items, null, null, false);
+            $this->assertContainsEquals($expectedItem, $list->items);
         }
 
         $this->assertEquals($subsetList->isIncomplete, $list->isIncomplete);

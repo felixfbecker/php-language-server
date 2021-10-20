@@ -15,16 +15,20 @@ foreach ([__DIR__ . '/../../../autoload.php', __DIR__ . '/../autoload.php', __DI
     }
 }
 
+$logger = new StderrLogger();
+
 // Convert all errors to ErrorExceptions
-set_error_handler(function (int $severity, string $message, string $file, int $line) {
+set_error_handler(function (int $severity, string $message, string $file, int $line)  use ($logger) {
     if (!(error_reporting() & $severity)) {
         // This error code is not included in error_reporting (can also be caused by the @ operator)
         return;
     }
+    if ($severity & (E_NOTICE | E_STRICT | E_DEPRECATED)) {
+        $logger->info("Ignored error: ". $message, ["severity" => $severity, "file" => $file, "line" => $line]);
+        return;
+    }
     throw new \ErrorException($message, 0, $severity, $file, $line);
 });
-
-$logger = new StderrLogger();
 
 // Only write uncaught exceptions to STDERR, not STDOUT
 set_exception_handler(function (\Throwable $e) use ($logger) {

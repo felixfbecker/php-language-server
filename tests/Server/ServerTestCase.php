@@ -44,7 +44,7 @@ abstract class ServerTestCase extends TestCase
      */
     private $referenceLocations;
 
-    public function setUp()
+    public function setUp(): void
     {
         $sourceIndex       = new Index;
         $dependenciesIndex = new DependenciesIndex;

@@ -260,6 +260,14 @@ class Index implements ReadableIndex, \Serializable
     {
         $data = unserialize($serialized);
 
+        $this->__unserialize($data);
+    }
+
+    /**
+     * @return void
+     */
+    public function __unserialize($data)
+    {
         if (isset($data['definitions'])) {
             foreach ($data['definitions'] as $fqn => $definition) {
                 $this->setDefinition($fqn, $definition);
@@ -278,12 +286,20 @@ class Index implements ReadableIndex, \Serializable
      */
     public function serialize()
     {
-        return serialize([
+        return serialize($this->__serialize());
+    }
+
+    /**
+     * @return array
+     */
+    public function __serialize(): array
+    {
+        return [
             'definitions' => iterator_to_array($this->getDefinitions()),
             'references' => $this->references,
             'complete' => $this->complete,
             'staticComplete' => $this->staticComplete
-        ]);
+        ];
     }
 
     /**

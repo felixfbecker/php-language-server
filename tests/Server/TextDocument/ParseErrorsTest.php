@@ -23,7 +23,7 @@ class ParseErrorsTest extends TestCase
 
     private $args;
 
-    public function setUp()
+    public function setUp(): void
     {
         $client = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
         $client->textDocument = new class($this->args) extends Client\TextDocument {

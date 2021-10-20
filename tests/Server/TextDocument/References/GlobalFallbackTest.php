@@ -18,7 +18,7 @@ use LanguageServer\Tests\Server\ServerTestCase;
 
 class GlobalFallbackTest extends ServerTestCase
 {
-    public function setUp()
+    public function setUp(): void
     {
         $projectIndex         = new ProjectIndex(new Index, new DependenciesIndex);
         $projectIndex->setComplete();

@@ -33,7 +33,7 @@ class SignatureHelpTest extends TestCase
      */
     private $loader;
 
-    public function setUp()
+    public function setUp(): void
     {
         $client = new LanguageClient(new MockProtocolStream, new MockProtocolStream);
         $index = new Index();

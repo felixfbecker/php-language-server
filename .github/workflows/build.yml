@@ -15,6 +15,9 @@ jobs:
           - xdebug: xdebug-3.1.1 # renovate:keep-up-to-date
             php: '7.4'
             os: ubuntu-18.04
+          - xdebug: xdebug-3.1.1 # renovate:keep-up-to-date
+            php: '8.0'
+            os: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
       - name: Setup Node.js
@@ -30,7 +33,7 @@ jobs:
           extensions: ${{ matrix.xdebug }}, ast
           tools: composer
       - name: Composer Install
-        run: composer install
+        run: composer install --ignore-platform-reqs
       - name: phpcs
         run: ./vendor/bin/phpcs -n
 #      - name: phan

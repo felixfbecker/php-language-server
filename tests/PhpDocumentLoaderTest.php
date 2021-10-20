@@ -20,7 +20,7 @@ class PhpDocumentLoaderTest extends TestCase
      */
     private $loader;
 
-    public function setUp()
+    public function setUp(): void
     {
         $projectIndex = new ProjectIndex(new Index, new DependenciesIndex);
         $this->loader = new PhpDocumentLoader(
