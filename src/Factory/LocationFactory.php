@@ -19,7 +19,7 @@ class LocationFactory
     public static function fromNode(Node $node): Location
     {
         $range = PositionUtilities::getRangeFromPosition(
-            $node->getStart(),
+            $node->getStartPosition(),
             $node->getWidth(),
             $node->getFileContents()
         );

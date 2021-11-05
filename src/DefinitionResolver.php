@@ -70,12 +70,12 @@ class DefinitionResolver
             ($declaration = ParserHelpers\tryGetConstOrClassConstDeclaration($node)) && ($elements = $declaration->constElements)
         ) {
             $defLine = $declaration->getText();
-            $defLineStart = $declaration->getStart();
+            $defLineStart = $declaration->getStartPosition();
 
             $defLine = \substr_replace(
                 $defLine,
                 $node->getFullText(),
-                $elements->getFullStart() - $defLineStart,
+                $elements->getFullStartPosition() - $defLineStart,
                 $elements->getFullWidth()
             );
         } else {
@@ -164,7 +164,7 @@ class DefinitionResolver
                 // create() throws when it thinks the doc comment has invalid fields.
                 // For example, a @see tag that is followed by something that doesn't look like a valid fqsen will throw.
                 return $this->docBlockFactory->create($docCommentText, $context);
-            } catch (\InvalidArgumentException $e) {
+            } catch (\InvalidArgumentException|\RuntimeException $e) {
                 return null;
             }
         }
@@ -589,7 +589,8 @@ class DefinitionResolver
                 // If it is a closure, also check use statements
                 if ($n instanceof Node\Expression\AnonymousFunctionCreationExpression &&
                     $n->anonymousFunctionUseClause !== null &&
-                    $n->anonymousFunctionUseClause->useVariableNameList !== null) {
+                    $n->anonymousFunctionUseClause->useVariableNameList !== null &&
+                    $n->anonymousFunctionUseClause->useVariableNameList instanceof Node\DelimitedList\UseVariableNameList) {
                     foreach ($n->anonymousFunctionUseClause->useVariableNameList->getElements() as $use) {
                         if ($use->getName() === $name) {
                             return $use;
@@ -1096,13 +1097,36 @@ class DefinitionResolver
             }
 
             // function foo(MyClass $a)
-            if ($node->typeDeclaration !== null) {
+            if ($node->typeDeclarationList !== null) {
                 // Use PHP7 return type hint
-                if ($node->typeDeclaration instanceof PhpParser\Token) {
-                    // Resolve a string like "bool" to a type object
-                    $type = $this->typeResolver->resolve($node->typeDeclaration->getText($node->getFileContents()));
-                } else {
-                    $type = new Types\Object_(new Fqsen('\\' . (string)$node->typeDeclaration->getResolvedName()));
+                $is_union = false;
+                $is_intersection = false;
+                $types = array_reduce($node->typeDeclarationList->children, function ($types, $typeDeclaration) use ($node, &$is_union, &$is_intersection) {
+                    if ($typeDeclaration instanceof PhpParser\Token) {
+                        if ($typeDeclaration->kind === PhpParser\TokenKind::BarToken) {
+                            $is_union = true;
+                            return $types;
+                        }
+                        if ($typeDeclaration->kind === PhpParser\TokenKind::AmpersandToken) {
+                            $is_intersection = true;
+                            return $types;
+                        }
+                        // Resolve a string like "bool" to a type object
+                        $types[] = $this->typeResolver->resolve($typeDeclaration->getText($node->getFileContents()));
+                    } else {
+                        $types[] = new Types\Object_(new Fqsen('\\' . (string)$typeDeclaration->getResolvedName()));
+                    }
+                    return $types;
+                }, []);
+                if (count($types) === 1) {
+                    $type = $types[0];
+                }
+                if ($is_union && !$is_intersection) {
+                    $type = new Types\Compound($types);
+                    return $type;
+                } else if (!$is_union && $is_intersection) {
+                    $type = new Types\Intersection($types);
+                    return $type;
                 }
             }
             // function foo($a = 3)
@@ -1141,18 +1165,42 @@ class DefinitionResolver
                 }
                 return $returnType;
             }
-            if ($node->returnType !== null && !($node->returnType instanceof PhpParser\MissingToken)) {
+            if ($node->returnTypeList !== null && !($node->returnTypeList instanceof PhpParser\MissingToken)) {
                 // Use PHP7 return type hint
-                if ($node->returnType instanceof PhpParser\Token) {
-                    // Resolve a string like "bool" to a type object
-                    return $this->typeResolver->resolve($node->returnType->getText($node->getFileContents()));
-                } elseif ($node->returnType->getResolvedName() === 'self') {
-                    $selfType = $this->getContainingClassType($node);
-                    if ($selfType !== null) {
-                        return $selfType;
+                $is_union = false;
+                $is_intersection = false;
+                $types = array_reduce($node->returnTypeList->children, function ($types, $returnType) use ($node, &$is_union, &$is_intersection) {
+                    if ($returnType instanceof PhpParser\Token) {
+                        if ($returnType->kind === PhpParser\TokenKind::BarToken) {
+                            $is_union = true;
+                            return $types;
+                        }
+                        if ($returnType->kind === PhpParser\TokenKind::AmpersandToken) {
+                            $is_intersection = true;
+                            return $types;
+                        }
+                        // Resolve a string like "bool" to a type object
+                        $types[] = $this->typeResolver->resolve($returnType->getText($node->getFileContents()));
+                        return $types;
+                    } elseif ($returnType->getResolvedName() === 'self') {
+                        $selfType = $this->getContainingClassType($node);
+                        if ($selfType !== null) {
+                            $types[] = $selfType;
+                            return $types;
+                        }
                     }
+                    $types[] = new Types\Object_(new Fqsen('\\' . (string)$returnType->getResolvedName()));
+                    return $types;
+                }, []);
+                if (count($types) === 1) {
+                    return $types[0];
                 }
-                return new Types\Object_(new Fqsen('\\' . (string)$node->returnType->getResolvedName()));
+                if ($is_union && !$is_intersection) {
+                    return new Types\Compound($types);
+                } else if (!$is_union && $is_intersection) {
+                    return new Types\Intersection($types);
+                }
+                // Broken code.. cant have T1|T2&T3 or more than one type without | or &
             }
             // Unknown return type
             return new Types\Mixed_;
@@ -1195,6 +1243,7 @@ class DefinitionResolver
             if (
                 ($docBlock = $this->getDocBlock($declarationNode))
                 && !empty($varTags = $docBlock->getTagsByName('var'))
+                && $varTags[0] instanceof DocBlock\Tags\TagWithType
                 && ($type = $varTags[0]->getType())
             ) {
                 return $type;

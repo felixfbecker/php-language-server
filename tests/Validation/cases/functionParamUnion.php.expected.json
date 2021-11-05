@@ -1,0 +1,35 @@
+{
+    "references": [],
+    "definitions": {
+        "test1()": {
+            "fqn": "test1()",
+            "extends": [],
+            "isMember": false,
+            "roamed": true,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "test1",
+                "kind": 12,
+                "location": {
+                    "uri": "./functionParamUnion.php"
+                },
+                "containerName": ""
+            },
+            "type__tostring": "void",
+            "type": {},
+            "declarationLine": "function test1(int|string $par): void {}",
+            "documentation": null,
+            "signatureInformation": {
+                "label": "(int|string $par)",
+                "documentation": null,
+                "parameters": [
+                    {
+                        "label": "int|string $par",
+                        "documentation": null
+                    }
+                ]
+            }
+        }
+    }
+}

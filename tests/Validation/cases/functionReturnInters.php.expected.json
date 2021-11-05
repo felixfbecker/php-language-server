@@ -1,0 +1,30 @@
+{
+    "references": [],
+    "definitions": {
+        "test1()": {
+            "fqn": "test1()",
+            "extends": [],
+            "isMember": false,
+            "roamed": true,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "test1",
+                "kind": 12,
+                "location": {
+                    "uri": "./functionReturnInters.php"
+                },
+                "containerName": ""
+            },
+            "type__tostring": "int&string",
+            "type": {},
+            "declarationLine": "function test1(): int&string {}",
+            "documentation": null,
+            "signatureInformation": {
+                "label": "()",
+                "documentation": null,
+                "parameters": []
+            }
+        }
+    }
+}
