@@ -41,3 +41,7 @@ TestClass::$staticTestProperty[123]->testProperty;
 
 $child = new ChildClass;
 echo $child->testMethod();
+
+// multi line method
+$obj2 = new TestClass2();
+$obj2->testMultilineMethod(0,1,2);

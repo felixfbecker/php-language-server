@@ -65,6 +65,8 @@ class SymbolTest extends ServerTestCase
             new SymbolInformation('UnusedClass',            SymbolKind::CLASS_,      $this->getDefinitionLocation('UnusedClass'),                                  ''),
             new SymbolInformation('unusedProperty',         SymbolKind::PROPERTY,    $this->getDefinitionLocation('UnusedClass::unusedProperty'),                  'UnusedClass'),
             new SymbolInformation('unusedMethod',           SymbolKind::METHOD,      $this->getDefinitionLocation('UnusedClass::unusedMethod'),                    'UnusedClass'),
+            new SymbolInformation('TestClass2',             SymbolKind::CLASS_,      $this->getDefinitionLocation('TestClass2'),                                   ''),
+            new SymbolInformation('testMultilineMethod',    SymbolKind::METHOD,      $this->getDefinitionLocation('TestClass2::testMultilineMethod()'),            'TestClass2'),
             new SymbolInformation('whatever',               SymbolKind::FUNCTION,    $this->getDefinitionLocation('whatever()'),                                   ''),
 
             new SymbolInformation('SecondTestNamespace',    SymbolKind::NAMESPACE,   $this->getDefinitionLocation('SecondTestNamespace'),                          ''),
