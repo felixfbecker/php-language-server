@@ -18,7 +18,7 @@
             },
             "type__tostring": "void",
             "type": {},
-            "declarationLine": "function test1(int|string $par): void {}",
+            "declarationLine": "function test1(int|string $par): void",
             "documentation": null,
             "signatureInformation": {
                 "label": "(int|string $par)",

@@ -18,7 +18,7 @@
             },
             "type__tostring": "int|string",
             "type": {},
-            "declarationLine": "function test1(): int|string {}",
+            "declarationLine": "function test1(): int|string",
             "documentation": null,
             "signatureInformation": {
                 "label": "()",
