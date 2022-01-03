@@ -65,7 +65,7 @@
             },
             "type__tostring": "mixed",
             "type": {},
-            "declarationLine": "static function a() {",
+            "declarationLine": "static function a()",
             "documentation": null,
             "signatureInformation": {
                 "label": "()",

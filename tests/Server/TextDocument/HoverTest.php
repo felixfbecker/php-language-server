@@ -66,6 +66,20 @@ class HoverTest extends ServerTestCase
         ], $reference->range), $result);
     }
 
+    public function testHoverForMultilineMethod()
+    {
+        // $obj2->testMultilineMethod(0,1,2);
+        // Get hover for testMultilineMethod
+        $reference = $this->getReferenceLocations('TestClass2::testMultilineMethod()')[0];
+        $result = $this->textDocument->hover(
+            new TextDocumentIdentifier($reference->uri),
+            $reference->range->end
+        )->wait();
+        $this->assertEquals(new Hover([
+            new MarkedString('php', "<?php\npublic function testMultilineMethod( \$param1, \$param2, \$param3 )"),
+        ], $reference->range), $result);
+    }
+
     public function testHoverForProperty()
     {
         // echo $obj->testProperty;

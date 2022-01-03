@@ -88,6 +88,8 @@ abstract class ServerTestCase extends TestCase
             'UnusedClass'                            => new Location($globalSymbolsUri,    new Range(new Position(111, 0), new Position(118,  1))),
             'UnusedClass::unusedProperty'            => new Location($globalSymbolsUri,    new Range(new Position(113,11), new Position(113, 26))),
             'UnusedClass::unusedMethod'              => new Location($globalSymbolsUri,    new Range(new Position(115, 4), new Position(117,  5))),
+            'TestClass2'                             => new Location($globalSymbolsUri,    new Range(new Position(120, 0), new Position(130,  1))),
+            'TestClass2::testMultilineMethod()'      => new Location($globalSymbolsUri,    new Range(new Position(123, 4), new Position(129,  5))),
             'whatever()'                             => new Location($globalReferencesUri, new Range(new Position(21,  0), new Position(23,   1))),
 
             // Namespaced
@@ -218,6 +220,9 @@ abstract class ServerTestCase extends TestCase
                 0 => new Location($globalReferencesUri, new Range(new Position( 5,  0), new Position( 5, 16))), // $obj->testMethod();
                 1 => new Location($globalReferencesUri, new Range(new Position(38,  0), new Position(38, 30))), // $obj->testProperty->testMethod();
                 2 => new Location($globalReferencesUri, new Range(new Position(42,  5), new Position(42, 23)))  // $child->testMethod();
+            ],
+            'TestClass2::testMultilineMethod()' => [
+                0 => new Location($globalReferencesUri, new Range(new Position(46,  0), new Position(46, 26))), // $obj->testMultilineMethod(0,1,2);
             ],
             'test_function()' => [
                 0 => new Location($globalReferencesUri, new Range(new Position(10,  0), new Position(10, 13))),

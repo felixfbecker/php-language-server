@@ -82,9 +82,14 @@ class DefinitionResolver
             $defLine = $node->getText();
         }
 
-        // Trim string to only include first line
-        $defLine = \rtrim(\strtok($defLine, "\n"), "\r");
-
+        if ($node instanceof Node\MethodDeclaration || $node instanceof Node\Statement\FunctionDeclaration) {
+            // cut at body start and replace all newlines
+            $defLine = \str_replace(["\n", "\r"], " ", \strtok($defLine, "{"));
+            $defLine = \preg_replace('!\s+!', " ", \trim($defLine));
+        } else {
+            // Trim string to only include first line
+            $defLine = \rtrim(\strtok($defLine, "\n"), "\r");
+        }
         // TODO - pretty print rather than getting text
 
         return $defLine;

@@ -73,7 +73,7 @@
             },
             "type__tostring": "\\Fixtures\\Prophecy\\WithReturnTypehints",
             "type": {},
-            "declarationLine": "public function getSelf(): self {",
+            "declarationLine": "public function getSelf(): self",
             "documentation": null,
             "signatureInformation": {
                 "label": "()",
@@ -98,7 +98,7 @@
             },
             "type__tostring": "string",
             "type": {},
-            "declarationLine": "public function getName(): string {",
+            "declarationLine": "public function getName(): string",
             "documentation": null,
             "signatureInformation": {
                 "label": "()",
@@ -123,7 +123,7 @@
             },
             "type__tostring": "\\parent",
             "type": {},
-            "declarationLine": "public function getParent(): parent {",
+            "declarationLine": "public function getParent(): parent",
             "documentation": null,
             "signatureInformation": {
                 "label": "()",

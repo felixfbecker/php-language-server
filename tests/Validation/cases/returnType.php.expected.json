@@ -45,7 +45,7 @@
             },
             "type__tostring": "\\TestNamespace\\TestClass",
             "type": {},
-            "declarationLine": "function whatever(TestClass $param): TestClass2 {",
+            "declarationLine": "function whatever(TestClass $param): TestClass2",
             "documentation": "Aute duis elit reprehenderit tempor cillum proident anim laborum eu laboris reprehenderit ea incididunt.",
             "signatureInformation": {
                 "label": "(\\TestNamespace\\TestClass $param)",

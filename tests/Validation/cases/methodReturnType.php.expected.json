@@ -42,7 +42,7 @@
             },
             "type__tostring": "\\FooClass",
             "type": {},
-            "declarationLine": "public function foo(): FooClass {",
+            "declarationLine": "public function foo(): FooClass",
             "documentation": null,
             "signatureInformation": {
                 "label": "()",
@@ -67,7 +67,7 @@
             },
             "type__tostring": "\\FooClass",
             "type": {},
-            "declarationLine": "public function bar() { }",
+            "declarationLine": "public function bar()",
             "documentation": "",
             "signatureInformation": {
                 "label": "()",

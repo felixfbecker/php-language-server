@@ -117,3 +117,15 @@ class UnusedClass
     {        
     }
 }
+
+class TestClass2
+{
+
+    public function testMultilineMethod(
+        $param1,
+        $param2,
+        $param3
+    ) {
+        
+    }
+}

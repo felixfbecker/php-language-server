@@ -71,7 +71,7 @@
             },
             "type__tostring": "mixed",
             "type": {},
-            "declarationLine": "function b() {",
+            "declarationLine": "function b()",
             "documentation": null,
             "signatureInformation": {
                 "label": "()",
@@ -138,7 +138,7 @@
             },
             "type__tostring": "mixed",
             "type": {},
-            "declarationLine": "function a () {",
+            "declarationLine": "function a ()",
             "documentation": null,
             "signatureInformation": {
                 "label": "()",
