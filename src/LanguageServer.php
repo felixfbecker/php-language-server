@@ -107,6 +107,20 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
     protected $definitionResolver;
 
     /**
+     * Reported root path
+     * 
+     * @var string|null
+     */
+    protected $rootPath;
+
+    /**
+     * The indexer
+     * 
+     * @var Indexer
+     */
+    protected Indexer $indexer;
+
+    /**
      * @param ProtocolReader  $reader
      * @param ProtocolWriter $writer
      */
@@ -170,6 +184,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
         if ($rootPath === null && $rootUri !== null) {
             $rootPath = uriToPath($rootUri);
         }
+        $this->rootPath = $rootPath;
         return coroutine(function () use ($capabilities, $rootPath, $processId) {
 
             if ($capabilities->xfilesProvider) {
@@ -225,7 +240,7 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                 $cache = $capabilities->xcacheProvider ? new ClientCache($this->client) : new FileSystemCache;
 
                 // Index in background
-                $indexer = new Indexer(
+                $this->indexer = new Indexer(
                     $this->filesFinder,
                     $rootPath,
                     $this->client,
@@ -234,9 +249,9 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
                     $sourceIndex,
                     $this->documentLoader,
                     $this->composerLock,
-                    $this->composerJson
+                    $this->composerJson,
+                    $capabilities->window->workDoneProgress
                 );
-                $indexer->index()->otherwise('\\LanguageServer\\crash');
             }
 
 
@@ -290,6 +305,22 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
 
             return new InitializeResult($serverCapabilities);
         });
+    }
+
+    /**
+     * The initialized notification is sent from the client to the server after the client received the
+     * result of the initialize request but before the client is sending any other request or notification 
+     * to the server. The server can use the initialized notification for example to dynamically register
+     * capabilities. The initialized notification may only be sent once.
+     * 
+     * @return Promise <void>
+     */
+    public function initialized(): Promise
+    {
+        $this->client->window->logMessage(\LanguageServerProtocol\MessageType::INFO, "OK!");
+        if ($this->indexer) {
+            $this->indexer->index()->otherwise('\\LanguageServer\\crash');
+        }
     }
 
     /**
