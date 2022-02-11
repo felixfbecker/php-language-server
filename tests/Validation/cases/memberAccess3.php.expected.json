@@ -90,7 +90,8 @@
                         "label": "\\MyNamespace\\ClassLoader $loader",
                         "documentation": null
                     }
-                ]
+                ],
+                "activeParameter": null
             }
         }
     }

@@ -96,7 +96,8 @@
                         "label": "mixed $testParameter",
                         "documentation": null
                     }
-                ]
+                ],
+                "activeParameter": null
             }
         }
     }

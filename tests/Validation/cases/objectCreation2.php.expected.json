@@ -90,7 +90,8 @@
             "signatureInformation": {
                 "label": "()",
                 "documentation": null,
-                "parameters": []
+                "parameters": [],
+                "activeParameter": null
             }
         }
     }

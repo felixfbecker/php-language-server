@@ -78,7 +78,8 @@
                         "label": "\\MyNamespace\\AccountInterface $account",
                         "documentation": null
                     }
-                ]
+                ],
+                "activeParameter": null
             }
         }
     }

@@ -74,7 +74,11 @@ class ParseErrorsTest extends TestCase
                 'severity' => DiagnosticSeverity::ERROR,
                 'code' => null,
                 'source' => 'php',
-                'message' => "'Name' expected."
+                'message' => "'Name' expected.",
+                'codeDescription' => null,
+                'tags' => null,
+                'relatedInformation' => null,
+                'data' => null
             ],
             [
                 'range' => [
@@ -90,7 +94,11 @@ class ParseErrorsTest extends TestCase
                 'severity' => DiagnosticSeverity::ERROR,
                 'code' => null,
                 'source' => 'php',
-                'message' => "'{' expected."
+                'message' => "'{' expected.",
+                'codeDescription' => null,
+                'tags' => null,
+                'relatedInformation' => null,
+                'data' => null
             ],
             [
                 'range' => [
@@ -106,7 +114,11 @@ class ParseErrorsTest extends TestCase
                 'severity' => DiagnosticSeverity::ERROR,
                 'code' => null,
                 'source' => 'php',
-                'message' => "'}' expected."
+                'message' => "'}' expected.",
+                'codeDescription' => null,
+                'tags' => null,
+                'relatedInformation' => null,
+                'data' => null
             ],
             [
                 'range' => [
@@ -122,7 +134,11 @@ class ParseErrorsTest extends TestCase
                 'severity' => DiagnosticSeverity::ERROR,
                 'code' => null,
                 'source' => 'php',
-                'message' => "'Name' expected."
+                'message' => "'Name' expected.",
+                'codeDescription' => null,
+                'tags' => null,
+                'relatedInformation' => null,
+                'data' => null
             ]]
         ], json_decode(json_encode($this->args), true));
     }

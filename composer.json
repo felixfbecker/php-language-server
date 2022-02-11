@@ -20,11 +20,17 @@
             "email": "felix.b@outlook.com"
         }
     ],
+    "repositories": [
+        {
+            "type": "git",
+            "url": "https://github.com/zobo/php-language-server-protocol"
+        }
+    ],
     "require": {
-        "php": "^7.0",
+        "php": ">=7.4",
         "composer/xdebug-handler": "^1.0",
         "felixfbecker/advanced-json-rpc": "^3.0.0",
-        "felixfbecker/language-server-protocol": "^1.0.1",
+        "felixfbecker/language-server-protocol": "dev-main",
         "jetbrains/phpstorm-stubs": "dev-master",
         "microsoft/tolerant-php-parser": "^0.1.1",
         "netresearch/jsonmapper": "^1.0",

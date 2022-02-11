@@ -6,3 +6,5 @@ composer.lock
 stubs
 *.ast
 node_modules/
+coverage.xml
+.phpunit.result.cache

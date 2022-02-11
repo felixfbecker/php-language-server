@@ -28,7 +28,8 @@
                         "label": "int|string $par",
                         "documentation": null
                     }
-                ]
+                ],
+                "activeParameter": null
             }
         }
     }

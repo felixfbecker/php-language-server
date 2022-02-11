@@ -43,7 +43,8 @@
             "signatureInformation": {
                 "label": "()",
                 "documentation": "Foo",
-                "parameters": []
+                "parameters": [],
+                "activeParameter": null
             }
         }
     }
