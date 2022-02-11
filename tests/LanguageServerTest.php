@@ -8,6 +8,7 @@ use LanguageServer\LanguageServer;
 use LanguageServer\Message;
 use LanguageServerProtocol\{
     ClientCapabilities,
+    ClientCapabilitiesWindow,
     TextDocumentSyncKind,
     MessageType,
     TextDocumentItem,
@@ -55,7 +56,7 @@ class LanguageServerTest extends TestCase
         $promise = new Promise;
         $input = new MockProtocolStream;
         $output = new MockProtocolStream;
-        $output->on('message', function (Message $msg) use ($promise) {
+        $output->on('message', function (Message $msg) use ($promise, $input) {
             if ($msg->body->method === 'window/logMessage' && $promise->state === Promise::PENDING) {
                 if ($msg->body->params->type === MessageType::ERROR) {
                     $promise->reject(new Exception($msg->body->params->message));
@@ -63,12 +64,18 @@ class LanguageServerTest extends TestCase
                     $promise->fulfill();
                 }
             }
+            if ($msg->body->method === 'window/workDoneProgress/create') {
+                $input->write(new Message(new AdvancedJsonRpc\SuccessResponse($msg->body->id, [])));
+            }
         });
         $server = new LanguageServer($input, $output);
         $capabilities = new ClientCapabilities;
+        $capabilities->window = new ClientCapabilitiesWindow();
+        $capabilities->window->workDoneProgress = true; 
         $server->initialize($capabilities, realpath(__DIR__ . '/../fixtures'), getmypid())->wait();
         $server->initialized();
         $promise->wait();
+        $this->assertTrue(true);
     }
 
     public function testIndexingWithFilesAndContentRequests()
