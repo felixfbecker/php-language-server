@@ -71,7 +71,7 @@ class LanguageServerTest extends TestCase
         $server = new LanguageServer($input, $output);
         $capabilities = new ClientCapabilities;
         $capabilities->window = new ClientCapabilitiesWindow();
-        $capabilities->window->workDoneProgress = true; 
+        $capabilities->window->workDoneProgress = true;
         $server->initialize($capabilities, realpath(__DIR__ . '/../fixtures'), getmypid())->wait();
         $server->initialized();
         $promise->wait();
