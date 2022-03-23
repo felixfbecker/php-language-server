@@ -1368,6 +1368,25 @@ class DefinitionResolver
 
         // INPUT                        OUTPUT
         // namespace A\B;
+        // class C {
+        //   public function __construct(
+        //     public string $a         A\B\C->$a
+        //   ) {}
+        // }
+        if (
+            (ParserHelpers\isPromotedConstructorParameter($node)) &&
+            ($classDeclaration =
+                $node->getFirstAncestor(
+                    Node\Expression\ObjectCreationExpression::class,
+                    PhpParser\ClassLike::class
+                )
+            ) !== null && isset($classDeclaration->name)) {
+            $name = $node->getName();
+            return (string)$classDeclaration->getNamespacedName() . '->' . $name;
+        }
+
+        // INPUT                        OUTPUT
+        // namespace A\B;
         // const FOO = 5;               A\B\FOO
         // class C {
         //   const $a, $b = 4           A\B\C::$a(), A\B\C::$b

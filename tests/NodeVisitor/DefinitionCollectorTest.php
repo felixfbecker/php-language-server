@@ -58,6 +58,25 @@ class DefinitionCollectorTest extends TestCase
         $this->assertInstanceOf(Node\Statement\ClassDeclaration::class, $defNodes['TestNamespace\\InnerNamespace\\InnerClass']);
     }
 
+    public function testCollectsSymbolsPHP8()
+    {
+        $path = realpath(__DIR__ . '/../../fixtures/symbols_php8.php');
+        $defNodes = $this->collectDefinitions($path);
+
+        $this->assertEquals([
+            'TestNamespace8',
+            'TestNamespace8\\PromotedProperties',
+            'TestNamespace8\\PromotedProperties->__construct()',
+            'TestNamespace8\\PromotedProperties->untyped',
+            'TestNamespace8\\PromotedProperties->name',
+        ], array_keys($defNodes));
+
+        $this->assertInstanceOf(Node\Statement\ClassDeclaration::class, $defNodes['TestNamespace8\\PromotedProperties']);
+        $this->assertInstanceOf(Node\MethodDeclaration::class, $defNodes['TestNamespace8\\PromotedProperties->__construct()']);
+        $this->assertInstanceOf(Node\Parameter::class, $defNodes['TestNamespace8\\PromotedProperties->untyped']);
+        $this->assertInstanceOf(Node\Parameter::class, $defNodes['TestNamespace8\\PromotedProperties->name']);
+    }
+
     public function testDoesNotCollectReferences()
     {
         $path = realpath(__DIR__ . '/../../fixtures/references.php');

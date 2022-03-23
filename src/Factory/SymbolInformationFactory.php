@@ -45,6 +45,8 @@ class SymbolInformationFactory
             }
         } else if ($node instanceof Node\Expression\Variable && $node->getFirstAncestor(Node\PropertyDeclaration::class) !== null) {
             $symbol->kind = SymbolKind::PROPERTY;
+        } else if (\LanguageServer\ParserHelpers\isPromotedConstructorParameter($node)) {
+            $symbol->kind = SymbolKind::PROPERTY;
         } else if ($node instanceof Node\ConstElement) {
             $symbol->kind = SymbolKind::CONSTANT;
         } else if (
@@ -75,7 +77,7 @@ class SymbolInformationFactory
                 $symbol->name = ltrim((string)$node->name->getText($node->getFileContents()), "$");
             }
         } else if (isset($node->variableName)) {
-            $symbol->name = $node->variableName->getText($node);
+            $symbol->name = trim($node->variableName->getText($node->getFileContents()), "$");
         } else if (!isset($symbol->name)) {
             return null;
         }

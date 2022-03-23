@@ -1,0 +1,122 @@
+{
+    "references": [],
+    "definitions": {
+        "TestNamespace8": {
+            "fqn": "TestNamespace8",
+            "extends": [],
+            "isMember": false,
+            "roamed": false,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "TestNamespace8",
+                "kind": 3,
+                "location": {
+                    "uri": "./promotedConstructor.php"
+                },
+                "containerName": ""
+            },
+            "type": null,
+            "declarationLine": "namespace TestNamespace8;",
+            "documentation": null,
+            "signatureInformation": null
+        },
+        "TestNamespace8\\PromotedProperties": {
+            "fqn": "TestNamespace8\\PromotedProperties",
+            "extends": [],
+            "isMember": false,
+            "roamed": false,
+            "isStatic": false,
+            "canBeInstantiated": true,
+            "symbolInformation": {
+                "name": "PromotedProperties",
+                "kind": 5,
+                "location": {
+                    "uri": "./promotedConstructor.php"
+                },
+                "containerName": "TestNamespace8"
+            },
+            "type": null,
+            "declarationLine": "class PromotedProperties {",
+            "documentation": null,
+            "signatureInformation": null
+        },
+        "TestNamespace8\\PromotedProperties->__construct()": {
+            "fqn": "TestNamespace8\\PromotedProperties->__construct()",
+            "extends": [],
+            "isMember": true,
+            "roamed": false,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "__construct",
+                "kind": 9,
+                "location": {
+                    "uri": "./promotedConstructor.php"
+                },
+                "containerName": "TestNamespace8\\PromotedProperties"
+            },
+            "type__tostring": "mixed",
+            "type": {},
+            "declarationLine": "public function __construct( public $untyped, public string $name = 'Damjan', )",
+            "documentation": null,
+            "signatureInformation": {
+                "label": "(mixed $untyped, string $name = 'Damjan')",
+                "documentation": null,
+                "parameters": [
+                    {
+                        "label": "mixed $untyped",
+                        "documentation": null
+                    },
+                    {
+                        "label": "string $name = 'Damjan'",
+                        "documentation": null
+                    }
+                ],
+                "activeParameter": null
+            }
+        },
+        "TestNamespace8\\PromotedProperties->untyped": {
+            "fqn": "TestNamespace8\\PromotedProperties->untyped",
+            "extends": [],
+            "isMember": true,
+            "roamed": false,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "untyped",
+                "kind": 7,
+                "location": {
+                    "uri": "./promotedConstructor.php"
+                },
+                "containerName": "TestNamespace8\\PromotedProperties"
+            },
+            "type__tostring": "mixed",
+            "type": {},
+            "declarationLine": "public $untyped",
+            "documentation": null,
+            "signatureInformation": null
+        },
+        "TestNamespace8\\PromotedProperties->name": {
+            "fqn": "TestNamespace8\\PromotedProperties->name",
+            "extends": [],
+            "isMember": true,
+            "roamed": false,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "name",
+                "kind": 7,
+                "location": {
+                    "uri": "./promotedConstructor.php"
+                },
+                "containerName": "TestNamespace8\\PromotedProperties"
+            },
+            "type__tostring": "string",
+            "type": {},
+            "declarationLine": "public string $name = 'Damjan'",
+            "documentation": null,
+            "signatureInformation": null
+        }
+    }
+}

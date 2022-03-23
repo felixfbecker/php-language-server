@@ -114,3 +114,17 @@ function isConstDefineExpression(Node $node): bool
         && $node->argumentExpressionList->children[0]->expression instanceof Node\StringLiteral
         && isset($node->argumentExpressionList->children[2]);
 }
+
+/**
+ * Returns true if the node is a promoted constructor parameter
+ * https://www.php.net/manual/en/language.oop5.decon.php#language.oop5.decon.constructor.promotion
+ * @param Node $node
+ * @return bool
+ */
+function isPromotedConstructorParameter(Node $node): bool
+{
+    return ($node instanceof Node\Parameter) &&
+    ($node->visibilityToken !== null) &&
+    ($node->parent && $node->parent->parent instanceof Node\MethodDeclaration) &&
+    ($node->parent->parent->getName() === '__construct');
+}
