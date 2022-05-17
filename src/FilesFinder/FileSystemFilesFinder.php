@@ -21,7 +21,7 @@ class FileSystemFilesFinder implements FilesFinder
     {
         return coroutine(function () use ($glob) {
             $uris = [];
-            foreach (new GlobIterator($glob) as $path) {
+            foreach (new GlobIterator($glob, 0, true) as $path) {
                 // Exclude any directories that also match the glob pattern
                 if (!is_dir($path)) {
                     $uris[] = pathToUri($path);
