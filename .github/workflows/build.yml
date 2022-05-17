@@ -16,7 +16,7 @@ jobs:
             php: '7.4'
             os: ubuntu-18.04
           - xdebug: xdebug-3.1.1 # renovate:keep-up-to-date
-            php: '8.0'
+            php: '8.1'
             os: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
