@@ -24,10 +24,6 @@
         {
             "type": "git",
             "url": "https://github.com/zobo/php-language-server-protocol"
-        },
-        {
-            "type": "git",
-            "url": "https://github.com/zobo/glob.git"
         }
     ],
     "require": {
@@ -42,7 +38,7 @@
         "psr/log": "^1.0",
         "sabre/event": "^5.0",
         "sabre/uri": "^2.0",
-        "webmozart/glob": "dev-feat-skip-errors as 4.6",
+        "webmozart/glob": "^4.6",
         "webmozart/path-util": "^2.3"
     },
     "require-dev": {
