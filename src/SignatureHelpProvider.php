@@ -55,7 +55,7 @@ class SignatureHelpProvider
             list($def, $argumentExpressionList) = yield $this->getCallingInfo($node);
 
             if (!$def || !$def->signatureInformation) {
-                return new SignatureHelp();
+                return null;
             }
 
             // Find the active parameter

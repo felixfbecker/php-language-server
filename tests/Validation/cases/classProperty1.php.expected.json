@@ -90,14 +90,11 @@
             "documentation": null,
             "signatureInformation": {
                 "label": "(mixed $testParameter)",
-                "documentation": null,
                 "parameters": [
                     {
-                        "label": "mixed $testParameter",
-                        "documentation": null
+                        "label": "mixed $testParameter"
                     }
-                ],
-                "activeParameter": null
+                ]
             }
         }
     }

@@ -46,9 +46,7 @@
             "documentation": null,
             "signatureInformation": {
                 "label": "()",
-                "documentation": null,
-                "parameters": [],
-                "activeParameter": null
+                "parameters": []
             }
         },
         "FooClass::staticSelf()": {
@@ -72,9 +70,7 @@
             "documentation": null,
             "signatureInformation": {
                 "label": "()",
-                "documentation": null,
-                "parameters": [],
-                "activeParameter": null
+                "parameters": []
             }
         },
         "FooClass->bar()": {
@@ -98,9 +94,7 @@
             "documentation": null,
             "signatureInformation": {
                 "label": "()",
-                "documentation": null,
-                "parameters": [],
-                "activeParameter": null
+                "parameters": []
             }
         }
     }

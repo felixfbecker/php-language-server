@@ -48,7 +48,7 @@ class SignatureHelpTest extends TestCase
     /**
      * @dataProvider signatureHelpProvider
      */
-    public function testSignatureHelp(Position $position, SignatureHelp $expectedSignature)
+    public function testSignatureHelp(Position $position, ?SignatureHelp $expectedSignature)
     {
         $callsUri = pathToUri(__DIR__ . '/../../../fixtures/signature_help/calls.php');
         $this->loader->open($callsUri, file_get_contents($callsUri));
@@ -180,19 +180,19 @@ class SignatureHelpTest extends TestCase
             ],
             'no signature help' => [
                 new Position(0, 0),
-                new SignatureHelp(),
+                null,
             ],
             'construct from non fqn (not supported)' => [
                 new Position(62, 9),
-                new SignatureHelp(),
+                null,
             ],
             'construct from non fqn (not supported) argument expression' => [
                 new Position(63, 11),
-                new SignatureHelp(),
+                null,
             ],
             'invalid var' => [
                 new Position(65, 13),
-                new SignatureHelp(),
+                null,
             ],
         ];
     }

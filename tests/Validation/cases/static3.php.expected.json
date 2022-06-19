@@ -72,9 +72,7 @@
             "documentation": null,
             "signatureInformation": {
                 "label": "()",
-                "documentation": null,
-                "parameters": [],
-                "activeParameter": null
+                "parameters": []
             }
         },
         "MyNamespace\\A": {
@@ -120,9 +118,7 @@
             "documentation": null,
             "signatureInformation": {
                 "label": "()",
-                "documentation": null,
-                "parameters": [],
-                "activeParameter": null
+                "parameters": []
             }
         }
     }

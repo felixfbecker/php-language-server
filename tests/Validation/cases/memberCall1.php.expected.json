@@ -72,14 +72,11 @@
             "documentation": null,
             "signatureInformation": {
                 "label": "(\\MyNamespace\\AccountInterface $account)",
-                "documentation": null,
                 "parameters": [
                     {
-                        "label": "\\MyNamespace\\AccountInterface $account",
-                        "documentation": null
+                        "label": "\\MyNamespace\\AccountInterface $account"
                     }
-                ],
-                "activeParameter": null
+                ]
             }
         }
     }

@@ -84,14 +84,11 @@
             "documentation": null,
             "signatureInformation": {
                 "label": "(\\MyNamespace\\ClassLoader $loader)",
-                "documentation": null,
                 "parameters": [
                     {
-                        "label": "\\MyNamespace\\ClassLoader $loader",
-                        "documentation": null
+                        "label": "\\MyNamespace\\ClassLoader $loader"
                     }
-                ],
-                "activeParameter": null
+                ]
             }
         }
     }

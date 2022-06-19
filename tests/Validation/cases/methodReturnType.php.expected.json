@@ -46,9 +46,7 @@
             "documentation": null,
             "signatureInformation": {
                 "label": "()",
-                "documentation": null,
-                "parameters": [],
-                "activeParameter": null
+                "parameters": []
             }
         },
         "FooClass->bar()": {
@@ -73,8 +71,7 @@
             "signatureInformation": {
                 "label": "()",
                 "documentation": "",
-                "parameters": [],
-                "activeParameter": null
+                "parameters": []
             }
         }
     }

@@ -77,9 +77,7 @@
             "documentation": null,
             "signatureInformation": {
                 "label": "()",
-                "documentation": null,
-                "parameters": [],
-                "activeParameter": null
+                "parameters": []
             }
         },
         "Fixtures\\Prophecy\\WithReturnTypehints->getName()": {
@@ -103,9 +101,7 @@
             "documentation": null,
             "signatureInformation": {
                 "label": "()",
-                "documentation": null,
-                "parameters": [],
-                "activeParameter": null
+                "parameters": []
             }
         },
         "Fixtures\\Prophecy\\WithReturnTypehints->getParent()": {
@@ -129,9 +125,7 @@
             "documentation": null,
             "signatureInformation": {
                 "label": "()",
-                "documentation": null,
-                "parameters": [],
-                "activeParameter": null
+                "parameters": []
             }
         }
     }

@@ -62,18 +62,14 @@
             "documentation": null,
             "signatureInformation": {
                 "label": "(mixed $untyped, string $name = 'Damjan')",
-                "documentation": null,
                 "parameters": [
                     {
-                        "label": "mixed $untyped",
-                        "documentation": null
+                        "label": "mixed $untyped"
                     },
                     {
-                        "label": "string $name = 'Damjan'",
-                        "documentation": null
+                        "label": "string $name = 'Damjan'"
                     }
-                ],
-                "activeParameter": null
+                ]
             }
         },
         "TestNamespace8\\PromotedProperties->untyped": {

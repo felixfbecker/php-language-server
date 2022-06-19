@@ -46,14 +46,11 @@
             "documentation": null,
             "signatureInformation": {
                 "label": "(\\MY_CONSTANT $a = MY_CONSTANT)",
-                "documentation": null,
                 "parameters": [
                     {
-                        "label": "\\MY_CONSTANT $a = MY_CONSTANT",
-                        "documentation": null
+                        "label": "\\MY_CONSTANT $a = MY_CONSTANT"
                     }
-                ],
-                "activeParameter": null
+                ]
             }
         }
     }

@@ -46,14 +46,11 @@
             "documentation": null,
             "signatureInformation": {
                 "label": "(\\MyNamespace\\Hi $view)",
-                "documentation": null,
                 "parameters": [
                     {
-                        "label": "\\MyNamespace\\Hi $view",
-                        "documentation": null
+                        "label": "\\MyNamespace\\Hi $view"
                     }
-                ],
-                "activeParameter": null
+                ]
             }
         }
     }

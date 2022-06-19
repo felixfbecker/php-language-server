@@ -22,14 +22,11 @@
             "documentation": null,
             "signatureInformation": {
                 "label": "(int|string $par)",
-                "documentation": null,
                 "parameters": [
                     {
-                        "label": "int|string $par",
-                        "documentation": null
+                        "label": "int|string $par"
                     }
-                ],
-                "activeParameter": null
+                ]
             }
         }
     }
