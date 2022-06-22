@@ -15,4 +15,8 @@ class WithReturnTypehints extends EmptyClass
     public function getParent(): parent {
         return $this;
     }
+    
+    public function getStatic(): static {
+        return $this;
+    }
 }

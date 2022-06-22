@@ -119,9 +119,33 @@
                 },
                 "containerName": "Fixtures\\Prophecy\\WithReturnTypehints"
             },
-            "type__tostring": "\\parent",
+            "type__tostring": "\\Fixtures\\Prophecy\\EmptyClass",
             "type": {},
             "declarationLine": "public function getParent(): parent",
+            "documentation": null,
+            "signatureInformation": {
+                "label": "()",
+                "parameters": []
+            }
+        },
+        "Fixtures\\Prophecy\\WithReturnTypehints->getStatic()": {
+            "fqn": "Fixtures\\Prophecy\\WithReturnTypehints->getStatic()",
+            "extends": [],
+            "isMember": true,
+            "roamed": false,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "getStatic",
+                "kind": 6,
+                "location": {
+                    "uri": "./WithReturnTypehints.php"
+                },
+                "containerName": "Fixtures\\Prophecy\\WithReturnTypehints"
+            },
+            "type__tostring": "static",
+            "type": {},
+            "declarationLine": "public function getStatic(): static",
             "documentation": null,
             "signatureInformation": {
                 "label": "()",

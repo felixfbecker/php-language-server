@@ -1,5 +1,8 @@
 {
     "references": {
+        "EmptyClass": [
+            "./methodReturnType.php"
+        ],
         "FooClass": [
             "./methodReturnType.php"
         ]
@@ -7,7 +10,9 @@
     "definitions": {
         "FooClass": {
             "fqn": "FooClass",
-            "extends": [],
+            "extends": [
+                "EmptyClass"
+            ],
             "isMember": false,
             "roamed": false,
             "isStatic": false,
@@ -21,7 +26,7 @@
                 "containerName": ""
             },
             "type": null,
-            "declarationLine": "class FooClass {",
+            "declarationLine": "class FooClass extends EmptyClass",
             "documentation": null,
             "signatureInformation": null
         },
@@ -67,6 +72,56 @@
             "type__tostring": "\\FooClass",
             "type": {},
             "declarationLine": "public function bar()",
+            "documentation": "",
+            "signatureInformation": {
+                "label": "()",
+                "documentation": "",
+                "parameters": []
+            }
+        },
+        "FooClass->baz()": {
+            "fqn": "FooClass->baz()",
+            "extends": [],
+            "isMember": true,
+            "roamed": false,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "baz",
+                "kind": 6,
+                "location": {
+                    "uri": "./methodReturnType.php"
+                },
+                "containerName": "FooClass"
+            },
+            "type__tostring": "static",
+            "type": {},
+            "declarationLine": "public function baz()",
+            "documentation": "",
+            "signatureInformation": {
+                "label": "()",
+                "documentation": "",
+                "parameters": []
+            }
+        },
+        "FooClass->buz()": {
+            "fqn": "FooClass->buz()",
+            "extends": [],
+            "isMember": true,
+            "roamed": false,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "buz",
+                "kind": 6,
+                "location": {
+                    "uri": "./methodReturnType.php"
+                },
+                "containerName": "FooClass"
+            },
+            "type__tostring": "\\EmptyClass",
+            "type": {},
+            "declarationLine": "public function buz()",
             "documentation": "",
             "signatureInformation": {
                 "label": "()",
