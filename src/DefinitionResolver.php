@@ -239,6 +239,17 @@ class DefinitionResolver
             }
         }
 
+        if ($node instanceof Node\Statement\ClassDeclaration &&
+            $node->classMembers !== null && $node->classMembers->classMemberDeclarations !== null) {
+            foreach ($node->classMembers->classMemberDeclarations as $dec) {
+                if ($dec instanceof Node\TraitUseClause) {
+                    foreach ($dec->traitNameList->getValues() as $n) {
+                        $def->extends[] = (string)$n->getNamespacedName();
+                    }
+                }
+            }
+        }
+
         $def->symbolInformation = SymbolInformationFactory::fromNode($node, $fqn);
 
         if ($def->symbolInformation !== null) {
@@ -314,6 +325,17 @@ class DefinitionResolver
         // http://php.net/manual/en/language.namespaces.fallback.php
         // TODO - verify that this is not a method
         $globalFallback = ParserHelpers\isConstantFetch($node) || $parent instanceof Node\Expression\CallExpression;
+
+        // Check special case parent::func() where we are actually accessing non-static parent member
+        if (
+            $node instanceof Node\Expression\ScopedPropertyAccessExpression
+            && $node->scopeResolutionQualifier->getText() === 'parent'
+        ) {
+            $def = $this->index->getDefinition(\str_replace('::', '->', $fqn));
+            if ($def !== null) {
+                return $def;
+            }
+        }
 
         // Return the Definition object from the index index
         return $this->index->getDefinition($fqn, $globalFallback);
@@ -494,10 +516,10 @@ class DefinitionResolver
             }
             if ($className === 'parent') {
                 // parent is resolved to the parent class
-                if (!isset($classNode->extends)) {
+                if (!isset($classNode->classBaseClause) || !isset($classNode->classBaseClause->baseClass)) {
                     return null;
                 }
-                $className = (string)$classNode->extends->getResolvedName();
+                $className = (string)$classNode->classBaseClause->baseClass->getResolvedName();
             } else {
                 $className = (string)$classNode->getNamespacedName();
             }
