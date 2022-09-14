@@ -104,6 +104,10 @@ if (!empty($options['tcp'])) {
     }
 } else {
     // Use STDIO
+    if (defined('PHP_WINDOWS_VERSION_BUILD')) {
+        $logger->emergency('Listening on STDIN not supported on Windows');
+        exit(1);
+    }
     $logger->debug('Listening on STDIN');
     stream_set_blocking(STDIN, false);
     $ls = new LanguageServer(
