@@ -597,6 +597,11 @@ class DefinitionResolver
             return null;
         }
 
+        // First check the direct parent of the node if it's an assignment
+        if ($var->parent !== null && self::isVariableDeclaration($var->parent, $name)) {
+            return $var->parent;
+        }
+
         $shouldDescend = function ($nodeToDescand) {
             // Make sure not to decend into functions or classes (they represent a scope boundary)
             return !($nodeToDescand instanceof PhpParser\FunctionLike || $nodeToDescand instanceof PhpParser\ClassLike);
@@ -1273,6 +1278,7 @@ class DefinitionResolver
                 ParserHelpers\tryGetPropertyDeclaration($node) ??
                 ParserHelpers\tryGetConstOrClassConstDeclaration($node)
             ) !== null ||
+            $node instanceof Node\Expression\AssignmentExpression ||
             ($node = $node->parent) instanceof Node\Expression\AssignmentExpression) {
             $declarationNode = $declarationNode ?? $node;
 
