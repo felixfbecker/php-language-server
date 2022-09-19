@@ -52,7 +52,7 @@ class ComposerScripts
 
                 // Change URI to phpstubs://
                 $parts = Uri\parse($uri);
-                $parts['path'] = Path::makeRelative($parts['path'], $stubsLocation);
+                $parts['path'] = Path::makeRelative(uriToPath($uri), $stubsLocation);
                 $parts['scheme'] = 'phpstubs';
                 $uri = Uri\build($parts);
 

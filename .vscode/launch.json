@@ -8,7 +8,8 @@
       "program": "${workspaceRoot}/vendor/phpunit/phpunit/phpunit",
       // "args": ["--filter", "testDefinitionForSelfKeyword"],
       "cwd": "${workspaceRoot}",
-      "runtimeArgs": ["-dxdebug.mode=debug", "-dxdebug.start_with_request=1"]
+      "port": 0,
+      "runtimeArgs": ["-dxdebug.mode=debug", "-dxdebug.start_with_request=1", "-dxdebug.client_port=${port}"]
     },
     {
       "name": "Listen for XDebug",

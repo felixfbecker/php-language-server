@@ -5,8 +5,9 @@ namespace LanguageServer\FilesFinder;
 
 use LanguageServer\LanguageClient;
 use Sabre\Event\Promise;
-use Sabre\Uri;
 use Webmozart\Glob\Glob;
+use Webmozart\PathUtil\Path;
+use function LanguageServer\uriToPath;
 
 /**
  * Retrieves file content from the client through a textDocument/xcontent request
@@ -38,7 +39,7 @@ class ClientFilesFinder implements FilesFinder
         return $this->client->workspace->xfiles()->then(function (array $textDocuments) use ($glob) {
             $uris = [];
             foreach ($textDocuments as $textDocument) {
-                $path = Uri\parse($textDocument->uri)['path'];
+                $path = Path::normalize(uriToPath($textDocument->uri));
                 if (Glob::match($path, $glob)) {
                     $uris[] = $textDocument->uri;
                 }
