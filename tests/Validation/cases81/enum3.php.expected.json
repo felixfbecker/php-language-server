@@ -1,0 +1,89 @@
+{
+    "references": [],
+    "definitions": {
+        "MyNamespace": {
+            "fqn": "MyNamespace",
+            "extends": [],
+            "isMember": false,
+            "roamed": false,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "MyNamespace",
+                "kind": 3,
+                "location": {
+                    "uri": ".81/enum3.php"
+                },
+                "containerName": ""
+            },
+            "type": null,
+            "declarationLine": "namespace MyNamespace;",
+            "documentation": null,
+            "signatureInformation": null
+        },
+        "MyNamespace\\Test3Enum": {
+            "fqn": "MyNamespace\\Test3Enum",
+            "extends": [
+                "UnitEnum"
+            ],
+            "isMember": false,
+            "roamed": false,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "Test3Enum",
+                "kind": 10,
+                "location": {
+                    "uri": ".81/enum3.php"
+                },
+                "containerName": "MyNamespace"
+            },
+            "type": null,
+            "declarationLine": "enum Test3Enum",
+            "documentation": null,
+            "signatureInformation": null
+        },
+        "MyNamespace\\Test3Enum::EnumCase1": {
+            "fqn": "MyNamespace\\Test3Enum::EnumCase1",
+            "extends": [],
+            "isMember": true,
+            "roamed": false,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "EnumCase1",
+                "kind": 10,
+                "location": {
+                    "uri": ".81/enum3.php"
+                },
+                "containerName": "MyNamespace\\Test3Enum"
+            },
+            "type__tostring": "\\MyNamespace\\Test3Enum",
+            "type": {},
+            "declarationLine": "case EnumCase1;",
+            "documentation": null,
+            "signatureInformation": null
+        },
+        "MyNamespace\\Test3Enum::EnumCase2": {
+            "fqn": "MyNamespace\\Test3Enum::EnumCase2",
+            "extends": [],
+            "isMember": true,
+            "roamed": false,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "EnumCase2",
+                "kind": 10,
+                "location": {
+                    "uri": ".81/enum3.php"
+                },
+                "containerName": "MyNamespace\\Test3Enum"
+            },
+            "type__tostring": "\\MyNamespace\\Test3Enum",
+            "type": {},
+            "declarationLine": "case EnumCase2;",
+            "documentation": null,
+            "signatureInformation": null
+        }
+    }
+}

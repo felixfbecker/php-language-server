@@ -258,6 +258,17 @@ class DefinitionResolver
             $def->documentation = $this->getDocumentationFromNode($node);
         }
 
+        if ($node instanceof Node\Statement\EnumDeclaration) {
+            $enumType = $node->enumType ? $this->typeResolver->resolve($node->enumType->getText($node->getFileContents())) : null;
+            if ($enumType instanceof Types\String_) {
+                $def->extends[] = "StringBackedEnum";
+            } else if ($enumType instanceof Types\Integer) {
+                $def->extends[] = "IntBackedEnum";
+            } else {
+                $def->extends[] = "UnitEnum";
+            }
+        }
+
         if ($node instanceof FunctionLike) {
             $def->signatureInformation = $this->signatureInformationFactory->create($node);
         }
@@ -534,14 +545,44 @@ class DefinitionResolver
             if (empty($memberName)) {
                 return null;
             }
-            $name = (string)$className . '::$' . $memberName;
+            $memberSuffix = '::$' . $memberName;
         } else {
-            $name = (string)$className . '::' . $scoped->memberName->getText($scoped->getFileContents());
+            $memberSuffix = '::' . $scoped->memberName->getText($scoped->getFileContents());
         }
         if ($scoped->parent instanceof Node\Expression\CallExpression) {
-            $name .= '()';
+            $memberSuffix .= '()';
         }
-        return $name;
+
+        $classFqn = (string)$className;
+        // Find the right class that implements the member
+        $implementorFqns = [$classFqn];
+        $visitedFqns = [];
+
+        while ($implementorFqn = array_shift($implementorFqns)) {
+            // If the member FQN exists, return it
+            if ($this->index->getDefinition($implementorFqn . $memberSuffix)) {
+                return $implementorFqn . $memberSuffix;
+            }
+            // Get Definition of implementor class
+            $implementorDef = $this->index->getDefinition($implementorFqn);
+            // If it doesn't exist, return the initial guess
+            if ($implementorDef === null) {
+                break;
+            }
+            // Note the FQN as visited
+            $visitedFqns[] = $implementorFqn;
+            // Repeat for parent class
+            if ($implementorDef->extends) {
+                foreach ($implementorDef->extends as $extends) {
+                    // Don't add the parent FQN if it's already been visited
+                    if (!\in_array($extends, $visitedFqns)) {
+                        $implementorFqns[] = $extends;
+                    }
+                }
+            }
+        }
+
+        return $classFqn . $memberSuffix;
     }
 
     /**
@@ -826,19 +867,28 @@ class DefinitionResolver
             if (!($classType instanceof Types\Object_) || $classType->getFqsen() === null) {
                 return new Types\Mixed_;
             }
-            $fqn = substr((string)$classType->getFqsen(), 1) . '::';
+            $classFqn = substr((string)$classType->getFqsen(), 1);
+            $add = '::';
 
             // TODO is there a cleaner way to do this?
-            $fqn .= $expr->memberName->getText() ?? $expr->memberName->getText($expr->getFileContents());
+            $add .= $expr->memberName->getText() ?? $expr->memberName->getText($expr->getFileContents());
             if ($expr->parent instanceof Node\Expression\CallExpression) {
-                $fqn .= '()';
+                $add .= '()';
             }
 
-            $def = $this->index->getDefinition($fqn);
-            if ($def === null) {
-                return new Types\Mixed_;
+            $classDef = $this->index->getDefinition($classFqn);
+            if ($classDef !== null) {
+                foreach ($classDef->getAncestorDefinitions($this->index, true) as $fqn => $def) {
+                    $def = $this->index->getDefinition($fqn . $add);
+                    if ($def !== null) {
+                        if ($def->type instanceof Types\This || $def->type instanceof Types\Self_ || $def->type instanceof Types\Static_) {
+                            return new Types\Object_(new Fqsen('\\' . $classFqn));
+                        }
+                        return $def->type;
+                    }
+                }
             }
-            return $def->type;
+            return new Types\Mixed_;
         }
 
         // OBJECT CREATION EXPRESSION
@@ -1249,6 +1299,14 @@ class DefinitionResolver
             return new Types\Mixed_;
         }
 
+        // ENUM
+        if (
+            ($node instanceof Node\EnumCaseDeclaration) &&
+            ($enumDeclaration = $node->getFirstAncestor(Node\Statement\EnumDeclaration::class))
+           ) {
+            return $this->typeResolver->resolve((string)$enumDeclaration->getNamespacedName());
+        }
+
         // FOREACH KEY/VARIABLE
         if ($node instanceof Node\ForeachKey || $node->parent instanceof Node\ForeachKey) {
             $foreach = $node->getFirstAncestor(Node\Statement\ForeachStatement::class);
@@ -1447,6 +1505,19 @@ class DefinitionResolver
             }
             return (string)$classDeclaration->getNamespacedName() . '::' . $node->getName();
         }
+
+        // INPUT                        OUTPUT
+        // namespace A\B;
+        // enum C {
+        //   case A;                    A\B\C::A
+        // }
+        if (
+            ($node instanceof Node\EnumCaseDeclaration) &&
+            ($enumDeclaration = $node->getFirstAncestor(Node\Statement\EnumDeclaration::class))
+           ) {
+            return (string)$enumDeclaration->getNamespacedName() . '::' . $node->name->getText($node->getFileContents());
+        }
+
 
         if (ParserHelpers\isConstDefineExpression($node)) {
             return $node->argumentExpressionList->children[0]->expression->getStringContentsText();

@@ -80,6 +80,8 @@ class TextDocument
      */
     protected $composerLock;
 
+    protected PhpDocumentLoader $documentLoader;
+
     /**
      * @param PhpDocumentLoader $documentLoader
      * @param DefinitionResolver $definitionResolver

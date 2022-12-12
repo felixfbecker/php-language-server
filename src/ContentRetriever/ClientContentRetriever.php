@@ -12,6 +12,8 @@ use Sabre\Event\Promise;
  */
 class ClientContentRetriever implements ContentRetriever
 {
+    private LanguageClient $client;
+    
     /**
      * @param LanguageClient $client
      */

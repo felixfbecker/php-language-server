@@ -49,6 +49,10 @@ class SymbolInformationFactory
             $symbol->kind = SymbolKind::PROPERTY;
         } else if ($node instanceof Node\ConstElement) {
             $symbol->kind = SymbolKind::CONSTANT;
+        } else if ($node instanceof Node\Statement\EnumDeclaration) {
+            $symbol->kind = SymbolKind::ENUM;
+        } else if ($node instanceof Node\EnumCaseDeclaration) {
+            $symbol->kind = SymbolKind::ENUM;
         } else if (
             (
                 ($node instanceof Node\Expression\AssignmentExpression)

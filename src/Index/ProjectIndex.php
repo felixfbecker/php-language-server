@@ -24,6 +24,8 @@ class ProjectIndex extends AbstractAggregateIndex
      */
     private $sourceIndex;
 
+    private ?\stdClass $composerJson;
+
     public function __construct(Index $sourceIndex, DependenciesIndex $dependenciesIndex, \stdClass $composerJson = null)
     {
         $this->sourceIndex = $sourceIndex;

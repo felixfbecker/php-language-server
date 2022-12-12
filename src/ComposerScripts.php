@@ -46,6 +46,8 @@ class ComposerScripts
 
             $uris = yield $finder->find("$stubsLocation/**/*.php");
 
+            $uris = array_merge($uris, yield $finder->find(__DIR__ . '/../extra_stubs/*.php'));
+
             foreach ($uris as $uri) {
                 echo "Parsing $uri\n";
                 $content = yield $contentRetriever->retrieve($uri);

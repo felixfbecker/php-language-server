@@ -56,6 +56,8 @@ class Workspace
      */
     public $documentLoader;
 
+    private ?\stdClass $composerJson;
+
     /**
      * @param LanguageClient    $client            LanguageClient instance used to signal updated results
      * @param ProjectIndex      $projectIndex      Index that is used to wait for full index completeness
