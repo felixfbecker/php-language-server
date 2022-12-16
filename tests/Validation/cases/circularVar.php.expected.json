@@ -1,0 +1,33 @@
+{
+    "references": [],
+    "definitions": {
+        "circularVar()": {
+            "fqn": "circularVar()",
+            "extends": [],
+            "isMember": false,
+            "roamed": true,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "circularVar",
+                "kind": 12,
+                "location": {
+                    "uri": "./circularVar.php"
+                },
+                "containerName": ""
+            },
+            "type__tostring": "mixed",
+            "type": {},
+            "declarationLine": "function circularVar(string $var)",
+            "documentation": null,
+            "signatureInformation": {
+                "label": "(string $var)",
+                "parameters": [
+                    {
+                        "label": "string $var"
+                    }
+                ]
+            }
+        }
+    }
+}

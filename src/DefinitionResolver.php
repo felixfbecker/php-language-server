@@ -639,7 +639,7 @@ class DefinitionResolver
         }
 
         // First check the direct parent of the node if it's an assignment
-        if ($var->parent !== null && self::isVariableDeclaration($var->parent, $name)) {
+        if ($var->parent !== null && $var->parent instanceof Node\Expression\AssignmentExpression && $var->parent->leftOperand === $var) {
             return $var->parent;
         }
 
