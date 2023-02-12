@@ -74,6 +74,11 @@ class Indexer
     private $workDoneProgress;
 
     /**
+     * @var array
+     */
+    public $skipPatters = [];
+
+    /**
      * @param FilesFinder       $filesFinder
      * @param string            $rootPath
      * @param LanguageClient    $client
@@ -122,9 +127,24 @@ class Indexer
             $pattern = Path::makeAbsolute('**/*.php', $this->rootPath);
             $uris = yield $this->filesFinder->find($pattern);
 
+            $count_all = count($uris);
+
+            $skip = array_map(function ($v) {
+                return str_replace('%2A', '*', pathToUri(Path::makeAbsolute($v, $this->rootPath)));
+            }, $this->skipPatters);
+
+            $uris = array_filter($uris, function ($v) use ($skip) {
+                foreach ($skip as $s) {
+                    if (\Webmozart\Glob\Glob::match($v, $s)) {
+                        return false;
+                    }
+                }
+                return true;
+            });
+
             $count = count($uris);
             $startTime = microtime(true);
-            $this->client->window->logMessage(MessageType::INFO, "$count files total");
+            $this->client->window->logMessage(MessageType::INFO, "$count files total (unfiltered $count_all)");
 
             //if ($this->workDoneProgress) {
             //    $this->workDoneProgress->beginProgress('Indexing', "0/$count files", 0);

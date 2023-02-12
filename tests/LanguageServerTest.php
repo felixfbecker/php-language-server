@@ -73,7 +73,7 @@ class LanguageServerTest extends TestCase
         $capabilities->window = new ClientCapabilitiesWindow();
         $capabilities->window->workDoneProgress = true;
         $server->initialize($capabilities, realpath(__DIR__ . '/../fixtures'), getmypid())->wait();
-        $server->initialized();
+        $server->initialized()->wait();
         $promise->wait();
         $this->assertTrue(true);
     }
@@ -123,7 +123,7 @@ class LanguageServerTest extends TestCase
         $capabilities->xfilesProvider = true;
         $capabilities->xcontentProvider = true;
         $server->initialize($capabilities, $rootPath, getmypid())->wait();
-        $server->initialized();
+        $server->initialized()->wait();
         $promise->wait();
         $this->assertTrue($filesCalled);
         $this->assertTrue($contentCalled);

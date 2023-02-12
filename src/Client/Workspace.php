@@ -44,4 +44,26 @@ class Workspace
             return $this->mapper->mapArray($textDocuments, [], TextDocumentIdentifier::class);
         });
     }
+
+    /**
+     * The workspace/configuration request is sent from the server to the client
+     * to fetch configuration settings from the client. The request can fetch
+     * several configuration settings in one roundtrip. The order of the
+     * returned configuration settings correspond to the order of the passed
+     * ConfigurationItems (e.g. the first item in the response is the result
+     * for the first configuration item in the params).
+     *
+     * @param  ConfigurationItem[] $items Array of configuration items
+     * @return Promise <stdClass[]> Array of configuration objects
+     */
+    public function configuration(array $items): Promise
+    {
+        return $this->handler->request(
+            'workspace/configuration',
+            ['items' => $items]
+        )->then(function (array $items) {
+            return $items;
+            //return $this->mapper->mapArray($items, [], ConfigurationItem::class);
+        });
+    }
 }
