@@ -167,7 +167,7 @@ class TreeAnalyzer
                         $node->parent instanceof Node\Expression\CallExpression ||
                         $node->memberName instanceof PhpParser\Token
                     ))
-                || ($parent instanceof Node\Statement\NamespaceDefinition && $parent->name !== null && $parent->name->getStartPosition() === $node->getStartPosition())
+                || ($parent instanceof Node\Statement\NamespaceDefinition && $parent->name instanceof Node\QualifiedName && $parent->name->getStartPosition() === $node->getStartPosition())
             ) {
                 return;
             }
@@ -191,7 +191,7 @@ class TreeAnalyzer
             } else if ($fqn === 'parent') {
                 // Resolve parent keyword to the base class FQN
                 $classNode = $node->getFirstAncestor(Node\Statement\ClassDeclaration::class);
-                if (!$classNode || !$classNode->classBaseClause || !$classNode->classBaseClause->baseClass) {
+                if (!$classNode || !$classNode->classBaseClause || !($classNode->classBaseClause->baseClass instanceof Node\QualifiedName)) {
                     return;
                 }
                 $fqn = (string)$classNode->classBaseClause->baseClass->getResolvedName();

@@ -318,7 +318,7 @@ class CompletionProvider
 
             $namespaceNode = $node->getNamespaceDefinition();
             /** @var string The current namespace without a leading backslash. */
-            $currentNamespace = $namespaceNode === null ? '' : $namespaceNode->name->getText();
+            $currentNamespace = $namespaceNode !== null && $namespaceNode->name instanceof Node\QualifiedName ? $namespaceNode->name->getText() : '';
 
             /** @var bool Whether the prefix is qualified (contains at least one backslash) */
             $isFullyQualified = false;
