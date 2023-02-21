@@ -5,7 +5,7 @@ namespace LanguageServer;
 
 use LanguageServer\Index\ReadableIndex;
 use phpDocumentor\Reflection\{Types, Type, TypeResolver};
-use LanguageServerProtocol\SymbolInformation;
+use LanguageServerProtocol\{SymbolInformation, SignatureInformation};
 use Generator;
 
 /**

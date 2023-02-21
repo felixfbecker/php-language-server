@@ -37,6 +37,10 @@ class ValidationTest extends TestCase
             $iterator->append(new RecursiveIteratorIterator(new RecursiveDirectoryIterator(realpath(__DIR__ . '/cases81'))));
         }
 
+        if (PHP_VERSION_ID >= 80200) {
+            $iterator->append(new RecursiveIteratorIterator(new RecursiveDirectoryIterator(realpath(__DIR__ . '/cases82'))));
+        }
+
         foreach ($iterator as $file) {
             if (strpos(\strrev((string)$file), \strrev(".php")) === 0 && !\in_array(basename((string)$file), $disabled)) {
                 if ($file->getSize() < 100000) {

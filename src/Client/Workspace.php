@@ -53,8 +53,8 @@ class Workspace
      * ConfigurationItems (e.g. the first item in the response is the result
      * for the first configuration item in the params).
      *
-     * @param  ConfigurationItem[] $items Array of configuration items
-     * @return Promise <stdClass[]> Array of configuration objects
+     * @param  array{'section': string}[] $items Array of configuration items
+     * @return Promise <\stdClass[]> Array of configuration objects
      */
     public function configuration(array $items): Promise
     {

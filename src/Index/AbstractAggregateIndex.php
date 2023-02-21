@@ -138,6 +138,7 @@ abstract class AbstractAggregateIndex implements ReadableIndex
                 return $def;
             }
         }
+        return null;
     }
 
     /**

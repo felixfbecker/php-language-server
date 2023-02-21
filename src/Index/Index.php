@@ -160,6 +160,8 @@ class Index implements ReadableIndex, \Serializable
 
             return $this->getDefinition($fqn);
         }
+
+        return null;
     }
 
     /**

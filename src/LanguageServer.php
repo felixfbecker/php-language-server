@@ -38,9 +38,6 @@ class LanguageServer extends AdvancedJsonRpc\Dispatcher
      */
     public $workspace;
 
-    /**
-     * @var Server\Window
-     */
     public $window;
 
     public $telemetry;

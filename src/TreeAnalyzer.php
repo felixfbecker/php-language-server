@@ -97,6 +97,7 @@ class TreeAnalyzer
         if ($node instanceof Node\Expression\Variable && $node->getName() === 'this') {
             // Find the first ancestor that's a class method. Return an error
             // if there is none, or if the method is static.
+            /** @var Node\MethodDeclaration|null $method */
             $method = $node->getFirstAncestor(Node\MethodDeclaration::class);
             if ($method && $method->isStatic()) {
                 $this->diagnostics[] = new Diagnostic(
@@ -180,6 +181,7 @@ class TreeAnalyzer
             if ($fqn === 'self' || $fqn === 'static') {
                 // Resolve self and static keywords to the containing class
                 // (This is not 100% correct for static but better than nothing)
+                /** @var Node\Statement\ClassDeclaration $classNode */
                 $classNode = $node->getFirstAncestor(Node\Statement\ClassDeclaration::class);
                 if (!$classNode) {
                     return;
@@ -190,6 +192,7 @@ class TreeAnalyzer
                 }
             } else if ($fqn === 'parent') {
                 // Resolve parent keyword to the base class FQN
+                /** @var Node\Statement\ClassDeclaration $classNode */
                 $classNode = $node->getFirstAncestor(Node\Statement\ClassDeclaration::class);
                 if (!$classNode || !$classNode->classBaseClause || !($classNode->classBaseClause->baseClass instanceof Node\QualifiedName)) {
                     return;
@@ -205,7 +208,7 @@ class TreeAnalyzer
             if (
                 $node instanceof Node\QualifiedName
                 && ($node->isQualifiedName() || $node->parent instanceof Node\NamespaceUseClause)
-                && !($parent instanceof Node\Statement\NamespaceDefinition && $parent->name->getStartPosition() === $node->getStartPositions()
+                && !($parent instanceof Node\Statement\NamespaceDefinition && $parent->name->getStartPosition() === $node->getStartPosition()
                 )
             ) {
                 // Add references for each referenced namespace

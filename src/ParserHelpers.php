@@ -16,7 +16,7 @@ function isConstantFetch(Node $node) : bool
             $parent instanceof Node\Expression ||
             $parent instanceof Node\DelimitedList\ExpressionList ||
             $parent instanceof Node\ArrayElement ||
-            ($parent instanceof Node\Parameter && $node->parent->default === $node) ||
+            ($parent instanceof Node\Parameter && $parent->default === $node) ||
             $parent instanceof Node\StatementNode ||
             $parent instanceof Node\CaseStatementNode
         ) &&

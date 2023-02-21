@@ -62,7 +62,7 @@ class Workspace
      * @param LanguageClient    $client            LanguageClient instance used to signal updated results
      * @param ProjectIndex      $projectIndex      Index that is used to wait for full index completeness
      * @param DependenciesIndex $dependenciesIndex Index that is used on a workspace/xreferences request
-     * @param DependenciesIndex $sourceIndex       Index that is used on a workspace/xreferences request
+     * @param Index             $sourceIndex       Index that is used on a workspace/xreferences request
      * @param \stdClass         $composerLock      The parsed composer.lock of the project, if any
      * @param PhpDocumentLoader $documentLoader    PhpDocumentLoader instance to load documents
      */
@@ -120,12 +120,13 @@ class Workspace
      *
      * @param SymbolDescriptor $query Partial metadata about the symbol that is being searched for.
      * @param string[]         $files An optional list of files to restrict the search to.
-     * @return ReferenceInformation[]
+     * @return Promise <ReferenceInformation[]>
      */
     public function xreferences($query, array $files = null): Promise
     {
         // TODO: $files is unused in the coroutine
         return coroutine(function () use ($query, $files) {
+            unset($files);
             if ($this->composerLock === null) {
                 return [];
             }

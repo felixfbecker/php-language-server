@@ -54,12 +54,12 @@ class Indexer
     private $documentLoader;
 
     /**
-     * @var \stdClasss
+     * @var \stdClass
      */
     private $composerLock;
 
     /**
-     * @var \stdClasss
+     * @var \stdClass
      */
     private $composerJson;
 
@@ -237,7 +237,7 @@ class Indexer
 
     /**
      * @param array $files
-     * @return Promise
+     * @return Promise <void>
      */
     private function indexFiles(array $files, string $progressTitle): Promise
     {

@@ -5,6 +5,7 @@ namespace LanguageServer\Factory;
 use LanguageServerProtocol\Location;
 use LanguageServerProtocol\SymbolInformation;
 use LanguageServerProtocol\SymbolKind;
+use Microsoft\PhpParser;
 use Microsoft\PhpParser\Node;
 use Microsoft\PhpParser\ResolvedName;
 use LanguageServer\Factory\LocationFactory;

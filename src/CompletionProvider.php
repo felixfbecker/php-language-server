@@ -125,11 +125,6 @@ class CompletionProvider
     private $definitionResolver;
 
     /**
-     * @var Project
-     */
-    private $project;
-
-    /**
      * @var ReadableIndex
      */
     private $index;
@@ -307,6 +302,7 @@ class CompletionProvider
             //    \MyCla|
 
             // The name Node under the cursor
+            /** @var Node\Expression\ObjectCreationExpression|null $creation */
             $nameNode = isset($creation) ? $creation->classTypeDesignator : $node;
 
             if ($nameNode instanceof Node\QualifiedName) {
@@ -339,7 +335,7 @@ class CompletionProvider
 
             if ($isFullyQualified) {
                 // \Prefix\Goes\Here| - Only return completions from the root namespace.
-                /** @var $items \Generator|CompletionItem[] Generator yielding CompletionItems indexed by their FQN */
+                /** @var \Generator|CompletionItem[] $items Generator yielding CompletionItems indexed by their FQN */
                 $items = $this->getCompletionsForFqnPrefix($prefix, $isCreation, false);
             } else if ($isQualified) {
                 // Prefix\Goes\Here|
@@ -487,7 +483,7 @@ class CompletionProvider
      * Gets completions for non-qualified names matching the start of an used class, function, or constant.
      *
      * @param string $prefix Non-qualified name being completed for
-     * @param QualifiedName[] $aliases Array of alias FQNs indexed by the alias.
+     * @param Node\QualifiedName[] $aliases Array of alias FQNs indexed by the alias.
      * @return \Generator|CompletionItem[]
      *   Yields CompletionItems.
      */
@@ -604,7 +600,7 @@ class CompletionProvider
      *
      * @param Node $node
      * @param string $namePrefix Prefix to filter
-     * @return array <Node\Expr\Variable|Node\Param|Node\Expr\ClosureUse>
+     * @return array <Node\Expression\Variable|Node\Parameter>
      */
     private function suggestVariablesAtNode(Node $node, string $namePrefix = ''): array
     {
@@ -676,6 +672,7 @@ class CompletionProvider
         };
 
         if ($this->isAssignmentToVariableWithPrefix($node, $namePrefix)) {
+            /** @var Node\Expression\AssignmentExpression $node */
             $vars[] = $node->leftOperand;
         } elseif ($node instanceof Node\ForeachKey || $node instanceof Node\ForeachValue) {
             foreach ($node->getDescendantNodes() as $descendantNode) {
@@ -690,6 +687,7 @@ class CompletionProvider
             // Avoiding closure usage in tight loop
             foreach ($node->getDescendantNodes($isAssignmentToVariable) as $descendantNode) {
                 if ($this->isAssignmentToVariableWithPrefix($descendantNode, $namePrefix)) {
+                    /** @var Node\Expression\AssignmentExpression $descendantNode */
                     $vars[] = $descendantNode->leftOperand;
                 }
             }

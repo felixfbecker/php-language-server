@@ -80,6 +80,7 @@ class SignatureHelpProvider
         return coroutine(function () use ($node) {
             $fqn = null;
             $callingNode = null;
+            $argumentExpressionList = null;
             if ($node instanceof Node\DelimitedList\ArgumentExpressionList) {
                 // Cursor is already inside a (
                 $argumentExpressionList = $node;

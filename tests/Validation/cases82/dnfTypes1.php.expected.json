@@ -1,0 +1,49 @@
+{
+    "references": {
+        "A": [
+            ".82/dnfTypes1.php"
+        ],
+        "B": [
+            ".82/dnfTypes1.php"
+        ],
+        "C": [
+            ".82/dnfTypes1.php"
+        ],
+        "D": [
+            ".82/dnfTypes1.php"
+        ],
+        "E": [
+            ".82/dnfTypes1.php"
+        ]
+    },
+    "definitions": {
+        "foo()": {
+            "fqn": "foo()",
+            "extends": [],
+            "isMember": false,
+            "roamed": true,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "foo",
+                "kind": 12,
+                "location": {
+                    "uri": ".82/dnfTypes1.php"
+                },
+                "containerName": ""
+            },
+            "type__tostring": "\\A|\\B|\\C|\\D|\\E",
+            "type": {},
+            "declarationLine": "function foo ((A&B)|C $x): (A&B)|C|(D&E)",
+            "documentation": null,
+            "signatureInformation": {
+                "label": "(\\A|\\B|\\C $x)",
+                "parameters": [
+                    {
+                        "label": "\\A|\\B|\\C $x"
+                    }
+                ]
+            }
+        }
+    }
+}

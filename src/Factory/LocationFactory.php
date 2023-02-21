@@ -14,7 +14,7 @@ class LocationFactory
      * Returns the location of the node
      *
      * @param Node $node
-     * @return self
+     * @return Location
      */
     public static function fromNode(Node $node): Location
     {

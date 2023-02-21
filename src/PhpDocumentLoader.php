@@ -18,7 +18,7 @@ class PhpDocumentLoader
     /**
      * A map from URI => PhpDocument of open documents that should be kept in memory
      *
-     * @var PhpDocument
+     * @var PhpDocument[]
      */
     private $documents = [];
 
@@ -33,14 +33,9 @@ class PhpDocumentLoader
     private $projectIndex;
 
     /**
-     * @var Parser
-     */
-    private $parser;
-
-    /**
      * @var PhpParser\Parser
      */
-    private $tolerantParser;
+    private $parser;
 
     /**
      * @var DocBlockFactory
@@ -147,7 +142,7 @@ class PhpDocumentLoader
      *
      * @param string $uri
      * @param string $content
-     * @return void
+     * @return PhpDocument
      */
     public function open(string $uri, string $content)
     {

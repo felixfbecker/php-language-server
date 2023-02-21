@@ -312,6 +312,7 @@ class DefinitionResolver
         if ($fqn === 'self' || $fqn === 'static') {
             // Resolve self and static keywords to the containing class
             // (This is not 100% correct for static but better than nothing)
+            /** @var Node\Statement\ClassDeclaration|null $classNode */
             $classNode = $node->getFirstAncestor(Node\Statement\ClassDeclaration::class);
             if (!$classNode) {
                 return;
@@ -322,6 +323,7 @@ class DefinitionResolver
             }
         } else if ($fqn === 'parent') {
             // Resolve parent keyword to the base class FQN
+            /** @var Node\Statement\ClassDeclaration|null $classNode */
             $classNode = $node->getFirstAncestor(Node\Statement\ClassDeclaration::class);
             if (!$classNode || !$classNode->classBaseClause || !($classNode->classBaseClause->baseClass instanceof Node\QualifiedName)) {
                 return;
@@ -521,6 +523,7 @@ class DefinitionResolver
 
         if ($className === 'self' || $className === 'static' || $className === 'parent') {
             // self and static are resolved to the containing class
+            /** @var Node\Statement\ClassDeclaration|null $classNode */
             $classNode = $scoped->getFirstAncestor(Node\Statement\ClassDeclaration::class);
             if ($classNode === null) {
                 return null;
@@ -594,6 +597,7 @@ class DefinitionResolver
      */
     private static function getContainingClassFqn(Node $node)
     {
+        /** @var Node\Statement\ClassDeclaration|null $classNode */
         $classNode = $node->getFirstAncestor(Node\Statement\ClassDeclaration::class);
         if ($classNode === null) {
             return null;
@@ -618,8 +622,8 @@ class DefinitionResolver
     /**
      * Returns the assignment or parameter node where a variable was defined
      *
-     * @param Node\Expression\Variable|Node\Expression\ClosureUse $var The variable access
-     * @return Node\Expression\Assign|Node\Expression\AssignOp|Node\Param|Node\Expression\ClosureUse|null
+     * @param Node\Expression\Variable|Node\UseVariableName $var The variable access
+     * @return Node\Expression\AssignmentExpression|Node\Parameter|Node\UseVariableName|null
      */
     public function resolveVariableToNode($var)
     {
@@ -1116,6 +1120,7 @@ class DefinitionResolver
         $className = (string)$class->getResolvedName();
 
         if ($className === 'self' || $className === 'parent') {
+            /** @var Node\Statement\ClassDeclaration|null $classNode */
             $classNode = $class->getFirstAncestor(Node\Statement\ClassDeclaration::class);
             if ($className === 'parent') {
                 if ($classNode === null || $classNode->classBaseClause === null || !($classNode->classBaseClause->baseClass instanceof Node\QualifiedName)) {
@@ -1180,35 +1185,9 @@ class DefinitionResolver
 
             // function foo(MyClass $a)
             if ($node->typeDeclarationList !== null) {
-                // Use PHP7 return type hint
-                $is_union = false;
-                $is_intersection = false;
-                $types = array_reduce($node->typeDeclarationList->children, function ($types, $typeDeclaration) use ($node, &$is_union, &$is_intersection) {
-                    if ($typeDeclaration instanceof PhpParser\Token) {
-                        if ($typeDeclaration->kind === PhpParser\TokenKind::BarToken) {
-                            $is_union = true;
-                            return $types;
-                        }
-                        if ($typeDeclaration->kind === PhpParser\TokenKind::AmpersandToken) {
-                            $is_intersection = true;
-                            return $types;
-                        }
-                        // Resolve a string like "bool" to a type object
-                        $types[] = $this->typeResolver->resolve($typeDeclaration->getText($node->getFileContents()));
-                    } else {
-                        $types[] = new Types\Object_(new Fqsen('\\' . (string)$typeDeclaration->getResolvedName()));
-                    }
-                    return $types;
-                }, []);
-                if (count($types) === 1) {
-                    $type = $types[0];
-                }
-                if ($is_union && !$is_intersection) {
-                    $type = new Types\Compound($types);
-                    return $type;
-                } else if (!$is_union && $is_intersection) {
-                    $type = new Types\Intersection($types);
-                    return $type;
+                $returnType = $this->getTypeFromTypeList($node, $node->typeDeclarationList);
+                if ($returnType !== null) {
+                    return $returnType;
                 }
             }
             // function foo($a = 3)
@@ -1245,6 +1224,7 @@ class DefinitionResolver
                         return $selfType;
                     }
                 } elseif ($returnType instanceof Types\Parent_) {
+                    /** @var Node\Statement\ClassDeclaration|null $classNode */
                     $classNode = $node->getFirstAncestor(Node\Statement\ClassDeclaration::class);
                     if ($classNode->classBaseClause !== null && $classNode->classBaseClause->baseClass instanceof Node\QualifiedName) {
                         return new Types\Object_(new Fqsen('\\' . (string)$classNode->classBaseClause->baseClass->getResolvedName()));
@@ -1253,47 +1233,10 @@ class DefinitionResolver
                 return $returnType;
             }
             if ($node->returnTypeList !== null && !($node->returnTypeList instanceof PhpParser\MissingToken)) {
-                // Use PHP7 return type hint
-                $is_union = false;
-                $is_intersection = false;
-                $types = array_reduce($node->returnTypeList->children, function ($types, $returnType) use ($node, &$is_union, &$is_intersection) {
-                    if ($returnType instanceof PhpParser\Token) {
-                        if ($returnType->kind === PhpParser\TokenKind::BarToken) {
-                            $is_union = true;
-                            return $types;
-                        }
-                        if ($returnType->kind === PhpParser\TokenKind::AmpersandToken) {
-                            $is_intersection = true;
-                            return $types;
-                        }
-                        // Resolve a string like "bool" to a type object
-                        $types[] = $this->typeResolver->resolve($returnType->getText($node->getFileContents()));
-                        return $types;
-                    } elseif ($returnType->getResolvedName() === 'self') {
-                        $selfType = $this->getContainingClassType($node);
-                        if ($selfType !== null) {
-                            $types[] = $selfType;
-                            return $types;
-                        }
-                    } elseif ($returnType->getResolvedName() === 'parent') {
-                        $classNode = $node->getFirstAncestor(Node\Statement\ClassDeclaration::class);
-                        if ($classNode->classBaseClause !== null && $classNode->classBaseClause->baseClass instanceof Node\QualifiedName) {
-                            $types[] = new Types\Object_(new Fqsen('\\' . (string)$classNode->classBaseClause->baseClass->getResolvedName()));
-                            return $types;
-                        }
-                    }
-                    $types[] = new Types\Object_(new Fqsen('\\' . (string)$returnType->getResolvedName()));
-                    return $types;
-                }, []);
-                if (count($types) === 1) {
-                    return $types[0];
+                $returnType = $this->getTypeFromTypeList($node, $node->returnTypeList);
+                if ($returnType !== null) {
+                    return $returnType;
                 }
-                if ($is_union && !$is_intersection) {
-                    return new Types\Compound($types);
-                } else if (!$is_union && $is_intersection) {
-                    return new Types\Intersection($types);
-                }
-                // Broken code.. cant have T1|T2&T3 or more than one type without | or &
             }
             // Unknown return type
             return new Types\Mixed_;
@@ -1309,6 +1252,7 @@ class DefinitionResolver
 
         // FOREACH KEY/VARIABLE
         if ($node instanceof Node\ForeachKey || $node->parent instanceof Node\ForeachKey) {
+            /** @var Node\Statement\ForeachStatement $foreach */
             $foreach = $node->getFirstAncestor(Node\Statement\ForeachStatement::class);
             $collectionType = $this->resolveExpressionNodeToType($foreach->forEachCollectionName);
             if ($collectionType instanceof Types\Array_) {
@@ -1321,6 +1265,7 @@ class DefinitionResolver
         if ($node instanceof Node\ForeachValue
             || ($node instanceof Node\Expression\Variable && $node->parent instanceof Node\ForeachValue)
         ) {
+            /** @var Node\Statement\ForeachStatement $foreach */
             $foreach = $node->getFirstAncestor(Node\Statement\ForeachStatement::class);
             $collectionType = $this->resolveExpressionNodeToType($foreach->forEachCollectionName);
             if ($collectionType instanceof Types\Array_) {
@@ -1369,6 +1314,64 @@ class DefinitionResolver
         }
 
         // The node does not have a type
+        return null;
+    }
+
+    /**
+     * @param Node $node
+     * @param Node\DelimitedList\QualifiedNameList|PhpParser\MissingToken|null $typeList
+     * @return \phpDocumentor\Reflection\Type|null
+     */
+    private function getTypeFromTypeList($node, $typeList)
+    {
+        // Use PHP7 return type hint
+        $is_union = false;
+        $is_intersection = false;
+        $types = array_reduce($typeList->children, function ($types, $type) use ($node, &$is_union, &$is_intersection) {
+            if ($type instanceof PhpParser\Token) {
+                if ($type->kind === PhpParser\TokenKind::BarToken) {
+                    $is_union = true;
+                    return $types;
+                }
+                if ($type->kind === PhpParser\TokenKind::AmpersandToken) {
+                    $is_intersection = true;
+                    return $types;
+                }
+                // Resolve a string like "bool" to a type object
+                $types[] = $this->typeResolver->resolve($type->getText($node->getFileContents()));
+                return $types;
+            } elseif ($type instanceof Node\ParenthesizedIntersectionType) {
+                $types[] = $this->getTypeFromTypeList($node, $type->children);
+                return $types;
+            } elseif ($type instanceof Node\QualifiedName) {
+                if ($type->getResolvedName() === 'self') {
+                    $selfType = $this->getContainingClassType($node);
+                    if ($selfType !== null) {
+                        $types[] = $selfType;
+                        return $types;
+                    }
+                } elseif ($type->getResolvedName() === 'parent') {
+                    /** @var Node\Statement\ClassDeclaration|null $classNode */
+                    $classNode = $node->getFirstAncestor(Node\Statement\ClassDeclaration::class);
+                    if ($classNode !== null && $classNode->classBaseClause !== null && $classNode->classBaseClause->baseClass instanceof Node\QualifiedName) {
+                        $types[] = new Types\Object_(new Fqsen('\\' . (string)$classNode->classBaseClause->baseClass->getResolvedName()));
+                        return $types;
+                    }
+                }
+                $types[] = new Types\Object_(new Fqsen('\\' . (string)$type->getResolvedName()));
+            }
+            // TODO?
+            return $types;
+        }, []);
+        if (count($types) === 1) {
+            return $types[0];
+        }
+        if ($is_union && !$is_intersection) {
+            return new Types\Compound($types);
+        } else if (!$is_union && $is_intersection) {
+            return new Types\Intersection($types);
+        }
+        // Broken code.. cant have T1|T2&T3 or more than one type without | or &
         return null;
     }
 
@@ -1515,6 +1518,7 @@ class DefinitionResolver
             ($node instanceof Node\EnumCaseDeclaration) &&
             ($enumDeclaration = $node->getFirstAncestor(Node\Statement\EnumDeclaration::class))
            ) {
+            /** @var Node\Statement\EnumDeclaration $enumDeclaration */
             return (string)$enumDeclaration->getNamespacedName() . '::' . $node->name->getText($node->getFileContents());
         }
 
