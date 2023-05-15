@@ -1,0 +1,31 @@
+{
+    "references": {
+        "TestTrait": [
+            "./trait1.php"
+        ]
+    },
+    "definitions": {
+        "TestClass": {
+            "fqn": "TestClass",
+            "extends": [
+                "TestTrait"
+            ],
+            "isMember": false,
+            "roamed": false,
+            "isStatic": false,
+            "canBeInstantiated": true,
+            "symbolInformation": {
+                "name": "TestClass",
+                "kind": 5,
+                "location": {
+                    "uri": "./trait1.php"
+                },
+                "containerName": ""
+            },
+            "type": null,
+            "declarationLine": "class TestClass {",
+            "documentation": null,
+            "signatureInformation": null
+        }
+    }
+}

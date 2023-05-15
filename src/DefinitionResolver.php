@@ -244,7 +244,20 @@ class DefinitionResolver
             foreach ($node->classMembers->classMemberDeclarations as $dec) {
                 if ($dec instanceof Node\TraitUseClause) {
                     foreach ($dec->traitNameList->getValues() as $n) {
-                        $def->extends[] = (string)$n->getNamespacedName();
+                        $content = $n->getFileContents();
+                        if ($n->isFullyQualifiedName()) {
+                            $def->extends[] = (string)PhpParser\ResolvedName::buildName($n->nameParts, $content);
+                        } else {
+                            list($importTable,,) = $n->getImportTablesForCurrentScope();
+                            $index = $n->nameParts[0]->getText($content);
+                            if(isset($importTable[$index])) {
+                                $resolvedName = $importTable[$index];
+                                $resolvedName->addNameParts(\array_slice($n->nameParts, 1), $content);
+                                $def->extends[] = (string)$resolvedName;
+                            } else {
+                                $def->extends[] = (string)$n->getNamespacedName();
+                            }
+                        }
                     }
                 }
             }

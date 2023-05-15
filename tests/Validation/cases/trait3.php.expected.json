@@ -1,0 +1,51 @@
+{
+    "references": {
+        "MyNamespace\\OtherNamespace\\TestTrait": [
+            "./trait3.php"
+        ]
+    },
+    "definitions": {
+        "MyNamespace": {
+            "fqn": "MyNamespace",
+            "extends": [],
+            "isMember": false,
+            "roamed": false,
+            "isStatic": false,
+            "canBeInstantiated": false,
+            "symbolInformation": {
+                "name": "MyNamespace",
+                "kind": 3,
+                "location": {
+                    "uri": "./trait3.php"
+                },
+                "containerName": ""
+            },
+            "type": null,
+            "declarationLine": "namespace MyNamespace;",
+            "documentation": null,
+            "signatureInformation": null
+        },
+        "MyNamespace\\TestClass": {
+            "fqn": "MyNamespace\\TestClass",
+            "extends": [
+                "OtherNamespace\\TestTrait"
+            ],
+            "isMember": false,
+            "roamed": false,
+            "isStatic": false,
+            "canBeInstantiated": true,
+            "symbolInformation": {
+                "name": "TestClass",
+                "kind": 5,
+                "location": {
+                    "uri": "./trait3.php"
+                },
+                "containerName": "MyNamespace"
+            },
+            "type": null,
+            "declarationLine": "class TestClass {",
+            "documentation": null,
+            "signatureInformation": null
+        }
+    }
+}
